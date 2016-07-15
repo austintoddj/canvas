@@ -70,3 +70,30 @@ function page_image($value = null)
     }
     return $value;
 }
+
+function stripe_image_meta($path, $type)
+{
+    $supported = ['jpg', 'jpeg', 'png'];
+
+    if(!in_array(strtolower($type), $supported)) {
+        throw new Exception("Unsupported image type: " . $type);
+    }
+
+    if (!extension_loaded('imagick')) {
+        return false;
+    }
+
+    try {
+        $image = new \Imagick($path);
+
+        if ($image->stripImage()) {
+            $image->writeImage($type . ':' . $path); // <-- looks wrong, but the extension prefix forces the file format.
+            return true;
+        }
+    } catch (\Exception $e) {
+
+        return false;
+    }
+
+    return false;
+}

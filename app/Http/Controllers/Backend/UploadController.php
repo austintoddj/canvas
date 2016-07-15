@@ -87,6 +87,19 @@ class UploadController extends Controller
     public function uploadFile(UploadFileRequest $request)
     {
         $file = $_FILES['file'];
+
+        if(env('STRIP_IMAGE_META', false)) {
+            switch ($file['type']) {
+                case 'image/jpeg':
+                    stripe_image_meta($file['tmp_name'], 'jpg');
+                    break;
+
+                case 'image/png':
+                    stripe_image_meta($file['tmp_name'], 'png');
+                    break;
+            }
+        }
+
         $fileName = $request->get('file_name');
         $fileName = $fileName ?: $file['name'];
         $path = str_finish($request->get('folder'), '/') . $fileName;
