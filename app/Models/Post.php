@@ -14,7 +14,12 @@ class Post extends Model
      * @var array
      */
     protected $dates = ['published_at'];
-    
+
+
+    protected $casts = [
+        'is_draft' => 'boolean'
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
