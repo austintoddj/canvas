@@ -71,7 +71,7 @@ function page_image($value = null)
     return $value;
 }
 
-function stripe_image_meta($path, $type)
+function strip_image_meta($path, $type)
 {
     $supported = ['jpg', 'jpeg', 'png'];
 

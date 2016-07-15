@@ -91,11 +91,11 @@ class UploadController extends Controller
         if(env('STRIP_IMAGE_META', false)) {
             switch ($file['type']) {
                 case 'image/jpeg':
-                    stripe_image_meta($file['tmp_name'], 'jpg');
+                    strip_image_meta($file['tmp_name'], 'jpg');
                     break;
 
                 case 'image/png':
-                    stripe_image_meta($file['tmp_name'], 'png');
+                    strip_image_meta($file['tmp_name'], 'png');
                     break;
             }
         }
