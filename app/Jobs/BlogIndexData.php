@@ -9,15 +9,19 @@ use Illuminate\Contracts\Bus\SelfHandling;
 class BlogIndexData extends Job implements SelfHandling
 {
     protected $tag;
+    protected $search;
+
 
     /**
-     * Constructor
+     * BlogIndexData constructor.
      *
-     * @param string|null $tag
+     * @param $tag
+     * @param null $search
      */
-    public function __construct($tag)
+    public function __construct($tag, $search = null)
     {
         $this->tag = $tag;
+        $this->search = $search;
     }
 
     /**
@@ -43,8 +47,14 @@ class BlogIndexData extends Job implements SelfHandling
         $posts = Post::with('tags')
             ->where('published_at', '<=', Carbon::now())
             ->where('is_draft', 0)
-            ->orderBy('published_at', 'desc')
-            ->simplePaginate(config('blog.posts_per_page'));
+            ->orderBy('published_at', 'desc');
+        
+            if($this->search !== null) {
+                $posts = $posts->where('content_raw', 'LIKE', '%' . html_entity_decode($this->search) . '%');
+            }
+
+            $posts = $posts->simplePaginate(config('blog.posts_per_page'));
+        
         return [
             'title' => config('blog.title'),
             'subtitle' => config('blog.subtitle'),

@@ -1,3 +1,18 @@
+<div class="container">
+    <div class="row">
+        <div class="col-md-2 col-md-offset-10">
+            <div class="form-group">
+                <form method="get">
+                    <input type="text" name="search" value="{{Request::get('search')}}" class="form-control"
+                           placeholder="Search..."
+                           style="margin-top: 15px";
+                    />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container" id="head-c">
     <div class="row">
         <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">

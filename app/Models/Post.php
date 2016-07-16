@@ -30,6 +30,11 @@ class Post extends Model
         'layout', 'is_draft', 'published_at',
     ];
 
+    /*
+    public function user() {
+        return $this->hasOne('\App\Models\User', 'id', 'user_id');
+    }*/
+
     /**
      * Get the tags relationship.
      *

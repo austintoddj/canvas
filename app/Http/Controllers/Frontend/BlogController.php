@@ -20,7 +20,8 @@ class BlogController extends Controller
     {
         $user = User::findOrFail(1);
         $tag = $request->get('tag');
-        $data = $this->dispatch(new BlogIndexData($tag));
+        $search = $request->get('search');
+        $data = $this->dispatch(new BlogIndexData($tag, $search));  // This is probably much better in a concrete class than a job.
         $layout = $tag ? Tag::layout($tag)->first() : 'frontend.blog.index';
 
         return view($layout, $data)->with(compact('user'));
