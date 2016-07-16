@@ -1,4 +1,4 @@
-@if (isset($slug))
+@if (isset($slug) && !is_null(config('disqus_name')))
 
     <div id="disqus_thread"></div>
 
