@@ -81,9 +81,18 @@ class Post extends Model
      */
     public function setContentRawAttribute($value)
     {
+        $config = \HTMLPurifier_Config::createDefault();
+
+        $config->set('HTML.TidyLevel', 'heavy' );
+        $config->set('HTML.ForbiddenElements', ['script', 'iframe']);
+        $config->set('HTML.ForbiddenAttributes', ['class', 'style']);
+
+
+        $purifier = new \HTMLPurifier($config);
         $markdown = new Parsedowner();
+        
         $this->attributes['content_raw'] = $value;
-        $this->attributes['content_html'] = $markdown->toHTML($value);
+        $this->attributes['content_html'] = $purifier->purify($markdown->toHTML($value)); // Prevent XSS - this fights with markdown however
     }
 
     /**

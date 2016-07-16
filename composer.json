@@ -19,7 +19,9 @@
         "erusev/parsedown": "^1.6",
         "proengsoft/laravel-jsvalidation": "1.0.*",
         "teamtnt/tntsearch": "^0.7.0",
-        "larapack/config-writer": "^1.0"
+        "larapack/config-writer": "^1.0",
+        "ezyang/htmlpurifier": "~4.7",
+        "html2text/html2text": "^4.0"
     },
     "require-dev": {
         "symfony/dom-crawler": "~3.0",
