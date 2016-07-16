@@ -29,6 +29,7 @@ return [
   */
   'posts_per_page'  => 6,
   'disqus_name' => env('DISQUS_NAME', null),
+  'tracking_id' => env('TRACKING_ID', null),
 
   /*
   |--------------------------------------------------------------------------

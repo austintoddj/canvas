@@ -12,6 +12,17 @@
                     <p class="tag-link">Explore <a href="#">{{ $tag->title or '' }}</a></p>
                     <p class="tag-subtitle">- {{ $tag->subtitle }} -</p>
                 @endif
+
+                {{-- Empty Search --}}
+                @if(sizeof($posts) == 0 && strlen(trim(\Input::get('search', ''))) != 0)
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <h2>No Search Results</h2>
+                        </div>
+                    </div>
+
+                @endif
+
                 {{-- The Posts --}}
                 @foreach ($posts as $post)
                     <div class="post-preview">
