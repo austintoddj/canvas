@@ -17,5 +17,10 @@
         @yield('unique-js')
 
         @include('frontend.blog.partials.footer')
+
+        @if(config('blog.tracking_id', false))
+            @include('frontend.blog.partials.tracking')
+        @endif
+
     </body>
 </html>
