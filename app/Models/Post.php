@@ -13,7 +13,12 @@ class Post extends Model
      * @var array
      */
     protected $dates = ['published_at'];
-    
+
+
+    protected $casts = [
+        'is_draft' => 'boolean'
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -23,6 +28,11 @@ class Post extends Model
         'title', 'subtitle', 'content_raw', 'page_image', 'meta_description',
         'layout', 'is_draft', 'published_at', 'slug',
     ];
+
+    /*
+    public function user() {
+        return $this->hasOne('\App\Models\User', 'id', 'user_id');
+    }*/
 
     /**
      * Get the tags relationship.
