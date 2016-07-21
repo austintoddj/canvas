@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+TeamTNT\TNTSearch\TNTSearch;
 
 class Tag extends Model
 {
