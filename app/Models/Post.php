@@ -4,7 +4,7 @@ namespace App\Models;
 use App\Services\Parsedowner;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use TeamTNT\TNTSearch\TNTSearch;
+use \TeamTNT\TNTSearch\TNTSearch;
 
 class Post extends Model
 {
