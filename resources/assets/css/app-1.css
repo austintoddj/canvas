@@ -10381,7 +10381,7 @@ h6 small,
   -ms-user-select: none;
   user-select: none;
   position: fixed;
-  z-index: 9999;
+  z-index: 999;
   width: 100%;
   left: 0;
   top: 0;
