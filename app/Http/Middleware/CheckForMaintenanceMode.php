@@ -1,11 +1,10 @@
 <?php
+
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Routing\Route;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode as Original;
 
 class CheckForMaintenanceMode extends Original
@@ -30,8 +29,6 @@ class CheckForMaintenanceMode extends Original
 
         return false;
     }
-
-
 
     /**
      * Handle an incoming request.
@@ -59,8 +56,7 @@ class CheckForMaintenanceMode extends Original
                 }
             }
 
-            if ($this->shouldPassThrough($request))
-            {
+            if ($this->shouldPassThrough($request)) {
                 return $response;
             }
 
