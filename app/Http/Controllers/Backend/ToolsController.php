@@ -1,7 +1,7 @@
 <?php
+
 namespace App\Http\Controllers\Backend;
 
-use File;
 use Excel;
 use Session;
 use App\Models\Tag;
@@ -11,7 +11,6 @@ use App\Models\PostTag;
 use App\Models\Migrations;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Artisan;
 
 class ToolsController extends Controller
@@ -32,6 +31,7 @@ class ToolsController extends Controller
             'timezone'          => $_SERVER['APP_TIMEZONE'],
             'status'            => $status,
         ];
+
         return view('backend.tools.index', compact('data'));
     }
 
@@ -48,6 +48,7 @@ class ToolsController extends Controller
         } else {
             Session::set('_reset-index', trans('messages.reset_index_error'));
         }
+
         return redirect(url('admin/tools'));
     }
 
@@ -66,6 +67,7 @@ class ToolsController extends Controller
         } else {
             Session::set('_cache-clear', trans('messages.cache_clear_error'));
         }
+
         return redirect(url('admin/tools'));
     }
 
@@ -81,9 +83,8 @@ class ToolsController extends Controller
                 foreach ($users as $user) {
                     $sheet->appendRow($user);
                 }
-
             });
-        })->store('csv', storage_path($date . '-canvas-archive'), true);
+        })->store('csv', storage_path($date.'-canvas-archive'), true);
     }
 
     protected function downloadPosts()
@@ -98,9 +99,8 @@ class ToolsController extends Controller
                 foreach ($posts as $post) {
                     $sheet->appendRow($post);
                 }
-
             });
-        })->store('csv', storage_path($date . '-canvas-archive'), true);
+        })->store('csv', storage_path($date.'-canvas-archive'), true);
     }
 
     protected function downloadTags()
@@ -115,9 +115,8 @@ class ToolsController extends Controller
                 foreach ($tags as $tag) {
                     $sheet->appendRow($tag);
                 }
-
             });
-        })->store('csv', storage_path($date . '-canvas-archive'), true);
+        })->store('csv', storage_path($date.'-canvas-archive'), true);
     }
 
     protected function downloadPostTag()
@@ -132,9 +131,8 @@ class ToolsController extends Controller
                 foreach ($postTag as $pt) {
                     $sheet->appendRow($pt);
                 }
-
             });
-        })->store('csv', storage_path($date . '-canvas-archive'), true);
+        })->store('csv', storage_path($date.'-canvas-archive'), true);
     }
 
     protected function downloadMigrations()
@@ -149,9 +147,8 @@ class ToolsController extends Controller
                 foreach ($migrations as $migration) {
                     $sheet->appendRow($migration);
                 }
-
             });
-        })->store('csv', storage_path($date . '-canvas-archive'), true);
+        })->store('csv', storage_path($date.'-canvas-archive'), true);
     }
 
     /**
@@ -168,7 +165,7 @@ class ToolsController extends Controller
         $this->downloadMigrations();
 
         $date = date('Y-m-d');
-        $path = storage_path($date . '-canvas-archive');
+        $path = storage_path($date.'-canvas-archive');
         $filename = sprintf('%s.zip', $path);
         $zip = new \ZipArchive();
         $zip->open($filename, \ZipArchive::CREATE);
@@ -189,9 +186,9 @@ class ToolsController extends Controller
         }
 
         $zip->close();
-        \File::deleteDirectory(storage_path($date . '-canvas-archive'));
+        \File::deleteDirectory(storage_path($date.'-canvas-archive'));
 
-        return response()->download(storage_path($date . '-canvas-archive.zip'))->deleteFileAfterSend(true);
+        return response()->download(storage_path($date.'-canvas-archive.zip'))->deleteFileAfterSend(true);
     }
 
     /**
@@ -207,6 +204,7 @@ class ToolsController extends Controller
         } else {
             Session::set('_enable-maintenance-mode', trans('messages.enable_maintenance_mode_error'));
         }
+
         return redirect(url('admin/tools'));
     }
 
@@ -223,6 +221,7 @@ class ToolsController extends Controller
         } else {
             Session::set('_disable-maintenance-mode', trans('messages.disable_maintenance_mode_error'));
         }
+
         return redirect(url('admin/tools'));
     }
 }
