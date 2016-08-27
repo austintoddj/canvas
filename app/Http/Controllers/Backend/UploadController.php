@@ -104,7 +104,7 @@ class UploadController extends Controller
             return ['success' => true];
         } else {
             $error = $result ?: trans('messages.upload_error', ['entity' => 'file']);
-            
+
             return ['success' => false, 'error' => $error];
         }
     }
