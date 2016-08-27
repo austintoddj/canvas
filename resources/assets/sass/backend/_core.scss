@@ -76,3 +76,12 @@
 .dropdown-menu {
     z-index: 15;
 }
+
+// Dropzone override
+
+.dz-message {
+  padding: 30px;
+  cursor: pointer;
+  border: 1px dashed transparentize(black, .85);
+  text-align: center;
+}

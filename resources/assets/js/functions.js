@@ -923,4 +923,15 @@ $(document).ready(function(){
         return false;
     });
 
+    /*
+     * Init dropzone for uploading file(s)
+     */
+    (function() {
+        if ($("#fileCreate")[0]) {
+            Dropzone.options.fileCreate = {
+                addRemoveLinks: true,
+                dictDefaultMessage: "Drop file(s) here to upload"
+            };
+        }
+    })();
 });

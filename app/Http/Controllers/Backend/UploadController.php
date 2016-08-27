@@ -89,7 +89,7 @@ class UploadController extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function uploadFile(UploadFileRequest $request)
+    public function ajaxUploadFile(UploadFileRequest $request)
     {
         $file = $request->file('file');
         $fileName = $request->get('file_name') ?: $file->getClientOriginalName();
@@ -101,13 +101,10 @@ class UploadController extends Controller
         );
 
         if ($result === true) {
-            Session::set('_new-file', trans('messages.upload_success', ['entity' => 'file']));
-
-            return redirect()->back();
+            return ['success' => true];
         } else {
             $error = $result ?: trans('messages.upload_error', ['entity' => 'file']);
-
-            return redirect()->back()->withErrors([$error]);
+            return ['success' => false, 'error' => $error];
         }
     }
 
