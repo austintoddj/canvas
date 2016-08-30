@@ -33,7 +33,7 @@ class ToolsController extends Controller
             'indexModified' => file_exists(storage_path('posts.index')) ? filemtime(storage_path('posts.index')) : false,
             'host' => $_SERVER['HTTP_HOST'],
             'ip' => $_SERVER['REMOTE_ADDR'],
-            'timezone' => $_SERVER['APP_TIMEZONE'],
+            'timezone' => env('APP_TIMEZONE'),
             'status' => App::isDownForMaintenance() ? 0 : 1,
         ];
 

@@ -20,33 +20,6 @@
 
 <div class="form-group">
     <div class="fg-line">
-      <label class="fg-label">Twitter</label>
-      <input type="text" class="form-control" name="twitter" id="twitter" value="{{ $data['twitter'] }}" placeholder="Twitter Username">
-    </div>
-</div>
-
-<br>
-
-<div class="form-group">
-    <div class="fg-line">
-      <label class="fg-label">Facebook</label>
-      <input type="text" class="form-control" name="facebook" id="facebook" value="{{ $data['facebook'] }}" placeholder="Facebook Username">
-    </div>
-</div>
-
-<br>
-
-<div class="form-group">
-    <div class="fg-line">
-      <label class="fg-label">GitHub</label>
-      <input type="text" class="form-control" name="github" id="github" value="{{ $data['github'] }}" placeholder="GitHub Username">
-    </div>
-</div>
-
-<br>
-
-<div class="form-group">
-    <div class="fg-line">
       <label class="fg-label">Address</label>
       <input type="text" class="form-control" name="address" id="address" value="{{ $data['address'] }}" placeholder="Address">
     </div>
@@ -69,3 +42,5 @@
       <input type="text" class="form-control" name="country" id="country" value="{{ $data['country'] }}" placeholder="Country">
     </div>
 </div>
+
+@include('backend.profile.partials.modals.resume-help')

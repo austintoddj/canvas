@@ -43,7 +43,7 @@ class UsersTableSeeder extends Seeder
             'display_name'  => 'Admin',
             'job'           => 'Web Developer',
             'gender'        => 'Male',
-            'birthday'      => '2016-06-17',
+            'birthday'      => '2016-02-29',
             'relationship'  => 'Single',
 
             /*
@@ -56,6 +56,7 @@ class UsersTableSeeder extends Seeder
             'twitter'       => 'username',      // Example: https://twitter.com/username
             'facebook'      => 'username',      // Example: https://facebook.com/username
             'github'        => 'username',      // Example: https://github.com/username
+            'linkedin'      => 'username',      // Example: https://linkedin.com/username
             'address'       => '1200 Main Street',
             'city'          => 'Minneapolis',
             'country'       => 'USA',

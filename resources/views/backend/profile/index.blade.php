@@ -63,24 +63,6 @@
                     <dt>Email Address</dt>
                     <dd>{{ $data['email'] }}</dd>
                 </dl>
-                @if(isset($data['twitter']) && strlen($data['twitter']))
-                    <dl class="dl-horizontal">
-                        <dt>Twitter</dt>
-                        <dd><a href="http://twitter.com/{{ $data['twitter'] }}" target="_blank">{{ '@' . $data['twitter'] }}</a></dd>
-                    </dl>
-                @endif
-                @if(isset($data['facebook']) && strlen($data['facebook']))
-                    <dl class="dl-horizontal">
-                        <dt>Facebook</dt>
-                        <dd><a href="http://facebook.com/{{ $data['facebook'] }}" target="_blank">{{ $data['facebook'] }}</a></dd>
-                    </dl>
-                @endif
-                @if(isset($data['github']) && strlen($data['github']))
-                    <dl class="dl-horizontal">
-                        <dt>GitHub</dt>
-                        <dd><a href="http://github.com/{{ $data['github'] }}" target="_blank">{{ $data['github'] }}</a></dd>
-                    </dl>
-                @endif
                 @if(isset($data['address']) && !empty($data['address']))
                     <dl class="dl-horizontal">
                         <dt>Address</dt>
@@ -102,4 +84,46 @@
             </div>
         </div>
     </div>
+
+    @if(isset($data['twitter']) && strlen($data['twitter']) || isset($data['facebook']) && strlen($data['facebook']) || isset($data['github']) && strlen($data['github']) || isset($data['linkedin']) && strlen($data['linkedin']) || isset($data['resume_cv']) && strlen($data['resume_cv']))
+        <div class="pmb-block">
+            <div class="pmbb-header">
+                <h2><i class="zmdi zmdi-accounts m-r-10"></i> Social Networks</h2>
+            </div>
+            <div class="pmbb-body p-l-30">
+                <div class="pmbb-view">
+                    @if(isset($data['twitter']) && strlen($data['twitter']))
+                        <dl class="dl-horizontal">
+                            <dt>Twitter</dt>
+                            <dd><a href="http://twitter.com/{{ $data['twitter'] }}" target="_blank">{{ '@' . $data['twitter'] }}</a></dd>
+                        </dl>
+                    @endif
+                    @if(isset($data['facebook']) && strlen($data['facebook']))
+                        <dl class="dl-horizontal">
+                            <dt>Facebook</dt>
+                            <dd><a href="http://facebook.com/{{ $data['facebook'] }}" target="_blank">{{ $data['facebook'] }}</a></dd>
+                        </dl>
+                    @endif
+                    @if(isset($data['github']) && strlen($data['github']))
+                        <dl class="dl-horizontal">
+                            <dt>GitHub</dt>
+                            <dd><a href="http://github.com/{{ $data['github'] }}" target="_blank">{{ $data['github'] }}</a></dd>
+                        </dl>
+                    @endif
+                    @if(isset($data['linkedin']) && strlen($data['linkedin']))
+                        <dl class="dl-horizontal">
+                            <dt>LinkedIn</dt>
+                            <dd><a href="http://linkedin.com/in/{{ $data['linkedin'] }}" target="_blank">{{ $data['linkedin'] }}</a></dd>
+                        </dl>
+                    @endif
+                    @if(isset($data['resume_cv']) && strlen($data['resume_cv']))
+                        <dl class="dl-horizontal">
+                            <dt>Resume/CV</dt>
+                            <dd><a href="{{ url('uploads', $data['resume_cv']) }}" target="_blank">{{ $data['resume_cv'] }}</a></dd>
+                        </dl>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
 @stop

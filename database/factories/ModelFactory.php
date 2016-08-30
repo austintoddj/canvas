@@ -19,6 +19,8 @@ $factory->define(App\Models\User::class, function (Faker\Generator $faker) {
         'twitter' => $faker->userName,
         'facebook' => $faker->userName,
         'github' => $faker->userName,
+        'linkedin' => $faker->userName,
+        'resume_cv' => $faker->url,
         'address' => $faker->streetAddress,
         'city' => $faker->city,
         'country' => $faker->countryCode,
@@ -41,7 +43,7 @@ $factory->define(App\Models\User::class, function (Faker\Generator $faker) {
 */
 $factory->define(App\Models\Post::class, function ($faker) {
     return [
-    'title' => 'Hello world',
+    'title' => 'Hello World',
     'slug' => 'hello-world',
     'subtitle' => 'Canvas is a minimal blogging application for developers. Canvas attempts to make blogging simple and enjoyable by utilizing the latest technologies and keeping the administration as simple as possible with the primary focus on writing.',
     'page_image' => 'placeholder.png',

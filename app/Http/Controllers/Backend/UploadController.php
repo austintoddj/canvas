@@ -93,10 +93,10 @@ class UploadController extends Controller
     {
         $file = $request->file('file');
         $fileName = $request->get('file_name') ?: $file->getClientOriginalName();
-        $fileName = explode('.', $fileName)[0].'.'.$file->getClientOriginalExtension();
+        $fileName = explode('.', $fileName)[0].'.'.strtolower($file->getClientOriginalExtension());
 
         $result = $this->manager->saveFile(
-            str_finish($request->get('folder'), '/').$fileName,
+            str_finish($request->get('folder'), '/').preg_replace('/[\'|\"]/', '', $fileName),
             File::get($file)
         );
 

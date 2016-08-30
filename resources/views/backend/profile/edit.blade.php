@@ -43,6 +43,17 @@
                 @include('backend.profile.partials.form.contact-information')
 
             </div>
+        </div>
+
+        <div class="pmb-block">
+            <div class="pmbb-header">
+                <h2><i class="zmdi zmdi-accounts m-r-10"></i> Edit Social Networks</h2>
+            </div>
+            <div class="pmbb-body p-l-30">
+
+                @include('backend.profile.partials.form.social-networks')
+
+            </div>
             <div class="form-group m-l-30">
                 <button type="submit" class="btn btn-primary btn-icon-text"><i class="zmdi zmdi-floppy"></i> Save</button>
                 &nbsp;

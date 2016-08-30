@@ -15,6 +15,8 @@ class ProfileTest extends TestCase
         'twitter' => '<dt>Twitter</dt>',
         'facebook' => '<dt>Facebook</dt>',
         'github' => '<dt>GitHub</dt>',
+        'linkedin' => '<dt>LinkedIn</dt>',
+        'resume_cv' => '<dt>Resume/CV</dt>',
         'address' => '<dt>Address</dt>',
         'city' => '<dt>City</dt>',
         'country' => '<dt>Country</dt>',
