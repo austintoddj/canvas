@@ -27,7 +27,7 @@
                         </li>
                         <li class="divider"></li>
                         <li>
-                            <a href="{{ url('auth/logout') }}"><i class="zmdi zmdi-power"></i> Sign out</a>
+                            <a href="{{ route('auth.logout') }}"><i class="zmdi zmdi-power"></i> Sign out</a>
                         </li>
                     </ul>
                 </li>

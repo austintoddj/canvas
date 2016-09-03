@@ -1,4 +1,4 @@
-<form role="form" id="login" method="POST" action="{{ url('/auth/login') }}">
+<form role="form" id="login" method="POST" action="{{ route('auth.login.store') }}">
     {!! csrf_field() !!}
     <div class="form-group fg-line">
         <input type="email" class="form-control"
@@ -20,4 +20,5 @@
     </div>
 
     <button type="submit" name="submit" class="btn btn-primary btn-block m-t-10">Sign in</button>
+    <a href="{{ route('auth.password.forgot') }}" class="btn btn-link btn-block m-t-10">Forgot my password</a>
 </form>

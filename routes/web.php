@@ -90,14 +90,25 @@ Route::group([
 */
 Route::group([
     'namespace' => 'Auth',
-    'prefix'    => 'auth',
 ], function () {
-    // Login
-    Route::post('login', 'AuthController@login');
+    Route::group(['prefix' => 'auth'], function () {
+        // Login
+        Route::post('login', 'LoginController@login')->name('auth.login.store');
 
-    // Logout
-    Route::get('logout', 'AuthController@logout');
+        // Logout
+        Route::get('logout', 'LoginController@logout')->name('auth.logout');
 
-    // Passwords
-    Route::post('password', 'PasswordController@updatePassword');
+        // Passwords
+        Route::post('password', 'PasswordController@updatePassword');
+    });
+
+    Route::group(['prefix' => 'password'], function () {
+        // Forgot password
+        Route::get('forgot', 'ForgotPasswordController@showLinkRequestForm')->name('auth.password.forgot');
+        Route::post('forgot', 'ForgotPasswordController@sendResetLinkEmail')->name('auth.password.forgot.store');
+
+        // Forgot password
+        Route::get('reset/{token}', 'ResetPasswordController@showResetForm')->name('auth.password.reset');
+        Route::post('reset', 'ResetPasswordController@reset')->name('auth.password.reset.store');
+    });
 });

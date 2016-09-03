@@ -15,7 +15,7 @@
 
 <script>
         (function(){
-            $('input[name="password"], input[name="new_password"], input[name="new_password_confirmation"]').parent().append('<a href="" class="show-password" tabindex="-1"><i class="zmdi zmdi-eye"></i></a>');
+            $('input[name="password"], input[name="password_confirmation"], input[name="new_password"], input[name="new_password_confirmation"]').parent().append('<a href="" class="show-password" tabindex="-1"><i class="zmdi zmdi-eye"></i></a>');
 
             function toggleIcon (elem) {
                 if ( elem.hasClass ( 'zmdi-eye' ) ) {
