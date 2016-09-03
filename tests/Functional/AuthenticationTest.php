@@ -34,7 +34,7 @@ class AuthenticationTest extends TestCase
      */
     public function testApplicationLogin()
     {
-        $this->visit('/auth/login')
+        $this->visit('/admin')
              ->type($this->user->email, 'email')
              ->type('password', 'password')
              ->press('submit')
@@ -52,7 +52,7 @@ class AuthenticationTest extends TestCase
         $this->actingAs($this->user)
              ->visit('/admin')
              ->click('logout')
-             ->seePageis('/auth/login')
+             ->seePageis('/admin')
              ->dontSeeIsAuthenticated();
     }
 }

@@ -26,11 +26,6 @@ class AuthController extends Controller
     /**
      * @var string
      */
-    protected $redirectAfterLogout = 'auth/login';
-
-    /**
-     * @var string
-     */
     protected $redirectTo = 'admin';
 
     /**
@@ -55,7 +50,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect('/auth/login');
+        return redirect('/admin');
     }
 
     /**

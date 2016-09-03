@@ -93,7 +93,6 @@ Route::group([
     'prefix'    => 'auth',
 ], function () {
     // Login
-    Route::get('login', 'AuthController@showLoginForm');
     Route::post('login', 'AuthController@login');
 
     // Logout
