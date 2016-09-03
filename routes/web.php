@@ -93,7 +93,6 @@ Route::group([
 ], function () {
     Route::group(['prefix' => 'auth'], function () {
         // Login
-//        Route::get('login', 'LoginController@showLoginForm')->name('auth.login');
         Route::post('login', 'LoginController@login')->name('auth.login.store');
 
         // Logout
