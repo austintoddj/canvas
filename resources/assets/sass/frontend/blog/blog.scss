@@ -596,3 +596,31 @@ code {
         color: rgb(197, 197, 197) !important;
     }
 }
+
+#scrollToTop{
+    background-color: #2196f3 !important;
+    border-radius: 2em;
+    font-size: 12px !important;
+    bottom: 10px;
+    color: #fff;
+    opacity: 0;
+    padding: .5em 1em;
+    position: fixed;
+    right: 10px;
+    text-shadow: 1px 1px #888;
+    transition: .5s all linear;
+
+    &.visible{
+        opacity: .8;
+        transition: .5s all linear;
+
+        @media only screen and (max-width: 680px){
+            right: calc(50% - 4em);
+        }
+
+        &:hover{
+            opacity: 1;
+            transition: .5s all linear;
+        }
+    }
+}

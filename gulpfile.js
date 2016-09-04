@@ -17,6 +17,11 @@ elixir(function (mix) {
     mix.sass('frontend.scss');
     mix.sass('backend.scss');
 
+    // Frontend JS Files
+    mix.scripts([
+        'frontend/**/*.js'
+    ], 'public/js/frontend.js');
+
     // Vendor JS Files
     mix.scripts([
         'jquery.min.js',
