@@ -15,6 +15,15 @@
             @if(isset($user->linkedin) && strlen($user->linkedin))
                 <a href="http://linkedin.com/in/{{ $user->linkedin }}" target="_blank" id="social"><i class="fa fa-fw fa-linkedin"></i></a>
             @endif
+            @if(isset($user->resume_cv) && strlen($user->resume_cv))
+                @if(!empty($user->github) || !empty($user->twitter) || !empty($user->facebook) || !empty($user->linkedin))
+                    <span id="social">&nbsp;-&nbsp;</span>
+                @endif
+                <a href="{{ url('uploads', $user->resume_cv) }}" target="_blank" id="social">
+                    <i class="fa fa-fw fa-file-pdf-o"></i>
+                    Resume/CV
+                </a>
+            @endif
         </div>
     </div>
 </div>
