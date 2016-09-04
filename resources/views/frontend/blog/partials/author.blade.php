@@ -25,12 +25,11 @@
             @endif
             @if(isset($user->resume_cv) && strlen($user->resume_cv))
                 @if(!empty($user->github) || !empty($user->twitter) || !empty($user->facebook) || !empty($user->linkedin))
-                    <span class="author-social">&nbsp;-&nbsp;</span>
+                    &nbsp;&nbsp;
+                    <span class="author-social">
+                        <a href="{{ url('uploads', $user->resume_cv) }}" class="author-social" target="_blank"><i class="fa fa-fw fa-download"></i> Resume/CV</a>
+                    </span>
                 @endif
-                <a href="{{ url('uploads', $user->resume_cv) }}" target="_blank" class="author-social">
-                    <i class="fa fa-fw fa-file-pdf-o"></i>
-                    Resume/CV
-                </a>
             @endif
         </h5>
     </div>

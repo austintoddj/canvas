@@ -13,4 +13,6 @@
     </div>
 
     <button type="submit" name="submit" class="btn btn-primary btn-block m-t-10">Send me a reset link</button>
+    <hr>
+    <a href="{{ url('admin') }}" class="btn btn-link btn-block m-t-10">Back To Sign In</a>
 </form>

@@ -18,7 +18,10 @@
                         <p class="f-20 f-300 text-center">Welcome back!</p>
                         <p class="text-muted text-center">Enter your email address to sign in</p>
 
+                        @include('shared.errors')
+
                         @include('auth.partials.form')
+
                         <br>
                     </div>
                 </div>
