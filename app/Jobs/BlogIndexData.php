@@ -2,13 +2,18 @@
 
 namespace App\Jobs;
 
-use Carbon\Carbon;
-use App\Models\Tag;
 use App\Models\Post;
-use Illuminate\Contracts\Bus\SelfHandling;
+use App\Models\Tag;
+use Carbon\Carbon;
+use Illuminate\Queue\SerializesModels;
 
-class BlogIndexData extends Job implements SelfHandling
+/**
+ * Class BlogIndexData.
+ */
+class BlogIndexData
 {
+    use SerializesModels;
+
     protected $tag;
 
     /**
@@ -33,30 +38,6 @@ class BlogIndexData extends Job implements SelfHandling
         }
 
         return $this->normalIndexData();
-    }
-
-    /**
-     * Return data for normal index page.
-     *
-     * @return array
-     */
-    protected function normalIndexData()
-    {
-        $posts = Post::with('tags')
-            ->where('published_at', '<=', Carbon::now())
-            ->where('is_draft', 0)
-            ->orderBy('published_at', 'desc')
-            ->simplePaginate(config('blog.posts_per_page'));
-
-        return [
-            'title' => config('blog.title'),
-            'subtitle' => config('blog.subtitle'),
-            'posts' => $posts,
-            'page_image' => config('blog.page_image'),
-            'meta_description' => config('blog.description'),
-            'reverse_direction' => false,
-            'tag' => null,
-        ];
     }
 
     /**
@@ -92,6 +73,30 @@ class BlogIndexData extends Job implements SelfHandling
             'reverse_direction' => $reverse_direction,
             'meta_description' => $tag->meta_description ?: \
                 config('blog.description'),
+        ];
+    }
+
+    /**
+     * Return data for normal index page.
+     *
+     * @return array
+     */
+    protected function normalIndexData()
+    {
+        $posts = Post::with('tags')
+            ->where('published_at', '<=', Carbon::now())
+            ->where('is_draft', 0)
+            ->orderBy('published_at', 'desc')
+            ->simplePaginate(config('blog.posts_per_page'));
+
+        return [
+            'title' => config('blog.title'),
+            'subtitle' => config('blog.subtitle'),
+            'posts' => $posts,
+            'page_image' => config('blog.page_image'),
+            'meta_description' => config('blog.description'),
+            'reverse_direction' => false,
+            'tag' => null,
         ];
     }
 }

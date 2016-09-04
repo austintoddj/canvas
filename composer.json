@@ -1,7 +1,17 @@
 {
     "name": "austintoddj/canvas",
-    "description": "Minimal blogging application for developers.",
-    "keywords": ["minimal", "blog", "application", "developers", "laravel", "canvas", "markdown", "material"],
+    "description": "Minimal blogging platform for developers.",
+    "keywords": [
+        "minimal",
+        "blogging",
+        "platform",
+        "developers",
+        "laravel",
+        "canvas",
+        "markdown",
+        "material",
+        "blog"
+    ],
     "license": "MIT",
     "type": "project",
     "authors": [
@@ -11,8 +21,8 @@
         }
     ],
     "require": {
-        "php": ">=5.5.9",
-        "laravel/framework": " 5.2.*",
+        "php": ">=5.6.4",
+        "laravel/framework": "5.3.*",
         "dflydev/apache-mime-types": "^1.0",
         "doctrine/dbal": "^2.5",
         "erusev/parsedown": "^1.6",
@@ -26,7 +36,7 @@
         "symfony/css-selector": "~3.0",
         "fzaninotto/faker": "~1.4",
         "mockery/mockery": "0.9.*",
-        "phpunit/phpunit": "~4.0",
+        "phpunit/phpunit": "~5.0",
         "phpspec/phpspec": "~2.1",
         "erikgall/eloquent-phpunit": "dev-master"
     },

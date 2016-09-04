@@ -3,38 +3,58 @@
 namespace App\Http\Controllers\Auth;
 
 use Session;
-use Validator;
-use App\Models\User;
 use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Auth\ThrottlesLogins;
+use App\Models\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
 
-class AuthController extends Controller
+class LoginController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
-    | Registration & Login Controller
+    | Login Controller
     |--------------------------------------------------------------------------
     |
-    | This controller handles the registration of new users, as well as the
-    | authentication of existing users. By default, this controller uses
-    | a simple trait to add these behaviors. Why don't you explore it?
+    | This controller handles authenticating users for the application and
+    | redirecting them to your home screen. The controller uses a trait
+    | to conveniently provide its functionality to your applications.
     |
     */
-    use AuthenticatesUsers, ThrottlesLogins;
 
-    protected $redirectAfterLogout = 'auth/login';
-
-    protected $redirectTo = 'admin';
+    use AuthenticatesUsers;
 
     /**
-     * Create a new authentication controller instance.
+     * Where to redirect users after login / registration.
+     *
+     * @var string
+     */
+    protected $redirectTo = '/admin';
+
+    /**
+     * Create a new controller instance.
      *
      * @return void
      */
     public function __construct()
     {
-        $this->middleware('guest', ['except' => 'getLogout']);
+        $this->middleware('guest', ['except' => 'logout']);
+    }
+
+    /**
+     * Log the user out of the application.
+     *
+     * @param  Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function logout(Request $request)
+    {
+        $this->guard()->logout();
+
+        $request->session()->flush();
+
+        $request->session()->regenerate();
+
+        return redirect('/admin');
     }
 
     /**
@@ -67,7 +87,12 @@ class AuthController extends Controller
         ]);
     }
 
-    public function authenticated(\Illuminate\Http\Request $request, User $user)
+    /**
+     * @param Request $request
+     * @param User $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function authenticated(Request $request, User $user)
     {
         Session::set('_login', trans('messages.login', ['first_name' => $user->first_name, 'last_name' => $user->last_name]));
 

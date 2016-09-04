@@ -19,6 +19,10 @@ class PasswordController extends Controller
         $this->middleware('auth');
     }
 
+    /**
+     * @param Request $request
+     * @return $this|\Illuminate\Http\RedirectResponse
+     */
     public function updatePassword(Request $request)
     {
         $this->validate($request, [
