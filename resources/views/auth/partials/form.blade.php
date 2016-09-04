@@ -20,5 +20,6 @@
     </div>
 
     <button type="submit" name="submit" class="btn btn-primary btn-block m-t-10">Sign in</button>
+    <hr>
     <a href="{{ route('auth.password.forgot') }}" class="btn btn-link btn-block m-t-10">Forgot my password</a>
 </form>

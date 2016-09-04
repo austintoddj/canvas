@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'login'                             => 'Welcome back, :first_name :last_name',
+    'login'                             => 'Welcome back, :display_name',
 
     'create_success'                    => 'Success! New :entity has been created.',
     'update_success'                    => 'Success! :entity has been updated.',

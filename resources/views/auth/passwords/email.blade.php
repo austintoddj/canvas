@@ -15,8 +15,10 @@
                     </div>
 
                     <div class="card-body card-padding" id="login-ch">
-                        <p class="f-20 f-300 text-center">Password Forgotten?</p>
+                        <p class="f-20 f-300 text-center">Forgot your password?</p>
                         <p class="text-muted text-center">Enter your email address to receive a reset link</p>
+
+                        @include('shared.errors')
 
                         @include('auth.passwords.partials.email-form')
                         <br>
@@ -29,6 +31,6 @@
 @endsection
 
 @section('unique-js')
-    {!! JsValidator::formRequest('App\Http\Requests\LoginRequest', '#login'); !!}
+    {!! JsValidator::formRequest('App\Http\Requests\ForgotPasswordRequest', '#forgot-password'); !!}
     @include('backend.shared.components.show-password', ['inputs' => 'input[name="password"]'])
 @stop

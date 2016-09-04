@@ -94,7 +94,7 @@ class LoginController extends Controller
      */
     public function authenticated(Request $request, User $user)
     {
-        Session::set('_login', trans('messages.login', ['first_name' => $user->first_name, 'last_name' => $user->last_name]));
+        Session::set('_login', trans('messages.login', ['display_name' => $user->display_name]));
 
         return redirect()->intended($this->redirectPath());
     }
