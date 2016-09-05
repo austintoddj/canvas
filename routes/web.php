@@ -50,7 +50,7 @@ Route::group([
 
     // Uploads Page
     Route::get('admin/upload', 'UploadController@index')->name('admin/upload');
-    Route::post('admin/upload/file', 'UploadController@uploadFile');
+    Route::post('admin/upload/file', 'UploadController@ajaxUploadFile');
     Route::delete('admin/upload/file', 'UploadController@deleteFile');
     Route::post('admin/upload/folder', 'UploadController@createFolder');
     Route::delete('admin/upload/folder', 'UploadController@deleteFolder');

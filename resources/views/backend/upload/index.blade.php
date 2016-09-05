@@ -33,7 +33,7 @@
                         @include('shared.success')
 
                         <h2>Uploads&nbsp;
-                            <a href="" data-toggle="modal" data-target="#modal-file-upload"><i class="zmdi zmdi-file-plus" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Upload file"></i></a>
+                            <a href="" data-toggle="modal" data-target="#modal-file-upload"><i class="zmdi zmdi-file-plus" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Upload file(s)"></i></a>
                             &nbsp;
                             <a href="" data-toggle="modal" data-target="#modal-folder-create"><i class="zmdi zmdi-folder" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="New folder"></i></a>
 

@@ -39,7 +39,8 @@ elixir(function (mix) {
         'jsvalidation.js',
         'jquery.mCustomScrollbar.concat.min.js',
         'fileinput.min.js',
-        'bootstrap-datetimepicker.min.js'
+        'bootstrap-datetimepicker.min.js',
+        'dropzone.min.js'
     ], 'public/js/vendor.js');
 
     // Application JS Files

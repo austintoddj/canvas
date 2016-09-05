@@ -3,38 +3,30 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Upload a File</h4>
+                    <h4 class="modal-title">Upload File(s)</h4>
                 </div>
-                <form method="POST" action="{{ url('admin/upload/file') }}" class="form-horizontal" enctype="multipart/form-data" id="fileCreate">
-                    <div class="modal-body">
+
+                <div class="modal-body">
+                    <form method="POST" action="{{ url('admin/upload/file') }}" class="dropzone" id="fileCreate">
                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="folder" value="{{ $folder }}">
+                    </form>
 
-                        <p class="f-500 c-black m-b-20">Preview</p>
-
-                        <div class="fileinput fileinput-new" data-provides="fileinput">
-                            <div class="fileinput-preview thumbnail" data-trigger="fileinput"></div>
-                            <div>
-                                <span class="btn btn-primary btn-file">
-                                    <span class="fileinput-new">Select file</span>
-                                    <span class="fileinput-exists">Change</span>
-                                    <input type="file" id="name" name="file">
-                                </span>
-                                <a href="#" class="btn btn-link fileinput-exists"
-                                   data-dismiss="fileinput">Remove</a>
-                            </div>
-                        </div>
-
-                        <div class="clearfix"><br></div>
-                        <div class="fg-line">
-                            <input type="text" id="file_name" name="file_name" class="form-control" placeholder="Filename (Optional)">
+                    <div class="upload-progress" style="display: none;">
+                        <div class="upload-progress-label"></div>
+                        <div class="progress">
+                            <div class="progress-bar upload-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0"></div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-link btn-icon-text"><i class="zmdi zmdi-floppy"></i> Save</button>
-                        <button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
-                    </div>
-                </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link" data-dismiss="modal">close</button>
+                    <button type="button" class="btn btn-link" onclick="window.location.reload()">
+                        <span class="zmdi zmdi-refresh"></span>
+                        reload page
+                    </button>
+                </div>
             </div>
         </div>
     </div>
