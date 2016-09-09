@@ -200,7 +200,7 @@ class ToolsController extends Controller
                         $sheet->appendRow($password_reset);
                     }
                 });
-            })->store('csv', storage_path($this->date . '-canvas-archive'), true);
+            })->store('csv', storage_path($this->date.'-canvas-archive'), true);
         }
     }
 
