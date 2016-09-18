@@ -2,11 +2,12 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Migrations;
 use Artisan;
 use ConfigWriter;
 use App\Models\Settings;
+use App\Models\Migrations;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Schema;
 
 class Install extends Command
 {
@@ -45,8 +46,7 @@ class Install extends Command
         $config = new ConfigWriter('blog');
 
         // Database Setup
-        $migrations = Migrations::all()->first();
-        if (empty($migrations)) {
+        if (! Schema::hasTable('migrations')) {
             $this->comment(PHP_EOL.'Creating your database...');
             $exitCode = Artisan::call('migrate', [
                 '--seed' => true,
