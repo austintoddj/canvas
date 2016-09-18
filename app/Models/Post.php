@@ -10,20 +10,32 @@ use Illuminate\Database\Eloquent\Model;
 class Post extends Model
 {
     /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = ['published_at'];
-
-    /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'title', 'subtitle', 'content_raw', 'page_image', 'meta_description',
-        'layout', 'is_draft', 'published_at', 'slug',
+        'title',
+        'subtitle',
+        'content_raw',
+        'page_image',
+        'meta_description',
+        'layout',
+        'is_draft',
+        'published_at',
+        'slug',
+    ];
+
+    protected $casts = [
+        'title'            => 'string',
+        'subtitle'         => 'string',
+        'content_raw'      => 'string',
+        'page_image'       => 'string',
+        'meta_description' => 'string',
+        'layout'           => 'string',
+        'is_draft'         => 'bool',
+        'published_at'     => 'datetime',
+        'slug'             => 'string',
     ];
 
     /**
