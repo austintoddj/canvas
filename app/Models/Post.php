@@ -86,26 +86,24 @@ class Post extends Model
      */
     public function url(Tag $tag = null)
     {
-        $url = url('blog/'.$this->slug);
-        if ($tag) {
-            $url .= '?tag='.urlencode($tag->tag);
-        }
+        $params = [];
+        $params['slug'] = $this->slug;
+        $params['tag'] = $tag ? $tag->tag : null;
 
-        return $url;
+        return route('blog.post.show', array_filter($params));
     }
 
     /**
      * Return an array of tag links.
      *
-     * @param string $base
      * @return array
      */
-    public function tagLinks($base = '/blog?tag=%TAG%')
+    public function tagLinks()
     {
         $tags = $this->tags()->pluck('tag');
         $return = [];
         foreach ($tags as $tag) {
-            $url = str_replace('%TAG%', urlencode($tag), $base);
+            $url = route('blog.post.index', ['tag' => $tag]);
             $return[] = '<a href="'.url($url).'">'.e($tag).'</a>';
         }
 

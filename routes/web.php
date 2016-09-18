@@ -5,12 +5,16 @@
 | Canvas Application Routes : Frontend
 |--------------------------------------------------------------------------
 */
-// Blog Index Page
-Route::get('/', 'Frontend\BlogController@index');
-Route::get('blog', 'Frontend\BlogController@index');
 
-// Blog Post Page
-Route::get('blog/{slug}', 'Frontend\BlogController@showPost');
+// Homepage
+Route::get('/', 'Frontend\BlogController@index')->name('home');
+
+Route::group(['prefix' => 'blog'], function () {
+    // Blog Index Page
+    Route::get('/', 'Frontend\BlogController@index')->name('blog.post.index');
+    // Blog Post Page
+    Route::get('{slug}', 'Frontend\BlogController@showPost')->name('blog.post.show');
+});
 
 /*
 |--------------------------------------------------------------------------
