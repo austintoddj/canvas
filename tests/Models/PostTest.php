@@ -75,7 +75,8 @@ class PostTest extends EloquentTestCase
     public function testModelProperties()
     {
         $this->hasFillable('title', 'subtitle', 'content_raw', 'page_image', 'meta_description', 'layout', 'is_draft', 'published_at', 'slug')
-             ->hasCasts('published_at', 'is_draft')
+             ->hasCasts('published_at', 'datetime')
+             ->hasCasts('is_draft', 'bool')
              ->belongsToMany(Tag::class);
     }
 
