@@ -98,8 +98,14 @@ class Post extends Model
      */
     public function url(Tag $tag = null)
     {
-        $params = [];
-        $params['slug'] = $this->slug;
+        $params = array_only([
+            'id'    => $this->id,
+            'slug'  => $this->slug,
+            'year'  => $this->published_at->format('Y'),
+            'month' => $this->published_at->format('m'),
+            'day'   => $this->published_at->format('d'),
+        ], config('blog.post_params'));
+
         $params['tag'] = $tag ? $tag->tag : null;
 
         return route('blog.post.show', array_filter($params));
