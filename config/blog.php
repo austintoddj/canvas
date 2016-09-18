@@ -14,6 +14,14 @@ return [
     */
     'posts_per_page' => 6,
 
+    'post_params' => [
+//        'id',
+        'slug',
+//        'year',
+//        'month',
+//        'day',
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Canvas Configuration : Storage
