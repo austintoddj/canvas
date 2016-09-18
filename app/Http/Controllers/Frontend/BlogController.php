@@ -39,19 +39,19 @@ class BlogController extends Controller
         $user = User::findOrFail(1);
         $required = config('blog.post_params', []);
         $post = Post::with('tags')
-            ->when(in_array('slug', $required), function($query) use($request) {
+            ->when(in_array('slug', $required), function ($query) use ($request) {
                 return $query->whereSlug($request->route('slug'));
             })
-            ->when(in_array('id', $required), function($query) use($request) {
+            ->when(in_array('id', $required), function ($query) use ($request) {
                 return $query->whereId($request->route('id'));
             })
-            ->when(in_array('year', $required), function($query) use($request) {
+            ->when(in_array('year', $required), function ($query) use ($request) {
                 return $query->whereYear('published_at', $request->route('year'));
             })
-            ->when(in_array('month', $required), function($query) use($request) {
+            ->when(in_array('month', $required), function ($query) use ($request) {
                 return $query->whereMonth('published_at', $request->route('month'));
             })
-            ->when(in_array('day', $required), function($query) use($request) {
+            ->when(in_array('day', $required), function ($query) use ($request) {
                 return $query->whereDay('published_at', $request->route('day'));
             })
             ->firstOrFail();
