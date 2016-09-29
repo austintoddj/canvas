@@ -10,20 +10,32 @@ use Illuminate\Database\Eloquent\Model;
 class Post extends Model
 {
     /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = ['published_at'];
-
-    /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'title', 'subtitle', 'content_raw', 'page_image', 'meta_description',
-        'layout', 'is_draft', 'published_at', 'slug',
+        'title',
+        'subtitle',
+        'content_raw',
+        'page_image',
+        'meta_description',
+        'layout',
+        'is_draft',
+        'published_at',
+        'slug',
+    ];
+
+    protected $casts = [
+        'title'            => 'string',
+        'subtitle'         => 'string',
+        'content_raw'      => 'string',
+        'page_image'       => 'string',
+        'meta_description' => 'string',
+        'layout'           => 'string',
+        'is_draft'         => 'bool',
+        'published_at'     => 'datetime',
+        'slug'             => 'string',
     ];
 
     /**
@@ -86,8 +98,14 @@ class Post extends Model
      */
     public function url(Tag $tag = null)
     {
-        $params = [];
-        $params['slug'] = $this->slug;
+        $params = array_only([
+            'id'    => $this->id,
+            'slug'  => $this->slug,
+            'year'  => $this->published_at->format('Y'),
+            'month' => $this->published_at->format('m'),
+            'day'   => $this->published_at->format('d'),
+        ], config('blog.post_params'));
+
         $params['tag'] = $tag ? $tag->tag : null;
 
         return route('blog.post.show', array_filter($params));

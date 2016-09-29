@@ -31,12 +31,32 @@ class BlogController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\Response
      */
-    public function showPost($slug, Request $request)
+    public function showPost(Request $request)
     {
         $user = User::findOrFail(1);
-        $post = Post::with('tags')->whereSlug($slug)->firstOrFail();
+        $required = config('blog.post_params', []);
+        $post = Post::with('tags')
+            ->when(in_array('slug', $required), function ($query) use ($request) {
+                return $query->whereSlug($request->route('slug'));
+            })
+            ->when(in_array('id', $required), function ($query) use ($request) {
+                return $query->whereId($request->route('id'));
+            })
+            ->when(in_array('year', $required), function ($query) use ($request) {
+                return $query->whereYear('published_at', $request->route('year'));
+            })
+            ->when(in_array('month', $required), function ($query) use ($request) {
+                return $query->whereMonth('published_at', $request->route('month'));
+            })
+            ->when(in_array('day', $required), function ($query) use ($request) {
+                return $query->whereDay('published_at', $request->route('day'));
+            })
+            ->firstOrFail();
+
         $tag = $request->get('tag');
         $title = $post->title;
         if ($tag) {
