@@ -34,7 +34,7 @@ class SettingsController extends Controller
             'db_connection' => strtoupper(env('DB_CONNECTION')),
             'web_server' => $_SERVER['SERVER_SOFTWARE'],
             'last_index' => date('Y-m-d H:i:s', file_exists(storage_path('posts.index')) ? filemtime(storage_path('posts.index')) : false),
-            'version' => (!empty(Settings::canvasVersion())) ? Settings::canvasVersion() : 'UNKNOWN',
+            'version' => (!empty(Settings::canvasVersion())) ? Settings::canvasVersion() : 'Older than 2.1.7',
         ];
 
         return view('backend.settings.index', compact('data'));
