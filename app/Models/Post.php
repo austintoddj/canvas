@@ -182,6 +182,8 @@ class Post extends Model
 
     public static function boot()
     {
+        parent::boot();
+        
         if (file_exists(config('services.tntsearch.storage').'/posts.index')
             && app('env') != 'testing') {
             self::created([__CLASS__, 'insertToIndex']);
