@@ -6,6 +6,7 @@ use Artisan;
 use ConfigWriter;
 use App\Models\Settings;
 use App\Models\Migrations;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
 
@@ -84,6 +85,13 @@ class Install extends Command
         $postsPerPage = $this->ask('Step 6: Number of posts to display per page');
         $this->postsPerPage($postsPerPage, $config);
         $this->line(PHP_EOL.'<info>✔</info> Success! The number of posts per page has been saved.');
+
+        // User
+        $this->comment(PHP_EOL . 'Step 7: Create admin user');
+        $email = $this->ask('Admin email address');
+        $password = $this->secret('Admin password');
+        $this->createUser($email, $password, $blogAuthor);
+        $this->line('<info>✔</info> Success! Admin user has been created.');
 
         // Search Index
         $this->comment(PHP_EOL.'Building the search index...');
@@ -209,5 +217,13 @@ class Install extends Command
         $settings->setting_name = 'canvas_version';
         $settings->setting_value = '2.1.7';
         $settings->save();
+    }
+
+    private function createUser($email, $password, $blogAuthor) {
+        $user = new User();
+        $user->email = $email;
+        $user->password = bcrypt($password);
+        $user->display_name = $blogAuthor;
+        $user->save();
     }
 }
