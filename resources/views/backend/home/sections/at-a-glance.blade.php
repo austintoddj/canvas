@@ -33,16 +33,17 @@
                 @endif
             </li>
         </ul>
-        
+        <?php
         $url = 'https://api.github.com/repos/austintoddj/canvas/releases/latest';
         ini_set('user_agent','Mozilla/4.0 (compatible; MSIE 6.0)');
         $result = file_get_contents($url);
         $obj = json_decode($result);
         
-        
+       
         @if($data['canvasVersion'] !== $obj->tag_name)
             <hr>
             <a href="{{ url('https://github.com/austintoddj/canvas/releases/tag/v2.1.7') }}" target="_blank"><small>Canvas <span id="tag_name"></span></a> is available! <a href="https://github.com/austintoddj/canvas/UPGRADE.md">Please update now.</a></small>
         @endif
+         ?>
     </div>
 </div>
