@@ -33,7 +33,16 @@
                 @endif
             </li>
         </ul>
-        @if($data['canvasVersion'] !== 'v2.1.7')
+        
+        $ch = curl_init('https://api.github.com/repos/austintoddj/canvas/releases/latest');
+        curl_setopt($ch,CURLOPT_USERAGENT,'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13'); // Set a user agent
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $result = curl_exec($ch);
+        curl_close($ch);
+        $obj = json_decode($result);
+        
+        @if($data['canvasVersion'] !== $obj->tag_name)
             <hr>
             <a href="{{ url('https://github.com/austintoddj/canvas/releases/tag/v2.1.7') }}" target="_blank"><small>Canvas <span id="tag_name"></span></a> is available! <a href="https://github.com/austintoddj/canvas/UPGRADE.md">Please update now.</a></small>
         @endif
