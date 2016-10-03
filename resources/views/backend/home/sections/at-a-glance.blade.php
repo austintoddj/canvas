@@ -34,13 +34,11 @@
             </li>
         </ul>
         
-        $ch = curl_init('https://api.github.com/repos/austintoddj/canvas/releases/latest');
-        curl_setopt($ch,CURLOPT_USERAGENT,'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13'); // Set a user agent
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $result = curl_exec($ch);
-        curl_close($ch);
+        $url = 'https://api.github.com/repos/austintoddj/canvas/releases/latest';
+        ini_set('user_agent','Mozilla/4.0 (compatible; MSIE 6.0)');
+        $result = file_get_contents($url);
         $obj = json_decode($result);
+        
         
         @if($data['canvasVersion'] !== $obj->tag_name)
             <hr>
