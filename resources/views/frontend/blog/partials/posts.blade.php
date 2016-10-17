@@ -1,5 +1,10 @@
 @foreach ($posts as $post)
     <div class="post-preview">
+        @if ($post->page_image)
+            <div class="text-center img-featured @foreach($post->tags as $tag) img-{{str_replace(' ', '-', $tag->tag)}} @endforeach" id="img-{{$post->id}}">
+                <img src="{{ asset($post->page_image) }}" class="post-hero">
+            </div>
+        @endif
         <h2 class="post-title">
             <a href="{{ $post->url($tag) }}">{{ $post->title }}</a>
         </h2>
