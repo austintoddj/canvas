@@ -31,7 +31,8 @@
         "teamtnt/tntsearch": "^0.8.0",
         "larapack/config-writer": "^1.0",
         "maatwebsite/excel": "~2.1.0",
-        "talvbansal/media-manager": "1.0.*"
+        "talvbansal/media-manager": "1.0.*",
+        "spatie/laravel-cookie-consent": "^1.6"
     },
     "require-dev": {
         "symfony/dom-crawler": "~3.0",
