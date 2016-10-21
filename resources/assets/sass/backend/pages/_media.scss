@@ -1,0 +1,17 @@
+// Override media manager loading spinner color
+.spinner {color: $brand-primary !important;}
+
+// Alter the highlight color for the tables with 'active' rows
+.table {
+  tbody {
+    tr {
+      &.active {
+        td {
+          background-color: $brand-primary !important;
+          color: $brand-white;
+          a {color: $brand-white;}
+        }
+      }
+    }
+  }
+}

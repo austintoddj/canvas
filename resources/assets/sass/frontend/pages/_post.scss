@@ -1,0 +1,53 @@
+.container img {
+  max-width: 100%;
+}
+
+.section-divider {
+  margin-top: 55px !important;
+}
+
+.post-page-title {
+  color: rgb(82, 82, 82);
+  font-size: 30px;
+  font-weight: 500;
+  margin-top: -5px;
+  text-rendering: optimizelegibility;
+  font-family: 'Source Sans Pro', sans-serif !important;
+}
+
+.post-page-meta {
+  color: $white-faded;
+  font-size: 13px;
+  text-transform: uppercase;
+  font-family: 'Source Sans Pro', sans-serif !important;
+  margin: 15px 0;
+}
+
+#auth-name {
+  margin-bottom: 2px !important;
+}
+
+.author {
+  border: 1px solid rgb(238, 238, 238);
+  border-radius: 3px;
+  padding: 23px 15px 15px 15px;
+}
+
+.author-bio {
+  color: rgb(197, 197, 197) !important;
+}
+
+.author-social {
+  margin-top: 5px;
+  color: rgb(197, 197, 197);
+  text-decoration: none !important;
+  a:hover {
+    color: rgb(197, 197, 197) !important;
+  }
+}
+
+.author-img {
+  float: left;
+  margin: 12px 15px 0 0;
+  width: 75px;
+}

@@ -1,0 +1,34 @@
+pre {
+  border: none;
+  background-color: $pre-background !important;
+  border-radius: 3px !important;
+  font-size: 13px !important;
+  font-family: 'Source Code Pro' !important;
+  -webkit-border-radius: 3px !important;
+  -moz-border-radius: 3px !important;
+  border-radius: 3px !important;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.121569) 0px 1px 1px 0px;
+  -moz-box-shadow: rgba(0, 0, 0, 0.121569) 0px 1px 1px 0px;
+  box-shadow: rgba(0, 0, 0, 0.121569) 0px 1px 1px 0px;
+
+  code {
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    box-shadow: none !important;
+  }
+
+}
+
+code {
+  border: none;
+  background-color: $pre-background !important;
+  border-radius: 3px !important;
+  font-size: 11px !important;
+  font-family: 'Source Code Pro' !important;
+  -webkit-border-radius: 3px !important;
+  -moz-border-radius: 3px !important;
+  border-radius: 3px !important;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.121569) 0px 1px 1px 0px;
+  -moz-box-shadow: rgba(0, 0, 0, 0.121569) 0px 1px 1px 0px;
+  box-shadow: rgba(0, 0, 0, 0.121569) 0px 1px 1px 0px;
+}

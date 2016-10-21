@@ -1,11 +1,23 @@
 // Fonts
-@import "fonts";
+@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,900italic,900,700italic,700,600italic,600,400italic,300,200italic,200,300italic');
+@import url('https:////fonts.googleapis.com/css?family=Source+Code+Pro:400,200,300,500,600,700,900');
 
-// Vendors
+// Modules
+@import "modules/_base";
 @import "../../../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap";
+@import "modules/_layout";
 
-// Default Canvas Theme
-@import "core";
+// Pages
+@import "pages/_index";
+@import "pages/_post";
+@import "pages/_tag";
+
+// Partials
+@import "partials/_bootstrap-overrides";
+@import "partials/_code";
+@import "partials/_navbar";
+@import "partials/_modal-dialogs";
+@import "partials/_scroll-to-top";
 
 // Child Theme
 @import "../theme/styles";

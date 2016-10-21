@@ -1,0 +1,24 @@
+.cl {
+  height: 45px;
+  margin-top: -11px;
+}
+
+.cl-center {
+  position: absolute !important;
+  height: 45px;
+  margin: auto !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  right: 0 !important;
+
+  @media (min-width: 768px) and (max-width: 991px) {
+    display: none !important;
+  }
+  @media (min-width: 992px) and (max-width: 1199px) {
+    display: none !important;
+  }
+  @media (min-width: 1200px) {
+    display: none !important;
+  }
+}

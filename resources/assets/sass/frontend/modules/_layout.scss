@@ -1,0 +1,52 @@
+.pager {
+  margin: 20px 0 20px 0;
+
+  li {
+    > a,
+    > span {
+      color: $white-faded;
+      border: none;
+      @include sans-serif();
+      text-transform: uppercase;
+      font-size: 15px;
+      font-weight: 400;
+      padding: 15px 25px;
+      background-color: white;
+    }
+
+    > a:hover,
+    > a:focus {
+      background-color: transparent;
+      border: none;
+    }
+  }
+
+  .disabled {
+    > a,
+    > a:hover,
+    > a:focus,
+    > span {
+      color: $gray;
+      background-color: $gray-dark;
+      cursor: not-allowed;
+    }
+  }
+}
+
+img::selection {
+  color: white;
+  background: transparent;
+}
+
+img::-moz-selection {
+  color: white;
+  background: transparent;
+}
+
+ul.pager {
+  > li {
+    > a {
+      padding: 0px !important;
+    }
+  }
+}

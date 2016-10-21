@@ -1,0 +1,31 @@
+#top-link-block {
+
+  #scroll-to-top {
+    background-color: #2196f3 !important;
+    border-radius: 2em;
+    font-size: 14px !important;
+    color: #fff;
+    padding: .5em 1em;
+    text-shadow: 1px 1px #888;
+    transition: 1s all linear;
+
+  }
+
+  &.affix-top {
+    position: absolute;
+    bottom: -122px;
+    right: 10px;
+  }
+
+  &.affix {
+    position: fixed;
+    bottom: 18px;
+    right: 10px;
+
+    @media only screen and (max-width: 680px) {
+      right: calc(50% - 4em);
+    }
+
+  }
+
+}

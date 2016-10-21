@@ -1,0 +1,118 @@
+body {
+  @include sans-serif();
+  font-size: 15px;
+  color: $gray;
+  text-rendering: optimizelegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+p {
+  line-height: 24px;
+  margin: 30px 0;
+  a {
+    text-decoration: none !important;
+    position: relative;
+    color: $brand-primary !important;
+  }
+  a:hover {
+    color: $brand-primary;
+  }
+  a:before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: $brand-primary;
+    visibility: hidden;
+    -webkit-transform: scaleX(0);
+    transform: scaleX(0);
+    -webkit-transition: all 0.3s ease-in-out 0s;
+    transition: all 0.3s ease-in-out 0s;
+  }
+  a:hover:before {
+    visibility: visible;
+    -webkit-transform: scaleX(1);
+    transform: scaleX(1);
+  }
+}
+
+a {
+  color: $gray-dark;
+  &:hover,
+  &:focus {
+    color: $brand-primary;
+    text-decoration: none;
+    -webkit-transition-delay: 0s, 0s;
+    -webkit-transition-duration: 0.2s, 0.2s;
+    -webkit-transition-property: color, border-color;
+    -webkit-transition-timing-function: ease, ease;
+    transition-delay: 0s, 0s;
+    transition-duration: 0.2s, 0.2s;
+    transition-property: color, border-color;
+    transition-timing-function: ease, ease;
+  }
+}
+
+a img {
+  &:hover,
+  &:focus {
+    cursor: zoom-in;
+  }
+}
+
+blockquote {
+  color: $gray;
+  font-style: italic;
+  padding: 5px 0px 5px 15px;
+  > p {
+    margin-top: 0px;
+    font-size: 15px;
+  }
+}
+
+.btn {
+  @include sans-serif();
+  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 0;
+  padding: 15px 25px;
+}
+
+.btn-lg {
+  font-size: 15px;
+  padding: 25px 35px;
+}
+
+.btn-default {
+  &:hover,
+  &:focus {
+    background-color: $brand-primary;
+    border: 1px solid $brand-primary;
+    color: white;
+  }
+}
+
+table {
+  border: 1px solid rgb(222, 224, 223);
+  -webkit-border-horizontal-spacing: 0px;
+  -webkit-border-vertical-spacing: 0px;
+  border-collapse: collapse;
+  box-sizing: border-box;
+  color: rgb(82, 82, 82);
+  display: table;
+}
+
+th {
+  padding: 5px;
+  border: 1px solid rgb(222, 224, 223);
+}
+
+td {
+  padding: 5px;
+  border: 1px solid rgb(222, 224, 223);
+}
+

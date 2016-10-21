@@ -1,0 +1,93 @@
+.navbar-custom {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 3;
+  @include sans-serif();
+  .navbar-brand {
+    font-weight: 800;
+  }
+  .nav {
+    li {
+      a {
+        text-transform: uppercase;
+        font-size: 12px;
+        font-weight: 800;
+      }
+    }
+  }
+  @media only screen and (min-width: 768px) {
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    .navbar-brand {
+      color: white;
+      padding: 20px;
+      &:hover,
+      &:focus {
+        color: $white-faded;
+      }
+    }
+
+    .nav {
+      li {
+        a {
+          color: white;
+          padding: 20px;
+          &:hover,
+          &:focus {
+            color: $white-faded;
+          }
+        }
+      }
+    }
+  }
+  @media only screen and (min-width: 1170px) {
+    -webkit-transition: background-color 0.3s;
+    -moz-transition: background-color 0.3s;
+    transition: background-color 0.3s;
+    /* Force Hardware Acceleration in WebKit */
+    -webkit-transform: translate3d(0, 0, 0);
+    -moz-transform: translate3d(0, 0, 0);
+    -ms-transform: translate3d(0, 0, 0);
+    -o-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    &.is-fixed {
+      position: fixed;
+      top: -61px;
+      background-color: transparentize(white, .9);
+      border-bottom: 1px solid darken(white, 5%);
+      -webkit-transition: -webkit-transform 0.3s;
+      -moz-transition: -moz-transform 0.3s;
+      transition: transform 0.3s;
+      .navbar-brand {
+        color: $gray-dark;
+        &:hover,
+        &:focus {
+          color: $brand-primary;
+        }
+      }
+      .nav {
+        li {
+          a {
+            color: $gray-dark;
+            &:hover,
+            &:focus {
+              color: $brand-primary;
+            }
+          }
+        }
+      }
+    }
+
+    &.is-visible {
+      -webkit-transform: translate3d(0, 100%, 0);
+      -moz-transform: translate3d(0, 100%, 0);
+      -ms-transform: translate3d(0, 100%, 0);
+      -o-transform: translate3d(0, 100%, 0);
+      transform: translate3d(0, 100%, 0);
+    }
+  }
+}

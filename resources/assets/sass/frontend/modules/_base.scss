@@ -1,3 +1,13 @@
+// Brand
+$brand-primary: rgb(253, 103, 105);
+$red: rgb(253, 103, 105);
+$red-light: rgba(253, 103, 105, .5);
+$gray: rgb(82, 82, 82);
+$gray-dark: rgb(68, 68, 68);
+$gray-muted: rgb(128, 128, 128);
+$white-faded: rgb(153, 153, 153);
+$pre-background: rgb(246, 246, 246);
+
 // Mixins
 @mixin transition-all() {
   -webkit-transition: all 0.5s;
@@ -20,6 +30,7 @@
   font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+// Typography
 @font-face {
   font-family: 'Unthrift First Personal';
   src: url('/fonts/unthriftfirstpersonal.eot'); /* IE9 Compat Modes */
