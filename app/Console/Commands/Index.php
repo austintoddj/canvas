@@ -3,8 +3,6 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
-use TeamTNT\TNTSearch\TNTSearch;
 
 class Index extends Command
 {

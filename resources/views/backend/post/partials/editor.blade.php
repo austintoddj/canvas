@@ -3,7 +3,6 @@
 @include('backend.post.partials.modals.help')
 
 <script type="text/javascript">
-    $(document).ready(function () {
         new Vue({
             el: '#main',
             data: {
@@ -100,5 +99,4 @@
                 });
             }
         });
-    });
 </script>

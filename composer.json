@@ -28,20 +28,19 @@
         "doctrine/dbal": "^2.5",
         "erusev/parsedown": "^1.6",
         "proengsoft/laravel-jsvalidation": "~1.3.1",
-        "teamtnt/tntsearch": "^0.8.0",
         "larapack/config-writer": "^1.0",
+        "laravel/scout": "^1.1",
         "maatwebsite/excel": "~2.1.0",
         "talvbansal/media-manager": "~2.0.0",
-        "teamtnt/laravel-scout-tntsearch-driver": "^1.1",
-        "laravel/scout": "^1.1"
+        "teamtnt/laravel-scout-tntsearch-driver": "^1.1"
     },
     "require-dev": {
-        "symfony/dom-crawler": "~3.0",
-        "symfony/css-selector": "~3.0",
+        "erikgall/eloquent-phpunit": "~1.0",
         "fzaninotto/faker": "~1.4",
         "mockery/mockery": "0.9.*",
         "phpunit/phpunit": "~5.0",
-        "erikgall/eloquent-phpunit": "~1.0"
+        "symfony/dom-crawler": "~3.0",
+        "symfony/css-selector": "~3.0"
     },
     "autoload": {
         "classmap": [

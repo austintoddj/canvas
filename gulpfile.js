@@ -52,7 +52,10 @@ elixir(function (mix) {
     mix.scripts([
         'functions.js',
         'bootstrap-growl.min.js'
-    ], 'public/js/app.js');
+    ], 'public/js/backend.js');
+
+    mix.webpack('app.js')
+        .scripts('app-vue.js');
 
     // Copy Media Manager SVG images into the public directory
     mix.copy( 'resources/assets/talvbansal/media-manager/fonts', 'public/fonts' );

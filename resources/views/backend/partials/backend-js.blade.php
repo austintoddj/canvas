@@ -2,7 +2,7 @@
 <script type="text/javascript" src="{{asset('js/vendor.js')}}"></script>
 
 <!-- Application Specific -->
-<script type="text/javascript" src="{{asset('js/app.js')}}"></script>
+<script type="text/javascript" src="{{asset('js/backend.js')}}"></script>
 
 <!-- Laravel CSRF Token-->
 <script>

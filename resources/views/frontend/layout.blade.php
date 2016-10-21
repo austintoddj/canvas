@@ -7,9 +7,13 @@
         @include('frontend.partials.frontend-css')
     </head>
     <body>
-        @include('frontend.partials.header')
-        @yield('content')
+        <div id="app">
+            @include('frontend.partials.header')
+            @yield('content')
+            @include('frontend.partials.footer')
+        </div>
+        @include('frontend.partials.frontend-js')
         @yield('unique-js')
-        @include('frontend.partials.footer')
+        <script type="text/javascript" src="{{asset('js/app-vue.js')}}"></script>
     </body>
 </html>
