@@ -40,23 +40,6 @@ class ToolsController extends Controller
     }
 
     /**
-     * Manually Reset the Site Index.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function resetIndex()
-    {
-        $exitCode = Artisan::call('canvas:index');
-        if ($exitCode === 0) {
-            Session::set('_reset-index', trans('messages.reset_index_success'));
-        } else {
-            Session::set('_reset-index', trans('messages.reset_index_error'));
-        }
-
-        return redirect(url('admin/tools'));
-    }
-
-    /**
      * Manually Flush the Application Cache.
      *
      * @return \Illuminate\View\View

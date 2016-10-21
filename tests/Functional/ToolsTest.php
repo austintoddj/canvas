@@ -23,16 +23,6 @@ class ToolsTest extends TestCase
     }
 
     /** @test */
-    public function it_can_reset_the_application_index()
-    {
-        $this->actingAs($this->user)
-            ->visit('/admin/tools')
-            ->click('Reset Index');
-        $this->assertSessionMissing('errors');
-        $this->seePageIs('/admin/tools');
-    }
-
-    /** @test */
     public function it_can_clear_the_application_cache()
     {
         $this->actingAs($this->user)

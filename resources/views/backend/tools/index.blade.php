@@ -26,20 +26,14 @@
                 </div>
                 @include('backend.tools.sections.maintenance-mode')
                 @include('backend.tools.sections.export-data')
-                @include('backend.tools.sections.reset-index')
                 @include('backend.tools.sections.clear-cache')
             </div>
         </section>
     </section>
-    @include('backend.tools.partials.modals.reset-index')
     @include('backend.tools.partials.modals.cache-clear')
 @stop
 
 @section('unique-js')
-    @if(Session::get('_reset-index'))
-        @include('backend.partials.notify', ['section' => '_reset-index'])
-        {{ \Session::forget('_reset-index') }}
-    @endif
     @if(Session::get('_cache-clear'))
         @include('backend.partials.notify', ['section' => '_cache-clear'])
         {{ \Session::forget('_cache-clear') }}
