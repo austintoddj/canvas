@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use App\Services\Parsedowner;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Scout\Searchable;
-use TeamTNT\TNTSearch\TNTSearch;
 use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model
