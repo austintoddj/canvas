@@ -80,7 +80,7 @@ function page_image($value = null)
 
 function getLatestRelease()
 {
-//    // Get the Packagist API
+    //    // Get the Packagist API
 //    $api = file_get_contents('https://packagist.org/p/austintoddj/canvas.json');
 //    // Decode it to a better format
 //    $stream = json_decode($api, true);
