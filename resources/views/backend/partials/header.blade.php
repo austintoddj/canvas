@@ -1,5 +1,5 @@
 <header id="header" class="clearfix" data-current-skin="blue">
-    <a href="{{ url('admin') }}"><img src="{{ asset('images/canvas-logo-white.gif') }}" class="cl-center" style="width: 100px"></a>
+    <a href="{{ url('admin') }}"><img src="{{ asset('assets/images/canvas-logo-white.gif') }}" class="cl-center" style="width: 100px"></a>
     <ul class="header-inner">
         <li id="menu-trigger" data-trigger="#sidebar">
             <div class="line-wrap">
@@ -9,7 +9,7 @@
             </div>
         </li>
         <li class="logo">
-            <a href="{{ url('admin') }}"><img src="{{ asset('images/canvas-logo-white.gif') }}" class="cl hidden-xs" style="width: 100px"></a>
+            <a href="{{ url('admin') }}"><img src="{{ asset('assets/images/canvas-logo-white.gif') }}" class="cl hidden-xs" style="width: 100px"></a>
         </li>
         <li class="pull-right">
             <ul class="top-menu">

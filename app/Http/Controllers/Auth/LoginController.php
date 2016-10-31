@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use Session;
-use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use App\Models\Settings;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
 class LoginController extends Controller
 {
@@ -88,12 +89,19 @@ class LoginController extends Controller
     }
 
     /**
+     * During the login process, call the GitHub API and grab the latest
+     * version of Canvas available and store it in the database. The
+     * functionality is kept here so that the API Rate Limit will
+     * be harder to reach.
+     *
      * @param Request $request
      * @param User $user
      * @return \Illuminate\Http\RedirectResponse
      */
     public function authenticated(Request $request, User $user)
     {
+        $col = Settings::getByName('latest_release');
+        empty($col) ? Settings::firstOrCreate(['setting_name' => 'latest_release', 'setting_value' => getLatestRelease()]) : Settings::where('setting_name', 'latest_release')->update(['setting_value' => getLatestRelease()]);
         Session::set('_login', trans('messages.login', ['display_name' => $user->display_name]));
 
         return redirect()->intended($this->redirectPath());

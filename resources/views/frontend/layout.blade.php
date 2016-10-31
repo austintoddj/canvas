@@ -14,6 +14,6 @@
         </div>
         @include('frontend.partials.frontend-js')
         @yield('unique-js')
-        <script type="text/javascript" src="{{asset('js/app-vue.js')}}"></script>
+        <script type="text/javascript" src="{{elixir('/assets/js/app-vue.js')}}"></script>
     </body>
 </html>

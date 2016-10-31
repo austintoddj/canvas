@@ -33,9 +33,9 @@ $pre-background: rgb(246, 246, 246);
 // Typography
 @font-face {
   font-family: 'Unthrift First Personal';
-  src: url('/fonts/unthriftfirstpersonal.eot'); /* IE9 Compat Modes */
-  src: url('/fonts/unthriftfirstpersonal.woff2') format('woff2'), /* Super Modern Browsers */
-  url('/fonts/unthriftfirstpersonal.woff') format('woff'), /* Pretty Modern Browsers */
-  url('/fonts/unthriftfirstpersonal.ttf') format('truetype'), /* Safari, Android, iOS */
-  url('/fonts/unthriftfirstpersonal.svg') format('svg'); /* Legacy iOS */
+  src: url('/assets/fonts/unthriftfirstpersonal.eot'); /* IE9 Compat Modes */
+  src: url('/assets/fonts/unthriftfirstpersonal.woff2') format('woff2'), /* Super Modern Browsers */
+  url('/assets/fonts/unthriftfirstpersonal.woff') format('woff'), /* Pretty Modern Browsers */
+  url('/assets/fonts/unthriftfirstpersonal.ttf') format('truetype'), /* Safari, Android, iOS */
+  url('/assets/fonts/unthriftfirstpersonal.svg') format('svg'); /* Legacy iOS */
 }

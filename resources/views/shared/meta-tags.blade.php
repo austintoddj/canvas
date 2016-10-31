@@ -12,7 +12,7 @@
 <meta name="twitter:site" content="{{ $user->twitter or ''}}" />
 <meta name="twitter:title" content="{{ Settings::blogTitle() }}" />
 <meta name="twitter:description" content="{{ Settings::blogDescription() }}" />
-<meta name="twitter:image" content="{{ url('/images/favicon.png') }}" />
+<meta name="twitter:image" content="{{ url('assets/images/favicon.png') }}" />
 @yield('twitter-card')
 
 <!-- SEO Tags -->
@@ -23,4 +23,4 @@
 <meta name="description" content="{{ Settings::blogDescription() }}">
 
 <!-- Favicon -->
-<link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+<link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png') }}">

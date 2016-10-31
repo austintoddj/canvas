@@ -1,4 +1,4 @@
-@extends('backend.layout')
+@extends('errors.layout')
 
 @section('title')
     <title>Canvas | Page not found</title>
@@ -11,7 +11,7 @@
                 <div class="card">
                     <br>
                     <div class="card-header" style="text-align: center">
-                        <img src="{{ asset('images/favicon.png') }}" style="width: 85px">
+                        <img src="{{ asset('assets/images/favicon.png') }}" style="width: 85px">
                     </div>
 
                     <div class="card-body card-padding" id="login-ch">
@@ -19,7 +19,11 @@
                         <p class="text-muted text-center">Sorry, but nothing exists here.</p>
                     </div>
                 </div>
-                <p class="text-center"><a href="/"><i class="zmdi zmdi-long-arrow-return"></i> Back to the blog</a></p>
+                @if(Auth::check())
+                    <p class="text-center"><a href="/admin"><i class="zmdi zmdi-long-arrow-return"></i> Back to the dashboard</a></p>
+                @else
+                    <p class="text-center"><a href="/"><i class="zmdi zmdi-long-arrow-return"></i> Back to the blog</a></p>
+                @endif
             </div>
         </section>
     </section>

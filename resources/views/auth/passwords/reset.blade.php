@@ -11,7 +11,7 @@
                 <div class="card">
                     <br>
                     <div class="card-header" style="text-align: center">
-                        <img src="{{ asset('images/favicon.png') }}" style="width: 85px">
+                        <img src="{{ asset('assets/images/favicon.png') }}" style="width: 85px">
                     </div>
 
                     <div class="card-body card-padding" id="login-ch">

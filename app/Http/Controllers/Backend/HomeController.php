@@ -17,12 +17,6 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $api = file_get_contents('https://packagist.org/p/austintoddj/canvas.json');
-        $stream = json_decode($api, true);
-        $packages = end($stream);
-        $project = end($packages);
-        $release = end($project);
-
         $data = [
             'posts' => Post::all(),
             'recentPosts' => Post::orderBy('created_at', 'desc')->take(4)->get(),
@@ -31,7 +25,7 @@ class HomeController extends Controller
             'analytics' => Settings::gaId(),
             'status' => App::isDownForMaintenance() ? 0 : 1,
             'canvasVersion' => Settings::canvasVersion(),
-            'latestRelease' => $release['version'],
+            'latestRelease' => Settings::latestRelease(),
         ];
 
         return view('backend.home.index', compact('data'));

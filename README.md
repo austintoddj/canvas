@@ -11,15 +11,16 @@
 
 [Canvas](http://canvas.toddaustin.io) is a simple, powerful blog publishing platform that lets you to share your stories with the world. Its beautifully designed interface and completely customizable framework allows you to create and publish your own blog, giving you tools that make it easy and even fun to do.
 
-Features [Google Material Design](https://material.google.com), [SimpleMDE](https://simplemde.com) for Markdown publishing with syntax highlighting by [PrismJS](http://prismjs.com), full-site searching by [TNTSearch](https://github.com/teamtnt/tntsearch), native [Google Analytics](https://www.google.com/analytics/#?modal_active=none) integration and more, all powered by [Laravel](https://laravel.com)!
+Features [Google Material Design](https://material.google.com), [SimpleMDE](https://simplemde.com) for Markdown publishing with syntax highlighting by [PrismJS](http://prismjs.com), full-site searching by [TNTSearch](https://github.com/teamtnt/laravel-scout-tntsearch-driver), native [Google Analytics](https://www.google.com/analytics/#?modal_active=none) integration and more, all powered by [Laravel](https://laravel.com)!
 
 ## Requirements
 
 Before you proceed make sure your server meets the following requirements:
 
 - [Composer](https://getcomposer.org/)
+- [Yarn](https://yarnpkg.com/)
 - [PHP](https://php.net/) >= 5.6.4
-- PHP Extensions ([PDO](http://php.net/manual/en/book.pdo.php), [SQLite](http://php.net/manual/en/book.sqlite.php), [OpenSSL](http://php.net/manual/en/book.openssl.php), [Mbstring](http://php.net/manual/en/book.mbstring.php), [Tokenizer](http://php.net/manual/en/book.tokenizer.php))
+- PHP Extensions ([PDO](http://php.net/manual/en/book.pdo.php), [SQLite](http://php.net/manual/en/book.sqlite.php), [OpenSSL](http://php.net/manual/en/book.openssl.php), [Mbstring](http://php.net/manual/en/book.mbstring.php), [Tokenizer](http://php.net/manual/en/book.tokenizer.php), [Zip](http://php.net/manual/en/book.zip.php))
 - PDO compliant database (SQL, MySQL, PostgreSQL, SQLite)
 
 ## Installation
@@ -30,7 +31,7 @@ Before you proceed make sure your server meets the following requirements:
     * Use [Packagist](https://packagist.org): `composer create-project austintoddj/canvas`
 
 2. Run `composer install` from the command line in the project root.
-3. Run `npm install` from the command line in the project root.
+3. Run `yarn` from the command line in the project root.
 4. Run `php artisan storage:link` to link the `storage/app/public` folder to `public/storage` 
 5. Copy the contents of `.env.example` and create a new file called `.env` in the project root. Set your application variables in the new file. Be sure to keep the value of `APP_ENV` set to `local` for the duration of the install.
 6. Run `php artisan canvas:install` and follow the on-screen prompts.
@@ -41,7 +42,7 @@ Before you proceed make sure your server meets the following requirements:
 ## Advanced Options
 
 1. Themes
-    * Run `npm install gulp` from the command line in the project root.
+    * Run `yarn add gulp` from the command line in the project root.
     * Create your own theme by editing the stylesheet at `resources/assets/sass/theme/styles.scss` or grab an [Official Canvas Theme](https://github.com/austintoddj/palette), fresh off the palette.
     * Run `gulp` after any changes to `resources/assets/sass/theme/styles.scss`
 

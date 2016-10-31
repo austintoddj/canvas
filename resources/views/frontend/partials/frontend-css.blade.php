@@ -1,5 +1,5 @@
 <!-- Application Styles -->
-<link rel="stylesheet" type="text/css" href="{{ asset('css/frontend.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ elixir('assets/css/frontend.css') }}">
 
 <!-- Font Awesome -->
 <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
