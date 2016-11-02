@@ -48,7 +48,7 @@ class Install extends Command
         // Database Setup
         if (! Schema::hasTable('migrations')) {
             $this->comment(PHP_EOL.'Creating your database...');
-            $exitCode = Artisan::call('migrate', [
+            $exitCode = $this->call('migrate', [
                 '--seed' => true,
             ]);
             $this->progress(5);
@@ -59,7 +59,7 @@ class Install extends Command
 
         // Admin User
         $this->comment(PHP_EOL.'Step 1/6: Creating the admin user');
-        $this->call('user:create', ['--admin' => 'default']);
+        $this->call('user:create', ['--admin' => true]);
         $this->progress(1);
 
         // Blog Title

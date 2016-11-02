@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use App\Services\Parsedowner;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Scout\Searchable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Post extends Model
 {
@@ -35,6 +35,26 @@ class Post extends Model
      * @var array
      */
     public $searchable = ['title', 'subtitle', 'content_raw', 'meta_description'];
+
+    /**
+     * get author of this post
+     * 
+     * @return BelongsTo
+     */
+    public function author()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * add Author to post
+     * 
+     * @param Post $post
+     */
+    public function addAuthor(User $author)
+    {
+        return $this->author()->associate($author);
+    }
 
     /**
      * Get the tags relationship.
