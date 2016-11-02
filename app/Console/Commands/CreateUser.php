@@ -2,7 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
+use App\Models\Settings;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Validator;
 
 class CreateUser extends Command
 {
@@ -20,6 +23,12 @@ class CreateUser extends Command
      * @var string
      */
     protected $description = 'Creates a new user for this application.';
+
+    /**
+     * rules for email validation
+     * @var [String]
+     */
+    protected $emailRules = ['email' => 'unique:users,email'];
 
     /**
      * Create a new command instance.
@@ -48,6 +57,7 @@ class CreateUser extends Command
         $lastName = $this->ask($user_type . ' last name');
 
         $this->createUser($email, $password, $firstName, $lastName);
+        $this->comment('Saving ' . $user_type . ' information...');
         $this->line(PHP_EOL.'<info>✔</info> Success! New ' . $user_type . ' has been created.');
     }
     /**
@@ -86,7 +96,6 @@ class CreateUser extends Command
         ]);
 
         $this->setBlogAuthor($user->display_name);
-        $this->comment('Saving ' . $user_type . ' information...');
     }
 
     /**
@@ -96,11 +105,11 @@ class CreateUser extends Command
      */
     private function setBlogAuthor($blogAuthor)
     {
-        $blogAuthorSetting = Settings::whereSettingName('blog_author')->get();
+        $blogAuthorSetting = Settings::whereSettingName('blog_author');
 
-        if ($blogAuthorSetting->count() != 0)
+        if ($blogAuthorSetting->count() == 1)
         {
-            return $this->updateAuthorSetting($blogAuthorSetting, $blogAuthor);
+            return $this->updateAuthorSetting($blogAuthorSetting->first(), $blogAuthor);
         }
 
         return $this->createAuthorSetting($blogAuthor);
@@ -110,7 +119,7 @@ class CreateUser extends Command
      * creates author settings with the current owner of the blog as author
      * @return [Settings]
      */
-    private function createAuthorSetting()
+    private function createAuthorSetting($blogAuthor)
     {
         return Settings::create([
             'setting_name' => 'blog_author',

@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Models\Settings;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Validator;
 
 class Install extends Command
 {
@@ -60,7 +59,7 @@ class Install extends Command
 
         // Admin User
         $this->comment(PHP_EOL.'Step 1/6: Creating the admin user');
-        $this->call('user:create -A');
+        $this->call('user:create', ['--admin' => 'default']);
         $this->progress(1);
 
         // Blog Title
