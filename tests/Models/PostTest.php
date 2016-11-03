@@ -73,6 +73,7 @@ class PostTest extends EloquentTestCase
     public function it_can_create_a_post_and_save_it_to_the_database()
     {
         $data = [
+            'id'            => 2,
             'title'         => 'example',
             'slug'          => 'foo',
             'subtitle'      => 'bar',
@@ -84,7 +85,7 @@ class PostTest extends EloquentTestCase
         $this->callRouteAsUser('admin.post.store', null, $data)
               ->seePostInDatabase(['title' => 'example', 'content_raw' => 'FooBar', 'content_html' => '<p>FooBar</p>'])
               ->seeInSession('_new-post', trans('messages.create_success', ['entity' => 'post']))
-              ->assertRedirectedTo('admin/post')
+              ->assertRedirectedTo('admin/post/2/edit')
               ->assertSessionMissing('errors');
     }
 

@@ -24,4 +24,8 @@
         @include('backend.partials.notify', ['section' => '_update-post'])
         {{ \Session::forget('_update-post') }}
     @endif
+    @if(Session::get('_new-post'))
+        @include('backend.partials.notify', ['section' => '_new-post'])
+        {{ \Session::forget('_new-post') }}
+    @endif
 @stop

@@ -28,13 +28,11 @@
                         <table id="posts" class="table table-condensed table-vmiddle">
                             <thead>
                                 <tr>
-                                    <th data-column-id="id">ID</th>
+                                    <th data-column-id="id" data-type="numeric" data-order="desc">ID</th>
                                     <th data-column-id="title">Title</th>
-                                    <th data-column-id="subtitle">Subtitle</th>
                                     <th data-column-id="slug">Slug</th>
                                     <th data-column-id="published">Status</th>
-                                    <th data-column-id="created" data-type="date" data-formatter="humandate" data-order="desc">Created</th>
-                                    <th data-column-id="updated" data-type="date" data-formatter="humandate">Updated</th>
+                                    <th data-column-id="date" data-type="date" data-formatter="humandate">Date</th>
                                     <th data-column-id="commands" data-formatter="commands" data-sortable="false">Actions</th>
                                 </tr>
                             </thead>
@@ -43,11 +41,13 @@
                                     <tr>
                                         <td>{{ $post->id }}</td>
                                         <td>{{ $post->title }}</td>
-                                        <td>{{ str_limit($post->subtitle, config('blog.backend_trim_width')) }}</td>
                                         <td>{{ $post->slug }}</td>
-                                        <td>{{ $post->is_draft === 1 ? '<span class="label label-primary">Draft</span>' : '<span class="label label-success">Published</span>' }}</td>
-                                        <td>{{ $post->created_at->format('Y-m-d') }}</td>
-                                        <td>{{ $post->updated_at->format('Y-m-d') }}</td>
+                                        <td>{{ $post->is_draft == 1 ? '<span class="label label-primary">Draft</span>' : '<span class="label label-success">Published</span>' }}</td>
+                                        @if($post->updated_at != $post->created_at)
+                                            <td>{{ $post->updated_at->format('Y/m/d') . "<br/>" }} Last updated</td>
+                                        @else
+                                            <td>{{ $post->created_at->format('Y/m/d') . "<br/>" }} Published</td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -60,10 +60,6 @@
 @stop
 
 @section('unique-js')
-    @if(Session::get('_new-post'))
-        @include('backend.partials.notify', ['section' => '_new-post'])
-        {{ \Session::forget('_new-post') }}
-    @endif
     @if(Session::get('_delete-post'))
         @include('backend.partials.notify', ['section' => '_delete-post'])
         {{ \Session::forget('_delete-post') }}

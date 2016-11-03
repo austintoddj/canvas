@@ -1,10 +1,5 @@
 <?php
 
-/**
- * Class AdminRoutesTest.
- *
- * Test the response code for each administrative route after login.
- */
 class AdminRoutesTest extends TestCase
 {
     use InteractsWithDatabase;

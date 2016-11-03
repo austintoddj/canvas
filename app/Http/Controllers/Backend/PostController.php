@@ -49,7 +49,7 @@ class PostController extends Controller
 
         Session::set('_new-post', trans('messages.create_success', ['entity' => 'post']));
 
-        return redirect()->route('admin.post.index');
+        return redirect()->route('admin.post.edit', $post->id);
     }
 
     /**

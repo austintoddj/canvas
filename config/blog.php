@@ -51,7 +51,7 @@ return [
     | the application, we need to trim the width of them and simply
     | add an ellipses at the trim point.
     |
-    | backend_trim_width: Used in the Posts Datatable
+    | backend_trim_width: Not being used currently
     | frontend_trim_width: Used in the Individual Post view
     |
     */
