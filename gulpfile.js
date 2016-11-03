@@ -43,7 +43,10 @@ elixir(function (mix) {
     mix.scripts([
         'functions.js',
         'bootstrap-growl.min.js'
-    ], assetsPath + 'js/app.js');
+    ], assetsPath + 'js/backend.js');
+
+    mix.webpack('app.js', assetsPath + 'js/app.js' )
+        .scripts('app-vue.js', assetsPath + 'js/app-vue.js');
 
     // Copy images
     mix.copy('resources/assets/images', assetsPath + 'images');

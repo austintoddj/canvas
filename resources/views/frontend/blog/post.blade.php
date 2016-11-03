@@ -33,10 +33,6 @@
     <title>{{ $title or Settings::blogTitle() }}</title>
 @stop
 
-@section('unique-js')
-    <script src="{{ elixir('assets/js/frontend.js') }}" charset="utf-8"></script>
-@endsection
-
 @section('content')
     <article>
         <div class="container" id="post">
