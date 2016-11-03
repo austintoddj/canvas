@@ -1,1 +1,1 @@
-const app=new Vue({el:"#app"});
+const canvas_app=new Vue({el:"#app"});

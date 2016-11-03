@@ -1,4 +1,4 @@
 
-const app = new Vue({
+const canvas_app = new Vue({
     el: '#app'
 });
