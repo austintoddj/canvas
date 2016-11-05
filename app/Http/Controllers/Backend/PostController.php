@@ -45,7 +45,7 @@ class PostController extends Controller
      */
     public function store(PostCreateRequest $request)
     {
-        $post = new Post( $request->postFillData() );
+        $post = new Post($request->postFillData());
         $post->addAuthor(Auth::user())->save();
         $post->syncTags($request->get('tags', []));
 

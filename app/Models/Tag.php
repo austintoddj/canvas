@@ -87,7 +87,7 @@ class Tag extends Model
             'tag' => $data['tag'],
             'title' => $data['title'],
             'subtitle' => $data['subtitle'],
-            'meta_description' => $data['meta_description']
+            'meta_description' => $data['meta_description'],
         ];
     }
 }

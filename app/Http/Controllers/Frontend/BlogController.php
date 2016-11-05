@@ -37,7 +37,7 @@ class BlogController extends Controller
      */
     public function showPost($slug, Request $request)
     {
-        $post = Post::with(['tags','author'])->whereSlug($slug)->firstOrFail();
+        $post = Post::with(['tags', 'author'])->whereSlug($slug)->firstOrFail();
         $user = $post->author;
         $tag = $request->get('tag');
         $title = $post->title;

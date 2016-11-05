@@ -25,7 +25,7 @@ class CreateUser extends Command
     protected $description = 'Creates a new user for this application.';
 
     /**
-     * rules for email validation
+     * rules for email validation.
      * @var [String]
      */
     protected $emailRules = ['email' => 'unique:users,email'];
@@ -49,28 +49,27 @@ class CreateUser extends Command
     {
         $user_type = $this->getUserType();
 
-        $email = $this->ask($user_type . ' email address');
+        $email = $this->ask($user_type.' email address');
         $this->validateEmailAddress($email);
 
-        $password = $this->ask($user_type . ' password');
-        $firstName = $this->ask($user_type . 'first name');
-        $lastName = $this->ask($user_type . ' last name');
+        $password = $this->ask($user_type.' password');
+        $firstName = $this->ask($user_type.'first name');
+        $lastName = $this->ask($user_type.' last name');
 
         $this->createUser($email, $password, $firstName, $lastName);
-        $this->comment('Saving ' . $user_type . ' information...');
-        $this->line(PHP_EOL.'<info>✔</info> Success! New ' . $user_type . ' has been created.');
+        $this->comment('Saving '.$user_type.' information...');
+        $this->line(PHP_EOL.'<info>✔</info> Success! New '.$user_type.' has been created.');
     }
     /**
-     * validates email address
-     * @param  [String] $email [description]
-     * @return [String]        [description]
+     * validates email address.
+     * @param  [String] $email
+     * @return [String]       
      */
     private function validateEmailAddress($email)
     {
         $validator = Validator::make(['email' => $email], $this->emailRules);
         
-        if ($validator->fails())
-        {
+        if ($validator->fails()) {
             $this->error('Sorry! That email already exists in the system.');
             $this->comment('Please run <info>canvas:coauthor</info> again.');
             die();
@@ -78,12 +77,12 @@ class CreateUser extends Command
     }
 
     /**
-     * creates a new user
-     * @param  [String] $email    
-     * @param  [String] $password 
+     * creates a new user.
+     * @param  [String] $email 
+     * @param  [String] $password
      * @param  [String] $firstName
-     * @param  [String] $lastName 
-     * @return [String]           
+     * @param  [String] $lastName
+     * @return [String]
      */
     private function createUser($email, $password, $firstName, $lastName)
     {
@@ -92,19 +91,18 @@ class CreateUser extends Command
             'password' => bcrypt($password),
             'first_name' => $firstName,
             'last_name' => $lastName,
-            'display_name' => $firstName . ' ' . $lastName
+            'display_name' => $firstName.' '.$lastName
         ]);
 
         $this->setBlogAuthor($user->display_name);
     }
 
     /**
-     * sets the author/the authors of this blog
+     * sets the author/the authors of this blog.
      * @param  [String] $blogAuthor
      * @return
      */
-    private function setBlogAuthor($blogAuthor)
-    {
+    private function setBlogAuthor($blogAuthor) {
         $blogAuthorSetting = Settings::whereSettingName('blog_author');
 
         if ($blogAuthorSetting->count() == 1)
@@ -116,7 +114,7 @@ class CreateUser extends Command
     }
 
     /**
-     * creates author settings with the current owner of the blog as author
+     * creates author settings with the current owner of the blog as author.
      * @return [Settings]
      */
     private function createAuthorSetting($blogAuthor)
@@ -128,20 +126,20 @@ class CreateUser extends Command
     }
 
     /**
-     * updates author setting to include the coauthor
+     * updates author setting to include the coauthor.
      * @param  [String] $blogAuthorSetting
-     * @param  [String] $coAuthor         
-     * @return [Settings]                   
+     * @param  [String] $coAuthor
+     * @return [Settings]
      */
     private function updateAuthorSetting($blogAuthorSetting, $coAuthor)
     {
         $blogAuthorSetting->setting_name = 'blog_author';
-        $blogAuthorSetting->setting_value = $blogAuthorSetting->setting_value . ' and ' .$coAuthor;
+        $blogAuthorSetting->setting_value = $blogAuthorSetting->setting_value.' and '.$coAuthor;
         return $blogAuthorSetting->save();
     }
 
     /**
-     * gets the type of the user to create
+     * gets the type of the user to create.
      * @return [Boolean] isAdmin
      */
     private function getUserType()

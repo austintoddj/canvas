@@ -31,8 +31,8 @@ class Post extends Model
     ];
 
     /**
-     * get author of this post
-     * 
+     * get author of this post.
+     *
      * @return BelongsTo
      */
     public function author()
@@ -41,7 +41,7 @@ class Post extends Model
     }
 
     /**
-     * add Author to post
+     * add Author to post.
      * @param User $author
      * @return Model
      */
@@ -200,7 +200,7 @@ class Post extends Model
             'title' => $data['title'],
             'subtitle' => $data['subtitle'],
             'content_raw' => $data['content_raw'],
-            'meta_description' => $data['meta_description']
+            'meta_description' => $data['meta_description'],
         ];
 
     }
