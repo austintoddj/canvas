@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \App\Console\Commands\Index::class,
         \App\Console\Commands\Install::class,
+        \App\Console\Commands\CreateUser::class,
     ];
 
     /**

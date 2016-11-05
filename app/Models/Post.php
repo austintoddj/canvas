@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use App\Services\Parsedowner;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Scout\Searchable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Post extends Model
 {
@@ -30,12 +31,24 @@ class Post extends Model
     ];
 
     /**
-     * Searchable items.
+     * get author of this post.
      *
-     * @var array
+     * @return BelongsTo
      */
-    public $searchable = ['title', 'subtitle', 'content_raw', 'meta_description'];
+    public function author()
+    {
+        return $this->belongsTo(User::class);
+    }
 
+    /**
+     * add Author to post.
+     * @param User $author
+     * @return Model
+     */
+    public function addAuthor(User $author)
+    {
+        return $this->author()->associate($author);
+    }
     /**
      * Get the tags relationship.
      *
@@ -129,10 +142,10 @@ class Post extends Model
     public function newerPost(Tag $tag = null)
     {
         $query =
-        static::where('published_at', '>', $this->published_at)
-            ->where('published_at', '<=', Carbon::now())
-            ->where('is_draft', 0)
-            ->orderBy('published_at', 'asc');
+            static::where('published_at', '>', $this->published_at)
+                ->where('published_at', '<=', Carbon::now())
+                ->where('is_draft', 0)
+                ->orderBy('published_at', 'asc');
         if ($tag) {
             $query = $query->whereHas('tags', function ($q) use ($tag) {
                 $q->where('tag', '=', $tag->tag);
@@ -151,9 +164,9 @@ class Post extends Model
     public function olderPost(Tag $tag = null)
     {
         $query =
-        static::where('published_at', '<', $this->published_at)
-            ->where('is_draft', 0)
-            ->orderBy('published_at', 'desc');
+            static::where('published_at', '<', $this->published_at)
+                ->where('is_draft', 0)
+                ->orderBy('published_at', 'desc');
         if ($tag) {
             $query = $query->whereHas('tags', function ($q) use ($tag) {
                 $q->where('tag', '=', $tag->tag);
@@ -172,4 +185,24 @@ class Post extends Model
     {
         return round(str_word_count($this->content_raw) / 275);
     }
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array
+     */
+    public function toSearchableArray()
+    {
+        $data = $this->toArray();
+
+        return [
+            'id'    => $data['id'],
+            'title' => $data['title'],
+            'subtitle' => $data['subtitle'],
+            'content_raw' => $data['content_raw'],
+            'meta_description' => $data['meta_description'],
+        ];
+
+    }
 }
+

@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Models\Settings;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Validator;
 
 class Install extends Command
 {
@@ -49,7 +48,7 @@ class Install extends Command
         // Database Setup
         if (! Schema::hasTable('migrations')) {
             $this->comment(PHP_EOL.'Creating your database...');
-            $exitCode = Artisan::call('migrate', [
+            $exitCode = $this->call('migrate', [
                 '--seed' => true,
             ]);
             $this->progress(5);
@@ -60,19 +59,8 @@ class Install extends Command
 
         // Admin User
         $this->comment(PHP_EOL.'Step 1/6: Creating the admin user');
-        $email = $this->ask('Admin email address');
-        $rules = ['email' => 'unique:users,email'];
-        $validator = Validator::make(['email' => $email], $rules);
-        if ($validator->fails()) {
-            $this->error('Sorry! That email already exists in the system.');
-            $this->comment('Please run the installer again.');
-            die();
-        }
-        $password = $this->ask('Admin password');
-        $firstName = $this->ask('Admin first name');
-        $lastName = $this->ask('Admin last name');
-        $this->createUser($email, $password, $firstName, $lastName);
-        $this->line(PHP_EOL.'<info>✔</info> Success! Admin user has been created.');
+        $this->call('user:create', ['--admin' => true]);
+        $this->progress(1);
 
         // Blog Title
         $blogTitle = $this->ask('Step 2/6: Title of your blog');
@@ -217,29 +205,6 @@ class Install extends Command
         $settings = new Settings();
         $settings->setting_name = 'canvas_version';
         $settings->setting_value = config('blog.version');
-        $settings->save();
-    }
-
-    private function createUser($email, $password, $firstName, $lastName)
-    {
-        $user = new User();
-        $user->email = $email;
-        $user->password = bcrypt($password);
-        $user->first_name = $firstName;
-        $user->last_name = $lastName;
-        $user->display_name = $firstName.' '.$lastName;
-        $user->save();
-
-        $this->author($user->display_name);
-        $this->comment('Saving admin information...');
-        $this->progress(1);
-    }
-
-    private function author($blogAuthor)
-    {
-        $settings = new Settings();
-        $settings->setting_name = 'blog_author';
-        $settings->setting_value = $blogAuthor;
         $settings->save();
     }
 }

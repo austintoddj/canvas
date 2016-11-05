@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Tag extends Model
 {
@@ -25,13 +26,6 @@ class Tag extends Model
         'tag', 'title', 'subtitle', 'meta_description',
         'reverse_direction', 'created_at', 'updated_at',
     ];
-
-    /**
-     * Searchable items.
-     *
-     * @var array
-     */
-    public $searchable = ['tag', 'title', 'subtitle', 'meta_description'];
 
     /**
      * Get the posts relationship.
@@ -77,5 +71,23 @@ class Tag extends Model
         $layout = static::whereTag($tag)->pluck('layout');
 
         return $layout ?: $default;
+    }
+
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array
+     */
+    public function toSearchableArray()
+    {
+        $data = $this->toArray();
+
+        return [
+            'tag' => $data['tag'],
+            'title' => $data['title'],
+            'subtitle' => $data['subtitle'],
+            'meta_description' => $data['meta_description'],
+        ];
     }
 }

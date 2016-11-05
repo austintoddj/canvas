@@ -34,6 +34,7 @@ class PostTest extends EloquentTestCase
     public function the_database_table_has_all_of_the_correct_columns()
     {
         $this->table->column('id')->integer()->increments();
+        $this->table->column('author_id')->integer()->notNullable();
         $this->table->column('title')->string()->notNullable();
         $this->table->column('subtitle')->string()->notNullable();
         $this->table->column('content_raw')->text()->notNullable();
