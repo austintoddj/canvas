@@ -45,7 +45,8 @@ class PostController extends Controller
      */
     public function store(PostCreateRequest $request)
     {
-        $post = ( new Post($request->postFillData()) )->addAuthor(Auth::user())->save();
+        $post = new Post( $request->postFillData() );
+        $post->addAuthor(Auth::user())->save();
         $post->syncTags($request->get('tags', []));
 
         Session::set('_new-post', trans('messages.create_success', ['entity' => 'post']));
