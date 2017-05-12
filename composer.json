@@ -10,6 +10,7 @@
         }
     ],
     "require": {
+        "fzaninotto/faker": "~1.4",
         "laravel/framework": "5.3.*",
         "cnvs/easel": "3.3.*",
         "cnvs/paper-dark": "*",
