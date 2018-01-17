@@ -14,14 +14,15 @@
         "doctrine/dbal": "2.5.*",
         "fzaninotto/faker": "~1.4",
         "cnvs/easel": "3.4.*",
-        "laravel/framework": "5.3.*",
+        "laravel/framework": "5.4.*",
         "barryvdh/laravel-debugbar": "^2.3"
     },
     "require-dev": {
-        "phpunit/phpunit": "~5.0",
+        "phpunit/phpunit": "~5.7",
         "mockery/mockery": "0.9.*",
         "symfony/dom-crawler": "~3.0",
-        "symfony/css-selector": "~3.0"
+        "symfony/css-selector": "~3.0",
+        "laravel/browser-kit-testing": "1.*"
     },
     "autoload": {
         "classmap": [
@@ -32,12 +33,9 @@
         }
     },
     "autoload-dev": {
-        "classmap": [
-            "tests/TestCase.php",
-            "tests/InteractsWithDatabase.php",
-            "tests/CreatesUser.php",
-            "tests/TestHelper.php"
-        ]
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
     },
     "scripts": {
         "post-root-package-install": [

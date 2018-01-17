@@ -1,6 +1,11 @@
 <?php
 
-class PostCreatePageTest extends TestCase
+namespace Tests;
+
+use Auth;
+use Carbon\Carbon;
+
+class PostCreatePageTest extends BrowserKitTestCase
 {
     use InteractsWithDatabase, CreatesUser, TestHelper;
 
@@ -33,7 +38,7 @@ class PostCreatePageTest extends TestCase
             'slug'          => 'foo',
             'subtitle'      => 'bar',
             'content'       => 'FooBar',
-            'published_at'  =>  Carbon\Carbon::now(),
+            'published_at'  =>  Carbon::now(),
             'layout'        => config('blog.post_layout'),
         ];
 

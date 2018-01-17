@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests;
+
 use Canvas\Models\Tag;
 use Canvas\Models\Post;
 use Canvas\Models\User;

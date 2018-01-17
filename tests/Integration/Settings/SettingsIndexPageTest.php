@@ -1,8 +1,11 @@
 <?php
 
+namespace Tests;
+
+use Auth;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 
-class SettingsIndexPageTest extends TestCase
+class SettingsIndexPageTest extends BrowserKitTestCase
 {
     use InteractsWithDatabase, CreatesUser;
 

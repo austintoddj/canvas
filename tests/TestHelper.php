@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests;
+
 use Canvas\Helpers\CanvasHelper;
 
 trait TestHelper

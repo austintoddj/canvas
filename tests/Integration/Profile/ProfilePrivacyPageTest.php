@@ -1,6 +1,10 @@
 <?php
 
-class ProfilePrivacyPageTest extends TestCase
+namespace Tests;
+
+use Auth;
+
+class ProfilePrivacyPageTest extends BrowserKitTestCase
 {
     use InteractsWithDatabase, CreatesUser, TestHelper;
 
