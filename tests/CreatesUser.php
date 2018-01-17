@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests;
+
 use Canvas\Models\User;
 
 trait CreatesUser

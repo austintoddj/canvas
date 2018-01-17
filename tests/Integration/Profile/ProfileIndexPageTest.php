@@ -1,8 +1,12 @@
 <?php
 
+namespace Tests;
+
+use Auth;
+use Canvas\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 
-class ProfileIndexPageTest extends TestCase
+class ProfileIndexPageTest extends BrowserKitTestCase
 {
     use InteractsWithDatabase, CreatesUser;
 
@@ -45,7 +49,7 @@ class ProfileIndexPageTest extends TestCase
     public function it_shows_error_messages_for_required_fields()
     {
         Auth::guard('canvas')->login($this->user);
-        $this->actingAs(factory(Canvas\Models\User::class)->create())
+        $this->actingAs(factory(User::class)->create())
             ->visit(route('canvas.admin.profile.index'));
 
         // Fill in all of the required fields with an empty string

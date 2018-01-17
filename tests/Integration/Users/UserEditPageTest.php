@@ -1,8 +1,11 @@
 <?php
 
+namespace Tests;
+
+use Auth;
 use Canvas\Helpers\CanvasHelper;
 
-class UserEditPageTest extends TestCase
+class UserEditPageTest extends BrowserKitTestCase
 {
     use InteractsWithDatabase, CreatesUser;
 

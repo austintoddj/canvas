@@ -1,6 +1,11 @@
 <?php
 
-class PostIndexPageTest extends TestCase
+namespace Tests;
+
+use Auth;
+use Carbon\Carbon;
+
+class PostIndexPageTest extends BrowserKitTestCase
 {
     use InteractsWithDatabase, CreatesUser;
 
@@ -37,7 +42,7 @@ class PostIndexPageTest extends TestCase
             ->type('bar', 'subtitle')
             ->type('FooBar', 'content')
             ->type('example', 'title')
-            ->type(Carbon\Carbon::now(), 'published_at')
+            ->type(Carbon::now(), 'published_at')
             ->type(config('blog.post_layout'), 'layout')
             ->check('is_published')
             ->press('Save');

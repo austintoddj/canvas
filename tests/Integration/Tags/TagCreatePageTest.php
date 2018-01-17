@@ -1,6 +1,11 @@
 <?php
 
-class TagCreatePageTest extends TestCase
+namespace Tests;
+
+use Auth;
+use CanvasHelper;
+
+class TagCreatePageTest extends BrowserKitTestCase
 {
     use InteractsWithDatabase, CreatesUser, TestHelper;
 

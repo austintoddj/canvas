@@ -1,6 +1,10 @@
 <?php
 
-class UserIndexPageTest extends TestCase
+namespace Tests;
+
+use Auth;
+
+class UserIndexPageTest extends BrowserKitTestCase
 {
     use InteractsWithDatabase, CreatesUser;
 
