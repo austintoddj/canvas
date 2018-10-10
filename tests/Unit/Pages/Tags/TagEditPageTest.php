@@ -6,8 +6,8 @@ use Tests\TestCase;
 use Tests\TestHelper;
 use Tests\CreatesUser;
 use Illuminate\Http\Response;
-use Tests\InteractsWithDatabase;
 use Canvas\Helpers\CanvasHelper;
+use Tests\InteractsWithDatabase;
 
 class TagEditPageTest extends TestCase
 {

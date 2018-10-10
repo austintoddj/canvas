@@ -7,7 +7,6 @@ use Tests\TestHelper;
 use Tests\CreatesUser;
 use Illuminate\Http\Response;
 use Tests\InteractsWithDatabase;
-use Canvas\Helpers\CanvasHelper;
 
 class UserCreatePageTest extends TestCase
 {

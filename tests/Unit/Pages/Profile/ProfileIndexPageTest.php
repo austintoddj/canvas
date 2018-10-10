@@ -83,6 +83,5 @@ class ProfileIndexPageTest extends TestCase
             ->seePageIs(route('canvas.admin.profile.index'))
             ->see(trans('canvas::messages.update_success', ['entity' => 'profile']));
         $this->assertSessionMissing('errors');
-
     }
 }

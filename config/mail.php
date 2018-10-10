@@ -57,7 +57,7 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'admin@canvas.com'),
-        'name' => env('MAIL_FROM_NAME', 'Canvas')
+        'name' => env('MAIL_FROM_NAME', 'Canvas'),
     ],
 
     /*

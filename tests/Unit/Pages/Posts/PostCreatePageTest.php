@@ -69,7 +69,7 @@ class PostCreatePageTest extends TestCase
             ->seePostInDatabase([
                 'title' => 'example',
                 'content_raw' => 'FooBar',
-                'content_html' => '<p>FooBar</p>'
+                'content_html' => '<p>FooBar</p>',
             ])
             ->assertRedirectedTo(route('canvas.admin.post.edit', 2))
             ->seeInSession('_new-post', self::getCreateMessage())
