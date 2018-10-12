@@ -99,7 +99,7 @@ abstract class TestCase extends Orchestra
 
         include_once __DIR__.'/../database/migrations/2018_10_12_000000_create_posts_table.php';
         include_once __DIR__.'/../database/migrations/2018_10_12_000000_create_tags_table.php';
-        include_once __DIR__ . '/../database/migrations/2018_10_13_000000_create_taggables_table.php';
+        include_once __DIR__.'/../database/migrations/2018_10_13_000000_create_taggables_table.php';
 
         (new \CreatePostsTable())->up();
         (new \CreateTagsTable())->up();

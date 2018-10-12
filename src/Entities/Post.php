@@ -21,7 +21,7 @@ class Post extends BaseEntity
         'title',
         'summary',
         'body',
-        'user_id'
+        'user_id',
     ];
 
     /**
