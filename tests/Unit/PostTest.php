@@ -3,7 +3,6 @@
 namespace Canvas\Tests\Unit;
 
 use Canvas\Entities\Post;
-use Canvas\Interfaces\PostInterface;
 use Canvas\Tests\TestCase;
 
 class PostTest extends TestCase
