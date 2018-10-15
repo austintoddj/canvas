@@ -3,8 +3,8 @@
 namespace Canvas\Repositories\Eloquent;
 
 use Canvas\Entities\Post;
-use Canvas\Interfaces\PostInterface;
 use Illuminate\Support\Collection;
+use Canvas\Interfaces\PostInterface;
 
 class PostRepository extends EloquentAbstract implements PostInterface
 {

@@ -42,7 +42,7 @@ class PostController extends Controller
     public function index(): View
     {
         $data = [
-            'posts' => $this->postInterface->getByUserId(auth()->user()->id)->sortByDesc('created_at')
+            'posts' => $this->postInterface->getByUserId(auth()->user()->id)->sortByDesc('created_at'),
         ];
 
         return view('canvas::canvas.posts.index', compact('data'));
@@ -56,7 +56,7 @@ class PostController extends Controller
     public function create(): View
     {
         $data = [
-            'tags' => $this->tagInterface->all()
+            'tags' => $this->tagInterface->all(),
         ];
 
         return view('canvas::canvas.posts.create', compact('data'));
