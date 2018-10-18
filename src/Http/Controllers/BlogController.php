@@ -18,11 +18,9 @@ class BlogController extends Controller
 
     public function showPost($id)
     {
-
     }
 
     public function showTag($id)
     {
-
     }
 }
