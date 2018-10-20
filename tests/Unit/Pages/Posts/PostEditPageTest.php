@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Pages\Posts;
 
-
 use Tests\TestCase;
 use Tests\TestHelper;
 use Tests\CreatesUser;

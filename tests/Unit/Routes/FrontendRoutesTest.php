@@ -38,11 +38,11 @@ class FrontendRoutesTest extends TestCase
     public function it_can_access_a_blog_tag_page()
     {
         // Actions
-        $this->call('GET', env('APP_URL') . '/blog?tag=Getting+Started');
+        $this->call('GET', env('APP_URL').'/blog?tag=Getting+Started');
 
         // Assertions
         $this->assertResponseStatus(Response::HTTP_OK)
-            ->seePageIs(env('APP_URL') . '/blog?tag=Getting+Started')
+            ->seePageIs(env('APP_URL').'/blog?tag=Getting+Started')
             ->see(e('GETTING STARTED WITH CANVAS'));
     }
 
@@ -74,7 +74,7 @@ class FrontendRoutesTest extends TestCase
     public function it_will_receive_a_404_error_if_a_page_is_not_found()
     {
         // Actions
-        $this->call('GET', env('APP_URL') . '/404Error');
+        $this->call('GET', env('APP_URL').'/404Error');
 
         // Assertions
         $this->assertResponseStatus(Response::HTTP_NOT_FOUND)

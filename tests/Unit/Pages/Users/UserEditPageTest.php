@@ -5,8 +5,8 @@ namespace Tests\Unit\Pages\Users;
 use Tests\TestCase;
 use Tests\CreatesUser;
 use Illuminate\Http\Response;
-use Tests\InteractsWithDatabase;
 use Canvas\Helpers\CanvasHelper;
+use Tests\InteractsWithDatabase;
 
 class UserEditPageTest extends TestCase
 {
@@ -55,7 +55,7 @@ class UserEditPageTest extends TestCase
             ->seePageIs(route('canvas.admin.user.edit', 2))
             ->see(self::getUpdateMessage('User'))
             ->seeInDatabase(CanvasHelper::TABLES['users'], ['first_name' => 'New Name']);
-            $this->assertResponseStatus(Response::HTTP_OK);
+        $this->assertResponseStatus(Response::HTTP_OK);
     }
 
     /** @test */
@@ -70,7 +70,7 @@ class UserEditPageTest extends TestCase
             ->press('Delete User')
             ->see(self::getDeleteMessage())
             ->dontSeeInDatabase(CanvasHelper::TABLES['users'], ['first_name' => 'first']);
-            $this->assertResponseStatus(Response::HTTP_OK);
+        $this->assertResponseStatus(Response::HTTP_OK);
     }
 
     /** @test */
@@ -84,7 +84,7 @@ class UserEditPageTest extends TestCase
 
             // Assertions
             ->seePageIs(route('canvas.admin.user.privacy', 2));
-            $this->assertResponseStatus(Response::HTTP_OK);
+        $this->assertResponseStatus(Response::HTTP_OK);
     }
 
     /** @test */
@@ -100,6 +100,6 @@ class UserEditPageTest extends TestCase
             // Assertions
             ->seePageIs(route('canvas.admin.user.edit', 2))
             ->see(self::getUpdateMessage('password'));
-            $this->assertResponseStatus(Response::HTTP_OK);
+        $this->assertResponseStatus(Response::HTTP_OK);
     }
 }

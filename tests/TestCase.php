@@ -2,14 +2,9 @@
 
 namespace Tests;
 
-use Canvas\Models\User;
-use App\Exceptions\Handler;
-use Exception;
 use Faker\Generator;
-use Illuminate\Contracts\Debug\ExceptionHandler;
-use Illuminate\Database\Eloquent\Factory as EloquentFactory;
-use Illuminate\Foundation\Application;
 use Laravel\BrowserKitTesting\TestCase as BaseTestCase;
+use Illuminate\Database\Eloquent\Factory as EloquentFactory;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -22,6 +17,5 @@ abstract class TestCase extends BaseTestCase
         $this->app->singleton(EloquentFactory::class, function () {
             return EloquentFactory::construct(app(Generator::class), base_path().'/vendor/cnvs/easel/database/factories');
         });
-
     }
 }

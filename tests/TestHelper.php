@@ -37,6 +37,7 @@ trait TestHelper
 
         return $this->$method(CanvasHelper::TABLES['posts'], $data);
     }
+
     /**
      * Assert that data can be found in the tags table.
      *

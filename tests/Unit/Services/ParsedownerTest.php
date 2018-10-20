@@ -28,8 +28,8 @@ class ParsedownerTest extends TestCase
     }
 
     /**
-    * @return array
-    **/
+     * @return array
+     **/
     public static function conversionsProvider()
     {
         return [
