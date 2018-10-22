@@ -25,7 +25,7 @@ class PostTest extends TestCase
             'summary' => '',
             'body' => '',
             'slug' => '',
-            'published_at' => now()->toDateTimeString()
+            'published_at' => now()->toDateTimeString(),
         ]);
 
         $this->assertNotNull(Post::where('title', $post->title));
@@ -49,7 +49,7 @@ class PostTest extends TestCase
             'summary' => '',
             'body' => '',
             'slug' => '',
-            'published_at' => now()->toDateTimeString()
+            'published_at' => now()->toDateTimeString(),
         ]);
 
         $this->assertCount(2, app(PostInterface::class)->getByUserId($this->testUser->id));

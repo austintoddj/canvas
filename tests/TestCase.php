@@ -63,8 +63,8 @@ abstract class TestCase extends Orchestra
     {
         // If we're not in TravisCI, load our local .env file
         if (empty(getenv('CI'))) {
-            $envPath = realpath(__DIR__ . '/..');
-            if (!file_exists($envPath)) {
+            $envPath = realpath(__DIR__.'/..');
+            if (! file_exists($envPath)) {
                 $dotenv = new Dotenv($envPath);
                 $dotenv->load();
             }
@@ -77,7 +77,7 @@ abstract class TestCase extends Orchestra
             'prefix'   => '',
         ]);
 
-        $app['config']->set('view.paths', [__DIR__ . '/resources/views']);
+        $app['config']->set('view.paths', [__DIR__.'/resources/views']);
 
         // Use test User model for users provider
         $app['config']->set('auth.providers.users.model', User::class);
@@ -99,7 +99,7 @@ abstract class TestCase extends Orchestra
             $table->softDeletes();
         });
 
-        $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/database/migrations');
         $this->createTestUser();
         $this->createTestPost();
         $this->createTestTag();
@@ -126,7 +126,7 @@ abstract class TestCase extends Orchestra
             'summary'     => 'post summary',
             'body'        => 'post body',
             'slug'       => 'post-title',
-            'published_at' => now()->toDateTimeString()
+            'published_at' => now()->toDateTimeString(),
         ]);
     }
 
@@ -137,7 +137,7 @@ abstract class TestCase extends Orchestra
     {
         return Tag::create([
             'name' => 'tag name',
-            'slug' => 'tag-name'
+            'slug' => 'tag-name',
         ]);
     }
 }

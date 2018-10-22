@@ -16,7 +16,7 @@ class TagController extends Controller
         });
 
         $data = [
-            'posts' => $posts
+            'posts' => $posts,
         ];
 
         return view('canvas::blog.index', compact('data'));

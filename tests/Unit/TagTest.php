@@ -20,7 +20,7 @@ class TagTest extends TestCase
     {
         $tag = Tag::create([
             'name' => 'example',
-            'slug' => 'example'
+            'slug' => 'example',
         ]);
 
         $this->assertNotNull(Tag::where('name', $tag->title));

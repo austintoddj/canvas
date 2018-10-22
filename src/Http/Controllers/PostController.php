@@ -72,7 +72,7 @@ class PostController extends Controller
     public function show($slug): View
     {
         $data = [
-            'post' => app(PostInterface::class)->findBySlug($slug)
+            'post' => app(PostInterface::class)->findBySlug($slug),
         ];
 
         return view('canvas::blog.show', compact('data'));

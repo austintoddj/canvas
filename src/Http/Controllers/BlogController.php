@@ -18,7 +18,7 @@ class BlogController extends Controller
     public function index(): View
     {
         $data = [
-            'posts' => $this->paginate(app(PostInterface::class)->getPublished()->sortByDesc('created_at'), 10)
+            'posts' => $this->paginate(app(PostInterface::class)->getPublished()->sortByDesc('created_at'), 10),
         ];
 
         return view('canvas::blog.index', compact('data'));
