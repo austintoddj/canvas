@@ -41,7 +41,7 @@ class TagTest extends TestCase
     {
         return Tag::create([
             'name' => Faker::create()->word,
-            'slug' => Faker::create()->slug
+            'slug' => Faker::create()->slug,
         ]);
     }
 }
