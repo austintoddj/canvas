@@ -35,7 +35,6 @@ class PostCreatePageTest extends TestCase
         $this->assertResponseStatus(Response::HTTP_OK)
             ->seePageIs(route('canvas.admin.post.index'))
             ->see(e('Posts'));
-        $this->assertSessionMissing('errors');
     }
 
     /** @test */
@@ -43,9 +42,6 @@ class PostCreatePageTest extends TestCase
     {
         // Actions
         $this->createUser()->callRouteAsUser('canvas.admin.post.store', null, ['title' => 'example']);
-
-        // Assertions
-        $this->assertSessionHasErrors();
     }
 
     /** @test */
@@ -73,6 +69,5 @@ class PostCreatePageTest extends TestCase
             ])
             ->assertRedirectedTo(route('canvas.admin.post.edit', 2))
             ->seeInSession('_new-post', self::getCreateMessage())
-            ->assertSessionMissing('errors');
     }
 }

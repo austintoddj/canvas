@@ -24,7 +24,6 @@ class PostIndexPageTest extends TestCase
         $this->assertResponseStatus(Response::HTTP_OK)
             ->seePageIs(route('canvas.admin.post.index'))
             ->see(e('Posts'));
-        $this->assertSessionMissing('errors');
     }
 
     /** @test */
@@ -39,7 +38,6 @@ class PostIndexPageTest extends TestCase
         $this->assertResponseStatus(Response::HTTP_OK)
             ->seePageIs(route('canvas.admin.post.create'))
             ->see(e('Create a New Post'));
-        $this->assertSessionMissing('errors');
     }
 
     /** @test */

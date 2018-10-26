@@ -34,7 +34,6 @@ class PostEditPageTest extends TestCase
             ->see(e('Foo'))
             ->seePostInDatabase()
             ->assertSessionMissing('errors');
-        $this->assertResponseStatus(Response::HTTP_OK);
     }
 
     /** @test */
@@ -47,7 +46,6 @@ class PostEditPageTest extends TestCase
             // Assertions
             ->seePageIs(route('canvas.blog.post.show', 'hello-world'))
             ->assertSessionMissing('errors');
-        $this->assertResponseStatus(Response::HTTP_OK);
     }
 
     /** @test */
@@ -62,6 +60,5 @@ class PostEditPageTest extends TestCase
             ->dontSeePostInDatabase(1)
             ->seePageIs(route('canvas.admin.post.index'))
             ->assertSessionMissing('errors');
-        $this->assertResponseStatus(Response::HTTP_OK);
     }
 }
