@@ -3,7 +3,6 @@
 namespace Canvas\Interfaces;
 
 use Canvas\Entities\Tag;
-
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 interface TagInterface extends InterfaceAbstract
