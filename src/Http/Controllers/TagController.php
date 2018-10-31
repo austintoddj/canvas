@@ -23,7 +23,7 @@ class TagController extends Controller
      */
     public function show(TagInterface $tagRepository, string $slug): View
     {
-        $tag   = $tagRepository->findBySlug($slug);
+        $tag = $tagRepository->findBySlug($slug);
         $posts = $tag->posts->filter(function ($post) {
             return $post->published;
         });

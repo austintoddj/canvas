@@ -37,12 +37,12 @@ class TagTest extends TestCase
     /** @test **/
     public function it_can_generate_its_own_reliable_slug()
     {
-        $name         = 'My Tag';
+        $name = 'My Tag';
         $expectedSlug = str_slug($name);
-        $tagData      = ['name' => $name];
-        $tag1         = Tag::create($tagData);
-        $tag2         = Tag::create($tagData);
-        $tag3         = Tag::create($tagData);
+        $tagData = ['name' => $name];
+        $tag1 = Tag::create($tagData);
+        $tag2 = Tag::create($tagData);
+        $tag3 = Tag::create($tagData);
 
         $this->assertSame($expectedSlug, $tag1->slug);
         $this->assertSame("$expectedSlug-1", $tag2->slug);

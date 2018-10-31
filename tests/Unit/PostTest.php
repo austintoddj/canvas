@@ -59,12 +59,12 @@ class PostTest extends TestCase
     /** @test **/
     public function it_can_generate_its_own_reliable_slug()
     {
-        $title        = 'My Strange Post Name 24-7';
+        $title = 'My Strange Post Name 24-7';
         $expectedSlug = str_slug($title);
-        $postData     = array_merge($this->getTestDataForUser($this->testUser->id), ['title' => $title]);
-        $post1        = Post::create($postData);
-        $post2        = Post::create($postData);
-        $post3        = Post::create($postData);
+        $postData = array_merge($this->getTestDataForUser($this->testUser->id), ['title' => $title]);
+        $post1 = Post::create($postData);
+        $post2 = Post::create($postData);
+        $post3 = Post::create($postData);
 
         $this->assertSame($expectedSlug, $post1->slug);
         $this->assertSame("$expectedSlug-1", $post2->slug);

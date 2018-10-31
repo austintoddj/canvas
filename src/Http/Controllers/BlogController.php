@@ -2,8 +2,8 @@
 
 namespace Canvas\Http\Controllers;
 
-use Canvas\Traits\Paginator;
 use Illuminate\View\View;
+use Canvas\Traits\Paginator;
 use Illuminate\Routing\Controller;
 use Canvas\Interfaces\PostInterface;
 
