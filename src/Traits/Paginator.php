@@ -6,7 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-trait Paginate
+trait Paginator
 {
     /**
      * Generates pagination on a Collection or an array.
