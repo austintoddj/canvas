@@ -54,7 +54,7 @@ class Post extends Model
      * @var array
      */
     public $dates = [
-        'published_at'
+        'published_at',
     ];
 
     /**

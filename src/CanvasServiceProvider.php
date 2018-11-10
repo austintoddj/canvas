@@ -27,7 +27,7 @@ class CanvasServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/canvas.php', 'canvas');
+        $this->mergeConfigFrom(__DIR__.'/../config/canvas.php', 'canvas');
         $this->commands([
             Console\InstallCommand::class,
         ]);
@@ -41,7 +41,7 @@ class CanvasServiceProvider extends ServiceProvider
     private function registerRoutes()
     {
         Route::namespace('Canvas\Http\Controllers')->group(function () {
-            $this->loadRoutesFrom(__DIR__ . '/Http/routes.php');
+            $this->loadRoutesFrom(__DIR__.'/Http/routes.php');
         });
     }
 
@@ -52,7 +52,7 @@ class CanvasServiceProvider extends ServiceProvider
      */
     private function registerResources()
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'canvas');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'canvas');
     }
 
     /**
@@ -63,7 +63,7 @@ class CanvasServiceProvider extends ServiceProvider
     private function registerMigrations()
     {
         if ($this->app->runningInConsole()) {
-            $this->loadMigrationsFrom(__DIR__ . '/Migrations');
+            $this->loadMigrationsFrom(__DIR__.'/Migrations');
         }
     }
 
@@ -76,13 +76,13 @@ class CanvasServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../public' => public_path('vendor/canvas'),
+                __DIR__.'/../public' => public_path('vendor/canvas'),
             ], 'assets');
             $this->publishes([
-                __DIR__ . '/../config/canvas.php' => config_path('canvas.php'),
+                __DIR__.'/../config/canvas.php' => config_path('canvas.php'),
             ], 'config');
             $this->publishes([
-                __DIR__ . '/../resources/views' => resource_path('views/vendor/canvas'),
+                __DIR__.'/../resources/views' => resource_path('views/vendor/canvas'),
             ], 'views');
         }
     }
