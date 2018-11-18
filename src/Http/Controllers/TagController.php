@@ -80,7 +80,7 @@ class TagController extends Controller
 
         validator($data, [
             'name' => 'required',
-            'slug' => 'required|' . Rule::unique('canvas_tags', 'slug')->ignore(request('id')) . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug' => 'required|'.Rule::unique('canvas_tags', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
         ])->validate();
 
         $tag = new Tag(['id' => request('id')]);
@@ -109,7 +109,7 @@ class TagController extends Controller
 
         validator($data, [
             'name' => 'required',
-            'slug' => 'required|' . Rule::unique('canvas_tags', 'slug')->ignore(request('id')) . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug' => 'required|'.Rule::unique('canvas_tags', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
         ])->validate();
 
         $tag->fill($data);
