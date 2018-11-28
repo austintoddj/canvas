@@ -15,7 +15,7 @@ class IncrementViewCount
      */
     public function handle(PostViewed $event)
     {
-        if (!$this->recentlyViewed($event->post)) {
+        if (! $this->recentlyViewed($event->post)) {
             $event->post->increment('views');
             $this->storeInSession($event->post);
         }
@@ -42,7 +42,7 @@ class IncrementViewCount
      */
     private function storeInSession(Post $post)
     {
-        $key = 'viewed_posts.' . $post->id;
+        $key = 'viewed_posts.'.$post->id;
         session()->put($key, time());
     }
 }

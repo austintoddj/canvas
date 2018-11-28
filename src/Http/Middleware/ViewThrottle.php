@@ -19,7 +19,7 @@ class ViewThrottle
     {
         $posts = $this->getViewedPosts();
 
-        if (!is_null($posts)) {
+        if (! is_null($posts)) {
             $posts = $this->cleanExpiredViews($posts);
             $this->storeInSession($posts);
         }

@@ -12,6 +12,6 @@ trait EventMap
     protected $events = [
         Events\PostViewed::class => [
             Listeners\IncrementViewCount::class,
-        ]
+        ],
     ];
 }

@@ -2,12 +2,12 @@
 
 namespace Canvas\Http\Controllers;
 
-use Canvas\Events\PostViewed;
 use Canvas\Tag;
 use Canvas\Post;
 use Carbon\Carbon;
 use Illuminate\View\View;
 use Illuminate\Support\Str;
+use Canvas\Events\PostViewed;
 use Illuminate\Validation\Rule;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\RedirectResponse;
