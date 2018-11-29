@@ -22,7 +22,7 @@ class StatsController extends Controller
                 'all'       => $posts,
                 'published' => $posts->where('published_at', '<=', now()->toDateTimeString()),
                 'drafts'    => $posts->where('published_at', '>', now()->toDateTimeString()),
-            ]
+            ],
         ];
 
         return view('canvas::canvas.stats.index', compact('data'));
