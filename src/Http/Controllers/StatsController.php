@@ -40,7 +40,7 @@ class StatsController extends Controller
 
         if ($post->published) {
             $data = [
-                'post' => $post
+                'post' => $post,
             ];
 
             return view('canvas::canvas.stats.show', compact('data'));
