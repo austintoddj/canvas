@@ -123,14 +123,14 @@ class PostController extends Controller
 
         validator($data, [
             'title'        => 'required',
-            'slug'         => 'required|' . Rule::unique('canvas_posts', 'slug')->ignore(request('id')) . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug'         => 'required|'.Rule::unique('canvas_posts', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
             'published_at' => 'required|date',
             'user_id'      => 'required',
         ])->validate();
 
         $post = new Post(['id' => request('id')]);
         $post->fill($data);
-        if (!is_null($data['featured_image'])) {
+        if (! is_null($data['featured_image'])) {
             $post->featured_image = $this->uploadImage($data['featured_image']);
         }
         $post->meta = $data['meta'];
@@ -173,7 +173,7 @@ class PostController extends Controller
 
         validator($data, [
             'title'        => 'required',
-            'slug'         => 'required|' . Rule::unique('canvas_posts', 'slug')->ignore($id) . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug'         => 'required|'.Rule::unique('canvas_posts', 'slug')->ignore($id).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
             'published_at' => 'required',
             'user_id'      => 'required',
         ])->validate();
@@ -217,7 +217,7 @@ class PostController extends Controller
 
         return collect($incomingTags)->map(function ($incomingTag) use ($tags) {
             $tag = $tags->where('slug', Str::slug($incomingTag['name']))->first();
-            if (!$tag) {
+            if (! $tag) {
                 $tag = Tag::create([
                     'id'   => $id = Str::uuid(),
                     'name' => $incomingTag['name'],
@@ -225,7 +225,7 @@ class PostController extends Controller
                 ]);
             }
 
-            return (string)$tag->id;
+            return (string) $tag->id;
         })->toArray();
     }
 
