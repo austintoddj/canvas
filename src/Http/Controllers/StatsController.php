@@ -69,13 +69,13 @@ class StatsController extends Controller
         if ($n < 900) {
             $n_format = number_format($n, $precision);
             $suffix = '';
-        } else if ($n < 900000) {
+        } elseif ($n < 900000) {
             $n_format = number_format($n / 1000, $precision);
             $suffix = 'K';
-        } else if ($n < 900000000) {
+        } elseif ($n < 900000000) {
             $n_format = number_format($n / 1000000, $precision);
             $suffix = 'M';
-        } else if ($n < 900000000000) {
+        } elseif ($n < 900000000000) {
             $n_format = number_format($n / 1000000000, $precision);
             $suffix = 'B';
         } else {
@@ -84,10 +84,10 @@ class StatsController extends Controller
         }
 
         if ($precision > 0) {
-            $dot_zero = '.' . str_repeat('0', $precision);
+            $dot_zero = '.'.str_repeat('0', $precision);
             $n_format = str_replace($dot_zero, '', $n_format);
         }
 
-        return $n_format . $suffix;
+        return $n_format.$suffix;
     }
 }
