@@ -9,7 +9,6 @@ use Illuminate\View\View;
 use Illuminate\Support\Str;
 use Canvas\Events\PostViewed;
 use Illuminate\Validation\Rule;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
