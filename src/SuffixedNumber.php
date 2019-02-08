@@ -31,7 +31,7 @@ class SuffixedNumber
         }
 
         if ($precision > 0) {
-            $dot_zero = '.' . str_repeat('0', $precision);
+            $dot_zero = '.'.str_repeat('0', $precision);
             $n_format = str_replace($dot_zero, '', $n_format);
         }
 

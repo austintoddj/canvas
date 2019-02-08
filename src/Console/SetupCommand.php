@@ -63,7 +63,7 @@ class SetupCommand extends Command
         );
 
         $this->line('');
-        $this->line('<info>[✔]</info> Canvas is setup and ready to use. Enjoy! Head over to ' . route('blog.index') . ' to get started.');
+        $this->line('<info>[✔]</info> Canvas is setup and ready to use. Enjoy! Head over to '.route('blog.index').' to get started.');
     }
 
     /**
