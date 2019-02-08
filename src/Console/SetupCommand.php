@@ -53,7 +53,7 @@ class SetupCommand extends Command
 
         file_put_contents(
             base_path('routes/web.php'),
-            file_get_contents(dirname(__DIR__, 2) . '/stubs/routes.stub'),
+            file_get_contents(dirname(__DIR__, 2).'/stubs/routes.stub'),
             FILE_APPEND
         );
 
@@ -67,11 +67,11 @@ class SetupCommand extends Command
      */
     protected function createDirectories()
     {
-        if (!is_dir($directory = resource_path('views/blog/layouts'))) {
+        if (! is_dir($directory = resource_path('views/blog/layouts'))) {
             mkdir($directory, 0755, true);
         }
 
-        if (!is_dir($directory = resource_path('views/blog/partials'))) {
+        if (! is_dir($directory = resource_path('views/blog/partials'))) {
             mkdir($directory, 0755, true);
         }
     }
@@ -84,8 +84,8 @@ class SetupCommand extends Command
     protected function exportViews()
     {
         foreach ($this->views as $key => $value) {
-            if (file_exists($view = resource_path('views/blog/' . $value))) {
-                if (!$this->confirm("The [{$value}] view already exists. Do you want to replace it?")) {
+            if (file_exists($view = resource_path('views/blog/'.$value))) {
+                if (! $this->confirm("The [{$value}] view already exists. Do you want to replace it?")) {
                     continue;
                 }
             }
@@ -107,7 +107,7 @@ class SetupCommand extends Command
         return str_replace(
             '{{namespace}}',
             $this->getAppNamespace(),
-            file_get_contents(dirname(__DIR__, 2) . '/stubs/controllers/BlogController.stub')
+            file_get_contents(dirname(__DIR__, 2).'/stubs/controllers/BlogController.stub')
         );
     }
 }

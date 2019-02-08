@@ -3,7 +3,6 @@
 namespace Canvas\Http\Controllers;
 
 use Canvas\Tag;
-use Canvas\Post;
 use Illuminate\View\View;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
