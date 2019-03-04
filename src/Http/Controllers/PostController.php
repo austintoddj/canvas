@@ -92,7 +92,7 @@ class PostController extends Controller
 
         validator($data, [
             'title'        => 'required',
-            'slug'         => 'required|' . Rule::unique('canvas_posts', 'slug')->ignore(request('id')) . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug'         => 'required|'.Rule::unique('canvas_posts', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
             'published_at' => 'required|date',
             'user_id'      => 'required',
         ])->validate();
@@ -102,13 +102,13 @@ class PostController extends Controller
         $post->meta = $data['meta'];
         $post->save();
 
-        if (!is_null(request('tags'))) {
+        if (! is_null(request('tags'))) {
             $post->tags()->sync(
                 $this->collectTags(request('tags') ?? [])
             );
         }
 
-        if (!is_null(request('topic'))) {
+        if (! is_null(request('topic'))) {
             $post->topic()->sync(
                 $this->assignTopics([request('topic')] ?? [])
             );
@@ -148,7 +148,7 @@ class PostController extends Controller
 
         validator($data, [
             'title'        => 'required',
-            'slug'         => 'required|' . Rule::unique('canvas_posts', 'slug')->ignore($id) . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug'         => 'required|'.Rule::unique('canvas_posts', 'slug')->ignore($id).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
             'published_at' => 'required',
             'user_id'      => 'required',
         ])->validate();
@@ -157,13 +157,13 @@ class PostController extends Controller
         $post->meta = $data['meta'];
         $post->save();
 
-        if (!is_null(request('tags'))) {
+        if (! is_null(request('tags'))) {
             $post->tags()->sync(
                 $this->collectTags(request('tags') ?? [])
             );
         }
 
-        if (!is_null(request('topic'))) {
+        if (! is_null(request('topic'))) {
             $post->topic()->sync(
                 $this->assignTopics([request('topic')] ?? [])
             );
@@ -201,7 +201,7 @@ class PostController extends Controller
         return collect($incomingTags)->map(function ($incomingTag) use ($tags) {
             $tag = $tags->where('slug', $incomingTag['slug'])->first();
 
-            if (!$tag) {
+            if (! $tag) {
                 $tag = Tag::create([
                     'id'   => $id = Str::uuid(),
                     'name' => $incomingTag['name'],
@@ -209,7 +209,7 @@ class PostController extends Controller
                 ]);
             }
 
-            return (string)$tag->id;
+            return (string) $tag->id;
         })->toArray();
     }
 
@@ -228,7 +228,7 @@ class PostController extends Controller
         return collect($incomingTopics)->map(function ($incomingTopic) use ($topics) {
             $topic = $topics->where('slug', $incomingTopic['slug'])->first();
 
-            if (!$topic) {
+            if (! $topic) {
                 $topic = Topic::create([
                     'id'   => $id = Str::uuid(),
                     'name' => $incomingTopic['name'],
@@ -236,7 +236,7 @@ class PostController extends Controller
                 ]);
             }
 
-            return (string)$topic->id;
+            return (string) $topic->id;
         })->toArray();
     }
 }
