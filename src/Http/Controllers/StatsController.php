@@ -20,7 +20,7 @@ class StatsController extends Controller
         $posts = Post::withCount('views')->orderByDesc('created_at')->paginate();
         $views = View::whereBetween('created_at', [
             now()->subDays(self::DAYS_PRIOR)->toDateTimeString(),
-            now()->toDateTimeString()
+            now()->toDateTimeString(),
         ])->select('created_at')->get();
 
         $data = [
