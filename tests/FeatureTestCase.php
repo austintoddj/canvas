@@ -60,7 +60,7 @@ class FeatureTestCase extends TestCase
             'prefix'   => '',
         ]);
 
-        $config->set('view.paths', [dirname(__DIR__) . '/resources/views']);
+        $config->set('view.paths', [dirname(__DIR__).'/resources/views']);
 
         $config->set('auth.providers.users.model', User::class);
     }
@@ -73,9 +73,9 @@ class FeatureTestCase extends TestCase
     {
         $this->loadLaravelMigrations();
 
-        $this->loadMigrationsFrom(dirname(__DIR__) . '/database/migrations');
+        $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
 
-        $this->loadFactoriesUsing($app, dirname(__DIR__) . '/database/factories');
+        $this->loadFactoriesUsing($app, dirname(__DIR__).'/database/factories');
 
         $this->artisan('migrate');
     }
