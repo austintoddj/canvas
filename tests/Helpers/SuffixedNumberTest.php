@@ -20,7 +20,7 @@ class SuffixedNumberTest extends FeatureTestCase
     {
         static $number = 899;
 
-        $this->assertEquals((string)$number, SuffixedNumber::format($number));
+        $this->assertEquals((string) $number, SuffixedNumber::format($number));
     }
 
     /** @test */
