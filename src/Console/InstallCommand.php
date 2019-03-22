@@ -61,7 +61,7 @@ class InstallCommand extends Command
         $namespace = Str::replaceLast('\\', '', $this->getAppNamespace());
         $appConfig = file_get_contents(config_path('app.php'));
 
-        if (Str::contains($appConfig, $namespace . '\\Providers\\CanvasServiceProvider::class')) {
+        if (Str::contains($appConfig, $namespace.'\\Providers\\CanvasServiceProvider::class')) {
             return;
         }
 
@@ -74,8 +74,8 @@ class InstallCommand extends Command
         $eol = array_keys($lineEndingCount, max($lineEndingCount))[0];
 
         file_put_contents(config_path('app.php'), str_replace(
-            "{$namespace}\\Providers\EventServiceProvider::class," . $eol,
-            "{$namespace}\\Providers\EventServiceProvider::class," . $eol . "        {$namespace}\Providers\CanvasServiceProvider::class," . $eol,
+            "{$namespace}\\Providers\EventServiceProvider::class,".$eol,
+            "{$namespace}\\Providers\EventServiceProvider::class,".$eol."        {$namespace}\Providers\CanvasServiceProvider::class,".$eol,
             $appConfig
         ));
 
