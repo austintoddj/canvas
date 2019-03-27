@@ -36,7 +36,7 @@ class StoreViewDataTest extends TestCase
             'user_id' => 1,
         ]);
 
-        $key = 'viewed_posts.' . $post->id;
+        $key = 'viewed_posts.'.$post->id;
 
         session()->put($key, time());
 
