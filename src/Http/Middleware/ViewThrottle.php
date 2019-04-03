@@ -26,7 +26,7 @@ class ViewThrottle
     {
         $posts = $this->getViewedPosts();
 
-        if (!is_null($posts)) {
+        if (! is_null($posts)) {
             $this->pruneExpiredViews($posts);
         }
 
@@ -59,7 +59,7 @@ class ViewThrottle
 
         foreach ($collection as $key => $value) {
             if ($value < $time - $throttleLimit) {
-                session()->forget('viewed_posts.' . $key);
+                session()->forget('viewed_posts.'.$key);
             }
         }
     }
