@@ -55,7 +55,7 @@ class Exporter
                 'views'       => $this->gatherViewData(),
                 'user'        => $this->gatherUserData(),
             ],
-        ])->toJson(JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+        ])->toJson(JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
         $this->file = sprintf('%s/%s/%s_export.json', config('canvas.storage_path'), 'exports', time());
 
@@ -157,7 +157,6 @@ class Exporter
      */
     private function gatherViewData(): array
     {
-
         return [];
     }
 

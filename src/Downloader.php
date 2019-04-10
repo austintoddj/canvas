@@ -17,7 +17,7 @@ class Downloader
         $file = Storage::disk(config('canvas.storage_disk'))
             ->getDriver()
             ->getAdapter()
-            ->applyPathPrefix($path);;
+            ->applyPathPrefix($path);
 
         return response()->download($file);
     }
