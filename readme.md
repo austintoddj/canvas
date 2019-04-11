@@ -82,7 +82,7 @@ php artisan canvas:publish
 Run the tests with:
 
 ```bash
-composer test
+npm run test
 ```
 
 ## License

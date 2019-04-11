@@ -1,12 +1,38 @@
 <?php
 
-namespace Canvas;
+namespace Canvas\Models;
 
 use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Canvas\Models\View
+ *
+ * @property int         $id
+ * @property string      $post_id
+ * @property string|null $ip
+ * @property string|null $agent
+ * @property string|null $referer
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Post   $post
+ * @method static Builder|View newModelQuery()
+ * @method static Builder|View newQuery()
+ * @method static Builder|View query()
+ * @method static Builder|View whereAgent($value)
+ * @method static Builder|View whereCreatedAt($value)
+ * @method static Builder|View whereId($value)
+ * @method static Builder|View whereIp($value)
+ * @method static Builder|View wherePostId($value)
+ * @method static Builder|View whereReferer($value)
+ * @method static Builder|View whereUpdatedAt($value)
+ * @mixin Model
+ * @mixin Builder
+ */
 class View extends Model
 {
     /**
@@ -56,6 +82,7 @@ class View extends Model
 
         // Prep the array to perform a comparison with the actual view data
         $range = collect();
+        /** @var Carbon $date */
         foreach ($period as $key => $date) {
             $range->push($date->toDateString());
         }

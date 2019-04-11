@@ -19,7 +19,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <h5 class="card-title text-muted small text-uppercase font-weight-bold">Views (30 days)</h5>
-                                <p class="card-text display-4">{{ \Canvas\SuffixedNumber::format($data['views']['count']) }}</p>
+                                <p class="card-text display-4">{{ $canvasNumberFormatter->format($data['views']['count']) }}</p>
                             </div>
                         </div>
                         <div class="card">

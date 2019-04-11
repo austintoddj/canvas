@@ -2,17 +2,20 @@
 
 namespace Canvas\Http\Controllers;
 
-use Canvas\Topic;
+use Canvas\Models\Topic;
+use Exception;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Routing\Controller;
+use Illuminate\View\View;
 
 class TopicController extends Controller
 {
     /**
      * Get all of the topics.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function index()
     {
@@ -26,7 +29,7 @@ class TopicController extends Controller
     /**
      * Create a new topic.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function create()
     {
@@ -41,7 +44,8 @@ class TopicController extends Controller
      * Edit a given topic.
      *
      * @param string $id
-     * @return \Illuminate\View\View
+     *
+     * @return View
      */
     public function edit(string $id)
     {
@@ -55,19 +59,20 @@ class TopicController extends Controller
     /**
      * Save a new topic.
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store()
     {
         $data = [
-            'id'   => request('id'),
+            'id' => request('id'),
             'name' => request('name'),
             'slug' => request('slug'),
         ];
 
         validator($data, [
             'name' => 'required',
-            'slug' => 'required|'.Rule::unique('canvas_topics', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug' => 'required|' . Rule::unique('canvas_topics', 'slug')->ignore(request('id'))
+                . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
         ])->validate();
 
         $topic = new Topic(['id' => request('id')]);
@@ -81,21 +86,23 @@ class TopicController extends Controller
      * Save a given topic.
      *
      * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
+     *
+     * @return RedirectResponse
      */
     public function update(string $id)
     {
         $topic = Topic::findOrFail($id);
 
         $data = [
-            'id'   => request('id'),
+            'id' => request('id'),
             'name' => request('name'),
             'slug' => request('slug'),
         ];
 
         validator($data, [
             'name' => 'required',
-            'slug' => 'required|'.Rule::unique('canvas_topics', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug' => 'required|' . Rule::unique('canvas_topics', 'slug')->ignore(request('id'))
+                . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
         ])->validate();
 
         $topic->fill($data);
@@ -108,7 +115,9 @@ class TopicController extends Controller
      * Delete a given topic.
      *
      * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
+     *
+     * @return RedirectResponse
+     * @throws Exception
      */
     public function destroy(string $id)
     {

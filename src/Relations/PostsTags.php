@@ -1,10 +1,10 @@
 <?php
 
-namespace Canvas;
+namespace Canvas\Relations;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class PostTags extends Pivot
+final class PostsTags extends Pivot
 {
     /**
      * The attributes that aren't mass assignable.

@@ -4,7 +4,7 @@ namespace Canvas\Tests;
 
 use ReflectionClass;
 use ReflectionException;
-use Canvas\CanvasServiceProvider;
+use Canvas\ServiceProvider;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -31,7 +31,7 @@ abstract class TestCase extends OrchestraTestCase
     protected function getPackageProviders($app): array
     {
         return [
-            CanvasServiceProvider::class,
+            ServiceProvider::class,
         ];
     }
 

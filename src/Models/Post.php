@@ -1,9 +1,10 @@
 <?php
 
-namespace Canvas;
+namespace Canvas\Models;
 
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,57 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * Canvas\Models\Post
+ *
+ * @property-read User               $author
+ * @property-read array              $popular_reading_times
+ * @property-read bool               $published
+ * @property-read string             $read_time
+ * @property-read array              $top_referers
+ * @property-read array              $view_trend
+ * @property-read Collection|Tag[]   $tags
+ * @property-read Collection|Topic[] $topic
+ * @property-read User               $user
+ * @property-read Collection|View[]  $views
+ * @method static bool|null forceDelete()
+ * @method static Builder|Post newModelQuery()
+ * @method static Builder|Post newQuery()
+ * @method static \Illuminate\Database\Query\Builder|Post onlyTrashed()
+ * @method static Builder|Post published()
+ * @method static Builder|Post query()
+ * @method static bool|null restore()
+ * @method static \Illuminate\Database\Query\Builder|Post withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|Post withoutTrashed()
+ * @property string $id
+ * @property string $slug
+ * @property string $title
+ * @property string|null $summary
+ * @property string|null $body
+ * @property \Illuminate\Support\Carbon $published_at
+ * @property string|null $featured_image
+ * @property string|null $featured_image_caption
+ * @property string $user_id
+ * @property array|null $meta
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @method static Builder|Post whereBody($value)
+ * @method static Builder|Post whereCreatedAt($value)
+ * @method static Builder|Post whereDeletedAt($value)
+ * @method static Builder|Post whereFeaturedImage($value)
+ * @method static Builder|Post whereFeaturedImageCaption($value)
+ * @method static Builder|Post whereId($value)
+ * @method static Builder|Post whereMeta($value)
+ * @method static Builder|Post wherePublishedAt($value)
+ * @method static Builder|Post whereSlug($value)
+ * @method static Builder|Post whereSummary($value)
+ * @method static Builder|Post whereTitle($value)
+ * @method static Builder|Post whereUpdatedAt($value)
+ * @method static Builder|Post whereUserId($value)
+ * @mixin Model
+ * @mixin Builder
+ */
 class Post extends Model
 {
     use SoftDeletes;
@@ -80,7 +132,7 @@ class Post extends Model
     /**
      * Get the tags relationship.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @return BelongsToMany
      */
     public function tags(): BelongsToMany
     {
@@ -90,9 +142,9 @@ class Post extends Model
     /**
      * Get the topics relationship.
      *
-     * @return belongsToMany
+     * @return BelongsToMany
      */
-    public function topic(): belongsToMany
+    public function topic(): BelongsToMany
     {
         return $this->belongsToMany(Topic::class, 'canvas_posts_topics', 'post_id', 'topic_id');
     }
@@ -100,7 +152,7 @@ class Post extends Model
     /**
      * Get the user relationship.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
     public function user(): BelongsTo
     {
@@ -120,21 +172,20 @@ class Post extends Model
     /**
      * Get the user who authored the post.
      *
-     * @param $value
      * @return User
      */
-    public function getAuthorAttribute($value): User
+    public function getAuthorAttribute(): User
     {
+        /** @noinspection PhpUndefinedMethodInspection */
         return User::find($this->user_id);
     }
 
     /**
      * Check to see if the post is published.
      *
-     * @param $value
      * @return bool
      */
-    public function getPublishedAttribute($value): bool
+    public function getPublishedAttribute(): bool
     {
         if ($this->published_at <= now()->toDateTimeString()) {
             return true;
@@ -146,10 +197,9 @@ class Post extends Model
     /**
      * Get the human-friendly estimated reading time of a post.
      *
-     * @param $value
      * @return string
      */
-    public function getReadTimeAttribute($value): string
+    public function getReadTimeAttribute(): string
     {
         // Only count words in our estimation
         $words = str_word_count(strip_tags($this->body));
@@ -163,17 +213,16 @@ class Post extends Model
     /**
      * Get the 10 most popular reading times rounded to the nearest 30 minutes.
      *
-     * @param $value
      * @return array
      */
-    public function getPopularReadingTimesAttribute($value): array
+    public function getPopularReadingTimesAttribute(): array
     {
         // Get the views associated with the post
-        $data = View::where('post_id', $this->id)->get();
+        $data = $this->views()->where('post_id', $this->id)->get();
 
         // Filter the view data to only include hours:minutes
         $collection = collect();
-        $data->each(function ($item, $key) use ($collection) {
+        $data->each(function ($item) use ($collection) {
             $collection->push($item->created_at->minute(0)->format('H:i'));
         });
 
@@ -182,7 +231,6 @@ class Post extends Model
 
         $popular_reading_times = collect();
         foreach ($filtered as $key => $value) {
-
             // Use each given time to create a 60 min range
             $start_time = Carbon::createFromTimeString($key);
             $end_time = $start_time->copy()->addMinutes(60);
@@ -191,7 +239,10 @@ class Post extends Model
             $percentage = number_format($value / $data->count() * 100, 2);
 
             // Get a human-readable hour range and floating percentage
-            $popular_reading_times->put(sprintf('%s - %s', $start_time->format('g:i A'), $end_time->format('g:i A')), $percentage);
+            $popular_reading_times->put(
+                sprintf('%s - %s', $start_time->format('g:i A'), $end_time->format('g:i A')),
+                $percentage
+            );
         }
 
         // Cast the collection to an array
@@ -209,17 +260,16 @@ class Post extends Model
     /**
      * Get the top 10 referring websites for a post.
      *
-     * @param $value
      * @return array
      */
-    public function getTopReferersAttribute($value): array
+    public function getTopReferersAttribute(): array
     {
         // Get the views associated with the post
         $data = $this->views;
 
         // Filter the view data to only include referrers
         $collection = collect();
-        $data->each(function ($item, $key) use ($collection) {
+        $data->each(function ($item) use ($collection) {
             is_null($item->referer) ? $collection->push('Other') : $collection->push(parse_url($item->referer)['host']);
         });
 
@@ -238,22 +288,21 @@ class Post extends Model
     /**
      * Return a view count for the last 30 days.
      *
-     * @param $value
      * @return array
      */
-    public function getViewTrendAttribute($value): array
+    public function getViewTrendAttribute(): array
     {
         // Get the views associated with the post
         $data = $this->views;
 
         // Filter views to only include the last 30 days
-        $filtered = $data->filter(function ($value, $key) {
+        $filtered = $data->filter(function ($value) {
             return $value->created_at >= now()->subDays(30);
         });
 
         // Filter the view data to only include created_at time strings
         $collection = collect();
-        $filtered->sortBy('created_at')->each(function ($item, $key) use ($collection) {
+        $filtered->sortBy('created_at')->each(function ($item) use ($collection) {
             $collection->push($item->created_at->toDateString());
         });
 
@@ -265,6 +314,7 @@ class Post extends Model
 
         // Prep the array to perform a comparison with the actual view data
         $range = collect();
+        /** @var Carbon $date */
         foreach ($period as $key => $date) {
             $range->push($date->toDateString());
         }
@@ -286,6 +336,7 @@ class Post extends Model
      * Scope a query to only include published posts.
      *
      * @param Builder $query
+     *
      * @return Builder
      */
     public function scopePublished($query): Builder

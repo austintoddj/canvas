@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Canvas\Tag;
-use Canvas\Post;
-use Canvas\Topic;
+use Canvas\Models\Tag;
+use Canvas\Models\Post;
+use Canvas\Models\Topic;
 use Illuminate\View\View;
 use Canvas\Events\PostViewed;
 

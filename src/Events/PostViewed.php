@@ -2,7 +2,7 @@
 
 namespace Canvas\Events;
 
-use Canvas\Post;
+use Canvas\Models\Post;
 
 class PostViewed
 {

@@ -75,7 +75,8 @@ class InstallCommand extends Command
 
         file_put_contents(config_path('app.php'), str_replace(
             "{$namespace}\\Providers\EventServiceProvider::class,".$eol,
-            "{$namespace}\\Providers\EventServiceProvider::class,".$eol."        {$namespace}\Providers\CanvasServiceProvider::class,".$eol,
+            "{$namespace}\\Providers\EventServiceProvider::class,".$eol
+                ."{$namespace}\Providers\CanvasServiceProvider::class,".$eol,
             $appConfig
         ));
 

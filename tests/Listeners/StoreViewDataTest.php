@@ -2,7 +2,7 @@
 
 namespace Canvas\Tests\Listeners;
 
-use Canvas\Post;
+use Canvas\Models\Post;
 use Canvas\Tests\TestCase;
 use Illuminate\Support\Str;
 use Canvas\Listeners\StoreViewData;

@@ -2,8 +2,8 @@
 
 namespace Canvas\Http\Controllers;
 
-use Canvas\Post;
-use Canvas\View;
+use Canvas\Models\Post;
+use Canvas\Models\View;
 use Illuminate\Routing\Controller;
 
 class StatsController extends Controller
@@ -13,7 +13,7 @@ class StatsController extends Controller
      *
      * @const int
      */
-    const DAYS_PRIOR = 30;
+    private const DAYS_PRIOR = 30;
 
     /**
      * Get all of the posts and views.

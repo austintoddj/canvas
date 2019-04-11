@@ -1,6 +1,9 @@
 <?php
 
-namespace Canvas;
+namespace Canvas\Traits;
+
+use Canvas\Events\PostViewed;
+use Canvas\Listeners\StoreViewData;
 
 trait EventMap
 {
@@ -10,8 +13,8 @@ trait EventMap
      * @var array
      */
     protected $events = [
-        Events\PostViewed::class => [
-            Listeners\StoreViewData::class,
+        PostViewed::class => [
+            StoreViewData::class,
         ],
     ];
 }

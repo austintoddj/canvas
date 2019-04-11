@@ -2,20 +2,23 @@
 
 namespace Canvas\Http\Controllers;
 
-use Canvas\Tag;
-use Canvas\Post;
-use Canvas\Topic;
+use Canvas\Models\Tag;
+use Canvas\Models\Post;
+use Canvas\Models\Topic;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Routing\Controller;
+use Illuminate\View\View;
 
 class PostController extends Controller
 {
     /**
      * Get all of the posts.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function index()
     {
@@ -29,7 +32,7 @@ class PostController extends Controller
     /**
      * Create a new post.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function create()
     {
@@ -46,7 +49,7 @@ class PostController extends Controller
      * Edit a given post.
      *
      * @param string $id
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function edit(string $id)
     {
@@ -65,7 +68,7 @@ class PostController extends Controller
     /**
      * Save a new post.
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store()
     {
@@ -90,7 +93,8 @@ class PostController extends Controller
 
         validator($data, [
             'title'        => 'required',
-            'slug'         => 'required|'.Rule::unique('canvas_posts', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug'         => 'required|'.Rule::unique('canvas_posts', 'slug')->ignore(request('id'))
+                . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
             'published_at' => 'required|date',
             'user_id'      => 'required',
         ])->validate();
@@ -115,7 +119,7 @@ class PostController extends Controller
      * Save a given post.
      *
      * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function update(string $id)
     {
@@ -142,7 +146,8 @@ class PostController extends Controller
 
         validator($data, [
             'title'        => 'required',
-            'slug'         => 'required|'.Rule::unique('canvas_posts', 'slug')->ignore($id).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug'         => 'required|'.Rule::unique('canvas_posts', 'slug')->ignore($id)
+                . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
             'published_at' => 'required',
             'user_id'      => 'required',
         ])->validate();
@@ -166,7 +171,9 @@ class PostController extends Controller
      * Delete a given post.
      *
      * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
+     *
+     * @return RedirectResponse
+     * @throws Exception
      */
     public function destroy(string $id)
     {
