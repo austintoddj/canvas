@@ -13,7 +13,7 @@ class InstallCommandTest extends TestCase
     {
         parent::setUp();
 
-        /**
+        /*
          * We need to skip the installation test until there is a better way to reset
          * the entire App folder within testbench-core, since canvas:install will
          * register and publish a Service Provider into the Laravel app.
