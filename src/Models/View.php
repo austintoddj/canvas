@@ -3,14 +3,14 @@
 namespace Canvas\Models;
 
 use Carbon\CarbonPeriod;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Canvas\Models\View
+ * Canvas\Models\View.
  *
  * @property int         $id
  * @property string      $post_id

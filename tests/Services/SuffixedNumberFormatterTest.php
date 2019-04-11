@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Canvas\Tests\Services;
 
+use Canvas\Tests\TestCase;
 use Canvas\Contracts\NumberFormatter;
 use Canvas\Services\SuffixedNumberFormatter;
-use Canvas\Tests\TestCase;
 
 /**
- * Class SuffixedNumberFormatterTest
+ * Class SuffixedNumberFormatterTest.
  *
  * @coversDefaultClass \Canvas\Services\SuffixedNumberFormatter
  *
