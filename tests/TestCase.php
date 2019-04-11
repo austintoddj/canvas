@@ -64,7 +64,7 @@ abstract class TestCase extends OrchestraTestCase
             'prefix'   => '',
         ]);
 
-        $config->set('view.paths', [dirname(__DIR__) . '/resources/views']);
+        $config->set('view.paths', [dirname(__DIR__).'/resources/views']);
 
         $config->set('auth.providers.users.model', User::class);
     }
@@ -77,7 +77,7 @@ abstract class TestCase extends OrchestraTestCase
     {
         $this->loadLaravelMigrations();
 
-        $this->loadMigrationsFrom(dirname(__DIR__) . '/database/migrations');
+        $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
 
         $this->artisan('migrate');
     }
