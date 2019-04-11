@@ -4,18 +4,18 @@ namespace Canvas\Models;
 
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * Canvas\Models\Post
+ * Canvas\Models\Post.
  *
  * @property-read User               $author
  * @property-read array              $popular_reading_times
@@ -176,7 +176,7 @@ class Post extends Model
      */
     public function getAuthorAttribute(): User
     {
-        /** @noinspection PhpUndefinedMethodInspection */
+        /* @noinspection PhpUndefinedMethodInspection */
         return User::find($this->user_id);
     }
 

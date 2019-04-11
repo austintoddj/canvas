@@ -33,10 +33,10 @@ class SuffixedNumberFormatter implements NumberFormatter
     {
         list($power, $suffix) = self::getPowerAndSuffix($number);
         $divisor = pow(self::BASE, $power);
-        $formattedNumber = number_format($number/$divisor, $precision);
+        $formattedNumber = number_format($number / $divisor, $precision);
 
         if ($precision > 0) {
-            $dotZero = '.' . str_repeat(self::PRECISION_PLACEHOLDER, $precision);
+            $dotZero = '.'.str_repeat(self::PRECISION_PLACEHOLDER, $precision);
             $formattedNumber = str_replace($dotZero, '', $formattedNumber);
         }
 

@@ -2,16 +2,16 @@
 
 namespace Canvas\Http\Controllers;
 
+use Exception;
+use Carbon\Carbon;
 use Canvas\Models\Tag;
 use Canvas\Models\Post;
 use Canvas\Models\Topic;
-use Carbon\Carbon;
-use Exception;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Routing\Controller;
-use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class PostController extends Controller
 {
@@ -94,7 +94,7 @@ class PostController extends Controller
         validator($data, [
             'title'        => 'required',
             'slug'         => 'required|'.Rule::unique('canvas_posts', 'slug')->ignore(request('id'))
-                . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+                .'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
             'published_at' => 'required|date',
             'user_id'      => 'required',
         ])->validate();
@@ -147,7 +147,7 @@ class PostController extends Controller
         validator($data, [
             'title'        => 'required',
             'slug'         => 'required|'.Rule::unique('canvas_posts', 'slug')->ignore($id)
-                . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+                .'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
             'published_at' => 'required',
             'user_id'      => 'required',
         ])->validate();

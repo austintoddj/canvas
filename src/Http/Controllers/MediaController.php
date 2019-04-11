@@ -20,7 +20,7 @@ class MediaController extends Controller
             'visibility' => 'public',
         ]);
 
-        /** @noinspection PhpUndefinedMethodInspection */
+        /* @noinspection PhpUndefinedMethodInspection */
         return Storage::disk($diskName)->url($path);
     }
 }

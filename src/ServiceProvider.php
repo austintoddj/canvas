@@ -2,15 +2,15 @@
 
 namespace Canvas;
 
-use Canvas\Console\SetupCommand;
 use Canvas\Traits\EventMap;
+use Canvas\Console\SetupCommand;
 use Illuminate\Events\Dispatcher;
 use Canvas\Console\InstallCommand;
 use Canvas\Console\PublishCommand;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
-use Illuminate\Support\ServiceProvider as SupportServiceProvider;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Support\ServiceProvider as SupportServiceProvider;
 
 class ServiceProvider extends SupportServiceProvider
 {
@@ -72,7 +72,7 @@ class ServiceProvider extends SupportServiceProvider
     private function handleRoutes()
     {
         Route::group($this->routeConfiguration(), function () {
-            $this->loadRoutesFrom(__DIR__ . '/../routes/canvas.php');
+            $this->loadRoutesFrom(__DIR__.'/../routes/canvas.php');
         });
     }
 
@@ -97,7 +97,7 @@ class ServiceProvider extends SupportServiceProvider
      */
     private function handleResources()
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'canvas');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'canvas');
     }
 
     /**
@@ -108,7 +108,7 @@ class ServiceProvider extends SupportServiceProvider
     private function handleMigrations()
     {
         if ($this->app->runningInConsole()) {
-            $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+            $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         }
     }
 
@@ -121,15 +121,15 @@ class ServiceProvider extends SupportServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../public' => public_path('vendor/canvas'),
+                __DIR__.'/../public' => public_path('vendor/canvas'),
             ], 'canvas-assets');
 
             $this->publishes([
-                __DIR__ . '/../config/canvas.php' => config_path('canvas.php'),
+                __DIR__.'/../config/canvas.php' => config_path('canvas.php'),
             ], 'canvas-config');
 
             $this->publishes([
-                __DIR__ . '/../stubs/providers/CanvasServiceProvider.stub' => app_path(
+                __DIR__.'/../stubs/providers/CanvasServiceProvider.stub' => app_path(
                     'Providers/CanvasServiceProvider.php'
                 ),
             ], 'canvas-provider');
@@ -142,7 +142,7 @@ class ServiceProvider extends SupportServiceProvider
     private function handleConfig(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/canvas.php',
+            __DIR__.'/../config/canvas.php',
             'canvas'
         );
     }
