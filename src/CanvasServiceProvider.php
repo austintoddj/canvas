@@ -7,8 +7,8 @@ use Illuminate\Events\Dispatcher;
 use Canvas\Console\InstallCommand;
 use Canvas\Console\PublishCommand;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\Container\BindingResolutionException;
 
 class CanvasServiceProvider extends ServiceProvider
 {
