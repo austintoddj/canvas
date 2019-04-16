@@ -66,7 +66,7 @@ class CanvasServiceProvider extends ServiceProvider
     private function handleRoutes()
     {
         Route::group($this->routeConfiguration(), function () {
-            $this->loadRoutesFrom(__DIR__ . '/../routes/canvas.php');
+            $this->loadRoutesFrom(__DIR__.'/../routes/canvas.php');
         });
     }
 
@@ -91,7 +91,7 @@ class CanvasServiceProvider extends ServiceProvider
      */
     private function handleResources()
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'canvas');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'canvas');
     }
 
     /**
@@ -102,7 +102,7 @@ class CanvasServiceProvider extends ServiceProvider
     private function handleMigrations()
     {
         if ($this->app->runningInConsole()) {
-            $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+            $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         }
     }
 
@@ -115,15 +115,15 @@ class CanvasServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../public' => public_path('vendor/canvas'),
+                __DIR__.'/../public' => public_path('vendor/canvas'),
             ], 'canvas-assets');
 
             $this->publishes([
-                __DIR__ . '/../config/canvas.php' => config_path('canvas.php'),
+                __DIR__.'/../config/canvas.php' => config_path('canvas.php'),
             ], 'canvas-config');
 
             $this->publishes([
-                __DIR__ . '/../stubs/providers/CanvasServiceProvider.stub' => app_path(
+                __DIR__.'/../stubs/providers/CanvasServiceProvider.stub' => app_path(
                     'Providers/CanvasServiceProvider.php'
                 ),
             ], 'canvas-provider');
@@ -136,7 +136,7 @@ class CanvasServiceProvider extends ServiceProvider
     private function handleConfig(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/canvas.php',
+            __DIR__.'/../config/canvas.php',
             'canvas'
         );
     }
