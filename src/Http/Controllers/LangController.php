@@ -14,7 +14,7 @@ class LangController extends Controller
      */
     public function __invoke(): void
     {
-        $files = glob(dirname(__DIR__, 3) . '/resources/lang/' . config('app.locale') . '/*.php');
+        $files = glob(dirname(__DIR__, 3).'/resources/lang/'.config('app.locale').'/*.php');
         $strings = collect();
 
         foreach ($files as $file) {
@@ -23,7 +23,7 @@ class LangController extends Controller
         }
 
         header('Content-Type: text/javascript');
-        echo('window.i18n = ' . json_encode($strings->toArray()) . ';');
+        echo 'window.i18n = '.json_encode($strings->toArray()).';';
         exit();
     }
 }
