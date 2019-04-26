@@ -89,7 +89,7 @@ class PostController extends Controller
         ];
 
         $messages = [
-            'unique' => __('canvas::validation.unique')
+            'unique' => __('canvas::validation.unique'),
         ];
 
         validator($data, [
@@ -145,7 +145,7 @@ class PostController extends Controller
         ];
 
         $messages = [
-            'unique' => __('canvas::validation.unique')
+            'unique' => __('canvas::validation.unique'),
         ];
 
         validator($data, [

@@ -66,7 +66,7 @@ class TagController extends Controller
         ];
 
         $messages = [
-            'unique' => __('canvas::validation.unique')
+            'unique' => __('canvas::validation.unique'),
         ];
 
         validator($data, [
@@ -98,7 +98,7 @@ class TagController extends Controller
         ];
 
         $messages = [
-            'unique' => __('canvas::validation.unique')
+            'unique' => __('canvas::validation.unique'),
         ];
 
         validator($data, [
