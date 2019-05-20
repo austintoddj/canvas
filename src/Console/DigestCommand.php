@@ -8,8 +8,8 @@ use Canvas\View;
 use Canvas\Mail\WeeklyDigest;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Foundation\Auth\User;
+use Illuminate\Support\Facades\Mail;
 
 class DigestCommand extends Command
 {
