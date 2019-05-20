@@ -2,8 +2,8 @@
 
 namespace Canvas;
 
-use Canvas\Console\DigestCommand;
 use Canvas\Console\SetupCommand;
+use Canvas\Console\DigestCommand;
 use Illuminate\Events\Dispatcher;
 use Canvas\Console\InstallCommand;
 use Canvas\Console\PublishCommand;
