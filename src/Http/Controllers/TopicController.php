@@ -72,7 +72,7 @@ class TopicController extends Controller
 
         validator($data, [
             'name' => 'required',
-            'slug' => 'required|' . Rule::unique('canvas_topics', 'slug')->ignore(request('id')) . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug' => 'required|'.Rule::unique('canvas_topics', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
         ], $messages)->validate();
 
         $topic = new Topic(['id' => request('id')]);
@@ -105,7 +105,7 @@ class TopicController extends Controller
 
         validator($data, [
             'name' => 'required',
-            'slug' => 'required|' . Rule::unique('canvas_topics', 'slug')->ignore(request('id')) . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug' => 'required|'.Rule::unique('canvas_topics', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
         ], $messages)->validate();
 
         $topic->fill($data);
