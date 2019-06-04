@@ -5,9 +5,8 @@ use Illuminate\Support\Str;
 use Faker\Generator as Faker;
 use Illuminate\Foundation\Auth\User;
 
-/** @var \Illuminate\Database\Eloquent\Factory $factory */
+/* @var \Illuminate\Database\Eloquent\Factory $factory */
 $factory->define(Post::class, function (Faker $faker) {
-
     $post = $faker->words(3);
 
     return [
