@@ -54,7 +54,7 @@ class SetupCommand extends Command
             $this->seed();
         }
 
-        $this->info('Setup complete. Head over to <comment>' . url('/blog') . '</comment> to get started.');
+        $this->info('Setup complete. Head over to <comment>'.url('/blog').'</comment> to get started.');
     }
 
     /**
@@ -64,11 +64,11 @@ class SetupCommand extends Command
      */
     private function createDirectories()
     {
-        if (!is_dir($directory = resource_path('views/blog/layouts'))) {
+        if (! is_dir($directory = resource_path('views/blog/layouts'))) {
             mkdir($directory, 0755, true);
         }
 
-        if (!is_dir($directory = resource_path('views/blog/partials'))) {
+        if (! is_dir($directory = resource_path('views/blog/partials'))) {
             mkdir($directory, 0755, true);
         }
     }
@@ -81,8 +81,8 @@ class SetupCommand extends Command
     private function exportViews()
     {
         foreach ($this->views as $key => $value) {
-            if (file_exists($view = resource_path('views/blog/' . $value))) {
-                if (!$this->confirm("The [blog/{$value}] view already exists. Do you want to replace it?")) {
+            if (file_exists($view = resource_path('views/blog/'.$value))) {
+                if (! $this->confirm("The [blog/{$value}] view already exists. Do you want to replace it?")) {
                     continue;
                 }
             }
@@ -102,7 +102,7 @@ class SetupCommand extends Command
     private function exportController()
     {
         if (file_exists($controller = app_path('Http/Controllers/BlogController.php'))) {
-            if ($this->confirm("The [Http/Controllers/BlogController.php] already exists. Do you want to replace it?")) {
+            if ($this->confirm('The [Http/Controllers/BlogController.php] already exists. Do you want to replace it?')) {
                 file_put_contents(
                     app_path('Http/Controllers/BlogController.php'),
                     $this->compileControllerStub()
@@ -121,7 +121,7 @@ class SetupCommand extends Command
         return str_replace(
             '{{namespace}}',
             $this->getAppNamespace(),
-            file_get_contents(dirname(__DIR__, 2) . '/stubs/controllers/BlogController.stub')
+            file_get_contents(dirname(__DIR__, 2).'/stubs/controllers/BlogController.stub')
         );
     }
 
@@ -132,10 +132,10 @@ class SetupCommand extends Command
      */
     private function registerRoutes()
     {
-        if (!Route::has('blog.index')) {
+        if (! Route::has('blog.index')) {
             file_put_contents(
                 base_path('routes/web.php'),
-                file_get_contents(dirname(__DIR__, 2) . '/stubs/routes.stub'),
+                file_get_contents(dirname(__DIR__, 2).'/stubs/routes.stub'),
                 FILE_APPEND
             );
         }
