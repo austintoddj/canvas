@@ -201,7 +201,6 @@ class PostController extends Controller
         $tags = Tag::all();
 
         return collect($incomingTags)->map(function ($incomingTag) use ($tags) {
-
             $tag = $tags->where('slug', $incomingTag['slug'])->first();
 
             if (! $tag) {
@@ -225,7 +224,6 @@ class PostController extends Controller
     private function attachOrCreateTopic(array $incomingTopic): array
     {
         if ($incomingTopic) {
-
             $topic = Topic::where('slug', $incomingTopic['slug'])->first();
 
             if (! $topic) {
