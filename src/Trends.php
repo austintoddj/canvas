@@ -2,10 +2,9 @@
 
 namespace Canvas;
 
-use DateInterval;
 use DatePeriod;
+use DateInterval;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Carbon\CarbonInterval;
 use Illuminate\Support\Collection;
 
