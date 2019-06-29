@@ -26,6 +26,7 @@ return [
     ],
     'posts'   => [
         'label' => 'Recent posts',
+        'reading' => 'Continue reading...',
     ],
     'tags'    => [
         'label' => 'Tags',

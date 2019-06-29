@@ -32,7 +32,7 @@
                             <p class="lead my-3"><a href="{{ route('blog.post', $post->slug) }}"
                                                     class="text-white text-decoration-none">{{ $post->summary }}</a></p>
                             <p class="lead mb-0"><a href="{{ route('blog.post', $post->slug) }}"
-                                                    class="text-white font-weight-bold">Continue reading...</a></p>
+                                                    class="text-white font-weight-bold">{{ __('canvas::blog.posts.reading') }}</a></p>
                         </div>
                     </div>
                 @endif
