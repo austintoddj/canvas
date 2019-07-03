@@ -12,7 +12,7 @@ class TagController extends Controller
     public function index()
     {
         return response()->json([
-            'tags' => Tag::orderByDesc('created_at')->withCount('posts')->get()
+            'tags' => Tag::orderByDesc('created_at')->withCount('posts')->get(),
         ]);
     }
 
