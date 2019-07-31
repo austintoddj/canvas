@@ -65,7 +65,7 @@ class TopicController extends Controller
 
         validator($data, [
             'name' => 'required',
-            'slug' => Rule::unique('canvas_topics', 'slug')->ignore(request('id')) . '|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug' => Rule::unique('canvas_topics', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
         ], $messages)->validate();
 
         $topic = $id !== 'create' ? Topic::find($id) : new Topic(['id' => request('id')]);
