@@ -176,6 +176,7 @@ class PostController extends Controller
                     'slug' => $incomingTopic['slug'],
                 ]);
             }
+
             return collect((string) $topic->id)->toArray();
         } else {
             return [];
