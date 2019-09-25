@@ -10,7 +10,7 @@ class PostTest extends TestCase
     /** @test */
     public function calculate_human_friendly_read_time()
     {
-        $this->loadFactoriesUsing($this->app, __DIR__ . '/../src/Storage/factories');
+        $this->loadFactoriesUsing($this->app, __DIR__.'/../src/Storage/factories');
 
         $post = factory(Post::class)->create();
 
