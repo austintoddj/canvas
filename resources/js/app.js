@@ -20,6 +20,15 @@ files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(
 
 Vue.prototype.trans = string => _.get(window.i18n, string);
 
+/**
+ * If it doesn't already exist, register a separate empty vue instance that
+ * is attached to the window, we can use it to listen out for and handle
+ * any events that may emitted by components...
+ */
+if (!window.eventHub) {
+    window.eventHub = new Vue();
+}
+
 new Vue({
     el: '#app',
 });

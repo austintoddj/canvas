@@ -7,9 +7,12 @@
                 <div class="form-group row">
                     <div class="col-12">
                         <label for="slug" class="font-weight-bold">{{ __('canvas::posts.forms.settings.slug.label') }}</label>
-                        <input type="text" class="form-control border-0 px-0"
-                               name="slug" title="{{ __('canvas::posts.forms.settings.slug.label') }}" value="{{ $data['post']->slug }}" required
-                               placeholder="{{ __('canvas::posts.forms.settings.slug.placeholder') }}">
+                        <slug-input placeholder="{{ __('canvas::posts.forms.settings.slug.placeholder') }}"
+                                    name="slug"
+                                    title="{{ __('canvas::posts.forms.settings.slug.label') }}"
+                                    value="{{ old('slug', $data['post']->slug) }}"
+                                    required
+                        ></slug-input>
                         @if ($errors->has('slug'))
                             <div class="invalid-feedback d-block">
                                 <strong>{{ $errors->first('slug') }}</strong>
