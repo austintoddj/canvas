@@ -3,7 +3,6 @@
 namespace Canvas\Tests\Listeners;
 
 use Canvas\Post;
-use Ramsey\Uuid\Uuid;
 use Canvas\Tests\TestCase;
 use Canvas\Listeners\StoreViewData;
 
