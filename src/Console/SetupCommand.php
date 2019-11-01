@@ -2,16 +2,16 @@
 
 namespace Canvas\Console;
 
-use Canvas\Tag;
 use Canvas\Post;
+use Canvas\Tag;
 use Canvas\Topic;
 use Faker\Generator;
-use Ramsey\Uuid\Uuid;
-use Illuminate\Support\Str;
 use Illuminate\Console\Command;
+use Illuminate\Console\DetectsApplicationNamespace;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Console\DetectsApplicationNamespace;
+use Illuminate\Support\Str;
+use Ramsey\Uuid\Uuid;
 
 class SetupCommand extends Command
 {

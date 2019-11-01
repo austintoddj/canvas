@@ -2,13 +2,13 @@
 
 namespace Canvas\Tests;
 
-use ReflectionClass;
-use ReflectionException;
 use Canvas\CanvasServiceProvider;
-use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use ReflectionClass;
+use ReflectionException;
 
 abstract class TestCase extends OrchestraTestCase
 {

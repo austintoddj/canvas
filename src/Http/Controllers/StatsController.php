@@ -3,8 +3,8 @@
 namespace Canvas\Http\Controllers;
 
 use Canvas\Post;
-use Canvas\View;
 use Canvas\Trends;
+use Canvas\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 

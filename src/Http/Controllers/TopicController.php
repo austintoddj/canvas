@@ -2,12 +2,12 @@
 
 namespace Canvas\Http\Controllers;
 
-use Exception;
 use Canvas\Topic;
-use Ramsey\Uuid\Uuid;
-use Illuminate\Validation\Rule;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Validation\Rule;
+use Ramsey\Uuid\Uuid;
 
 class TopicController extends Controller
 {

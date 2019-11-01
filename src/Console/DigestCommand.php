@@ -2,13 +2,13 @@
 
 namespace Canvas\Console;
 
-use Exception;
+use Canvas\Mail\Digest;
 use Canvas\Post;
 use Canvas\View;
-use Canvas\Mail\Digest;
+use Exception;
 use Illuminate\Console\Command;
-use Illuminate\Support\Collection;
 use Illuminate\Foundation\Auth\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
 
 class DigestCommand extends Command

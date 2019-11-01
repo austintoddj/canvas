@@ -2,9 +2,9 @@
 
 namespace Canvas\Tests\Listeners;
 
+use Canvas\Listeners\StoreViewData;
 use Canvas\Post;
 use Canvas\Tests\TestCase;
-use Canvas\Listeners\StoreViewData;
 
 class StoreViewDataTest extends TestCase
 {

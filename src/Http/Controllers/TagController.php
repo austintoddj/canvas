@@ -2,12 +2,12 @@
 
 namespace Canvas\Http\Controllers;
 
-use Exception;
 use Canvas\Tag;
-use Ramsey\Uuid\Uuid;
-use Illuminate\Validation\Rule;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Validation\Rule;
+use Ramsey\Uuid\Uuid;
 
 class TagController extends Controller
 {

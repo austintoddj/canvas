@@ -2,8 +2,8 @@
 
 namespace Canvas\Listeners;
 
-use Canvas\Post;
 use Canvas\Events\PostViewed;
+use Canvas\Post;
 
 class StoreViewData
 {

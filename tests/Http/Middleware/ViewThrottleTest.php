@@ -2,9 +2,9 @@
 
 namespace Canvas\Tests\Middleware;
 
+use Canvas\Http\Middleware\ViewThrottle;
 use Canvas\Post;
 use Canvas\Tests\TestCase;
-use Canvas\Http\Middleware\ViewThrottle;
 
 class ViewThrottleTest extends TestCase
 {

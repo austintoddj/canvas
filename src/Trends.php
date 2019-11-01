@@ -2,10 +2,10 @@
 
 namespace Canvas;
 
-use DatePeriod;
-use DateInterval;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
+use DateInterval;
+use DatePeriod;
 use Illuminate\Support\Collection;
 
 trait Trends

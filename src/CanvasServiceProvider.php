@@ -2,14 +2,14 @@
 
 namespace Canvas;
 
-use Canvas\Console\SetupCommand;
 use Canvas\Console\DigestCommand;
-use Illuminate\Events\Dispatcher;
 use Canvas\Console\InstallCommand;
 use Canvas\Console\PublishCommand;
+use Canvas\Console\SetupCommand;
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Contracts\Container\BindingResolutionException;
 
 class CanvasServiceProvider extends ServiceProvider
 {
