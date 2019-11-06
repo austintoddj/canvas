@@ -77,12 +77,10 @@ class TopicController extends Controller
 
         if ($id !== 'create') {
             $topic = Topic::find($id);
-        }
-        else {
+        } else {
             if ($topic = Topic::onlyTrashed()->where('slug', request('slug'))->first()) {
                 $topic->restore();
-            }
-            else {
+            } else {
                 $topic = new Topic(['id' => request('id')]);
             }
         }

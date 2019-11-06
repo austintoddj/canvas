@@ -77,12 +77,10 @@ class TagController extends Controller
 
         if ($id !== 'create') {
             $tag = Tag::find($id);
-        }
-        else {
+        } else {
             if ($tag = Tag::onlyTrashed()->where('slug', request('slug'))->first()) {
                 $tag->restore();
-            }
-            else {
+            } else {
                 $tag = new Tag(['id' => request('id')]);
             }
         }
