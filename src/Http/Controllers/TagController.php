@@ -34,7 +34,6 @@ class TagController extends Controller
     public function show($id = null): JsonResponse
     {
         if (Tag::forCurrentUser()->pluck('id')->contains($id) || $this->isNewTag($id)) {
-
             if ($this->isNewTag($id)) {
                 return response()->json(Tag::make([
                     'id' => Uuid::uuid4(),
