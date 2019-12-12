@@ -3,8 +3,8 @@
 namespace Canvas\Http\Controllers;
 
 use Canvas\UserMeta;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 class SettingsController extends Controller
