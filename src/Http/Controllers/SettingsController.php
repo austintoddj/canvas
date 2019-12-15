@@ -52,7 +52,6 @@ class SettingsController extends Controller
             $settings->each(function ($item, $key) {
                 //
             });
-
         } else {
             return response()->json(null, 301);
         }
