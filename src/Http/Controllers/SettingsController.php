@@ -3,9 +3,9 @@
 namespace Canvas\Http\Controllers;
 
 use Canvas\UserMeta;
-use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Str;
 
 class SettingsController extends Controller
 {
@@ -41,9 +41,7 @@ class SettingsController extends Controller
 
     public function update(): JsonResponse
     {
-
         dd(request()->all());
-
 
         if (request()->user()) {
             $settings = UserMeta::forCurrentUser()->get();
