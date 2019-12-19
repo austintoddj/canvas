@@ -17,7 +17,7 @@ class SettingsController extends Controller
     public function show(): JsonResponse
     {
         $metaData = UserMeta::forCurrentUser()->first();
-        $emailHash= md5(trim(Str::lower(request()->user()->email)));
+        $emailHash = md5(trim(Str::lower(request()->user()->email)));
 
         return response()->json([
             'username'  => $metaData->username ?? null,

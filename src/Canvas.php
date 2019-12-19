@@ -16,7 +16,7 @@ class Canvas
     public static function scriptVariables()
     {
         $metaData = UserMeta::forCurrentUser()->first();
-        $emailHash= md5(trim(Str::lower(request()->user()->email)));
+        $emailHash = md5(trim(Str::lower(request()->user()->email)));
 
         return [
             'lang'     => self::collectLanguageFiles(config('app.locale')),
@@ -38,11 +38,11 @@ class Canvas
     {
         $path = public_path('vendor/canvas/mix-manifest.json');
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             throw new RuntimeException('The assets for Canvas are not up to date. Please run: php artisan canvas:publish');
         }
 
-        return File::get($path) === File::get(__DIR__ . '/../public/mix-manifest.json');
+        return File::get($path) === File::get(__DIR__.'/../public/mix-manifest.json');
     }
 
     /**
@@ -54,7 +54,7 @@ class Canvas
      */
     private static function collectLanguageFiles(string $locale): string
     {
-        $langDirectory = dirname(__DIR__, 1) . '/resources/lang';
+        $langDirectory = dirname(__DIR__, 1).'/resources/lang';
         $files = collect(glob("{$langDirectory}/{$locale}/*.php"));
         $lines = collect();
 
