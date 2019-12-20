@@ -22,7 +22,7 @@ class SettingsController extends Controller
         return response()->json([
             'username'  => $metaData->username ?? null,
             'summary'   => $metaData->summary ?? null,
-            'avatar'    => $metaData->avatar && !empty($metaData->avatar) ? $metaData->avatar : "https://secure.gravatar.com/avatar/{$emailHash}?s=500",
+            'avatar'    => $metaData->avatar && ! empty($metaData->avatar) ? $metaData->avatar : "https://secure.gravatar.com/avatar/{$emailHash}?s=500",
             'digest'    => $metaData->digest ?? false,
             'dark_mode' => $metaData->dark_mode ?? 0,
         ]);
