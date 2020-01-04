@@ -161,7 +161,7 @@ class Post extends Model
      */
     public function getPublishedAttribute(): bool
     {
-        return !is_null($this->published_at) && $this->published_at <= now()->toDateTimeString();
+        return ! is_null($this->published_at) && $this->published_at <= now()->toDateTimeString();
     }
 
     /**
