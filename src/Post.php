@@ -143,7 +143,7 @@ class Post extends Model
     {
         return $this->hasMany(View::class);
     }
-    
+
     /**
      * Check to see if the post is published.
      *
