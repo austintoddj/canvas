@@ -59,7 +59,7 @@ class SetupCommand extends Command
 
         // Optionally seed the database with demo data
         if ($this->option('data')) {
-            if (User::find(1)) {
+            if (User::count() > 0) {
                 $this->seed();
             } else {
                 $this->error('No users found. Please create a user and re-run the setup.');
