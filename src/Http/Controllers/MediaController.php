@@ -43,6 +43,6 @@ class MediaController extends Controller
         $base = log($bytes, 1024);
         $suffixes = ['', 'KB', 'MB', 'GB', 'TB'];
 
-        return round(pow(1024, $base - floor($base)), $precision) . ' ' . $suffixes[floor($base)];
+        return round(pow(1024, $base - floor($base)), $precision).' '.$suffixes[floor($base)];
     }
 }
