@@ -19,7 +19,6 @@ class AlterCanvasViewsRenameIndexes extends Migration
 
             $table->dropIndex('created_at');
             $table->index('created_at');
-
         });
     }
 
