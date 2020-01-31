@@ -24,7 +24,7 @@ class Canvas
             'timezone'  => config('app.timezone'),
             'unsplash'  => config('canvas.unsplash.access_key'),
             'user'      => auth()->user()->only(['name', 'email']),
-            'avatar'    => optional($metaData)->avatar && !empty(optional($metaData)->avatar) ? $metaData->avatar : "https://secure.gravatar.com/avatar/{$emailHash}?s=500",
+            'avatar'    => optional($metaData)->avatar && ! empty(optional($metaData)->avatar) ? $metaData->avatar : "https://secure.gravatar.com/avatar/{$emailHash}?s=500",
             'darkMode'  => optional($metaData)->dark_mode,
             'maxUpload' => config('canvas.upload_filesize'),
         ];
@@ -39,11 +39,11 @@ class Canvas
     {
         $path = public_path('vendor/canvas/mix-manifest.json');
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             throw new RuntimeException('The assets for Canvas are not up to date. Please run: php artisan canvas:publish');
         }
 
-        return File::get($path) === File::get(__DIR__ . '/../public/mix-manifest.json');
+        return File::get($path) === File::get(__DIR__.'/../public/mix-manifest.json');
     }
 
     /**
@@ -55,7 +55,7 @@ class Canvas
      */
     private static function collectLanguageFiles(string $locale): string
     {
-        $langDirectory = dirname(__DIR__, 1) . '/resources/lang';
+        $langDirectory = dirname(__DIR__, 1).'/resources/lang';
         $files = collect(glob("{$langDirectory}/{$locale}/*.php"));
         $lines = collect();
 
