@@ -31,7 +31,7 @@ class CaptureVisitTest extends TestCase
         $post = factory(Post::class)->create();
         $ip = '127.0.0.1';
 
-        $key = 'visited_posts.' . $post->id;
+        $key = 'visited_posts.'.$post->id;
 
         session()->put($key, [
             'timestamp' => time(),
