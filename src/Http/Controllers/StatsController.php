@@ -70,11 +70,11 @@ class StatsController extends Controller
             $views = View::where('post_id', $post->id)->get();
             $previousMonthlyViews = $views->whereBetween('created_at', [
                 today()->subMonth()->startOfMonth()->startOfDay()->toDateTimeString(),
-                today()->subMonth()->endOfMonth()->endOfDay()->toDateTimeString()
+                today()->subMonth()->endOfMonth()->endOfDay()->toDateTimeString(),
             ]);
             $currentMonthlyViews = $views->whereBetween('created_at', [
                 today()->startOfMonth()->startOfDay()->toDateTimeString(),
-                today()->endOfMonth()->endOfDay()->toDateTimeString()
+                today()->endOfMonth()->endOfDay()->toDateTimeString(),
             ]);
             $lastThirtyDays = $views->whereBetween('created_at', [
                 today()->subDays(self::DAYS_PRIOR)->startOfDay()->toDateTimeString(),
@@ -84,11 +84,11 @@ class StatsController extends Controller
             $visits = Visit::where('post_id', $post->id)->get();
             $previousMonthlyVisits = $visits->whereBetween('created_at', [
                 today()->subMonth()->startOfMonth()->startOfDay()->toDateTimeString(),
-                today()->subMonth()->endOfMonth()->endOfDay()->toDateTimeString()
+                today()->subMonth()->endOfMonth()->endOfDay()->toDateTimeString(),
             ]);
             $currentMonthlyVisits = $visits->whereBetween('created_at', [
                 today()->startOfMonth()->startOfDay()->toDateTimeString(),
-                today()->endOfMonth()->endOfDay()->toDateTimeString()
+                today()->endOfMonth()->endOfDay()->toDateTimeString(),
             ]);
 
             return response()->json([
