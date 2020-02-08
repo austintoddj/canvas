@@ -58,7 +58,7 @@ trait Trends
         $dataCountThisMonth = $current->count();
 
         if ($dataCountLastMonth != 0) {
-            $difference = (int)$dataCountLastMonth - (int)$dataCountThisMonth;
+            $difference = (int) $dataCountLastMonth - (int) $dataCountThisMonth;
             $growth = ($difference / $dataCountLastMonth) * 100;
         } else {
             $growth = $dataCountThisMonth * 100;

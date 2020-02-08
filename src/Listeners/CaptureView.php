@@ -17,12 +17,12 @@ class CaptureView
      */
     public function handle(PostViewed $event)
     {
-        if (!$this->wasRecentlyViewed($event->post)) {
+        if (! $this->wasRecentlyViewed($event->post)) {
             $view_data = [
                 'post_id' => $event->post->id,
                 'ip' => request()->getClientIp(),
                 'agent' => request()->header('user_agent'),
-                'referer' => $this->validUrl((string)request()->header('referer')),
+                'referer' => $this->validUrl((string) request()->header('referer')),
             ];
 
             $event->post->views()->create($view_data);

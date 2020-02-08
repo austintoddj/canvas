@@ -28,11 +28,11 @@ class Session
         $viewedPosts = $this->getViewedPostsInSession();
         $visitedPosts = $this->getVisitedPostsInSession();
 
-        if (!is_null($viewedPosts)) {
+        if (! is_null($viewedPosts)) {
             $this->pruneExpiredViews($viewedPosts);
         }
 
-        if (!is_null($visitedPosts)) {
+        if (! is_null($visitedPosts)) {
             $this->pruneExpiredVisits($visitedPosts);
         }
 
@@ -69,7 +69,7 @@ class Session
     {
         foreach (collect($posts) as $key => $value) {
             if ($value < now()->subSeconds(self::EXPIRES_IN)->timestamp) {
-                session()->forget('viewed_posts.' . $key);
+                session()->forget('viewed_posts.'.$key);
             }
         }
     }
@@ -83,8 +83,8 @@ class Session
     private function pruneExpiredVisits(array $posts)
     {
         foreach (collect($posts) as $key => $value) {
-            if (!Carbon::createFromTimestamp($value['timestamp'])->isToday()) {
-                session()->forget('visited_posts.' . $key);
+            if (! Carbon::createFromTimestamp($value['timestamp'])->isToday()) {
+                session()->forget('visited_posts.'.$key);
             }
         }
     }
