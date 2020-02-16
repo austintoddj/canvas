@@ -14,7 +14,7 @@
                 <a
                     href="#"
                     class="btn btn-sm btn-outline-success font-weight-bold my-auto"
-                    :class="{ disabled: form.name === '' }"
+                    :class="{ disabled: form.name === '' || form.slug === '' }"
                     @click="saveTopic"
                     :aria-label="trans.app.save">
                     {{ trans.app.save }}
@@ -60,10 +60,17 @@
                 </div>
                 <div class="form-group">
                     <div class="col-lg-12">
-                        <p class="lead text-muted">
-                            <span v-if="!form.slug" class="text-success">{{ trans.app.give_your_topic_a_name_slug }}</span>
-                            <span v-else class="text-success">{{ form.slug }}</span>
-                        </p>
+                        <input
+                            type="text"
+                            name="slug"
+                            autocomplete="off"
+                            v-model="form.slug"
+                            title="Slug"
+                            @keyup.enter="saveTopic"
+                            class="form-control-lg form-control border-0 px-0 bg-transparent"
+                            :placeholder="trans.app.give_your_topic_a_name_slug"
+                        />
+
                         <div v-if="form.errors.slug" class="invalid-feedback d-block">
                             <strong>{{ form.errors.slug[0] }}</strong>
                         </div>
@@ -114,12 +121,6 @@
 
         mounted() {
             this.fetchData()
-        },
-
-        watch: {
-            'form.name'(val) {
-                this.form.slug = this.slugify(val)
-            },
         },
 
         methods: {
