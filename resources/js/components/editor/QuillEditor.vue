@@ -230,6 +230,7 @@
                         toolbar: [
                             ['bold', 'italic', 'code', 'link'],
                             [{header: '2'}, {header: '3'}],
+                            [{list: 'ordered'}, {list: 'bullet'}],
                             ['blockquote', 'code-block'],
                         ],
                     },
