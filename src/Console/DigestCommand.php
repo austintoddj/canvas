@@ -68,6 +68,6 @@ class DigestCommand extends Command
      */
     private function userHasEnabledMail(User $user): bool
     {
-        return (bool)UserMeta::where('user_id', $user->id)->pluck('digest')->first();
+        return (bool) UserMeta::where('user_id', $user->id)->pluck('digest')->first();
     }
 }
