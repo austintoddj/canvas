@@ -3,7 +3,6 @@
 namespace Canvas;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Visit extends Model
 {
