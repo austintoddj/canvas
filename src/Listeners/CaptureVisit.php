@@ -49,7 +49,7 @@ class CaptureVisit
 
             return $visit['ip'] != $ip;
         } else {
-             return true;
+            return true;
         }
     }
 
