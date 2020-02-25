@@ -1,34 +1,35 @@
 <?php
 
 return [
-
-    'title'   => '博客',
     'buttons' => [
         'learn' => '学到更多',
-        'next'  => '阅读下一篇',
+        'continue' => '继续阅读...',
+        'next' => '阅读下一篇',
         'enjoy' => '你可能会喜欢',
-        'edit'  => '编辑帖子',
+        'edit' => '编辑帖子',
         'stats' => '查看统计信息',
+        'canonical' => '该帖子最初发布于',
     ],
-    'empty'   => [
+    'empty' => [
         'description' => '没有找到帖子，从头开始',
-        'action'      => '添加新帖子',
+        'action' => '添加新帖子',
     ],
-    'nav'     => [
+    'nav' => [
         'user' => [
-            'posts'  => '帖子',
-            'tags'   => '标签',
+            'posts' => '帖子',
+            'tags' => '标签',
             'topics' => '话题',
-            'stats'  => '统计',
-            'login'  => '登入',
+            'stats' => '统计',
+            'settings' => '设定值',
+            'login' => '登入',
             'logout' => '登出',
         ],
     ],
-    'posts'   => [
+    'posts' => [
         'label' => '最近的帖子',
     ],
-    'tags'    => [
+    'tags' => [
         'label' => '标签',
     ],
-
+    'title' => '博客',
 ];

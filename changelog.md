@@ -2,6 +2,126 @@
 
 ## [Unreleased](https://github.com/cnvs/canvas/compare/master...develop)
 
+## [5.2.5](https://github.com/cnvs/canvas/compare/v5.2.4...v5.2.5) (February 24, 2020)
+
+### Fixed
+- Fix for a bad array offset when using PHP 7.4 ([#635](https://github.com/cnvs/canvas/issues/635))
+- Fixed zero-decimals with an optional parameter ([33d1692](https://github.com/cnvs/canvas/commit/33d16924beb425b6157a9ec65d7fe7ee5a21d2d2))
+
+### Changed
+- Refactored the `canvas:setup` Artisan command ([0dfb717](https://github.com/cnvs/canvas/commit/0dfb717a832590bc1c133a9fb6f611fdbaf172b0))
+
+## [5.2.4](https://github.com/cnvs/canvas/compare/v5.2.3...v5.2.4) (February 10, 2020)
+
+### Fixed
+- Fix for the incorrect middleware on the route stub ([#625](https://github.com/cnvs/canvas/issues/625))
+
+## [5.2.3](https://github.com/cnvs/canvas/compare/v5.2.2...v5.2.3) (February 9, 2020)
+
+### Fixed
+- Fixed broken editor/embed links ([#624](https://github.com/cnvs/canvas/issues/624))
+
+## [5.2.2](https://github.com/cnvs/canvas/compare/v5.2.1...v5.2.2) (February 9, 2020)
+
+### Fixed
+- Fixed a Safari-related bug ([e42ce62](https://github.com/cnvs/canvas/commit/e42ce624a2b2827332384a86089fa956fb6a6f4c))
+
+## [5.2.1](https://github.com/cnvs/canvas/compare/v5.2.0...v5.2.1) (February 9, 2020)
+
+### Fixed
+- Fixed a bug on referer attributes ([9631885](https://github.com/cnvs/canvas/commit/9631885e1d1cb8330556172d4fc4132d73d38459))
+
+## [5.2.0](https://github.com/cnvs/canvas/compare/v5.1.1...v5.2.0) (February 9, 2020)
+
+### Fixed
+- Fixed the translations based on locale ([#595](https://github.com/cnvs/canvas/issues/595), [01ec767](https://github.com/cnvs/canvas/commit/01ec767e9cdc9faedc7395f517aa2898d1342385))
+- Fixed a parse error for canonical URLs ([#610](https://github.com/cnvs/canvas/issues/610), [f706204](https://github.com/cnvs/canvas/commit/f706204d21414d10277360900519e69de80b9236))
+
+### Changed
+- Removed the `og_*` and `twitter_*` tags from SEO meta
+- Cleanup and refactor of all language files
+- Comprehensive refactor of the image/featured image modals to utilize [FilePond](https://pqina.nl/filepond) and [vue-infinite-loading](https://peachscript.github.io/vue-infinite-loading)
+- Updated the modal animations ([66bb4ac](https://github.com/cnvs/canvas/commit/66bb4ac83bffb33346cc6cc127a062b01da9c5c2))
+- UI/UX improvements
+
+### Added
+- Added support for Visitor tracking
+- Added a mini Publish button for mobile devices ([c0f73e9](https://github.com/cnvs/canvas/commit/c0f73e9dd2e62951aaa29316fe1d3586b1bbac35))
+- Added infinite loading to Unsplash image searches
+- Enhancements to link/video embedding in the editor
+
+## [5.1.1](https://github.com/cnvs/canvas/compare/v5.0.0...v5.1.1) (January 22, 2020)
+
+## Fixed
+- Updated the views table migration to support MariaDB ([#607](https://github.com/cnvs/canvas/issues/607), [9a27a1f](https://github.com/cnvs/canvas/commit/9a27a1f86141d5bcc25c6cd3751e6fd499b56654))
+
+## [5.1.0](https://github.com/cnvs/canvas/compare/v5.0.3...v5.1.0) (January 22, 2020)
+
+## Changed
+- Changed the chart library from Frappe Charts to Charts.js ([0a5607b](https://github.com/cnvs/canvas/commit/0a5607b040874391d0cc34dfec70e320783db2f6))
+- Refactored the mailable to a markdown template ([cefbd93](https://github.com/cnvs/canvas/commit/cefbd93290a33d382861e311d3c42a8d52a29c6e))
+
+## Added
+- Added infinite loading ([e34f7f4](https://github.com/cnvs/canvas/commit/e34f7f47093bf42e19c9a2b376db47c337ad4bfc), [415c9ec](https://github.com/cnvs/canvas/commit/415c9ec2994f9c67a1273bb15994c5af0bb28ca1), [686b85c](https://github.com/cnvs/canvas/commit/686b85ce5f41bdb3e4f62520666f68dcada88c58))
+- Added user-managed settings ([8466aa0](https://github.com/cnvs/canvas/commit/8466aa02006cc68a0c5d06c6d54a2e896654abdc))
+- Added an editor control bar for mobile devices ([d48b72d](https://github.com/cnvs/canvas/commit/d48b72db213d902ce54dabafc3e74da8e62fc95c))
+- Added translations for Turkish and Dutch ([201aeb4](https://github.com/cnvs/canvas/commit/201aeb4d439b1438636accb1411c6db762fc6e9e), [281e604](https://github.com/cnvs/canvas/commit/281e604edcda0a717ee73fa8a095f8a2628a60f7))
+
+## [5.0.3](https://github.com/cnvs/canvas/compare/v5.0.2...v5.0.3) (December 16, 2019)
+
+## Fixed
+- Added an existence check in the default template ([0ea4bf7](https://github.com/cnvs/canvas/pull/582/commits/0ea4bf7859da54967410751b3b39807fba16ca3c))
+
+## [5.0.2](https://github.com/cnvs/canvas/compare/v5.0.1...v5.0.2) (December 13, 2019)
+
+## Fixed
+- Fixed a non-object error on the default template ([fc65d52](https://github.com/cnvs/canvas/commit/fc65d520e722bb44cf376be698823fa5f92c236e))
+
+## [5.0.1](https://github.com/cnvs/canvas/compare/v5.0.0...v5.0.1) (December 7, 2019)
+
+## Fixed
+- Addressed 3rd party security vulnerabilities ([8403b92](https://github.com/cnvs/canvas/commit/8403b924708c36fbb3d8ed1e307e2b802790bfab))
+
+## [5.0.0](https://github.com/cnvs/canvas/compare/v4.2.9...v5.0.0) (December 5, 2019)
+
+## Changed
+- Complete re-write of the package into a single page application
+- Replaced the FontAwesome library with custom illustrated icons from [RefactoringUI](https://refactoringui.com)
+- Comprehensive update to the color palette
+- Updated the digest notifications config variable ([02055d1](https://github.com/cnvs/canvas/commit/02055d1291fce1cd5434a1a6551e2e24f13fe185))
+
+## Added
+- Added Vuex for state management ([de90dd8](https://github.com/cnvs/canvas/commit/de90dd8e512f223a0c59b39556c8a92667d70854))
+- Added [NProgress](https://github.com/rstacruz/nprogress) on page loads
+- Added an autosaving feature to the editor
+- Added SEO data syncing ([#506](https://github.com/cnvs/canvas/issues/506))
+
+## Fixed
+- Updated version support in CI testing ([#513](https://github.com/cnvs/canvas/issues/513), [f702d8d](https://github.com/cnvs/canvas/commit/f702d8d2c5c5bad8512ae0458794d91fbcb338c8))
+- Restricted access to content viewing/editing based on authorship [d9e25f4](https://github.com/cnvs/canvas/commit/d9e25f4df94e3302ee57d3b3617fda30cf5440a0)
+
+## [4.2.9](https://github.com/cnvs/canvas/compare/v4.2.8...v4.2.9) (September 20, 2019)
+
+## Fixed
+- Patch for null referer URLs being passed in the view listener ([76e5fd6](https://github.com/cnvs/canvas/commit/76e5fd6aca480cda2455a195001babecf9e76b37))
+
+## [4.2.8](https://github.com/cnvs/canvas/compare/v4.2.7...v4.2.8) (September 17, 2019)
+
+## Added
+- Added support for Laravel 6 LTS ([#549](https://github.com/cnvs/canvas/issues/549), [cd5fab3](https://github.com/cnvs/canvas/commit/cd5fab3b1ea1544e5256abd868fd09f88e8cff5a))
+
+## Fixed
+- Patch for an undefined 'host' index on referer links ([#545](https://github.com/cnvs/canvas/issues/545), [#546](https://github.com/cnvs/canvas/pull/546), [dfa09e3](https://github.com/cnvs/canvas/commit/dfa09e314a4ca45864dd96cd3353609a87d8ef2f))
+
+## [4.2.7](https://github.com/cnvs/canvas/compare/v4.2.6...v4.2.7) (August 19, 2019)
+
+## Added
+- Added an Open Graph prefix and `og-type` ([#521](https://github.com/cnvs/canvas/pull/521), [1a81dd8](https://github.com/cnvs/canvas/commit/1a81dd81d615b1dc47385126c686abebc7d9c69f))
+
+## Fixed
+- Patch for the missing info line output during the `canvas:setup` command ([8e3751e](https://github.com/cnvs/canvas/commit/8e3751e96ff7daa285c206df86b471c3a613661a))
+- Patch for the referer property being null but not empty ([#533](https://github.com/cnvs/canvas/issues/533), [6b92b5e](https://github.com/cnvs/canvas/commit/6b92b5ec843f57f3788ebb4720a87e88c191ea7a))
+
 ## [4.2.6](https://github.com/cnvs/canvas/compare/v4.2.5...v4.2.6) (June 19, 2019)
 
 ## Changed
@@ -96,7 +216,7 @@
 ### Changed
 - Minor updates to the sponsorship page ([91a6ff5](https://github.com/cnvs/canvas/commit/91a6ff598821fe76627398be6b725c2ad3cb522c))
 
-## [v4.1.36](https://github.com/cnvs/canvas/compare/v4.1.35...v4.1.36) (May 22, 2019)
+## [v4.1.36](https://github.com/cnvs/canvas/compare/v4.1.35...v4.1.36) (May 16, 2019)
 
 ### Added
 - Added sponsor information ([6476549](https://github.com/cnvs/canvas/commit/64765492e228ac859399054f7aee05e5fcf07b33))

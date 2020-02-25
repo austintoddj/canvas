@@ -3,126 +3,127 @@
 namespace Canvas\Http\Controllers;
 
 use Canvas\Topic;
-use Ramsey\Uuid\Uuid;
-use Illuminate\Validation\Rule;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Validation\Rule;
+use Ramsey\Uuid\Uuid;
 
 class TopicController extends Controller
 {
     /**
-     * Show the topics index page.
+     * Get all the topics.
      *
-     * @return \Illuminate\View\View
+     * @return JsonResponse
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        $topics = Topic::orderByDesc('created_at')
-            ->withCount('posts')
-            ->get();
-
-        return view('canvas::topics.index', compact('topics'));
+        return response()->json(
+            Topic::forCurrentUser()
+                 ->latest()
+                 ->withCount('posts')
+                 ->paginate(), 200
+        );
     }
 
     /**
-     * Show the page to create a new topic.
+     * Get a single topic or return a UUID to create one.
      *
-     * @return \Illuminate\View\View
-     * @throws \Exception
+     * @param null $id
+     * @return JsonResponse
+     * @throws Exception
      */
-    public function create()
+    public function show($id = null): JsonResponse
     {
-        $topic_id = Uuid::uuid4();
+        if (Topic::forCurrentUser()->pluck('id')->contains($id) || $this->isNewTopic($id)) {
+            if ($this->isNewTopic($id)) {
+                return response()->json(Topic::make([
+                    'id' => Uuid::uuid4(),
+                ]), 200);
+            } else {
+                $topic = Topic::find($id);
 
-        return view('canvas::topics.create', compact('topic_id'));
+                if ($topic) {
+                    return response()->json($topic, 200);
+                } else {
+                    return response()->json(null, 301);
+                }
+            }
+        }
     }
 
     /**
-     * Show the page to edit a given topic.
+     * Create or update a topic.
      *
      * @param string $id
-     * @return \Illuminate\View\View
+     * @return JsonResponse
      */
-    public function edit(string $id)
-    {
-        $topic = Topic::findOrFail($id);
-
-        return view('canvas::topics.edit', compact('topic'));
-    }
-
-    /**
-     * Save a new topic.
-     *
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store()
+    public function store(string $id): JsonResponse
     {
         $data = [
-            'id'   => request('id'),
+            'id' => request('id'),
             'name' => request('name'),
             'slug' => request('slug'),
+            'user_id' => request()->user()->id,
         ];
 
         $messages = [
-            'required' => __('canvas::validation.required'),
-            'unique'   => __('canvas::validation.unique'),
+            'required' => __('canvas::app.validation_required'),
+            'unique' => __('canvas::app.validation_unique'),
         ];
 
         validator($data, [
             'name' => 'required',
-            'slug' => 'required|'.Rule::unique('canvas_topics', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug' => [
+                'required',
+                'alpha_dash',
+                Rule::unique('canvas_topics')->where(function ($query) use ($data) {
+                    return $query->where('slug', $data['slug'])->where('user_id', $data['user_id']);
+                })->ignore($id)->whereNull('deleted_at'),
+            ],
         ], $messages)->validate();
 
-        $topic = new Topic(['id' => request('id')]);
-        $topic->fill($data);
-        $topic->save();
-
-        return redirect(route('canvas.topic.edit', $topic->id))->with('notify', __('canvas::nav.notify.success'));
-    }
-
-    /**
-     * Save a given topic.
-     *
-     * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(string $id)
-    {
-        $topic = Topic::findOrFail($id);
-
-        $data = [
-            'id'   => request('id'),
-            'name' => request('name'),
-            'slug' => request('slug'),
-        ];
-
-        $messages = [
-            'required' => __('canvas::validation.required'),
-            'unique'   => __('canvas::validation.unique'),
-        ];
-
-        validator($data, [
-            'name' => 'required',
-            'slug' => 'required|'.Rule::unique('canvas_topics', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
-        ], $messages)->validate();
+        if ($id !== 'create') {
+            $topic = Topic::find($id);
+        } else {
+            if ($topic = Topic::onlyTrashed()->where('slug', request('slug'))->first()) {
+                $topic->restore();
+            } else {
+                $topic = new Topic(['id' => request('id')]);
+            }
+        }
 
         $topic->fill($data);
         $topic->save();
 
-        return redirect(route('canvas.topic.edit', $topic->id))->with('notify', __('canvas::nav.notify.success'));
+        return response()->json($topic->refresh(), 201);
     }
 
     /**
-     * Delete a given topic.
+     * Delete a topic.
      *
      * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return mixed
      */
     public function destroy(string $id)
     {
-        $topic = Topic::findOrFail($id);
+        $topic = Topic::find($id);
 
-        $topic->delete();
+        if ($topic) {
+            $topic->delete();
 
-        return redirect(route('canvas.topic.index'));
+            return response()->json([], 204);
+        }
+    }
+
+    /**
+     * Return true if we're creating a new topic.
+     *
+     * @param string $id
+     * @return bool
+     */
+    private function isNewTopic(string $id): bool
+    {
+        return $id === 'create';
     }
 }

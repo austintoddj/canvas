@@ -1,18 +1,12 @@
-/**
- * Create the divider blot.
- *
- * @author Mohamed Said <themsaid@gmail.com>
- */
+import Quill from 'quill'
 
-import Quill from 'quill';
-
-let BlockEmbed = Quill.import('blots/block/embed');
+let BlockEmbed = Quill.import('blots/block/embed')
 
 class DividerBlot extends BlockEmbed {
     //
 }
 
-DividerBlot.blotName = 'divider';
-DividerBlot.tagName = 'hr';
+DividerBlot.blotName = 'divider'
+DividerBlot.tagName = 'hr'
 
-export default DividerBlot;
+export default DividerBlot

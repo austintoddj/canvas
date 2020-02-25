@@ -1,25 +1,63 @@
-/**
- * First we will load all of this project's JavaScript dependencies which
- * includes Vue and other libraries. It is a great starting point when
- * building robust, powerful web applications using Vue and Laravel.
- */
+import Vue from 'vue'
+import Routes from './routes'
+import {store} from './store'
+import NProgress from 'nprogress'
+import VueRouter from 'vue-router'
+import moment from 'moment-timezone'
+import HelperMixin from "./mixins/HelperMixin"
+import RequestMixin from "./mixins/RequestMixin"
 
-require('./bootstrap');
+require('bootstrap')
 
-window.Vue = require('vue');
+window.Popper = require('popper.js').default
 
-/**
- * Next, we will create a fresh Vue application instance and attach it to
- * the page. Then, you may begin adding components to this application
- * or customize the JavaScript scaffolding to fit your unique needs.
- */
+Vue.mixin(HelperMixin)
+Vue.mixin(RequestMixin)
 
-const files = require.context('./', true, /\.vue$/i);
+// Set the default timezone
+moment.tz.setDefault(Canvas.timezone)
 
-files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default));
+// Prevent the production tip on Vue startup
+Vue.config.productionTip = false
 
-Vue.prototype.trans = string => _.get(window.i18n, string);
+Vue.use(VueRouter)
 
-new Vue({
-    el: '#app',
-});
+const router = new VueRouter({
+    routes: Routes,
+    mode: 'history',
+    base: Canvas.path,
+})
+
+NProgress.configure({
+    showSpinner: false,
+    easing: 'ease',
+    speed: 300,
+})
+
+router.beforeEach((to, from, next) => {
+    NProgress.start()
+    next()
+})
+
+const app = new Vue({
+    el: '#canvas',
+    router,
+    store,
+
+    data: {
+        avatar: Canvas.avatar
+    },
+
+    mounted() {
+        this.$root.$on('updateAvatar', this.updateAvatar)
+    },
+
+    methods: {
+        updateAvatar(url) {
+            this.$root.avatar = url
+        }
+    }
+})
+
+// Give the store access to the root Vue instance
+store.$app = app

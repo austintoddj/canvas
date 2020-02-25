@@ -5,6 +5,7 @@
 composer.lock
 npm-debug.log
 yarn-error.log
-.DS_Store
 Thumbs.db
+.DS_Store
 .phpunit.result.cache
+*.code-workspace

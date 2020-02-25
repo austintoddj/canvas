@@ -2,9 +2,10 @@
 
 namespace Canvas;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Topic extends Model
 {
@@ -46,19 +47,44 @@ class Topic extends Model
     public $incrementing = false;
 
     /**
+     * The number of models to return for pagination.
+     *
+     * @var int
+     */
+    protected $perPage = 10;
+
+    /**
      * Get the posts relationship.
      *
-     * @return HasManyThrough
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function posts(): HasManyThrough
+    public function posts(): BelongsToMany
     {
-        return $this->HasManyThrough(
-            Post::class,
-            PostsTopics::class,
-            'topic_id', // Foreign key on canvas_posts_topics table...
-            'id', // Foreign key on canvas_posts table...
-            'id', // Local key on canvas_topics table...
-            'post_id' // Local key on canvas_posts_topics table...
-        );
+        return $this->belongsToMany(Post::class, 'canvas_posts_topics', 'topic_id', 'post_id');
+    }
+
+    /**
+     * Scope a query to only include posts for the current logged in user.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopeForCurrentUser($query): Builder
+    {
+        return $query->where('user_id', request()->user()->id ?? null);
+    }
+
+    /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($item) {
+            $item->posts()->detach();
+        });
     }
 }

@@ -1,35 +1,36 @@
 <?php
 
 return [
-
-    'title'   => 'Blog',
     'buttons' => [
         'learn' => 'Learn More',
-        'next'  => 'Read this next',
+        'continue' => 'Continue reading...',
+        'next' => 'Read this next',
         'enjoy' => 'You might enjoy',
-        'edit'  => 'Edit post',
+        'edit' => 'Edit post',
         'stats' => 'View stats',
+        'canonical' => 'This post was originally published on',
     ],
-    'empty'   => [
+    'empty' => [
         'description' => 'No posts were found, start by',
-        'action'      => 'adding a new post',
+        'action' => 'adding a new post',
     ],
-    'nav'     => [
+    'nav' => [
         'user' => [
-            'posts'  => 'Posts',
-            'tags'   => 'Tags',
+            'posts' => 'Posts',
+            'tags' => 'Tags',
             'topics' => 'Topics',
-            'stats'  => 'Stats',
-            'login'  => 'Sign in',
+            'stats' => 'Stats',
+            'settings' => 'Settings',
+            'login' => 'Sign in',
             'logout' => 'Sign out',
         ],
     ],
-    'posts'   => [
+    'posts' => [
         'label' => 'Recent posts',
         'reading' => 'Continue reading...',
     ],
-    'tags'    => [
+    'tags' => [
         'label' => 'Tags',
     ],
-
+    'title' => 'Blog',
 ];

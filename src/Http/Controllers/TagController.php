@@ -3,126 +3,127 @@
 namespace Canvas\Http\Controllers;
 
 use Canvas\Tag;
-use Ramsey\Uuid\Uuid;
-use Illuminate\Validation\Rule;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Validation\Rule;
+use Ramsey\Uuid\Uuid;
 
 class TagController extends Controller
 {
     /**
-     * Show the tags index page.
+     * Get all the tags.
      *
-     * @return \Illuminate\View\View
+     * @return JsonResponse
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        $tags = Tag::orderByDesc('created_at')
-            ->withCount('posts')
-            ->get();
-
-        return view('canvas::tags.index', compact('tags'));
+        return response()->json(
+            Tag::forCurrentUser()
+               ->latest()
+               ->withCount('posts')
+               ->paginate(), 200
+        );
     }
 
     /**
-     * Show the page to create a new tag.
+     * Get a single tag or return a UUID to create one.
      *
-     * @return \Illuminate\View\View
-     * @throws \Exception
+     * @param null $id
+     * @return JsonResponse
+     * @throws Exception
      */
-    public function create()
+    public function show($id = null): JsonResponse
     {
-        $tag_id = Uuid::uuid4();
+        if (Tag::forCurrentUser()->pluck('id')->contains($id) || $this->isNewTag($id)) {
+            if ($this->isNewTag($id)) {
+                return response()->json(Tag::make([
+                    'id' => Uuid::uuid4(),
+                ]), 200);
+            } else {
+                $tag = Tag::find($id);
 
-        return view('canvas::tags.create', compact('tag_id'));
+                if ($tag) {
+                    return response()->json($tag, 200);
+                } else {
+                    return response()->json(null, 301);
+                }
+            }
+        }
     }
 
     /**
-     * Show the page to edit a given tag.
+     * Create or update a tag.
      *
      * @param string $id
-     * @return \Illuminate\View\View
+     * @return JsonResponse
      */
-    public function edit(string $id)
-    {
-        $tag = Tag::findOrFail($id);
-
-        return view('canvas::tags.edit', compact('tag'));
-    }
-
-    /**
-     * Save a new tag.
-     *
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store()
+    public function store(string $id): JsonResponse
     {
         $data = [
-            'id'   => request('id'),
+            'id' => request('id'),
             'name' => request('name'),
             'slug' => request('slug'),
+            'user_id' => request()->user()->id,
         ];
 
         $messages = [
-            'required' => __('canvas::validation.required'),
-            'unique'   => __('canvas::validation.unique'),
+            'required' => __('canvas::app.validation_required'),
+            'unique' => __('canvas::app.validation_unique'),
         ];
 
         validator($data, [
             'name' => 'required',
-            'slug' => 'required|'.Rule::unique('canvas_tags', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
+            'slug' => [
+                'required',
+                'alpha_dash',
+                Rule::unique('canvas_tags')->where(function ($query) use ($data) {
+                    return $query->where('slug', $data['slug'])->where('user_id', $data['user_id']);
+                })->ignore($id)->whereNull('deleted_at'),
+            ],
         ], $messages)->validate();
 
-        $tag = new Tag(['id' => request('id')]);
-        $tag->fill($data);
-        $tag->save();
-
-        return redirect(route('canvas.tag.edit', $tag->id))->with('notify', __('canvas::nav.notify.success'));
-    }
-
-    /**
-     * Save a given tag.
-     *
-     * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(string $id)
-    {
-        $tag = Tag::findOrFail($id);
-
-        $data = [
-            'id'   => request('id'),
-            'name' => request('name'),
-            'slug' => request('slug'),
-        ];
-
-        $messages = [
-            'required' => __('canvas::validation.required'),
-            'unique'   => __('canvas::validation.unique'),
-        ];
-
-        validator($data, [
-            'name' => 'required',
-            'slug' => 'required|'.Rule::unique('canvas_tags', 'slug')->ignore(request('id')).'|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/i',
-        ], $messages)->validate();
+        if ($this->isNewTag($id)) {
+            if ($tag = Tag::onlyTrashed()->where('slug', $data['slug'])->first()) {
+                $tag->restore();
+            } else {
+                $tag = new Tag(['id' => $data['id']]);
+            }
+        } else {
+            $tag = Tag::find($id);
+        }
 
         $tag->fill($data);
         $tag->save();
 
-        return redirect(route('canvas.tag.edit', $tag->id))->with('notify', __('canvas::nav.notify.success'));
+        return response()->json($tag->refresh(), 201);
     }
 
     /**
-     * Delete a given tag.
+     * Delete a tag.
      *
      * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return mixed
      */
     public function destroy(string $id)
     {
-        $tag = Tag::findOrFail($id);
+        $tag = Tag::find($id);
 
-        $tag->delete();
+        if ($tag) {
+            $tag->delete();
 
-        return redirect(route('canvas.tag.index'));
+            return response()->json([], 204);
+        }
+    }
+
+    /**
+     * Return true if we're creating a new tag.
+     *
+     * @param string $id
+     * @return bool
+     */
+    private function isNewTag(string $id): bool
+    {
+        return $id === 'create';
     }
 }

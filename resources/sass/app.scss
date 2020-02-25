@@ -1,35 +1,71 @@
+@import 'utilities/fonts';
+@import 'utilities/variables';
+@import 'vendor-extensions/bootstrap';
 
-// Fonts
-@import url("https://fonts.googleapis.com/css?family=Nunito|Merriweather:300,400,700");
-@import "~@fortawesome/fontawesome-free/scss/regular";
-@import "~@fortawesome/fontawesome-free/scss/solid";
-@import "~@fortawesome/fontawesome-free/scss/fontawesome";
+$body-color: $gray-900;
 
-// Typography
-$font-family-sans-serif: "Nunito", sans-serif;
-$font-family-serif: "Merriweather", serif;
-$fa-font-path: "../fonts" !default;
-$font-size-base: 0.9rem;
-$line-height-base: 1.6;
+$link-color: $gray-900;
+$link-hover-color: $gray-900;
 
-// Color Palette
-$light-grey: #9ba3aa;
-$indigo: #6574cd;
-$purple: #9561e2;
-$orange: #f6993f;
-$dark-grey: #444;
-$yellow: #ffed4a;
-$green: #38c172;
-$blue: #3490dc;
-$pink: #f66D9b;
-$teal: #4dc0b5;
-$cyan: #6cb2eb;
-$red: #e3342f;
+$text-muted: $gray-500;
 
-// Base
-@import "base";
+$dropdown-link-active-color: darken($gray-900, 5%);
+$dropdown-link-active-bg: $gray-100;
 
-.logo i {
-  font-size: 20px;
-  color: rgb(33, 37, 41) !important;
+$custom-control-indicator-bg: $text-muted;
+
+.shadow-inner {
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
 }
+
+.controls {
+    background-color: $white;
+}
+
+.navbar-mini {
+    background-color: $white;
+}
+
+.primary {
+    fill: $gray-500;
+}
+
+.secondary {
+    fill: $gray-700;
+}
+
+.logo-primary {
+    fill: $gray-500;
+}
+
+.logo-secondary {
+    fill: $gray-700;
+}
+
+.fill-bg {
+    fill: $white;
+}
+
+.fill-body-color {
+    fill: $body-color;
+}
+
+.font-serif {
+    font-family: $font-family-serif;
+}
+
+.font-sans {
+    font-family: $font-family-sans-serif;
+}
+
+@import 'vendor-extensions/vue';
+@import 'vendor-extensions/nprogress';
+@import 'vendor-extensions/multiselect';
+@import 'vendor-extensions/switch';
+@import 'vendor-extensions/filepond';
+
+@import '~bootstrap/scss/functions';
+@import '~bootstrap/scss/variables';
+@import '~bootstrap/scss/mixins';
+
+@import '~bootstrap';

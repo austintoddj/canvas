@@ -3,14 +3,15 @@
 namespace Canvas;
 
 use Carbon\Carbon;
-use Illuminate\Support\Str;
-use Illuminate\Foundation\Auth\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User;
+use Illuminate\Support\Str;
 
 class Post extends Model
 {
@@ -77,23 +78,40 @@ class Post extends Model
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['read_time'];
+
+    /**
      * Get the tags relationship.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function tags(): BelongsToMany
     {
-        return $this->belongsToMany(Tag::class, 'canvas_posts_tags', 'post_id', 'tag_id');
+        return $this->belongsToMany(
+            Tag::class,
+            'canvas_posts_tags',
+            'post_id',
+            'tag_id'
+        );
     }
 
     /**
-     * Get the topics relationship.
+     * Get the topic relationship.
      *
-     * @return belongsToMany
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function topic(): belongsToMany
+    public function topic(): BelongsToMany
     {
-        return $this->belongsToMany(Topic::class, 'canvas_posts_topics', 'post_id', 'topic_id');
+        return $this->belongsToMany(
+            Topic::class,
+            'canvas_posts_topics',
+            'post_id',
+            'topic_id'
+        );
     }
 
     /**
@@ -107,6 +125,23 @@ class Post extends Model
     }
 
     /**
+     * Get the user meta relationship.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOneThrough
+     */
+    public function userMeta(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            UserMeta::class,
+            User::class,
+            'id',       // Foreign key on users table...
+            'user_id',  // Foreign key on posts table...
+            'user_id',  // Local key on posts table...
+            'id'        // Local key on users table...
+        );
+    }
+
+    /**
      * Get the views relationship.
      *
      * @return HasMany
@@ -117,13 +152,13 @@ class Post extends Model
     }
 
     /**
-     * Get the user who authored the post.
+     * Get the visits relationship.
      *
-     * @return User
+     * @return HasMany
      */
-    public function getAuthorAttribute(): User
+    public function visits(): HasMany
     {
-        return $this->user;
+        return $this->hasMany(Visit::class);
     }
 
     /**
@@ -133,11 +168,7 @@ class Post extends Model
      */
     public function getPublishedAttribute(): bool
     {
-        if ($this->published_at <= now()->toDateTimeString()) {
-            return true;
-        } else {
-            return false;
-        }
+        return ! is_null($this->published_at) && $this->published_at <= now()->toDateTimeString();
     }
 
     /**
@@ -153,7 +184,7 @@ class Post extends Model
         // Divide by the average number of words per minute
         $minutes = ceil($words / 250);
 
-        return sprintf('%d %s %s', $minutes, Str::plural(__('canvas::stats.details.reading.time'), $minutes), __('canvas::stats.details.reading.read'));
+        return sprintf('%d %s %s', $minutes, Str::plural(__('canvas::app.min'), $minutes), __('canvas::app.read'));
     }
 
     /**
@@ -204,7 +235,7 @@ class Post extends Model
     }
 
     /**
-     * Get the top 10 referring websites for a post.
+     * Get the top referring websites for a post.
      *
      * @return array
      */
@@ -216,13 +247,17 @@ class Post extends Model
         // Filter the view data to only include referrers
         $collection = collect();
         $data->each(function ($item, $key) use ($collection) {
-            is_null($item->referer) ? $collection->push(__('canvas::stats.details.referer.other')) : $collection->push(parse_url($item->referer)['host']);
+            if (empty(parse_url($item->referer)['host'])) {
+                $collection->push(__('canvas::app.other'));
+            } else {
+                $collection->push(parse_url($item->referer)['host']);
+            }
         });
 
         // Count the unique values and assign to their respective keys
         $array = array_count_values($collection->toArray());
 
-        // Only return the top 10 referrers with their view count
+        // Only return the top N referrers with their view count
         $sliced = array_slice($array, 0, 10, true);
 
         // Sort the array in a descending order
@@ -250,6 +285,43 @@ class Post extends Model
      */
     public function scopeDraft($query): Builder
     {
-        return $query->where('published_at', '>', now()->toDateTimeString());
+        return $query->where('published_at', null)->orWhere('published_at', '>', now()->toDateTimeString());
+    }
+
+    /**
+     * Scope a query to only include posts for the current logged in user.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopeForCurrentUser($query): Builder
+    {
+        return $query->where('user_id', request()->user()->id ?? null);
+    }
+
+    /**
+     * Scope a query to eager load user meta.
+     *
+     * @param $query
+     * @return Builder
+     */
+    public function scopeWithUserMeta($query): Builder
+    {
+        return $query->with('userMeta');
+    }
+
+    /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($item) {
+            $item->tags()->detach();
+            $item->topic()->detach();
+        });
     }
 }

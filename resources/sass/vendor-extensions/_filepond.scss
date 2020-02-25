@@ -1,0 +1,48 @@
+/*
+ * FilePond Component
+ *
+ * @link https://github.com/pqina/filepond
+ */
+
+@import '../utilities/variables';
+
+.filepond--drop-label,
+.filepond--drop-label label {
+    cursor: pointer;
+}
+
+.filepond--panel-root {
+    background-color: $gray-100;
+}
+
+.filepond--panel-root {
+    border-radius: $border-radius;
+}
+
+.filepond--item-panel {
+    border-radius: $border-radius;
+}
+
+.filepond--panel-top:after,
+.filepond--panel-bottom:before{
+    height: 0 !important;
+}
+
+.filepond--image-preview-wrapper {
+    border-radius: $border-radius !important;
+}
+
+[data-filepond-item-state*='error'] .filepond--item-panel,
+[data-filepond-item-state*='invalid'] .filepond--item-panel {
+    background-color: $red;
+}
+
+[data-filepond-item-state='processing-complete'] .filepond--item-panel {
+    background-color: $green;
+}
+
+.selected-image button {
+    position: absolute;
+    top: 25px;
+    right: 27px;
+}

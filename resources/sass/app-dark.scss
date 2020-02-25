@@ -1,195 +1,166 @@
+@import 'utilities/fonts';
+@import 'utilities/variables';
+@import 'vendor-extensions/bootstrap';
+@import 'vendor-extensions/multiselect';
 
-// Fonts
-@import url("https://fonts.googleapis.com/css?family=Nunito|Merriweather:300,400,700");
-@import "~@fortawesome/fontawesome-free/scss/regular";
-@import "~@fortawesome/fontawesome-free/scss/solid";
-@import "~@fortawesome/fontawesome-free/scss/fontawesome";
+$body-bg: rgb(38, 50, 56);
+$body-color: rgb(195, 211, 222);
+$border-color: rgba(67, 72, 87, 1);
 
-// Typography
-$font-family-sans-serif: "Nunito", sans-serif;
-$font-family-serif: "Merriweather", serif;
-$fa-font-path: "../fonts" !default;
-$font-size-base: 0.9rem;
-$line-height-base: 1.6;
+$link-color: $gray-300;
+$link-hover-color: $gray-500;
 
-// Color Palette
-$color-text-default: rgb(195,211,222);
-$color-accent: rgba(67, 72, 87, .5);
-$color-border: rgba(67, 72, 87, 1);
-$color-background: rgb(38, 50, 56);
-$green: rgb(195,232,141);
-$blue: rgb(130,170,255);
-$red: rgb(247,140,108);
-$light-grey: #9ba3aa;
-$orange: #f6993f;
-$indigo: #6574cd;
-$dark-grey: #444;
-$yellow: #ffed4a;
-$purple: #9561e2;
-$pink: #f66D9b;
-$teal: #4dc0b5;
-$cyan: #6cb2eb;
+$text-muted: $gray-600;
 
-// Base
-@import "base";
+$dropdown-bg: $body-bg;
+$dropdown-color: $body-color;
+$dropdown-link-color: $gray-300;
+$dropdown-link-hover-color: darken($gray-900, 5%);
+$dropdown-link-hover-bg: $gray-500;
+$dropdown-link-active-color: darken($gray-900, 5%);
+$dropdown-link-active-bg: $gray-500;
+$dropdown-border-color: $gray-700;
+$dropdown-divider-bg: $gray-800;
 
-body {
-  background-color: $color-background;
-  color: $color-text-default;
-}
+$card-border-color: $gray-700;
 
-a.nav-link {
-  color: $color-text-default !important;
-}
+$input-color: $gray-400;
+$input-placeholder-color: $gray-600;
 
-a.nav-link:hover {
-  color: $color-text-default !important;
-}
+$modal-content-bg: $body-bg;
 
-a:hover,
-a.text-primary:hover {
-  color: rgba(130,170,255, .5) !important;
-}
+$custom-control-indicator-bg: $text-muted;
 
-blockquote {
-  border-left: 4px solid $color-border !important;
-
-  span {
-    color: $color-text-default !important;
-  }
-}
-
-.btn-outline-primary:hover,
-.btn-primary:hover,
-.btn-danger:hover {
-  color: $color-background !important;
-}
-
-.border-bottom {
-  border-bottom: 1px solid $color-border !important;
-}
-
-.border-top {
-  border-top: 1px solid $color-border !important;
-}
-
-.card {
-  background: transparent;
-  border: 1px solid $color-border;
-}
-
-.custom-select {
-  background-color: transparent !important;
-  color: $color-text-default !important;
-}
-
-.dropdown-menu {
-  background-color: $color-background !important;
-  border: 1px solid $color-border !important;
-}
-
-.dropdown-menu a {
-  color: $color-text-default !important;
-}
-
-.dropdown-menu a:hover {
-  color: $color-background !important;
-  background-color: $color-text-default;
-}
-
-.dropdown-divider {
-  border-top: 1px solid $color-border !important;
-}
-
-div.controls {
-  background-color: $color-background !important;
-}
-
-input, textarea {
-  background: transparent !important;
-  color: $color-text-default !important;
-}
-
-.line-chart {
-  line.line-horizontal,
-  line.line-vertical {
-    stroke: $color-border !important;
-  }
-}
-
-.logo i {
-  font-size: 20px;
-  color: $color-text-default;
-}
-
-.modal-content {
-  background-color: $color-background !important;
-  border: 1px solid $color-border !important;
-}
-
-.modal-footer {
-  border-top: 1px solid $color-border !important;
-}
-
-.multiselect__content-wrapper {
-  background-color: $color-background !important;
-  border: 1px solid $color-border !important;
-}
-
-.multiselect__element {
-  color: $color-text-default !important;
-}
-
-.multiselect__option--selected, .multiselect__option--selected::after {
-  color: $color-background !important;
-  background-color: $color-text-default !important;
-}
-
-.multiselect__single {
-  background: none !important;
-  color: $color-text-default !important;
-}
-
-.multiselect__tags {
-  background: none !important;
-}
+$bg-darker: #71809630;
 
 .ql-editor {
-  color: $color-text-default !important;
-
-  .bg-white {
-    background-color: transparent !important;
-  }
-
-  hr {
-    color: $color-border !important;
-  }
+    color: $body-color;
 }
 
-.ql-editor.ql-blank::before {
-  color: #59616A !important;
-}
-
-#sidebar-controls {
-  .controls {
-    button {
-      i {
-        color: rgb(108,117,125) !important;
-      }
-    }
-
-    button:hover {
-      i {
-        color: rgb(108,117,125) !important;
-      }
-    }
-  }
+div.ql-editor.ql-blank::before {
+    color: $gray-600;
 }
 
 select.input {
-  color: $color-text-default !important;
+    color: $input-color;
 }
 
-text {
-  fill: $color-text-default !important;
+.multiselect__content-wrapper {
+    background-color: $body-bg;
+    border-color: $border-color;
 }
+
+.multiselect--above .multiselect__content-wrapper {
+    border-top-color: $border-color;
+}
+
+.multiselect__content-wrapper ul li {
+    color: $input-color;
+}
+
+.multiselect__input, .multiselect__single {
+    color: $input-color;
+}
+
+.multiselect__input {
+    background-color: transparent;
+}
+
+.multiselect__tags {
+    border-radius: $border-radius;
+    background-color: $bg-darker;
+    border: none;
+    padding-left: .75rem;
+}
+
+.multiselect__option--selected {
+    color: $body-color;
+    background-color: $bg-darker;
+}
+
+.form-control:focus {
+    background-color: $bg-darker !important;
+}
+
+.bg-transparent:focus {
+    background-color: transparent !important;
+}
+
+.filepond--panel-root {
+    background-color: $bg-darker !important;
+}
+
+.filepond--drop-label {
+    color: $body-color !important;
+}
+
+.filepond--drop-label svg path {
+    fill: $body-color;
+}
+
+.bg-darker {
+    background-color: #71809630;
+}
+
+.sidebar-controls.active {
+    background-color: $body-bg;
+}
+
+.shadow-inner {
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.controls {
+    background-color: $body-bg;
+}
+
+.navbar-mini {
+    background-color: $body-bg;
+}
+
+.navbar-mini button:hover {
+    background-color: transparent;
+}
+
+.primary {
+    fill: $gray-500;
+}
+
+.secondary {
+    fill: $gray-700;
+}
+
+.logo-primary {
+    fill: $gray-700;
+}
+
+.logo-secondary {
+    fill: $gray-500;
+}
+
+.fill-bg {
+    fill: $body-bg;
+}
+
+.fill-body-color {
+    fill: $body-color;
+}
+
+.font-serif {
+    font-family: $font-family-serif;
+}
+
+.font-sans {
+    font-family: $font-family-sans-serif;
+}
+
+@import 'vendor-extensions/vue';
+@import 'vendor-extensions/nprogress';
+@import 'vendor-extensions/switch';
+@import 'vendor-extensions/filepond';
+
+@import '~bootstrap/scss/functions';
+@import '~bootstrap/scss/variables';
+@import '~bootstrap/scss/mixins';
+
+@import '~bootstrap';

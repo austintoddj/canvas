@@ -1,24 +1,17 @@
 <template>
-    <div v-cloak>
-        <multiselect
-                v-model="value"
-                :placeholder="this.trans.topics.forms.select"
-                :tag-placeholder="this.trans.topics.forms.tag"
-                label="name"
-                track-by="slug"
-                :options="options"
-                :taggable="true"
-                @input="onChange"
-                @tag="addTopic">
-        </multiselect>
-
-        <div class="topics">
-            <template v-if="value.length !== 0">
-                <input hidden type="hidden" :name="`topic[name]`" :value="value.name">
-                <input hidden type="hidden" :name="`topic[slug]`" :value="value.slug">
-            </template>
-        </div>
-    </div>
+    <multiselect
+        v-model="value"
+        :placeholder="trans.app.select_a_topic"
+        :tag-placeholder="trans.app.add_a_new_topic"
+        :options="options"
+        :multiple="false"
+        :taggable="true"
+        @input="onChange"
+        @tag="addTopic"
+        label="name"
+        track-by="slug"
+        style="cursor: pointer"
+    />
 </template>
 
 <script>
@@ -28,116 +21,64 @@
         props: {
             topics: {
                 type: Array,
-                required: false
+                required: false,
             },
             assigned: {
-                type: Object,
-                required: false
-            }
+                type: Object | Array,
+                required: false,
+            },
         },
 
         components: {
-            Multiselect
+            Multiselect,
         },
 
         data() {
             const allTopics = this.topics.map(obj => {
-                let filtered = {};
+                let filtered = {}
 
-                filtered['name'] = obj.name;
-                filtered['slug'] = obj.slug;
+                filtered['name'] = obj.name
+                filtered['slug'] = obj.slug
 
-                return filtered;
-            });
+                return filtered
+            })
 
             return {
-                value: this.assigned ? this.assigned : [],
                 options: allTopics,
-                trans: i18n
+                value: this.assigned ? this.assigned : [],
+                trans: JSON.parse(Canvas.lang),
             }
         },
 
         methods: {
             onChange(value, id) {
-                if (this.value == null) {
-                    this.value = [];
-                }
+                this.$store.dispatch('setPostTopic', value)
+
+                this.update()
             },
 
             addTopic(searchQuery) {
                 const topic = {
                     name: searchQuery,
-                    slug: this.slugify(searchQuery)
-                };
+                    slug: this.slugify(searchQuery),
+                }
 
-                this.options.push(topic);
+                this.options.push(topic)
 
                 this.value = {
                     name: topic.name,
-                    slug: topic.slug
-                };
+                    slug: topic.slug,
+                    user_id: Canvas.user.id
+                }
+
+                this.$store.dispatch('setPostTopic', this.value)
+
+                this.update()
             },
 
-            /**
-             * Convert a string to a slug.
-             *
-             * @source https://gist.github.com/mathewbyrne/1280286
-             */
-            slugify(text) {
-                return text.toString().toLowerCase()
-                    .replace(/\s+/g, '-')
-                    .replace(/[^\w\-]+/g, '')
-                    .replace(/--+/g, '-')
-            }
-        }
+            update() {
+                this.$parent.update()
+            },
+        },
     }
 </script>
-
-<style>
-    @import "~vue-multiselect/dist/vue-multiselect.min.css";
-
-    .multiselect__select {
-        display: none;
-    }
-
-    .multiselect__tags {
-        border: none;
-        padding-left: 0;
-        padding-right: 0;
-    }
-
-    .multiselect__tag,
-    .multiselect__option--highlight,
-    .multiselect__option--highlight::after,
-    .multiselect__tag-icon:focus,
-    .multiselect__tag-icon:hover {
-        background: #3490dc;
-    }
-
-    .multiselect,
-    .multiselect__input,
-    .multiselect__single {
-        font-size: 14px;
-        padding: 0;
-        border-radius: 0;
-    }
-
-    .multiselect__input:focus::placeholder,
-    .multiselect__input:focus::-webkit-input-placeholder,
-    .multiselect__input::placeholder,
-    .multiselect__input::-webkit-input-placeholder,
-    .multiselect__placeholder {
-        color: #6c757d;
-        opacity: 1;
-        padding-top: 0;
-        line-height: 1;
-    }
-
-    .multiselect__input {
-        line-height: 1;
-    }
-
-    .multiselect__tag {
-        padding-bottom: 2px;
-    }
-</style>

@@ -4,12 +4,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Canvas Path
+    | Base Route
     |--------------------------------------------------------------------------
     |
     | This is the URI path where Canvas will be accessible from. You are free
-    | to change this path to anything you like. Note that updating the URI
-    | will affect the internal API paths that are not exposed to users.
+    | to change this path to anything you like. Note that the URI will not
+    | affect the paths of its internal API that aren't exposed to users.
     |
     */
 
@@ -33,18 +33,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Uploads Disk
+    | Storage
     |--------------------------------------------------------------------------
     |
-    | This is the storage disk Canvas will use to put file uploads, you may
+    | This is the storage disk Canvas will use to put file uploads. You may
     | use any of the disks defined in the config/filesystems.php file and
-    | You may also configure the path where files are to be stored.
+    | you may also change the maximum upload size from its 3MB default.
     |
     */
 
     'storage_disk' => env('CANVAS_STORAGE_DISK', 'local'),
 
     'storage_path' => env('CANVAS_STORAGE_PATH', 'public/canvas'),
+
+    'upload_filesize' => env('CANVAS_UPLOAD_FILESIZE', 3145728),
 
     /*
     |--------------------------------------------------------------------------
@@ -63,12 +65,13 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Notifications
+    | E-Mail Notifications
     |--------------------------------------------------------------------------
     |
-    | This option enables Canvas to send e-mail notifications via the default
-    | mail driver. If enabled, a weekly summary will be sent to each user
-    | that has authored content providing them with unique analytics.
+    | This option controls e-mail notifications that will be sent via the
+    | default application mail driver. A default option is provided to
+    | support the notification system as an opt-in feature.
+    |
     |
     */
 

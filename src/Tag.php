@@ -2,9 +2,10 @@
 
 namespace Canvas;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Tag extends Model
 {
@@ -46,12 +47,44 @@ class Tag extends Model
     public $incrementing = false;
 
     /**
-     * The posts that have the tag.
+     * The number of models to return for pagination.
      *
-     * @return BelongsToMany
+     * @var int
+     */
+    protected $perPage = 10;
+
+    /**
+     * Get the posts relationship.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function posts(): BelongsToMany
     {
         return $this->belongsToMany(Post::class, 'canvas_posts_tags', 'tag_id', 'post_id');
+    }
+
+    /**
+     * Scope a query to only include posts for the current logged in user.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopeForCurrentUser($query): Builder
+    {
+        return $query->where('user_id', request()->user()->id ?? null);
+    }
+
+    /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($item) {
+            $item->posts()->detach();
+        });
     }
 }

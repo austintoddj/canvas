@@ -2,9 +2,9 @@
 
 namespace Canvas\Console;
 
-use Illuminate\Support\Str;
 use Illuminate\Console\Command;
 use Illuminate\Console\DetectsApplicationNamespace;
+use Illuminate\Support\Str;
 
 class InstallCommand extends Command
 {
@@ -22,7 +22,7 @@ class InstallCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Install all of the Canvas resources';
+    protected $description = 'Install the resources and run migrations';
 
     /**
      * Execute the console command.
@@ -45,8 +45,6 @@ class InstallCommand extends Command
      * Register the Canvas service provider in the application configuration file.
      *
      * @return void
-     *
-     * @author Taylor Otwell <taylor@laravel.com>
      */
     private function registerCanvasServiceProvider()
     {
@@ -59,8 +57,8 @@ class InstallCommand extends Command
 
         $lineEndingCount = [
             "\r\n" => substr_count($appConfig, "\r\n"),
-            "\r"   => substr_count($appConfig, "\r"),
-            "\n"   => substr_count($appConfig, "\n"),
+            "\r" => substr_count($appConfig, "\r"),
+            "\n" => substr_count($appConfig, "\n"),
         ];
 
         $eol = array_keys($lineEndingCount, max($lineEndingCount))[0];

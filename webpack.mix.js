@@ -12,19 +12,19 @@ const mix = require('laravel-mix');
  */
 
 mix.options({
-        uglify: {
-            uglifyOptions: {
-                compress: {
-                    drop_console: true,
-                }
+    uglify: {
+        uglifyOptions: {
+            compress: {
+                drop_console: true,
             }
         }
-    })
-    .setPublicPath('public')
+    }
+});
+
+mix.setPublicPath('public')
     .setResourceRoot('../')
     .js('resources/js/app.js', 'public/js')
     .sass('resources/sass/app.scss', 'public/css')
     .sass('resources/sass/app-dark.scss', 'public/css')
     .copy('resources/favicon.ico', 'public')
-    .sourceMaps()
     .version();

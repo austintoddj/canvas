@@ -19,4 +19,14 @@ class PostsTopics extends Pivot
      * @var array
      */
     protected $guarded = [];
+
+    public function posts()
+    {
+        return $this->belongsTo(Post::class);
+    }
+
+    public function topic()
+    {
+        return $this->belongsTo(Topic::class);
+    }
 }

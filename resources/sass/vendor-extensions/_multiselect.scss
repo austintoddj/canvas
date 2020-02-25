@@ -1,0 +1,65 @@
+/*
+ * Vue MultiSelect Component
+ *
+ * @author Damian Dulisz
+ * @link https://github.com/shentao/vue-multiselect
+ */
+
+@import '../utilities/variables';
+@import '~vue-multiselect/dist/vue-multiselect.min.css';
+
+.multiselect__select {
+    display: none;
+}
+
+.multiselect__tags > input {
+    margin-bottom: 10px;
+}
+
+.multiselect__input {
+    background-color: $gray-100;
+}
+
+.multiselect__tags {
+    border-radius: $border-radius;
+    background-color: $gray-100;
+    border: none;
+    padding-left: .75rem;
+}
+
+.multiselect__tag,
+.multiselect__option--highlight,
+.multiselect__option--highlight::after,
+.multiselect__tag-icon:focus,
+.multiselect__tag-icon:hover {
+    background: $green;
+}
+
+.multiselect,
+.multiselect__input,
+.multiselect__single {
+    padding: 0;
+}
+
+.multiselect__single {
+    background-color: transparent;
+}
+
+.multiselect__input:focus::placeholder,
+.multiselect__input:focus::-webkit-input-placeholder,
+.multiselect__input::placeholder,
+.multiselect__input::-webkit-input-placeholder,
+.multiselect__placeholder {
+    color: #7A889B;
+    padding-top: 0;
+    line-height: $line-height-base;
+    font-size: 16px;
+}
+
+.multiselect__input {
+    line-height: $line-height-base;
+}
+
+.multiselect__tag {
+    padding-bottom: 2px;
+}

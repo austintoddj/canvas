@@ -1,34 +1,35 @@
 <?php
 
 return [
-
-    'title'   => 'Blog',
     'buttons' => [
         'learn' => 'Conoce más',
-        'next'  => 'A continuación lee',
+        'continue' => 'Sigue leyendo...',
+        'next' => 'A continuación lee',
         'enjoy' => 'Usted podría disfrutar',
-        'edit'  => 'Editar post',
+        'edit' => 'Editar post',
         'stats' => 'Ver estadísticas',
+        'canonical' => 'Esta publicación fue publicada originalmente en',
     ],
-    'empty'   => [
+    'empty' => [
         'description' => 'No se encontraron publicaciones, comienza por',
-        'action'      => 'añadir una nueva publicación',
+        'action' => 'añadir una nueva publicación',
     ],
-    'nav'     => [
+    'nav' => [
         'user' => [
-            'posts'  => 'Publicaciones',
-            'tags'   => 'Etiquetas',
+            'posts' => 'Publicaciones',
+            'tags' => 'Etiquetas',
             'topics' => 'Temas',
-            'stats'  => 'Estadísticas',
-            'login'  => 'Registrarse',
+            'stats' => 'Estadísticas',
+            'settings' => 'Configuraciones',
+            'login' => 'Registrarse',
             'logout' => 'Desconectar',
         ],
     ],
-    'posts'   => [
+    'posts' => [
         'label' => 'Publicaciones recientes',
     ],
-    'tags'    => [
+    'tags' => [
         'label' => 'Etiquetas',
     ],
-
+    'title' => 'Blog',
 ];

@@ -24,7 +24,7 @@ class View extends Model
     /**
      * Get the post relationship.
      *
-     * @return BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function post(): BelongsTo
     {

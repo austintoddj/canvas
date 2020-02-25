@@ -2,13 +2,13 @@
 
 namespace Canvas\Tests;
 
-use ReflectionClass;
-use ReflectionException;
 use Canvas\CanvasServiceProvider;
-use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use ReflectionClass;
+use ReflectionException;
 
 abstract class TestCase extends OrchestraTestCase
 {
@@ -39,7 +39,7 @@ abstract class TestCase extends OrchestraTestCase
      * @param Application $app
      * @return void
      */
-    protected function resolveApplicationCore($app)
+    protected function resolveApplicationCore($app): void
     {
         parent::resolveApplicationCore($app);
 
@@ -59,9 +59,9 @@ abstract class TestCase extends OrchestraTestCase
         $config->set('database.default', 'sqlite');
 
         $config->set('database.connections.sqlite', [
-            'driver'   => 'sqlite',
+            'driver' => 'sqlite',
             'database' => ':memory:',
-            'prefix'   => '',
+            'prefix' => '',
         ]);
 
         $config->set('view.paths', [dirname(__DIR__).'/resources/views']);
@@ -76,8 +76,8 @@ abstract class TestCase extends OrchestraTestCase
     protected function setUpDatabase($app): void
     {
         $this->loadLaravelMigrations();
-
-        $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadFactoriesUsing($this->app, __DIR__.'/../database/factories');
 
         $this->artisan('migrate');
     }

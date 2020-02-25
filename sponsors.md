@@ -1,10 +1,8 @@
 ## Sponsors
 
-[Canvas](https://cnvs.io) is a freely available, open source project that gives something back to the greater [Laravel](https://laravel.com) community. Because PHP and blogging has dominated so much of the Internet today, it makes sense that there would be a highly-maintained package ready and waiting for any developers who need one.
+[Canvas](https://cnvs.io) is a freely available, open source project that gives something back to the greater [Laravel](https://laravel.com) community. Because PHP and blogging has dominated so much of the Internet today, it makes sense that there would be a highly-maintained package ready-to-go for any developers who need one.
 
 **Financial contributions will never be required to maintain this project**, they are however very much appreciated. If you've ever used Canvas in your daily work, either personally or professionally, and feel that it has made your life easier, consider supporting the project by buying a cup of coffee.
-
-(*Sponsorship opportunities are not yet available, stay tuned!*)
 
 If you haven't already, star the repo to show your support, it makes a huge difference. Thank you in advance. :-)
 

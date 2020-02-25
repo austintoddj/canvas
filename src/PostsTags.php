@@ -19,4 +19,14 @@ class PostsTags extends Pivot
      * @var array
      */
     protected $guarded = [];
+
+    public function posts()
+    {
+        return $this->belongsTo(Post::class);
+    }
+
+    public function tags()
+    {
+        return $this->belongsTo(Tag::class);
+    }
 }

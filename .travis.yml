@@ -2,33 +2,43 @@ language: php
 
 sudo: false
 
-php:
-  - 7.1
-  - 7.2
-  - 7.3
+cache:
+  directories:
+    - $HOME/.composer/cache
 
 notifications:
   email: false
   slack:
     secure: AqHB172t10a7gJhGPSm94/eTgHmA7TcKGUBajMiIIkgp4Lmf5GP52JBp8Cip4kzkPeijawavK0pOFIs+2ps+11OAtsRNZ8TSSYIgfCD9n4GyAslFSw3QOCbVW4OcghH2GgH87dG773812DfJbUdK/HEMlu4kRVBPsoGzKK3IaTAPi9CiEq8Z8Qg9+BZkzf1a0HE/ym+ViuXKJpqQHaV5i5HFOCKV4kylEcZj4vxc9XZbx2wO/py1p9ez2YVH0cF1mxGNRqAQIjFHWtthJqldDU9Ufp9L9EKGDm7h/LK9MPGCPeFKoxvBa3wf6SDavAXgcGGZi1s24XFZklZNgSN4VaMKKa4T1PVdecQIayyoYGZX4JfXl0Bgg7I5sbVI3DeX8nSGwoGsXdli1i53aQ9feWVXGpQIJuM86NrmPFRB8qMRZcJDN8VuAyAaIKH/e5gCikG8qNgA+dphfPAY8Es3M/cJQOV29JkmFq3wddikxfQEKkJPv2Y9Q9pe8B9y5rPyFfuS7tErh/iLb68tpWSWXvgVxwqv5gx+6f0bm6J4pAvle0AuPRXBDdXwkCqdz6Ut5rI/GzzwqA3KIyDEaU1s93syfue54f29oPn27aWqoqATW41RjQCH9MkDD+4+KPFVAFYZY4oP80uFC3gBjoAvUYYTO/fypv8p/CwZ/XjNZg0=
 
-env:
-  matrix:
-    - LARAVEL=5.8.*
-    - LARAVEL=dev-master
-
 matrix:
-  exclude:
+  fast_finish: true
+  include:
     - php: 7.1
-      env: LARAVEL=dev-master
-  allow_failures:
-    - env: LARAVEL=dev-master
+      env: LARAVEL='5.6.*' TESTBENCH='3.6.*' DBAL='2.9.*'
+    - php: 7.2
+      env: LARAVEL='5.6.*' TESTBENCH='3.6.*' DBAL='2.9.*'
+    - php: 7.1
+      env: LARAVEL='5.7.*' TESTBENCH='3.7.*' DBAL='2.9.*'
+    - php: 7.2
+      env: LARAVEL='5.7.*' TESTBENCH='3.7.*' DBAL='2.9.*'
+    - php: 7.2
+      env: LARAVEL='5.8.*' TESTBENCH='3.8.*' DBAL='2.9.*'
+    - php: 7.3
+      env: LARAVEL='5.8.*' TESTBENCH='3.8.*' DBAL='2.9.*'
+    - php: 7.2
+      env: LARAVEL='6.*' TESTBENCH='4.*' DBAL='2.9.*'
+    - php: 7.3
+      env: LARAVEL='6.*' TESTBENCH='4.*' DBAL='2.9.*'
+    - php: 7.4
+      env: LARAVEL='6.*' TESTBENCH='4.*' DBAL='2.9.*'
 
 before_install:
   - phpenv config-rm xdebug.ini || true
   - travis_retry composer self-update
+  - travis_retry composer require --no-update --no-interaction "illuminate/support=${LARAVEL}" "orchestra/testbench=${TESTBENCH}" "doctrine/dbal=${DBAL}"
 
 install:
-  - travis_retry composer require "illuminate/support=${LARAVEL}" --dev --prefer-dist --no-interaction --no-suggest
+  - travis_retry composer update --prefer-dist --no-interaction --no-suggest
 
 script: vendor/bin/phpunit --verbose
