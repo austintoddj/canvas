@@ -85,11 +85,11 @@ class TrackerTest extends TestCase
     public function evaluates_month_to_month_visitor_performance()
     {
         factory(Visit::class, 1)->create([
-            'created_at' => today()->subMonth()->toDateString()
+            'created_at' => today()->subMonth()->toDateString(),
         ]);
 
         factory(Visit::class, 2)->create([
-            'created_at' => today()->toDateString()
+            'created_at' => today()->toDateString(),
         ]);
 
         $visits = Visit::all();
@@ -115,11 +115,11 @@ class TrackerTest extends TestCase
     public function evaluates_month_to_month_view_performance()
     {
         factory(View::class, 1)->create([
-            'created_at' => today()->subMonth()->toDateString()
+            'created_at' => today()->subMonth()->toDateString(),
         ]);
 
         factory(View::class, 2)->create([
-            'created_at' => today()->toDateString()
+            'created_at' => today()->toDateString(),
         ]);
 
         $views = View::all();
