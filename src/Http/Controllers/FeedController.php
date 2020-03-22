@@ -2,8 +2,8 @@
 
 namespace Canvas\Http\Controllers;
 
-use Canvas\Post;
 use Canvas\Feed;
+use Canvas\Post;
 use Illuminate\Routing\Controller;
 
 class FeedController extends Controller

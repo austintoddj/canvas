@@ -105,6 +105,6 @@ return [
         'enabled' => env('CANVAS_FEED_ENABLED', false),
 
         'path' => env('CANVAS_FEED_PATH', 'feed'),
-    ]
+    ],
 
 ];
