@@ -6,7 +6,6 @@ use Canvas\Post;
 use Canvas\Tracker;
 use Canvas\View;
 use Canvas\Visit;
-use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
