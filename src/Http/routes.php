@@ -49,4 +49,3 @@ Route::namespace('Canvas\Http\Controllers')->group(function () {
         Route::get('/{view?}', 'ViewController')->where('view', '(.*)')->name('canvas');
     });
 });
-
