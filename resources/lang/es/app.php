@@ -74,6 +74,7 @@ return [
     'read' => 'leer',
     'ready_to_publish' => '¿Listo para publicar?',
     'referer_unknown' => 'Las vistas de publicaciones en esta categoría no pudieron determinar de manera confiable un referente. p.ej. Modo incognito',
+    'search_post' => 'Buscar una publicación...',
     'save' => 'Guardar',
     'save_changes' => 'Guardar cambios',
     'saved' => '¡Guardado!',

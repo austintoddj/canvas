@@ -74,6 +74,7 @@ return [
     'read' => 'read',
     'ready_to_publish' => 'Ready to publish?',
     'referer_unknown' => 'Post views in this category could not reliably determine a referrer. e.g. Incognito mode',
+    'search_post' => 'Search a post...',
     'save' => 'Save',
     'save_changes' => 'Save changes',
     'saved' => 'Saved!',
