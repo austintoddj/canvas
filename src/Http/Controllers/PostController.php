@@ -23,19 +23,15 @@ class PostController extends Controller
         $publishedCount = Post::forCurrentUser()->published()->count();
         $draftCount = Post::forCurrentUser()->draft()->count();
 
-        if (request()->query('postType') == 'draft') {
-            return response()->json([
-                'posts' => Post::forCurrentUser()->draft()->latest()->withCount('views')->paginate(),
-                'draftCount' => $draftCount,
-                'publishedCount' => $publishedCount,
-            ], 200);
-        } else {
-            return response()->json([
-                'posts' => Post::forCurrentUser()->published()->latest()->withCount('views')->paginate(),
-                'draftCount' => $draftCount,
-                'publishedCount' => $publishedCount,
-            ], 200);
-        }
+        return response()->json([
+            'posts' => Post::forCurrentUser()
+                ->filter(request()->only(['search', 'postType']))
+                ->latest()
+                ->withCount('views')
+                ->paginate(),
+            'draftCount' => $draftCount,
+            'publishedCount' => $publishedCount,
+        ], 200);
     }
 
     /**

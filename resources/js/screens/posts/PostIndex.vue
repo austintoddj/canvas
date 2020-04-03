@@ -18,6 +18,20 @@
                         <option value="draft">{{ trans.app.draft }} ({{ draftCount }})</option>
                     </select>
                 </div>
+                
+                <div class="form-group row">
+                        <div class="col-12">
+                            <input
+                                name="search"
+                                type="text"
+                                :class="!Canvas.darkMode ? 'bg-white': 'bg-darker'"
+                                class="form-control form-control-lg shadow-lg border-0"
+                                title="Search"
+                                v-model="search"
+                                :placeholder="trans.app.search_post"
+                            />
+                        </div>
+                    </div>
 
                 <div class="mt-2 card shadow border-0">
                     <div class="card-body p-0">
@@ -92,6 +106,8 @@
     import Hover from "../../directives/Hover";
     import InfiniteLoading from 'vue-infinite-loading'
     import PageHeader from '../../components/PageHeader'
+    import throttle from 'lodash/throttle'
+
 
     export default {
         name: 'posts-index',
@@ -114,6 +130,7 @@
                 postType: 'published',
                 infiniteId: +new Date(),
                 trans: JSON.parse(Canvas.translations),
+                search: '',
             }
         },
 
@@ -124,6 +141,7 @@
                         params: {
                             page: this.page,
                             postType: this.postType,
+                            search: this.search,
                         },
                     })
                     .then(response => {
@@ -153,6 +171,15 @@
                 this.page = 1;
                 this.posts = [];
                 this.infiniteId += 1;
+            }
+        },
+
+        watch: {
+            search: {
+                 handler: throttle(function() {
+                    this.changeType()
+                }, 800),
+                deep: true,
             }
         }
     }

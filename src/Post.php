@@ -308,6 +308,26 @@ class Post extends Model
     }
 
     /**
+     * Scope to filter posts by type and by search term if given.
+     *
+     * @param Builder $query
+     * @param arrray $filters     *
+     * @return Builder
+     */
+    public function scopeFilter($query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where('title', 'like', '%'.$search.'%');
+        })->when($filters['postType'] ?? null, function ($query, $type) {
+            if ($type === 'published') {
+                $query->published();
+            } elseif ($type === 'draft') {
+                $query->draft();
+            }
+        });
+    }
+
+    /**
      * The "booting" method of the model.
      *
      * @return void
