@@ -26,7 +26,7 @@ class PostTest extends TestCase
     public function allow_posts_to_share_the_same_slug_with_unique_users()
     {
         $user_1 = factory(config('canvas.user'))->create();
-        $post_1 = $this->actingAs($user_1)->withoutMiddleware()->post('/canvas/api/posts/create', [
+        $post_1 = $this->actingAs($user_1)->withoutMiddleware()->post('/canvas/api/posts', [
             'id' => Uuid::uuid4(),
             'slug' => 'a-new-hope',
             'topic' => [],
@@ -34,7 +34,7 @@ class PostTest extends TestCase
         ]);
 
         $user_2 = factory(config('canvas.user'))->create();
-        $post_2 = $this->actingAs($user_2)->withoutMiddleware()->post('/canvas/api/posts/create', [
+        $post_2 = $this->actingAs($user_2)->withoutMiddleware()->post('/canvas/api/posts', [
             'id' => Uuid::uuid4(),
             'slug' => 'a-new-hope',
             'topic' => [],
