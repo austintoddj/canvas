@@ -83,7 +83,7 @@
 
 <script>
     import debounce from 'lodash/debounce'
-    import {mapState} from 'vuex'
+    import {mapGetters, mapState} from 'vuex'
     import TagSelect from '../TagSelect'
     import TopicSelect from '../TopicSelect'
     import Tooltip from '../../directives/Tooltip'
@@ -113,18 +113,11 @@
 
         data() {
             return {
-                allTags: [],
-                allTopics: [],
                 trans: JSON.parse(Canvas.translations),
             }
         },
 
         computed: mapState(['activePost']),
-
-        mounted() {
-            this.allTags = this.tags
-            this.allTopics = this.topics
-        },
 
         methods: {
             syncSlug() {
@@ -133,6 +126,7 @@
             },
 
             update: debounce(function (e) {
+                console.log('settings modal called it')
                 this.$parent.save()
             }, 3000),
         },

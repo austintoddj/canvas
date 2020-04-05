@@ -1,6 +1,6 @@
 export const state = {
-    activePost: {},
-}
+    post: {},
+};
 
 export default {
     state,

@@ -457,6 +457,7 @@
             },
 
             update: debounce(function (e) {
+                console.log('it was me, i called it')
                 this.$parent.save()
             }, 3000),
         },

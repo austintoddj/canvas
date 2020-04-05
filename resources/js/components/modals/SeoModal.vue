@@ -123,6 +123,7 @@
 
         methods: {
             update: debounce(function (e) {
+                console.log('seo modal called it')
                 this.$parent.save()
             }, 3000),
 

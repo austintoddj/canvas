@@ -170,7 +170,8 @@
                 this.request()
                     .get('/api/posts', {
                         params: {
-                            page: this.page
+                            page: this.page,
+                            type: 'published'
                         },
                     })
                     .then(response => {

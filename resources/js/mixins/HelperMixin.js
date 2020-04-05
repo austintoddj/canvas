@@ -29,9 +29,9 @@ export default {
          * @returns {boolean}
          */
         isScheduled(date) {
-            return moment(date).isAfter(
+            return date ? moment(date).isAfter(
                 moment(new Date()).format().slice(0, 19).replace('T', ' ')
-            )
+            ) : false;
         },
 
         /**
@@ -41,8 +41,8 @@ export default {
          * @returns {boolean}
          */
         isPublished(date) {
-            return moment(date).isBefore(
-                moment(new Date()).format().slice(0, 19).replace('T', ' '))
+            return date ? moment(date).isBefore(
+                moment(new Date()).format().slice(0, 19).replace('T', ' ')) : false;
         },
 
         /**

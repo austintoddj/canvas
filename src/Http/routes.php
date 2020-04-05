@@ -5,45 +5,33 @@ use Illuminate\Support\Facades\Route;
 Route::namespace('Canvas\Http\Controllers')->group(function () {
     Route::prefix(config('canvas.path'))->middleware(config('canvas.middleware'))->group(function () {
         Route::prefix('api')->group(function () {
-            Route::prefix('stats')->group(function () {
-                Route::get('/', 'StatsController@index');
-                Route::get('{id}', 'StatsController@show');
-            });
+            Route::get('stats', 'StatsController@index');
+            Route::get('stats/{id}', 'StatsController@show');
 
-            Route::prefix('posts')->group(function () {
-                Route::get('/', 'PostController@index');
-                Route::get('{id?}', 'PostController@show');
-                Route::post('{id}', 'PostController@store');
-                Route::delete('{id}', 'PostController@destroy');
-            });
+            Route::get('posts', 'PostController@index');
+            Route::get('posts/create', 'PostController@create');
+            Route::post('posts', 'PostController@store');
+            Route::get('posts/{id}/edit', 'PostController@edit');
+            Route::post('posts/{id}', 'PostController@update');
+            Route::delete('posts/{id}', 'PostController@destroy');
 
-            Route::prefix('tags')->group(function () {
-                Route::get('/', 'TagController@index');
-                Route::get('{id?}', 'TagController@show');
-                Route::post('{id}', 'TagController@store');
-                Route::delete('{id}', 'TagController@destroy');
-            });
+            Route::get('tags', 'TagController@index');
+            Route::get('tags/{id?}', 'TagController@show');
+            Route::post('tags/{id}', 'TagController@store');
+            Route::delete('tags/{id}', 'TagController@destroy');
 
-            Route::prefix('topics')->group(function () {
-                Route::get('/', 'TopicController@index');
-                Route::get('{id?}', 'TopicController@show');
-                Route::post('{id}', 'TopicController@store');
-                Route::delete('{id}', 'TopicController@destroy');
-            });
+            Route::get('topics', 'TopicController@index');
+            Route::get('topics/{id?}', 'TopicController@show');
+            Route::post('topics/{id}', 'TopicController@store');
+            Route::delete('topics/{id}', 'TopicController@destroy');
 
-            Route::prefix('media')->group(function () {
-                Route::post('uploads', 'MediaController@store');
-                Route::delete('uploads', 'MediaController@destroy');
-            });
+            Route::post('media/uploads', 'MediaController@store');
+            Route::delete('media/uploads', 'MediaController@destroy');
 
-            Route::prefix('settings')->group(function () {
-                Route::get('/', 'SettingsController@show');
-                Route::post('/', 'SettingsController@update');
-            });
+            Route::get('settings', 'SettingsController@show');
+            Route::post('settings', 'SettingsController@update');
 
-            Route::prefix('locale')->group(function () {
-                Route::post('/', 'LocaleController@update');
-            });
+            Route::post('locale', 'LocaleController@update');
         });
 
         Route::get('/{view?}', 'ViewController')->where('view', '(.*)')->name('canvas');

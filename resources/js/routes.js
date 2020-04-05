@@ -13,17 +13,17 @@ export default [
     {
         path: '/posts',
         name: 'posts',
-        component: require('./screens/posts/PostIndex').default,
+        component: require('./screens/posts/PostsIndex').default,
     },
     {
         path: '/posts/create',
         name: 'posts-create',
-        component: require('./screens/posts/PostEdit').default,
+        component: require('./screens/posts/PostsCreate').default,
     },
     {
         path: '/posts/:id/edit',
         name: 'posts-edit',
-        component: require('./screens/posts/PostEdit').default,
+        component: require('./screens/posts/PostsEdit').default,
     },
     {
         path: '/tags',

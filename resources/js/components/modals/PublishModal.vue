@@ -50,8 +50,8 @@
                         </div>
                     </div>
 
-                    <p class="mt-3 text-success font-italic" v-if="isScheduled(this.activePost.published_at)">
-                        {{ trans.app.your_post_will_publish_at }} {{ moment(this.activePost.published_at).format('h:mm A') }} {{ trans.app.on }} {{ moment(this.activePost.published_at).format('MMMM DD, YYYY') }}.
+                    <p class="mt-3 text-success font-italic" v-if="isScheduled(post.published_at)">
+                        {{ trans.app.your_post_will_publish_at }} {{ moment(post.published_at).format('h:mm A') }} {{ trans.app.on }} {{ moment(post.published_at).format('MMMM DD, YYYY') }}.
                     </p>
                 </div>
                 <div class="modal-footer">
@@ -68,7 +68,7 @@
 
                         <div class="col-lg order-lg-first px-0">
                             <button
-                                v-if="isScheduled(this.activePost.published_at)"
+                                v-if="isScheduled(post.published_at)"
                                 @click="cancelScheduling"
                                 type="button"
                                 class="btn btn-link btn-block text-muted font-weight-bold text-decoration-none"
@@ -113,7 +113,7 @@
         },
 
         computed: {
-            ...mapState(['activePost']),
+            ...mapState(['post']),
 
             shouldPublish() {
                 return moment(this.result).isBefore(
@@ -127,7 +127,7 @@
 
         mounted() {
             this.generateDatePicker(
-                this.activePost.published_at ||
+                this.post.published_at ||
                 moment(new Date())
                     .format()
                     .slice(0, 19)
@@ -179,13 +179,11 @@
             },
 
             scheduleOrPublish() {
-                this.activePost.published_at = this.result
-                this.$parent.save()
+                this.$store.dispatch('SET_POST_PUBLISHED_AT', this.result)
             },
 
             cancelScheduling() {
-                this.activePost.published_at = ''
-                this.$parent.save()
+                this.$store.dispatch('SET_POST_PUBLISHED_AT', '')
             },
         },
     }
