@@ -18,7 +18,5 @@ class PostTest extends TestCase
             'id' => Uuid::uuid4(),
             'slug' => 'a-new-hope',
         ]);
-
-
     }
 }
