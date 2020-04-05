@@ -225,7 +225,7 @@ class PostController extends Controller
     }
 
     /**
-     * Attach or create a given topic.
+     * Sync the topic assigned to the post.
      *
      * @param $incomingTopic
      * @return array
@@ -252,12 +252,12 @@ class PostController extends Controller
     }
 
     /**
-     * Attach or create tags given an incoming array.
+     * Sync the tags assigned to the post.
      *
-     * @param array $incomingTags
+     * @param $incomingTags
      * @return array
      */
-    private function syncTags(array $incomingTags): array
+    private function syncTags($incomingTags): array
     {
         if ($incomingTags) {
             $tags = Tag::forCurrentUser()->get(['id', 'name', 'slug']);

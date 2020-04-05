@@ -16,13 +16,17 @@ Route::namespace('Canvas\Http\Controllers')->group(function () {
             Route::delete('posts/{id}', 'PostController@destroy');
 
             Route::get('tags', 'TagController@index');
-            Route::get('tags/{id?}', 'TagController@show');
-            Route::post('tags/{id}', 'TagController@store');
+            Route::get('tags/create', 'TagController@create');
+            Route::post('tags', 'TagController@store');
+            Route::get('tags/{id}/edit', 'TagController@edit');
+            Route::post('tags/{id}', 'TagController@update');
             Route::delete('tags/{id}', 'TagController@destroy');
 
             Route::get('topics', 'TopicController@index');
-            Route::get('topics/{id?}', 'TopicController@show');
-            Route::post('topics/{id}', 'TopicController@store');
+            Route::get('topics/create', 'TopicController@create');
+            Route::post('topics', 'TopicController@store');
+            Route::get('topics/{id}/edit', 'TopicController@edit');
+            Route::post('topics/{id}', 'TopicController@update');
             Route::delete('topics/{id}', 'TopicController@destroy');
 
             Route::post('media/uploads', 'MediaController@store');
