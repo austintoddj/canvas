@@ -3,10 +3,10 @@
 namespace Canvas\Tests\Unit;
 
 use Canvas\Post;
+use Canvas\Tests\TestCase;
 use Canvas\Tracker;
 use Canvas\View;
 use Canvas\Visit;
-use Canvas\Tests\TestCase;
 use Carbon\CarbonInterval;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
