@@ -2,9 +2,9 @@
 
 namespace Canvas\Tests\Unit;
 
+use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Ramsey\Uuid\Uuid;
-use Canvas\Tests\TestCase;
 
 class TopicTest extends TestCase
 {
