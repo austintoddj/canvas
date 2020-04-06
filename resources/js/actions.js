@@ -3,7 +3,7 @@ export const actions = {
         vm.request()
             .get('/api/posts/create')
             .then(response => {
-                context.commit('SET_POST', response.data.post);
+                context.commit('SET_POST', response.data);
             })
             .catch(error => {
                 // Add any error debugging...

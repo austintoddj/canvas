@@ -32,18 +32,17 @@ class TagController extends Controller
      */
     public function create()
     {
-        return response()->json(Tag::make([
-            'id' => Uuid::uuid4(),
-        ]), 200);
+        return response()->json([
+            'id' => Uuid::uuid4()->toString(),
+        ], 200);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param string $id
      * @return JsonResponse
      */
-    public function store(string $id): JsonResponse
+    public function store(): JsonResponse
     {
         $data = [
             'id' => request('id'),

@@ -28,17 +28,17 @@ export default [
     {
         path: '/tags',
         name: 'tags',
-        component: require('./screens/tags/TagsIndex').default,
+        component: require('./screens/tags/TagList').default,
     },
     {
         path: '/tags/create',
         name: 'tags-create',
-        component: require('./screens/tags/TagsEdit').default,
+        component: require('./screens/tags/TagEditor').default,
     },
     {
         path: '/tags/:id/edit',
         name: 'tags-edit',
-        component: require('./screens/tags/TagsEdit').default,
+        component: require('./screens/tags/TagEditor').default,
     },
     {
         path: '/topics',
@@ -48,7 +48,7 @@ export default [
     {
         path: '/topics/create',
         name: 'topics-create',
-        component: require('./screens/topics/TopicsEdit').default,
+        component: require('./screens/topics/TopicsCreate').default,
     },
     {
         path: '/topics/:id/edit',

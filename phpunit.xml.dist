@@ -16,10 +16,6 @@
         <testsuite name="Canvas Unit Tests">
             <directory suffix="Test.php">./tests/Unit</directory>
         </testsuite>
-
-        <testsuite name="Canvas Feature Tests">
-            <directory suffix="Test.php">./tests/Feature</directory>
-        </testsuite>
     </testsuites>
     <filter>
         <whitelist processUncoveredFilesFromWhitelist="true">

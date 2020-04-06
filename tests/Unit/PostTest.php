@@ -27,13 +27,13 @@ class PostTest extends TestCase
     {
         $user_1 = factory(config('canvas.user'))->create();
         $post_1 = $this->actingAs($user_1)->withoutMiddleware()->post('/canvas/api/posts', [
-            'id' => Uuid::uuid4(),
+            'id' => Uuid::uuid4()->toString(),
             'slug' => 'a-new-hope',
         ]);
 
         $user_2 = factory(config('canvas.user'))->create();
         $post_2 = $this->actingAs($user_2)->withoutMiddleware()->post('/canvas/api/posts', [
-            'id' => Uuid::uuid4(),
+            'id' => Uuid::uuid4()->toString(),
             'slug' => 'a-new-hope',
         ]);
 
