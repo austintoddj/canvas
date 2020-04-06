@@ -234,7 +234,7 @@ class PostController extends Controller
         if ($incomingTopic) {
             $topic = Topic::forCurrentUser()->where('slug', $incomingTopic['slug'])->first();
 
-            if (!$topic) {
+            if (! $topic) {
                 $topic = Topic::create([
                     'id' => $id = Uuid::uuid4()->toString(),
                     'name' => $incomingTopic['name'],
@@ -243,7 +243,7 @@ class PostController extends Controller
                 ]);
             }
 
-            return collect((string)$topic->id)->toArray();
+            return collect((string) $topic->id)->toArray();
         } else {
             return [];
         }
@@ -263,7 +263,7 @@ class PostController extends Controller
             return collect($incomingTags)->map(function ($incomingTag) use ($tags) {
                 $tag = $tags->where('slug', $incomingTag['slug'])->first();
 
-                if (!$tag) {
+                if (! $tag) {
                     $tag = Tag::create([
                         'id' => $id = Uuid::uuid4()->toString(),
                         'name' => $incomingTag['name'],
@@ -272,7 +272,7 @@ class PostController extends Controller
                     ]);
                 }
 
-                return (string)$tag->id;
+                return (string) $tag->id;
             })->toArray();
         } else {
             return [];
