@@ -19,7 +19,7 @@ class Canvas
         $emailHash = md5(trim(Str::lower(request()->user()->email)));
 
         return [
-            'avatar' => optional($metaData)->avatar && !empty(optional($metaData)->avatar) ? $metaData->avatar : "https://secure.gravatar.com/avatar/{$emailHash}?s=500",
+            'avatar' => optional($metaData)->avatar && ! empty(optional($metaData)->avatar) ? $metaData->avatar : "https://secure.gravatar.com/avatar/{$emailHash}?s=500",
             'darkMode' => optional($metaData)->dark_mode,
             'languageCodes' => self::getAvailableLanguageCodes(),
             'locale' => optional($metaData)->locale ?? config('app.locale'),
@@ -41,11 +41,11 @@ class Canvas
     {
         $path = public_path('vendor/canvas/mix-manifest.json');
 
-        if (!File::exists($path)) {
-            throw new RuntimeException(__('canvas::app.assets_are_not_up_to_date') . __('canvas::app.to_update_run') . ' php artisan canvas:publish');
+        if (! File::exists($path)) {
+            throw new RuntimeException(__('canvas::app.assets_are_not_up_to_date').__('canvas::app.to_update_run').' php artisan canvas:publish');
         }
 
-        return File::get($path) === File::get(__DIR__ . '/../public/mix-manifest.json');
+        return File::get($path) === File::get(__DIR__.'/../public/mix-manifest.json');
     }
 
     /**
@@ -55,7 +55,7 @@ class Canvas
      */
     private static function getAvailableLanguageCodes()
     {
-        $locales = preg_grep('/^([^.])/', scandir(dirname(__DIR__, 1) . '/resources/lang'));
+        $locales = preg_grep('/^([^.])/', scandir(dirname(__DIR__, 1).'/resources/lang'));
         $translations = collect();
 
         foreach ($locales as $locale) {
