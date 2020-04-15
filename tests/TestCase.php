@@ -114,7 +114,7 @@ abstract class TestCase extends OrchestraTestCase
             PHPUnit::assertEquals(
                 $expected,
                 $actualValue = data_get($jsonResponse, $key),
-                "Failed asserting that [$actualValue] matches expected [$expected]." . PHP_EOL . PHP_EOL .
+                "Failed asserting that [$actualValue] matches expected [$expected].".PHP_EOL.PHP_EOL.
                 json_encode($jsonResponse)
             );
 
