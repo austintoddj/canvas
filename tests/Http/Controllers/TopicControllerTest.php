@@ -3,8 +3,8 @@
 namespace Canvas\Tests\Controllers;
 
 use Canvas\Http\Middleware\Session;
-use Canvas\Topic;
 use Canvas\Tests\TestCase;
+use Canvas\Topic;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
