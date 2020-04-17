@@ -22,7 +22,6 @@ class TopicTest extends TestCase
         $this->withoutMiddleware([Authorize::class, Session::class, VerifyCsrfToken::class]);
     }
 
-
     /** @test */
     public function allow_topics_to_share_the_same_slug_with_unique_users()
     {
