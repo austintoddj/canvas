@@ -7,7 +7,6 @@ use Canvas\Topic;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
-use Illuminate\Validation\Rule;
 use Ramsey\Uuid\Uuid;
 
 class TopicController extends Controller
@@ -58,7 +57,7 @@ class TopicController extends Controller
     {
         $topic = Topic::forCurrentUser()->find($id);
 
-        if (!$topic) {
+        if (! $topic) {
             if ($tag = Topic::forCurrentUser()->onlyTrashed()->where('slug', $request->slug)->first()) {
                 $tag->restore();
             } else {

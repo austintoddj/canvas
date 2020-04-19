@@ -218,7 +218,7 @@ class TagControllerTest extends TestCase
              ->assertNotFound();
 
         $this->actingAs($user_1)
-             ->deleteJson("canvas/api/tags/not-a-tag")
+             ->deleteJson('canvas/api/tags/not-a-tag')
              ->assertNotFound();
 
         $this->actingAs($user_1)

@@ -3,8 +3,8 @@
 namespace Canvas\Tests\Controllers;
 
 use Canvas\Http\Middleware\Session;
-use Canvas\Topic;
 use Canvas\Tests\TestCase;
+use Canvas\Topic;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -218,7 +218,7 @@ class TopicControllerTest extends TestCase
              ->assertNotFound();
 
         $this->actingAs($user_1)
-             ->deleteJson("canvas/api/topics/not-a-topic")
+             ->deleteJson('canvas/api/topics/not-a-topic')
              ->assertNotFound();
 
         $this->actingAs($user_1)

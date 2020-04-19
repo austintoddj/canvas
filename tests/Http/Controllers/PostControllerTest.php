@@ -344,7 +344,7 @@ class PostControllerTest extends TestCase
              ->assertNotFound();
 
         $this->actingAs($user_1)
-             ->deleteJson("canvas/api/posts/not-a-post")
+             ->deleteJson('canvas/api/posts/not-a-post')
              ->assertNotFound();
 
         $this->actingAs($user_1)

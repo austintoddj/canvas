@@ -54,7 +54,7 @@ trait Tracker
 
     /**
      * Return date string and their related counts for a given number of days.
-     * example: [ Y-m-d => count ]
+     * example: [ Y-m-d => count ].
      *
      * @param Collection $data
      * @param int $days
