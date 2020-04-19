@@ -6,7 +6,6 @@ use Canvas\Http\Middleware\Session;
 use Canvas\Post;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use ReflectionException;
 
 class SessionTest extends TestCase
 {
