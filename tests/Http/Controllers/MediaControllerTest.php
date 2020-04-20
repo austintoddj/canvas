@@ -34,11 +34,11 @@ class MediaControllerTest extends TestCase
         $user = factory(config('canvas.user'))->create();
 
         $this->actingAs($user)->postJson('canvas/api/media/uploads', [
-            null
+            null,
         ])->assertStatus(400);
 
         $this->actingAs($user)->postJson('canvas/api/media/uploads', [
-            UploadedFile::fake()->image('photo.jpg')
+            UploadedFile::fake()->image('photo.jpg'),
         ])->assertSuccessful();
     }
 
@@ -50,11 +50,11 @@ class MediaControllerTest extends TestCase
         $user = factory(config('canvas.user'))->create();
 
         $this->actingAs($user)->deleteJson('canvas/api/media/uploads', [
-            null
+            null,
         ])->assertStatus(400);
 
         $this->actingAs($user)->deleteJson('canvas/api/media/uploads', [
-            UploadedFile::fake()->image('photo.jpg')
+            UploadedFile::fake()->image('photo.jpg'),
         ])->assertSuccessful();
     }
 }

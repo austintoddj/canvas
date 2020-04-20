@@ -54,14 +54,14 @@ class SessionTest extends TestCase
 
         session()->put('visited_posts.'.$recent->id, [
             'timestamp' => now()->timestamp,
-            'ip' => $ip
+            'ip' => $ip,
         ]);
 
         $old = factory(Post::class)->create();
 
         session()->put('visited_posts.'.$old->id, [
             'timestamp' => now()->subDay()->timestamp,
-            'ip' => $ip
+            'ip' => $ip,
         ]);
 
         $this->invokeMethod($this->instance, 'pruneExpiredVisits', [collect(session()->get('visited_posts'))]);
