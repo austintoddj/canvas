@@ -4,7 +4,6 @@ namespace Canvas\Tests\Controllers;
 
 use Canvas\Http\Middleware\Session;
 use Canvas\Post;
-use Canvas\PostsTags;
 use Canvas\Tag;
 use Canvas\Tests\TestCase;
 use Canvas\Topic;
