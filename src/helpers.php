@@ -1,6 +1,6 @@
 <?php
 
-if (!function_exists('is_fresh')) {
+if (! function_exists('is_fresh')) {
     /**
      * Return true if the given ID is for a new resource.
      *
