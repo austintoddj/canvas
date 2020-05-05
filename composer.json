@@ -1,17 +1,21 @@
 {
-    "name": "cnvs/canvas",
+    "name": "buyownex/canvas",
     "description": "A Laravel publishing platform",
     "keywords": ["canvas", "laravel", "publishing", "platform"],
     "license": "MIT",
-    "homepage": "https://cnvs.io",
+    "homepage": "https://buyownex.com",
     "support": {
-        "issues": "https://github.com/cnvs/canvas/issues",
-        "source": "https://github.com/cnvs/canvas"
+        "issues": "https://github.com/buyownex/canvas/issues",
+        "source": "https://github.com/buyownex/canvas"
     },
     "authors": [
         {
             "name": "Todd Austin",
             "email": "austin.todd.j@gmail.com"
+        },
+        {
+            "name": "Nikolay Zubarev",
+            "email": "office@buyownex.com"
         }
     ],
     "require": {
