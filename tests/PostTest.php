@@ -52,4 +52,29 @@ class PostTest extends TestCase
             'user_id' => $post_2->decodeResponseJson()['user_id'],
         ]);
     }
+
+    /** @test */
+    public function correctly_order_pinned_published_posts()
+    {
+        $publishedPosts = factory(Post::class, 8)->create();
+        $pinnedPostOne = factory(Post::class)->create([
+            'published_at' => now()->subDay(1),
+            'is_pinned' => true,
+        ]);
+        $pinnedPostTwo = factory(Post::class)->create([
+            'published_at' => now()->subDay(2),
+            'is_pinned' => true,
+        ]);
+
+        $posts = Post::posts()->get();
+
+        $this->assertEquals($posts->first()->id, $pinnedPostOne->id);
+        $this->assertEquals($posts->get(1)->id, $pinnedPostTwo->id);
+        $this->assertEquals($posts->count(), 10);
+
+        $unpinnedPosts = $posts->slice(2);
+        foreach ($unpinnedPosts as $post) {
+            $this->assertTrue($post->is_pinned === '0');
+        }
+    }
 }
