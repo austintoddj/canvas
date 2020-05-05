@@ -95,6 +95,7 @@ class PostController extends Controller
             'featured_image' => request('featured_image', null),
             'featured_image_caption' => request('featured_image_caption', null),
             'user_id' => request()->user()->id,
+            'is_pinned' => request('is_pinned', false),
             'meta' => [
                 'description' => request('meta.description', null),
                 'title' => request('meta.title', null),

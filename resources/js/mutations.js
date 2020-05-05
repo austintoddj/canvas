@@ -9,6 +9,7 @@ export const mutations = {
         payload.slug = get(data, 'slug', '')
         payload.summary = get(data, 'summary', '')
         payload.body = get(data, 'body', '')
+        payload.is_pinned = get(data, 'is_pinned')
         payload.published_at = get(data, 'published_at', '')
         payload.featured_image = get(data, 'featured_image', '')
         payload.featured_image_caption = get(data, 'featured_image_caption', '')

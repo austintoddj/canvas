@@ -264,6 +264,17 @@ class Post extends Model
     }
 
     /**
+     * Scope a query to include all published posts ordered by publish date with pinned posts first.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopePosts($query)
+    {
+        return $query->published()->orderBy('is_pinned', 'DESC')->orderBy('published_at', 'DESC');
+    }
+
+    /**
      * Scope a query to only include published posts.
      *
      * @param Builder $query
@@ -283,6 +294,17 @@ class Post extends Model
     public function scopeDraft($query)
     {
         return $query->where('published_at', null)->orWhere('published_at', '>', now()->toDateTimeString());
+    }
+
+    /**
+     * Scope a query to only include pinned posts.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopePinned($query)
+    {
+        return $query->where('is_pinned', true);
     }
 
     /**

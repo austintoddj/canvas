@@ -70,6 +70,15 @@
                             <tag-select :tags="tags" :tagged="activePost.tags"/>
                         </div>
                     </div>
+                    <div class="form-group row">
+                        <div class="col-12">
+                            <label for="pinned" class="font-weight-bold text-uppercase text-muted small">{{ trans.app.pinned_post }}</label>
+                            <select v-model="activePost.is_pinned" name="pinned" class="custom-select border-0" :class="!Canvas.darkMode ? 'bg-light': 'bg-darker'">
+                                <option value="0">{{ trans.app.No }}</option>
+                                <option value="1">{{ trans.app.Yes }}</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-link btn-block font-weight-bold text-muted text-decoration-none" data-dismiss="modal">
