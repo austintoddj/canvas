@@ -78,7 +78,7 @@ class TopicTest extends TestCase
         $user = factory(config('canvas.user'))->create();
 
         $topic = factory(Topic::class)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         $this->assertEquals(1, $topic->forUser($user)->count());

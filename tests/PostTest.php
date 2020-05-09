@@ -57,7 +57,7 @@ class PostTest extends TestCase
     public function published_attribute()
     {
         $post = factory(Post::class)->create([
-            'published_at' => now()->subDay()
+            'published_at' => now()->subDay(),
         ]);
 
         $this->assertTrue($post->published);
@@ -83,12 +83,12 @@ class PostTest extends TestCase
 
         factory(View::class, 1)->create([
             'post_id' => $post->id,
-            'created_at' => now()->subHour()
+            'created_at' => now()->subHour(),
         ]);
 
         factory(View::class, 1)->create([
             'post_id' => $post->id,
-            'created_at' => now()->addHour()
+            'created_at' => now()->addHour(),
         ]);
 
         $this->assertCount(2, $post->popularReadingTimes);
@@ -157,7 +157,7 @@ class PostTest extends TestCase
         $post = factory(Post::class)->create();
 
         factory(UserMeta::class)->create([
-            'user_id' => $post->user->id
+            'user_id' => $post->user->id,
         ]);
 
         $this->assertInstanceOf(UserMeta::class, $post->userMeta);
@@ -169,7 +169,7 @@ class PostTest extends TestCase
         $post = factory(Post::class)->create();
 
         factory(View::class)->create([
-            'post_id' => $post->id
+            'post_id' => $post->id,
         ]);
 
         $this->assertInstanceOf(View::class, $post->views->first());
@@ -181,7 +181,7 @@ class PostTest extends TestCase
         $post = factory(Post::class)->create();
 
         factory(Visit::class)->create([
-            'post_id' => $post->id
+            'post_id' => $post->id,
         ]);
 
         $this->assertInstanceOf(Visit::class, $post->visits->first());
@@ -193,7 +193,7 @@ class PostTest extends TestCase
         $user = factory(config('canvas.user'))->create();
 
         $post = factory(Post::class)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         $this->assertEquals(1, $post->forUser($user)->count());
@@ -205,11 +205,11 @@ class PostTest extends TestCase
         $user = factory(config('canvas.user'))->create();
 
         $post = factory(Post::class)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         $meta = factory(UserMeta::class)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         $this->assertSame($meta->id, $post->withUserMeta()->first()->userMeta->id);

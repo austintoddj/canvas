@@ -83,7 +83,7 @@ class Post extends Model
      * @var array
      */
     protected $appends = [
-        'read_time'
+        'read_time',
     ];
 
     /**

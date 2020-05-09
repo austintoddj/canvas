@@ -29,7 +29,7 @@ class VisitTest extends TestCase
         $post = factory(Post::class)->create();
 
         factory(Visit::class)->create([
-            'post_id' => $post->id
+            'post_id' => $post->id,
         ]);
 
         $this->assertCount(1, $post->visits);
@@ -43,7 +43,7 @@ class VisitTest extends TestCase
 
         $post->visits()->create([
             'post_id' => $post->id,
-            'created_at' => now()->subMonth()
+            'created_at' => now()->subMonth(),
         ]);
 
         $post->visits()->createMany(

@@ -78,7 +78,7 @@ class TagTest extends TestCase
         $user = factory(config('canvas.user'))->create();
 
         $tag = factory(Tag::class)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         $this->assertEquals(1, $tag->forUser($user)->count());

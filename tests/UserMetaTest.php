@@ -52,7 +52,7 @@ class UserMetaTest extends TestCase
         $user = factory(config('canvas.user'))->create();
 
         $meta = factory(UserMeta::class)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         $this->assertEquals(1, $meta->forUser($user)->count());
