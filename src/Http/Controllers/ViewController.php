@@ -15,7 +15,7 @@ class ViewController extends Controller
     public function __invoke()
     {
         return view('canvas::layout')->with([
-            'dark' => optional(UserMeta::forUser(request()->user())->first())->dark_mode ?? false
+            'dark' => optional(UserMeta::forUser(request()->user())->first())->dark_mode ?? false,
         ]);
     }
 }
