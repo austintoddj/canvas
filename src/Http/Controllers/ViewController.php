@@ -16,7 +16,7 @@ class ViewController extends Controller
     public function __invoke()
     {
         return view('canvas::layout')->with([
-            'config' => $this->getAppConfiguration()
+            'config' => $this->getAppConfiguration(),
         ]);
     }
 
