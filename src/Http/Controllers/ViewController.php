@@ -31,7 +31,7 @@ class ViewController extends Controller
         $emailHash = md5(trim(Str::lower(request()->user()->email)));
 
         return [
-            'avatar' => optional($metaData)->avatar && !empty(optional($metaData)->avatar) ? $metaData->avatar : "https://secure.gravatar.com/avatar/{$emailHash}?s=500",
+            'avatar' => optional($metaData)->avatar && ! empty(optional($metaData)->avatar) ? $metaData->avatar : "https://secure.gravatar.com/avatar/{$emailHash}?s=500",
             'darkMode' => optional($metaData)->dark_mode,
             'languageCodes' => $this->getAvailableLanguageCodes(),
             'locale' => optional($metaData)->locale ?? config('app.locale'),
@@ -51,7 +51,7 @@ class ViewController extends Controller
      */
     private function getAvailableLanguageCodes(): array
     {
-        $locales = preg_grep('/^([^.])/', scandir(dirname(__DIR__, 3) . '/resources/lang'));
+        $locales = preg_grep('/^([^.])/', scandir(dirname(__DIR__, 3).'/resources/lang'));
         $translations = collect();
 
         foreach ($locales as $locale) {
