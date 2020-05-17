@@ -2,7 +2,6 @@
 
 namespace Canvas\Http\Controllers;
 
-use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
@@ -41,7 +40,7 @@ class UploadsController extends Controller
      */
     public function destroy()
     {
-        if (!empty(request()->getContent())) {
+        if (! empty(request()->getContent())) {
             $file = pathinfo(request()->getContent());
 
             $storagePath = $this->getBaseStoragePath();
