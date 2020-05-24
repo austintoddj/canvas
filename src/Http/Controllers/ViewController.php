@@ -39,7 +39,7 @@ class ViewController extends Controller
      */
     private function getAvailableLanguageCodes(): array
     {
-        $locales = preg_grep('/^([^.])/', scandir(dirname(__DIR__, 3) . '/resources/lang'));
+        $locales = preg_grep('/^([^.])/', scandir(dirname(__DIR__, 3).'/resources/lang'));
         $translations = collect();
 
         foreach ($locales as $locale) {
@@ -63,7 +63,7 @@ class ViewController extends Controller
             'id' => request()->user()->id,
             'name' => request()->user()->name,
             'email' => request()->user()->email,
-            'avatar' => optional($metaData)->avatar && !empty(optional($metaData)->avatar) ? $metaData->avatar : "https://secure.gravatar.com/avatar/{$emailHash}?s=500",
+            'avatar' => optional($metaData)->avatar && ! empty(optional($metaData)->avatar) ? $metaData->avatar : "https://secure.gravatar.com/avatar/{$emailHash}?s=500",
             'darkMode' => optional($metaData)->dark_mode,
             'locale' => optional($metaData)->locale ?? config('app.locale'),
             'username' => optional($metaData)->username,
