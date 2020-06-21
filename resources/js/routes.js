@@ -1,64 +1,68 @@
+function page(path) {
+    return require(`./screens/${path}`).default
+}
+
 export default [
     { path: '/', redirect: '/stats' },
     {
         path: '/stats',
         name: 'stats',
-        component: require('./screens/stats/StatsIndex').default,
+        component: page('stats/StatsIndex'),
     },
     {
         path: '/stats/:id',
         name: 'stats-show',
-        component: require('./screens/stats/StatsShow').default,
+        component: page('stats/StatsShow'),
     },
     {
         path: '/posts',
         name: 'posts',
-        component: require('./screens/posts/PostIndex').default,
+        component: page('posts/PostIndex'),
     },
     {
         path: '/posts/create',
         name: 'posts-create',
-        component: require('./screens/posts/PostEdit').default,
+        component: page('posts/PostEdit'),
     },
     {
         path: '/posts/:id/edit',
         name: 'posts-edit',
-        component: require('./screens/posts/PostEdit').default,
+        component: page('posts/PostEdit'),
     },
     {
         path: '/tags',
         name: 'tags',
-        component: require('./screens/tags/TagsIndex').default,
+        component: page('tags/TagsIndex'),
     },
     {
         path: '/tags/create',
         name: 'tags-create',
-        component: require('./screens/tags/TagsEdit').default,
+        component: page('tags/TagsEdit'),
     },
     {
         path: '/tags/:id/edit',
         name: 'tags-edit',
-        component: require('./screens/tags/TagsEdit').default,
+        component: page('tags/TagsEdit'),
     },
     {
         path: '/topics',
         name: 'topics',
-        component: require('./screens/topics/TopicsIndex').default,
+        component: page('topics/TopicsIndex'),
     },
     {
         path: '/topics/create',
         name: 'topics-create',
-        component: require('./screens/topics/TopicsEdit').default,
+        component: page('topics/TopicsEdit'),
     },
     {
         path: '/topics/:id/edit',
         name: 'topics-edit',
-        component: require('./screens/topics/TopicsEdit').default,
+        component: page('topics/TopicsEdit'),
     },
     {
         path: '/settings',
         name: 'settings-show',
-        component: require('./screens/settings/SettingsShow').default,
+        component: page('settings/SettingsShow'),
     },
     {
         path: '*',
