@@ -41,7 +41,7 @@ class CaptureVisitTest extends TestCase
         $listener->handle($event);
 
         $this->assertDatabaseHas('canvas_visits', [
-            'post_id' => $post->id
+            'post_id' => $post->id,
         ]);
     }
 

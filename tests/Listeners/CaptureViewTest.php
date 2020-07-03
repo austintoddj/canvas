@@ -5,7 +5,6 @@ namespace Canvas\Tests\Listeners;
 use Canvas\Events\PostViewed;
 use Canvas\Listeners\CaptureView;
 use Canvas\Models\Post;
-use Canvas\Models\View;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -42,7 +41,7 @@ class CaptureViewTest extends TestCase
         $listener->handle($event);
 
         $this->assertDatabaseHas('canvas_views', [
-            'post_id' => $post->id
+            'post_id' => $post->id,
         ]);
     }
 
