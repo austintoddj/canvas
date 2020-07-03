@@ -2,10 +2,10 @@
 
 namespace Canvas\Http\Controllers;
 
+use Canvas\Helpers\Traffic;
 use Canvas\Models\Post;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
-use Canvas\Helpers\Traffic;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 
@@ -58,7 +58,7 @@ class StatsController extends Controller
     {
         $post = Post::forUser(request()->user())->find($id);
 
-        if (!$post || !$post->published) {
+        if (! $post || ! $post->published) {
             return response()->json(null, 404);
         }
 

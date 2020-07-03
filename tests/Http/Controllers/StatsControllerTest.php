@@ -112,7 +112,7 @@ class StatsControllerTest extends TestCase
     public function it_returns_404_if_post_is_not_published()
     {
         $post = factory(Post::class)->create([
-            'published_at' => now()->addWeek()
+            'published_at' => now()->addWeek(),
         ]);
 
         $this->actingAs($post->user)->getJson("canvas/api/stats/{$post->id}")->assertNotFound();
