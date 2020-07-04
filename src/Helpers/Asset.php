@@ -21,8 +21,10 @@ class Asset
             'php artisan canvas:publish'
         );
 
-        if (!File::exists($path)) throw new RuntimeException($message);
+        if (! File::exists($path)) {
+            throw new RuntimeException($message);
+        }
 
-        return File::get($path) === File::get(__DIR__ . '/../../public/mix-manifest.json');
+        return File::get($path) === File::get(__DIR__.'/../../public/mix-manifest.json');
     }
 }
