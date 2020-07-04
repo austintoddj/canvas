@@ -4,8 +4,6 @@ namespace Canvas\Tests\Helpers;
 
 use Canvas\Helpers\Asset;
 use Canvas\Tests\TestCase;
-use Illuminate\Support\Facades\Storage;
-use Mockery\Mock;
 use RuntimeException;
 
 class AssetTest extends TestCase
