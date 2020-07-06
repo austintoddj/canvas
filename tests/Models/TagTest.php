@@ -39,7 +39,7 @@ class TagTest extends TestCase
 
         factory(UserMeta::class)->create([
             'user_id' => $tagOne->user->id,
-            'admin' => 1
+            'admin' => 1,
         ]);
 
         $response = $this->actingAs($tagOne->user)->postJson("/canvas/api/tags/{$tagOne->id}", $data);
@@ -54,7 +54,7 @@ class TagTest extends TestCase
 
         factory(UserMeta::class)->create([
             'user_id' => $tagTwo->user->id,
-            'admin' => 1
+            'admin' => 1,
         ]);
 
         $response = $this->actingAs($tagTwo->user)->postJson("/canvas/api/tags/{$tagTwo->id}", $data);

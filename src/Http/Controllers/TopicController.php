@@ -55,7 +55,7 @@ class TopicController extends Controller
     {
         $topic = Topic::find($id);
 
-        if (!$topic) {
+        if (! $topic) {
             if ($topic = Topic::onlyTrashed()->where('slug', request('slug'))->first()) {
                 $topic->restore();
             } else {

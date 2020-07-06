@@ -39,7 +39,7 @@ class TopicTest extends TestCase
 
         factory(UserMeta::class)->create([
             'user_id' => $topicOne->user->id,
-            'admin' => 1
+            'admin' => 1,
         ]);
 
         $response = $this->actingAs($topicOne->user)->postJson("/canvas/api/topics/{$topicOne->id}", $data);
@@ -54,7 +54,7 @@ class TopicTest extends TestCase
 
         factory(UserMeta::class)->create([
             'user_id' => $topicTwo->user->id,
-            'admin' => 1
+            'admin' => 1,
         ]);
 
         $response = $this->actingAs($topicTwo->user)->postJson("/canvas/api/topics/{$topicTwo->id}", $data);

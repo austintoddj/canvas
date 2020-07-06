@@ -38,7 +38,7 @@ class ViewController extends Controller
      */
     private function getAvailableLanguageCodes(): array
     {
-        $locales = preg_grep('/^([^.])/', scandir(dirname(__DIR__, 3) . '/resources/lang'));
+        $locales = preg_grep('/^([^.])/', scandir(dirname(__DIR__, 3).'/resources/lang'));
         $translations = collect();
 
         foreach ($locales as $locale) {
