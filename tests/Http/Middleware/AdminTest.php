@@ -2,7 +2,6 @@
 
 namespace Canvas\Tests\Http\Middleware;
 
-use Canvas\Models\UserMeta;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
