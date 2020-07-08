@@ -25,7 +25,7 @@ class UserControllerTest extends TestCase
             Authorize::class,
             Admin::class,
             Session::class,
-            VerifyCsrfToken::class
+            VerifyCsrfToken::class,
         ]);
     }
 
@@ -34,7 +34,7 @@ class UserControllerTest extends TestCase
     {
         $user = factory(config('canvas.user'))->create();
 
-        $response = $this->actingAs($user)->getJson("canvas/api/users")->assertSuccessful();
+        $response = $this->actingAs($user)->getJson('canvas/api/users')->assertSuccessful();
 
         $this->assertIsArray($response->decodeResponseJson('data'));
         $this->assertEquals(1, $response->decodeResponseJson('total'));

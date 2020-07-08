@@ -27,7 +27,7 @@ class TagControllerTest extends TestCase
             Authorize::class,
             Admin::class,
             Session::class,
-            VerifyCsrfToken::class
+            VerifyCsrfToken::class,
         ]);
 
         $this->registerAssertJsonExactFragmentMacro();
