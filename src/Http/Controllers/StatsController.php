@@ -58,7 +58,7 @@ class StatsController extends Controller
     {
         $post = Post::forUser(request()->user())->find($id);
 
-        if (!$post || !$post->published) {
+        if (! $post || ! $post->published) {
             return response()->json(null, 404);
         }
 
