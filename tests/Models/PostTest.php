@@ -237,11 +237,11 @@ class PostTest extends TestCase
         $this->assertEquals(0, $post->topic->count());
         $this->assertDatabaseMissing('canvas_posts_tags', [
             'post_id' => $post->id,
-            'tag_id' => $tag->id
+            'tag_id' => $tag->id,
         ]);
         $this->assertDatabaseMissing('canvas_posts_topics', [
             'post_id' => $post->id,
-            'topic_id' => $topic->id
+            'topic_id' => $topic->id,
         ]);
     }
 }
