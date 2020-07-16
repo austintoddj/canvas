@@ -23,7 +23,7 @@
         "filepond-plugin-image-validate-size": "^1.2.3",
         "jquery": "^3.4",
         "laravel-mix": "^5.0",
-        "lodash": "^4.17.5",
+        "lodash": "^4.17.19",
         "md5": "^2.2.1",
         "moment": "^2.24.0",
         "moment-timezone": "^0.5.27",
