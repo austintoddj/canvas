@@ -80,7 +80,7 @@ class TagControllerTest extends TestCase
         $tag = factory(Tag::class)->create();
         $post = factory(Post::class)->create();
         factory(View::class)->create([
-            'post_id' => $post->id
+            'post_id' => $post->id,
         ]);
 
         $tag->posts()->sync([$post->id]);

@@ -80,7 +80,7 @@ class TopicControllerTest extends TestCase
         $topic = factory(Topic::class)->create();
         $post = factory(Post::class)->create();
         factory(View::class)->create([
-            'post_id' => $post->id
+            'post_id' => $post->id,
         ]);
 
         $topic->posts()->sync([$post->id]);
