@@ -2,7 +2,6 @@
 
 namespace Canvas\Http\Controllers;
 
-use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Exception;
@@ -33,7 +32,7 @@ class SearchController extends Controller
     {
         $tags = Tag::select('id', 'name')->latest()->get();
 
-        $tags->map(function($tag) {
+        $tags->map(function ($tag) {
             $tag['type'] = 'Tag';
             $tag['route'] = 'edit-tag';
 
@@ -53,7 +52,7 @@ class SearchController extends Controller
     {
         $topics = Topic::select('id', 'name')->latest()->get();
 
-        $topics->map(function($topic) {
+        $topics->map(function ($topic) {
             $topic['type'] = 'Topic';
             $topic['route'] = 'edit-topic';
 
@@ -73,7 +72,7 @@ class SearchController extends Controller
     {
         $users = resolve(config('canvas.user', User::class))->select('id', 'name')->latest()->get();
 
-        $users->map(function($user) {
+        $users->map(function ($user) {
             $user['type'] = 'User';
             $user['route'] = 'edit-user';
 
