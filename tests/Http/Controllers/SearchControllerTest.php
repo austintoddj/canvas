@@ -36,16 +36,16 @@ class SearchControllerTest extends TestCase
     public function it_can_fetch_all_posts_for_an_admin_user()
     {
         $meta = factory(UserMeta::class)->create([
-            'admin' => 1
+            'admin' => 1,
         ]);
 
         factory(Post::class, 2)->create([
-            'user_id' => $meta->user->id
+            'user_id' => $meta->user->id,
         ]);
 
         factory(Post::class, 1)->create([
             'user_id' => 2,
-            'published_at' => now()->addWeek()
+            'published_at' => now()->addWeek(),
         ]);
 
         $response = $this->actingAs($meta->user)
@@ -64,16 +64,16 @@ class SearchControllerTest extends TestCase
     public function it_can_only_fetch_user_posts_for_a_non_admin_user()
     {
         $meta = factory(UserMeta::class)->create([
-            'admin' => 0
+            'admin' => 0,
         ]);
 
         factory(Post::class, 2)->create([
-            'user_id' => $meta->user->id
+            'user_id' => $meta->user->id,
         ]);
 
         factory(Post::class, 1)->create([
             'user_id' => 2,
-            'published_at' => now()->addWeek()
+            'published_at' => now()->addWeek(),
         ]);
 
         $response = $this->actingAs($meta->user)
@@ -94,11 +94,11 @@ class SearchControllerTest extends TestCase
     public function it_can_fetch_tags()
     {
         $meta = factory(UserMeta::class)->create([
-            'admin' => 1
+            'admin' => 1,
         ]);
 
         factory(Tag::class, 2)->create([
-            'user_id' => $meta->user->id
+            'user_id' => $meta->user->id,
         ]);
 
         $response = $this->actingAs($meta->user)
@@ -118,11 +118,11 @@ class SearchControllerTest extends TestCase
     public function it_can_fetch_topics()
     {
         $meta = factory(UserMeta::class)->create([
-            'admin' => 1
+            'admin' => 1,
         ]);
 
         factory(Topic::class, 2)->create([
-            'user_id' => $meta->user->id
+            'user_id' => $meta->user->id,
         ]);
 
         $response = $this->actingAs($meta->user)
@@ -142,7 +142,7 @@ class SearchControllerTest extends TestCase
     public function it_can_fetch_users()
     {
         $meta = factory(UserMeta::class)->create([
-            'admin' => 1
+            'admin' => 1,
         ]);
 
         factory(config('canvas.user'), 2)->create();

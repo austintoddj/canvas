@@ -208,7 +208,7 @@ class PostTest extends TestCase
         ]);
 
         $meta = factory(UserMeta::class)->create([
-            'admin' => 1
+            'admin' => 1,
         ]);
 
         $this->assertEquals(2, $post->forUser($meta->user)->count());
