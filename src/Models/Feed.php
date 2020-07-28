@@ -2,8 +2,6 @@
 
 namespace Canvas\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
 class Feed
 {
     private $name;
