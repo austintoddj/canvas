@@ -220,7 +220,6 @@ class PostTest extends TestCase
             'type' => 'published',
         ])->count());
 
-
 //        factory(Post::class)->create([
 //            'user_id' => 2,
 //        ]);

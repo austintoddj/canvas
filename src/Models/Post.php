@@ -306,13 +306,13 @@ class Post extends Model
      */
     public function scopeFilterBy($query, $user, $filters = []): Builder
     {
-        if (!$filters) {
+        if (! $filters) {
             return $query;
         }
 
         $meta = UserMeta::where('user_id', $user->id)->first();
 
-        if (isset($filters['scope']) && $filters['scope'] === 'user' || !optional($meta)->admin) {
+        if (isset($filters['scope']) && $filters['scope'] === 'user' || ! optional($meta)->admin) {
             $query->where('user_id', $user->id);
         }
 
