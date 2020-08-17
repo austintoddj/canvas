@@ -31,7 +31,7 @@ class PostController extends Controller
             }
 
             return $query->where('user_id', $request->user()->id);
-        })->when($type, function ($query, $type) use ($request) {
+        })->when($type, function ($query, $type) {
             if ($type === 'draft') {
                 return $query->draft();
             }
