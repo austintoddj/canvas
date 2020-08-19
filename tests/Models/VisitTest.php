@@ -11,9 +11,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 /**
- * Class VisitTest
+ * Class VisitTest.
  *
- * @package Canvas\Tests\Models
  * @covers \Canvas\Models\Visit
  */
 class VisitTest extends TestCase

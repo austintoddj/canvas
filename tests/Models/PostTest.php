@@ -17,9 +17,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 
 /**
- * Class PostTest
+ * Class PostTest.
  *
- * @package Canvas\Tests\Models
  * @covers \Canvas\Models\Post
  */
 class PostTest extends TestCase

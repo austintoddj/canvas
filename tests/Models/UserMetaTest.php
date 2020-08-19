@@ -10,9 +10,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 /**
- * Class UserMetaTest
+ * Class UserMetaTest.
  *
- * @package Canvas\Tests\Models
  * @covers \Canvas\Models\UserMeta
  */
 class UserMetaTest extends TestCase

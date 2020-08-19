@@ -6,9 +6,8 @@ use Canvas\Helpers\URL;
 use Canvas\Tests\TestCase;
 
 /**
- * Class URLTest
+ * Class URLTest.
  *
- * @package Canvas\Tests\Helpers
  * @covers \Canvas\Helpers\URL
  */
 class URLTest extends TestCase

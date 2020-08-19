@@ -13,9 +13,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Ramsey\Uuid\Uuid;
 
 /**
- * Class PostControllerTest
+ * Class PostControllerTest.
  *
- * @package Canvas\Tests\Http\Controllers
  * @covers \Canvas\Http\Controllers\PostController
  */
 class PostControllerTest extends TestCase

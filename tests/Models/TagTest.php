@@ -13,9 +13,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Ramsey\Uuid\Uuid;
 
 /**
- * Class TagTest
+ * Class TagTest.
  *
- * @package Canvas\Tests\Models
  * @covers \Canvas\Models\Tag
  */
 class TagTest extends TestCase

@@ -10,9 +10,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 /**
- * Class StatsControllerTest
+ * Class StatsControllerTest.
  *
- * @package Canvas\Tests\Http\Controllers
  * @covers \Canvas\Http\Controllers\StatsController
  */
 class StatsControllerTest extends TestCase

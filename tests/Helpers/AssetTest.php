@@ -7,9 +7,8 @@ use Canvas\Tests\TestCase;
 use RuntimeException;
 
 /**
- * Class AssetTest
+ * Class AssetTest.
  *
- * @package Canvas\Tests\Helpers
  * @covers \Canvas\Helpers\Asset
  */
 class AssetTest extends TestCase

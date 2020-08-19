@@ -13,9 +13,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 /**
- * Class SearchControllerTest
+ * Class SearchControllerTest.
  *
- * @package Canvas\Tests\Http\Controllers
  * @covers \Canvas\Http\Controllers\SearchController
  */
 class SearchControllerTest extends TestCase

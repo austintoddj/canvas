@@ -9,9 +9,8 @@ use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 /**
- * Class CaptureViewTest
+ * Class CaptureViewTest.
  *
- * @package Canvas\Tests\Listeners
  * @covers \Canvas\Listeners\CaptureView
  */
 class CaptureViewTest extends TestCase
