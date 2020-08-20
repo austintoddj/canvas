@@ -50,7 +50,7 @@ class UserControllerTest extends TestCase
     public function it_can_fetch_an_existing_user_with_meta_data()
     {
         $meta = factory(UserMeta::class)->create([
-            'locale' => 'en'
+            'locale' => 'en',
         ]);
 
         $response = $this->actingAs($meta->user)->getJson("canvas/api/users/{$meta->user->id}")->assertSuccessful();
