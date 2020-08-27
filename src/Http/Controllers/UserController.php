@@ -49,7 +49,7 @@ class UserController extends Controller
     {
         $meta = UserMeta::firstWhere('user_id', $id);
 
-        if (!$meta) {
+        if (! $meta) {
             $meta = new UserMeta([
                 'user_id' => $id,
             ]);
