@@ -31,8 +31,9 @@ class AdminCommand extends Command
     {
         $email = $this->ask('Enter the email of the user to grant admin access to');
 
-        if (!$email) {
+        if (! $email) {
             $this->error('Please enter a valid email.');
+
             return;
         }
 
@@ -40,8 +41,9 @@ class AdminCommand extends Command
             ->where('email', $email)
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             $this->error('Unable to find a user with that email.');
+
             return;
         }
 
@@ -49,6 +51,7 @@ class AdminCommand extends Command
 
         if ($meta->admin) {
             $this->info('User is already an admin.');
+
             return;
         }
 

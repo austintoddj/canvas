@@ -6,7 +6,7 @@ use Canvas\Models\UserMeta;
 use Canvas\Tests\TestCase;
 
 /**
- * Class AdminCommandTest
+ * Class AdminCommandTest.
  *
  * @covers \Canvas\Console\AdminCommand
  */
@@ -34,7 +34,7 @@ class AdminCommandTest extends TestCase
     public function it_returns_successfully_if_user_is_already_an_admin()
     {
         $meta = factory(UserMeta::class)->create([
-            'admin' => true
+            'admin' => true,
         ]);
 
         $this->artisan('canvas:admin')
@@ -47,7 +47,7 @@ class AdminCommandTest extends TestCase
     public function it_grants_admin_access_to_a_user()
     {
         $meta = factory(UserMeta::class)->create([
-            'admin' => false
+            'admin' => false,
         ]);
 
         $this->artisan('canvas:admin')
