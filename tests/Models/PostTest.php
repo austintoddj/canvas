@@ -215,7 +215,7 @@ class PostTest extends TestCase
 
         factory(Post::class)->create([
             'user_id' => $user->id,
-            'published_at' => now()->subDay()
+            'published_at' => now()->subDay(),
         ]);
 
         $this->assertInstanceOf(Builder::class, resolve(Post::class)->published());
@@ -229,7 +229,7 @@ class PostTest extends TestCase
 
         factory(Post::class)->create([
             'user_id' => $user->id,
-            'published_at' => now()->addDay()
+            'published_at' => now()->addDay(),
         ]);
 
         $this->assertInstanceOf(Builder::class, resolve(Post::class)->draft());
