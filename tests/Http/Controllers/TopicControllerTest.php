@@ -136,7 +136,7 @@ class TopicControllerTest extends TestCase
             'name' => 'A deleted tag',
             'slug' => 'a-deleted-tag',
             'user_id' => $user->id,
-            'deleted_at' => now()
+            'deleted_at' => now(),
         ]);
 
         $data = [
