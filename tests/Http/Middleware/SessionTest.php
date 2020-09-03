@@ -74,7 +74,7 @@ class SessionTest extends TestCase
         session()->put('viewed_posts.'.$oldPost->id, now()->subHour()->subMinute()->timestamp);
 
         $this->invokeMethod($this->instance, 'pruneExpiredViews', [
-            collect(session()->get('viewed_posts'))
+            collect(session()->get('viewed_posts')),
         ]);
 
         $this->assertArrayHasKey($recentPost->id, session()->get('viewed_posts'));
@@ -101,7 +101,7 @@ class SessionTest extends TestCase
         ]);
 
         $this->invokeMethod($this->instance, 'pruneExpiredVisits', [
-            collect(session()->get('visited_posts'))
+            collect(session()->get('visited_posts')),
         ]);
 
         $this->assertArrayHasKey($recentPost->id, session()->get('visited_posts'));
