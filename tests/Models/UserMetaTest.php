@@ -70,7 +70,7 @@ class UserMetaTest extends TestCase
     public function contributor_attribute()
     {
         $meta = factory(UserMeta::class)->create([
-            'role' => UserMeta::CONTRIBUTOR
+            'role' => UserMeta::CONTRIBUTOR,
         ]);
 
         $this->assertTrue($meta->isContributor);
@@ -80,7 +80,7 @@ class UserMetaTest extends TestCase
     public function editor_attribute()
     {
         $meta = factory(UserMeta::class)->create([
-            'role' => UserMeta::EDITOR
+            'role' => UserMeta::EDITOR,
         ]);
 
         $this->assertTrue($meta->isEditor);
@@ -90,7 +90,7 @@ class UserMetaTest extends TestCase
     public function admin_attribute()
     {
         $meta = factory(UserMeta::class)->create([
-            'role' => UserMeta::ADMIN
+            'role' => UserMeta::ADMIN,
         ]);
 
         $this->assertTrue($meta->isAdmin);
