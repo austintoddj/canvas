@@ -6,7 +6,6 @@ use Canvas\Http\Middleware\Session;
 use Canvas\Models\Post;
 use Canvas\Models\Role;
 use Canvas\Models\UserMeta;
-use Canvas\Models\View;
 use Canvas\Tests\TestCase;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -43,11 +42,11 @@ class StatsControllerTest extends TestCase
         $user = factory(config('canvas.user'))->create();
 
         factory(Post::class, 3)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         factory(Post::class, 1)->create([
-            'user_id' => 2
+            'user_id' => 2,
         ]);
 
         $response = $this->actingAs($user)->getJson('canvas/api/stats')->assertSuccessful();
@@ -74,11 +73,11 @@ class StatsControllerTest extends TestCase
         $user = factory(config('canvas.user'))->create();
 
         factory(Post::class, 3)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         factory(Post::class, 1)->create([
-            'user_id' => 2
+            'user_id' => 2,
         ]);
 
         $response = $this->actingAs($user)->getJson('canvas/api/stats?scope=all')->assertSuccessful();
@@ -107,7 +106,7 @@ class StatsControllerTest extends TestCase
         ]);
 
         $post = factory(Post::class)->create([
-            'user_id' => 123
+            'user_id' => 123,
         ]);
 
         $response = $this->actingAs($admin->user)
@@ -166,7 +165,7 @@ class StatsControllerTest extends TestCase
         ]);
 
         $post = factory(Post::class)->create([
-            'user_id' => 123
+            'user_id' => 123,
         ]);
 
         $response = $this->actingAs($editor->user)
@@ -225,7 +224,7 @@ class StatsControllerTest extends TestCase
         ]);
 
         $post = factory(Post::class)->create([
-            'user_id' => $contributor->user->id
+            'user_id' => $contributor->user->id,
         ]);
 
         $response = $this->actingAs($contributor->user)
