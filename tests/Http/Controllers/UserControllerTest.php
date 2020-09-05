@@ -38,7 +38,7 @@ class UserControllerTest extends TestCase
     public function it_can_fetch_all_users()
     {
         $meta = factory(UserMeta::class)->create([
-            'role' => UserMeta::ADMIN
+            'role' => UserMeta::ADMIN,
         ]);
 
         $response = $this->actingAs($meta->user)->getJson('canvas/api/users')->assertSuccessful();

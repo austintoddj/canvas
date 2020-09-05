@@ -41,7 +41,7 @@ class InstallCommand extends Command
 
         $this->info('Installation complete.');
         $this->table(['Default Email', 'Default Password'], [[$email, $password]]);
-        $this->info('First things first, login at <info>'. route('canvas.login') . '</info> and update your credentials.');
+        $this->info('First things first, login at <info>'.route('canvas.login').'</info> and update your credentials.');
     }
 
     /**
@@ -56,7 +56,7 @@ class InstallCommand extends Command
             'name' => 'Example User',
             'email' => $email,
             'password' => Hash::make($password),
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
     }
 

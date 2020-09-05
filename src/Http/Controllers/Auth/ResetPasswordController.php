@@ -45,8 +45,8 @@ class ResetPasswordController extends Controller
         // database. Otherwise we will parse the error and return the response.
         $response = $this->broker()->reset(
             $this->credentials($request), function ($user, $password) {
-            $this->resetPassword($user, $password);
-        }
+                $this->resetPassword($user, $password);
+            }
         );
 
         // If the password was successfully reset, we will redirect the user back to
