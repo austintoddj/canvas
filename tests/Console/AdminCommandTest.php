@@ -34,7 +34,7 @@ class AdminCommandTest extends TestCase
     public function it_returns_successfully_if_user_is_already_an_admin()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $this->artisan('canvas:admin')
@@ -47,7 +47,7 @@ class AdminCommandTest extends TestCase
     public function it_grants_admin_access_to_a_user()
     {
         $user = factory(User::class)->create([
-            'role' => null
+            'role' => null,
         ]);
 
         $this->artisan('canvas:admin')

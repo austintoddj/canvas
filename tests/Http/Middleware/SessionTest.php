@@ -4,7 +4,6 @@ namespace Canvas\Tests\Http\Middleware;
 
 use Canvas\Http\Middleware\Session;
 use Canvas\Models\Post;
-use Canvas\Models\User;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;

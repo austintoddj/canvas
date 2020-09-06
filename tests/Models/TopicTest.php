@@ -41,7 +41,7 @@ class TopicTest extends TestCase
     public function topics_can_share_the_same_slug_with_unique_users()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $data = [
@@ -51,7 +51,7 @@ class TopicTest extends TestCase
         ];
 
         $topicOne = factory(Topic::class)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         $response = $this->actingAs($user, 'canvas')->postJson("/canvas/api/topics/{$topicOne->id}", $data);

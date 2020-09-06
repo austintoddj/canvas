@@ -23,7 +23,7 @@ class DigestCommandTest extends TestCase
         Mail::fake();
 
         $user = factory(User::class)->create([
-            'digest' => 1
+            'digest' => 1,
         ]);
 
         $posts = factory(Post::class, 2)->create([
@@ -68,7 +68,7 @@ class DigestCommandTest extends TestCase
         Mail::fake();
 
         $user = factory(User::class)->create([
-            'digest' => 0
+            'digest' => 0,
         ]);
 
         $posts = factory(Post::class, 2)->create([
