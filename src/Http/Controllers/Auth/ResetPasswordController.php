@@ -31,9 +31,9 @@ class ResetPasswordController extends Controller
     public function showResetForm(Request $request, $token = null)
     {
         return view('canvas::auth.passwords.reset')->with([
-                'token' => $token,
-                'email' => $request->email,
-            ]
+            'token' => $token,
+            'email' => $request->email,
+        ]
         );
     }
 
@@ -63,7 +63,6 @@ class ResetPasswordController extends Controller
             // will update the password on an actual user model and persist it to the
             // database. Otherwise we will parse the error and return the response.
             $this->resetPassword($user, $request->password);
-
         } catch (Throwable $e) {
             return redirect()->route('canvas.password.request')->with('invalidResetToken', 'reset your dang token');
         }
