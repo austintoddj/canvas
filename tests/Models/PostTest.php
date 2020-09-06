@@ -2,7 +2,6 @@
 
 namespace Canvas\Tests\Models;
 
-use Canvas\Http\Middleware\Session;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
@@ -11,12 +10,10 @@ use Canvas\Models\View;
 use Canvas\Models\Visit;
 use Canvas\Tests\TestCase;
 use Carbon\Carbon;
-use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 

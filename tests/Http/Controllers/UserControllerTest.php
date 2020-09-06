@@ -29,7 +29,7 @@ class UserControllerTest extends TestCase
     public function it_can_fetch_all_users()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         factory(User::class, 3)->create();

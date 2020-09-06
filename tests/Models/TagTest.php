@@ -24,7 +24,7 @@ class TagTest extends TestCase
     public function tags_can_share_the_same_slug_with_unique_users()
     {
         $adminUserOne = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $data = [
@@ -44,7 +44,7 @@ class TagTest extends TestCase
         ]);
 
         $adminUserTwo = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $tagTwo = factory(Tag::class)->create();

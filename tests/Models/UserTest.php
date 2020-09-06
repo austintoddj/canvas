@@ -7,7 +7,6 @@ use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Canvas\Models\User;
 use Canvas\Tests\TestCase;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -49,7 +48,7 @@ class UserTest extends TestCase
     public function remember_token_is_hidden_for_arrays()
     {
         $this->assertArrayNotHasKey('remember_token', factory(User::class)->create([
-            'remember_token' => Str::random(60)
+            'remember_token' => Str::random(60),
         ])->toArray());
     }
 
@@ -59,7 +58,7 @@ class UserTest extends TestCase
         $user = factory(User::class)->create();
 
         factory(Post::class)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         $this->assertInstanceOf(HasMany::class, $user->posts());
@@ -72,7 +71,7 @@ class UserTest extends TestCase
         $user = factory(User::class)->create();
 
         factory(Tag::class)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         $this->assertInstanceOf(HasMany::class, $user->tags());
@@ -85,7 +84,7 @@ class UserTest extends TestCase
         $user = factory(User::class)->create();
 
         factory(Topic::class)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         $this->assertInstanceOf(HasMany::class, $user->topics());

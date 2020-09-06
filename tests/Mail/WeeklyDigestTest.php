@@ -2,12 +2,9 @@
 
 namespace Canvas\Tests\Mail;
 
-use Canvas\Http\Middleware\Session;
 use Canvas\Mail\WeeklyDigest;
 use Canvas\Models\Post;
 use Canvas\Tests\TestCase;
-use Illuminate\Auth\Middleware\Authorize;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 /**

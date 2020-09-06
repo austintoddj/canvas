@@ -24,7 +24,7 @@ class TopicTest extends TestCase
     public function topics_can_share_the_same_slug_with_unique_users()
     {
         $adminUserOne = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $data = [
@@ -44,7 +44,7 @@ class TopicTest extends TestCase
         ]);
 
         $adminUserTwo = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $topicTwo = factory(Topic::class)->create();

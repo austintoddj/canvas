@@ -92,7 +92,7 @@ class StatsControllerTest extends TestCase
     public function it_can_show_stats_for_another_users_published_post_as_an_admin()
     {
         $admin = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $post = factory(Post::class)->create([
@@ -151,7 +151,7 @@ class StatsControllerTest extends TestCase
     public function it_can_show_stats_for_another_users_published_post_as_an_editor()
     {
         $editor = factory(User::class)->create([
-            'role' => User::EDITOR
+            'role' => User::EDITOR,
         ]);
 
         $post = factory(Post::class)->create([
@@ -210,7 +210,7 @@ class StatsControllerTest extends TestCase
     public function it_can_show_stats_for_a_users_published_post_as_a_contributor()
     {
         $contributor = factory(User::class)->create([
-            'role' => User::CONTRIBUTOR
+            'role' => User::CONTRIBUTOR,
         ]);
 
         $post = factory(Post::class)->create([

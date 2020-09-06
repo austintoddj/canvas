@@ -2,15 +2,11 @@
 
 namespace Canvas\Tests\Http\Controllers;
 
-use Canvas\Http\Middleware\Admin;
-use Canvas\Http\Middleware\Session;
 use Canvas\Models\Post;
 use Canvas\Models\Topic;
 use Canvas\Models\User;
 use Canvas\Models\View;
 use Canvas\Tests\TestCase;
-use Illuminate\Auth\Middleware\Authorize;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Ramsey\Uuid\Uuid;
 
@@ -38,8 +34,8 @@ class TopicControllerTest extends TestCase
     {
         $topic = factory(Topic::class)->create([
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $this->actingAs($topic->user, 'canvas')
@@ -57,7 +53,7 @@ class TopicControllerTest extends TestCase
     public function it_can_fetch_a_new_topic()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $response = $this->actingAs($user, 'canvas')->getJson('canvas/api/topics/create')->assertSuccessful();
@@ -70,8 +66,8 @@ class TopicControllerTest extends TestCase
     {
         $topic = factory(Topic::class)->create([
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $this->actingAs($topic->user, 'canvas')
@@ -88,8 +84,8 @@ class TopicControllerTest extends TestCase
     {
         $topic = factory(Topic::class)->create([
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $post = factory(Post::class)->create();
@@ -114,7 +110,7 @@ class TopicControllerTest extends TestCase
     public function it_returns_404_if_no_topic_is_found()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $this->actingAs($user, 'canvas')->getJson('canvas/api/topics/not-a-topic')->assertNotFound();
@@ -124,7 +120,7 @@ class TopicControllerTest extends TestCase
     public function it_can_create_a_new_topic()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $data = [
@@ -145,7 +141,7 @@ class TopicControllerTest extends TestCase
     public function it_can_refresh_a_deleted_tag()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $topic = factory(Topic::class)->create([
@@ -176,8 +172,8 @@ class TopicControllerTest extends TestCase
     {
         $topic = factory(Topic::class)->create([
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $data = [
@@ -198,8 +194,8 @@ class TopicControllerTest extends TestCase
     {
         $topic = factory(Topic::class)->create([
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $response = $this->actingAs($topic->user, 'canvas')
@@ -219,8 +215,8 @@ class TopicControllerTest extends TestCase
             'name' => 'A new topic',
             'slug' => 'a-new-topic',
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $this->actingAs($topic->user, 'canvas')
@@ -243,8 +239,8 @@ class TopicControllerTest extends TestCase
     {
         $topic = factory(Topic::class)->create([
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $post = factory(Post::class)->create([

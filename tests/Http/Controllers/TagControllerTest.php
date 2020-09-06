@@ -34,8 +34,8 @@ class TagControllerTest extends TestCase
     {
         $tag = factory(Tag::class)->create([
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $this->actingAs($tag->user, 'canvas')
@@ -53,7 +53,7 @@ class TagControllerTest extends TestCase
     public function it_can_fetch_a_new_tag()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $response = $this->actingAs($user, 'canvas')->getJson('canvas/api/tags/create')->assertSuccessful();
@@ -66,8 +66,8 @@ class TagControllerTest extends TestCase
     {
         $tag = factory(Tag::class)->create([
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $this->actingAs($tag->user, 'canvas')
@@ -84,8 +84,8 @@ class TagControllerTest extends TestCase
     {
         $tag = factory(Tag::class)->create([
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $post = factory(Post::class)->create();
@@ -110,7 +110,7 @@ class TagControllerTest extends TestCase
     public function it_returns_404_if_no_tag_is_found()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $this->actingAs($user, 'canvas')->getJson('canvas/api/tags/not-a-tag')->assertNotFound();
@@ -120,7 +120,7 @@ class TagControllerTest extends TestCase
     public function it_can_create_a_new_tag()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $data = [
@@ -141,7 +141,7 @@ class TagControllerTest extends TestCase
     public function it_can_refresh_a_deleted_tag()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         $tag = factory(Tag::class)->create([
@@ -172,8 +172,8 @@ class TagControllerTest extends TestCase
     {
         $tag = factory(Tag::class)->create([
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $data = [
@@ -194,8 +194,8 @@ class TagControllerTest extends TestCase
     {
         $tag = factory(Tag::class)->create([
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $response = $this->actingAs($tag->user, 'canvas')
@@ -215,8 +215,8 @@ class TagControllerTest extends TestCase
             'name' => 'A new tag',
             'slug' => 'a-new-tag',
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $this->actingAs($tag->user, 'canvas')
@@ -239,8 +239,8 @@ class TagControllerTest extends TestCase
     {
         $tag = factory(Tag::class)->create([
             'user_id' => factory(User::class)->create([
-                'role' => User::ADMIN
-            ])
+                'role' => User::ADMIN,
+            ]),
         ]);
 
         $post = factory(Post::class)->create([

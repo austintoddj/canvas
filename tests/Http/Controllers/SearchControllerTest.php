@@ -32,7 +32,7 @@ class SearchControllerTest extends TestCase
     public function it_can_only_fetch_user_posts_for_contributors()
     {
         $user = factory(User::class)->create([
-            'role' => User::CONTRIBUTOR
+            'role' => User::CONTRIBUTOR,
         ]);
 
         factory(Post::class, 2)->create([
@@ -62,7 +62,7 @@ class SearchControllerTest extends TestCase
     public function it_can_fetch_all_posts_for_editors()
     {
         $user = factory(User::class)->create([
-            'role' => User::EDITOR
+            'role' => User::EDITOR,
         ]);
 
         factory(Post::class, 2)->create([
@@ -92,7 +92,7 @@ class SearchControllerTest extends TestCase
     public function it_can_fetch_all_posts_for_admins()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         factory(Post::class, 2)->create([
@@ -122,7 +122,7 @@ class SearchControllerTest extends TestCase
     public function it_can_fetch_tags_for_an_admin_user()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         factory(Tag::class, 2)->create([
@@ -146,7 +146,7 @@ class SearchControllerTest extends TestCase
     public function it_can_fetch_topics_for_an_admin_user()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         factory(Topic::class, 2)->create([
@@ -170,7 +170,7 @@ class SearchControllerTest extends TestCase
     public function it_can_fetch_users_for_an_admin_user()
     {
         $user = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
 
         factory(User::class, 2)->create();
