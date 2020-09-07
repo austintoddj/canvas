@@ -11,7 +11,6 @@ use Canvas\Tests\TestCase;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Ramsey\Uuid\Uuid;
 
 /**
  * Class UserTest.
