@@ -95,7 +95,7 @@ class UserControllerTest extends TestCase
         ]);
 
         $post = factory(Post::class)->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         factory(View::class)->create([
@@ -131,7 +131,7 @@ class UserControllerTest extends TestCase
             'id' => Uuid::uuid4()->toString(),
             'name' => 'Name',
             'email' => 'email@example.com',
-            'password' => Hash::make(Str::random(60))
+            'password' => Hash::make(Str::random(60)),
         ];
 
         $this->actingAs($user, 'canvas')
@@ -160,7 +160,7 @@ class UserControllerTest extends TestCase
             'id' => Uuid::uuid4()->toString(),
             'name' => 'Deleted User',
             'email'=> 'email@example.com',
-            'password' => Hash::make(Str::random(60))
+            'password' => Hash::make(Str::random(60)),
         ];
 
         $this->actingAs($admin, 'canvas')
@@ -182,7 +182,7 @@ class UserControllerTest extends TestCase
             'id' => Uuid::uuid4()->toString(),
             'name' => 'User',
             'email'=> 'email@example.com',
-            'password' => Hash::make(Str::random(60))
+            'password' => Hash::make(Str::random(60)),
         ]);
 
         $data = [
