@@ -33,8 +33,9 @@ class UserCommand extends Command
      */
     public function handle()
     {
-        if (!filter_var($this->option('email'), FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($this->option('email'), FILTER_VALIDATE_EMAIL)) {
             $this->error('Please enter a valid email.');
+
             return;
         }
 
@@ -73,6 +74,7 @@ class UserCommand extends Command
 
             default:
                 $this->error('Please enter a valid role.');
+
                 return;
         }
 
@@ -80,6 +82,6 @@ class UserCommand extends Command
 
         $this->info('New user created.');
         $this->table(['Email', 'Password'], [[$email, $password]]);
-        $this->info('First things first, login at <info>' . route('canvas.login') . '</info> and update your credentials.');
+        $this->info('First things first, login at <info>'.route('canvas.login').'</info> and update your credentials.');
     }
 }

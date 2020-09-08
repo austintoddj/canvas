@@ -2,10 +2,10 @@
 
 namespace Canvas;
 
-use Canvas\Console\UserCommand;
 use Canvas\Console\DigestCommand;
 use Canvas\Console\InstallCommand;
 use Canvas\Console\PublishCommand;
+use Canvas\Console\UserCommand;
 use Canvas\Events\PostViewed;
 use Canvas\Listeners\CaptureView;
 use Canvas\Listeners\CaptureVisit;

@@ -43,7 +43,7 @@ class UserCommandTest extends TestCase
 
         $this->assertDatabaseHas('canvas_users', [
             'email' => $email,
-            'role' => User::CONTRIBUTOR
+            'role' => User::CONTRIBUTOR,
         ]);
     }
 
@@ -59,7 +59,7 @@ class UserCommandTest extends TestCase
 
         $this->assertDatabaseHas('canvas_users', [
             'email' => $email,
-            'role' => User::EDITOR
+            'role' => User::EDITOR,
         ]);
     }
 
@@ -75,7 +75,7 @@ class UserCommandTest extends TestCase
 
         $this->assertDatabaseHas('canvas_users', [
             'email' => $email,
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
     }
 }
