@@ -10,7 +10,6 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Validation\Rule;
 use Ramsey\Uuid\Uuid;
 
 class PostController extends Controller
