@@ -65,7 +65,7 @@ class PostController extends Controller
                     'title' => '',
                     'description' => '',
                     'canonical_link' => '',
-                ]
+                ],
             ]),
             'tags' => Tag::get(['name', 'slug']),
             'topics' => Topic::get(['name', 'slug']),
