@@ -60,7 +60,7 @@ class UserController extends Controller
             } else {
                 $user = new User([
                     'id' => $id,
-                    'password' => Hash::make($request->password)
+                    'password' => Hash::make($request->password),
                 ]);
             }
         }
