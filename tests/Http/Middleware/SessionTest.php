@@ -4,14 +4,9 @@ namespace Canvas\Tests\Http\Middleware;
 
 use Canvas\Http\Middleware\Session;
 use Canvas\Models\Post;
-use Canvas\Models\User;
 use Canvas\Tests\TestCase;
-use Closure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Http;
-use Mockery\Mock;
 
 /**
  * Class SessionTest.
