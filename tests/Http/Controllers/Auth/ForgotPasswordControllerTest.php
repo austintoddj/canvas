@@ -39,10 +39,9 @@ class ForgotPasswordControllerTest extends TestCase
 
         $this->actingAs($user, 'canvas')
              ->post(route('canvas.password.email'), [
-                 'email' => $user->email
+                 'email' => $user->email,
              ])
              ->assertRedirect(route('canvas.password.request'));
-
 
         Mail::assertSent(ResetPassword::class, function ($mail) use ($user) {
             $this->assertIsString($mail->token);

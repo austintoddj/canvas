@@ -22,7 +22,7 @@ class ResetPasswordControllerTest extends TestCase
 
         $this->actingAs($user, 'canvas')
              ->get(route('canvas.password.reset', [
-                 'token' => Str::random(60)
+                 'token' => Str::random(60),
              ]))
              ->assertSuccessful()
              ->assertViewIs('canvas::auth.passwords.reset')
