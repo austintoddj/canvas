@@ -38,7 +38,7 @@ class UserController extends Controller
     {
         return response()->json(User::make([
             'id' => Uuid::uuid4()->toString(),
-            'role' => User::CONTRIBUTOR
+            'role' => User::CONTRIBUTOR,
         ]), 200);
     }
 
