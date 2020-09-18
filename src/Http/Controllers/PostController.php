@@ -84,7 +84,7 @@ class PostController extends Controller
             $post = Post::with('tags', 'topic')->where('user_id', $request->user('canvas')->id)->find($id);
         }
 
-        if (!$post) {
+        if (! $post) {
             $post = new Post(['id' => $id]);
         }
 
@@ -156,7 +156,7 @@ class PostController extends Controller
 
         $topic = Topic::firstWhere('slug', $topicToAssign['slug']);
 
-        if (!$topic) {
+        if (! $topic) {
             $topic = Topic::create([
                 'id' => $id = Uuid::uuid4()->toString(),
                 'name' => $topicToAssign['name'],
@@ -165,7 +165,7 @@ class PostController extends Controller
             ]);
         }
 
-        return [ (string)$topic->id ];
+        return [(string) $topic->id];
     }
 
     /**
@@ -185,7 +185,7 @@ class PostController extends Controller
         return collect($incomingTags)->map(function ($item) use ($tags) {
             $tag = $tags->firstWhere('slug', $item['slug']);
 
-            if (!$tag) {
+            if (! $tag) {
                 $tag = Tag::create([
                     'id' => $id = Uuid::uuid4()->toString(),
                     'name' => $item['name'],
@@ -194,7 +194,7 @@ class PostController extends Controller
                 ]);
             }
 
-            return (string)$tag->id;
+            return (string) $tag->id;
         })->toArray();
     }
 }
