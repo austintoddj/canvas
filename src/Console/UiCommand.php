@@ -102,20 +102,20 @@ class UiCommand extends Command
     private function updatePackageArray(array $packages)
     {
         return [
-                'bootstrap' => '^4.5.2',
-                'jquery' => '^3.5.1',
-                'medium-zoom' => '^1.0.6',
-                'moment' => '^2.29.0',
-                'nprogress' => '^0.2.0',
-                'popper.js' => '^1.16.1',
-                'resolve-url-loader' => '^3.1.1',
-                'sass' => '^1.26.11',
-                'sass-loader' => '^10.0.0',
-                'vue' => '^2.6.11',
-                'vue-meta' => '^2.4.0',
-                'vue-router' => '^3.4.2',
-                'vue-template-compiler' => '^2.6.11',
-            ] + $packages;
+            'bootstrap' => '^4.5.2',
+            'jquery' => '^3.5.1',
+            'medium-zoom' => '^1.0.6',
+            'moment' => '^2.29.0',
+            'nprogress' => '^0.2.0',
+            'popper.js' => '^1.16.1',
+            'resolve-url-loader' => '^3.1.1',
+            'sass' => '^1.26.11',
+            'sass-loader' => '^10.0.0',
+            'vue' => '^2.6.11',
+            'vue-meta' => '^2.4.0',
+            'vue-router' => '^3.4.2',
+            'vue-template-compiler' => '^2.6.11',
+        ] + $packages;
     }
 
     /**
@@ -151,7 +151,7 @@ class UiCommand extends Command
             }
         }
 
-        copy(dirname(__DIR__, 2)."/resources/stubs/views/canvas-ui.stub", $view);
+        copy(dirname(__DIR__, 2).'/resources/stubs/views/canvas-ui.stub', $view);
     }
 
     /**
@@ -166,7 +166,7 @@ class UiCommand extends Command
             str_replace(
                 '{{namespace}}',
                 $this->laravel->getNamespace(),
-                file_get_contents(__DIR__."/../../resources/stubs/controllers/CanvasUiController.stub")
+                file_get_contents(__DIR__.'/../../resources/stubs/controllers/CanvasUiController.stub')
             )
         );
 
