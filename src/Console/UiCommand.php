@@ -102,17 +102,17 @@ class UiCommand extends Command
     private function updatePackageArray(array $packages)
     {
         return [
-            "axios" => '^0.19',
+            'axios' => '^0.19',
             'bootstrap' => '^4.5.2',
-            "cross-env" => '^7.0',
+            'cross-env' => '^7.0',
             'jquery' => '^3.5.1',
-            "laravel-mix" => '^5.0.1',
-            "lodash" => '^4.17.19',
+            'laravel-mix' => '^5.0.1',
+            'lodash' => '^4.17.19',
             'medium-zoom' => '^1.0.6',
             'moment' => '^2.29.0',
             'nprogress' => '^0.2.0',
             'popper.js' => '^1.16.1',
-            "resolve-url-loader" => '^3.1.0',
+            'resolve-url-loader' => '^3.1.0',
             'sass' => '^1.26.11',
             'sass-loader' => '^10.0.0',
             'vue' => '^2.6.11',
