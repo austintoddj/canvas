@@ -105,7 +105,7 @@ class UiCommand extends Command
             'axios' => '^0.19',
             'bootstrap' => '^4.5.2',
             'cross-env' => '^7.0',
-            "highlight.js" => "^10.2.0",
+            'highlight.js' => '^10.2.0',
             'jquery' => '^3.5.1',
             'laravel-mix' => '^5.0.1',
             'lodash' => '^4.17.19',
