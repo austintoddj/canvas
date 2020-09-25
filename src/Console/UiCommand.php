@@ -57,7 +57,7 @@ class UiCommand extends Command
         ];
 
         foreach ($directories as $path) {
-            if (!$filesystem->isDirectory($directory = resource_path($path))) {
+            if (! $filesystem->isDirectory($directory = resource_path($path))) {
                 $filesystem->makeDirectory($directory, 0755, true);
             }
         }
@@ -71,7 +71,7 @@ class UiCommand extends Command
      */
     private function updatePackages($dev = true)
     {
-        if (!file_exists(base_path('package.json'))) {
+        if (! file_exists(base_path('package.json'))) {
             return;
         }
 
@@ -88,7 +88,7 @@ class UiCommand extends Command
 
         file_put_contents(
             base_path('package.json'),
-            json_encode($packages, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . PHP_EOL
+            json_encode($packages, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT).PHP_EOL
         );
     }
 
@@ -101,26 +101,26 @@ class UiCommand extends Command
     private function updatePackageArray(array $packages)
     {
         return [
-                'axios' => '^0.19',
-                'bootstrap' => '^4.5.2',
-                'cross-env' => '^7.0',
-                'highlight.js' => '^10.2.0',
-                'jquery' => '^3.5.1',
-                'laravel-mix' => '^5.0.1',
-                'lodash' => '^4.17.19',
-                'medium-zoom' => '^1.0.6',
-                'moment' => '^2.29.0',
-                'nprogress' => '^0.2.0',
-                'popper.js' => '^1.16.1',
-                'resolve-url-loader' => '^3.1.0',
-                'sass' => '^1.26.11',
-                'sass-loader' => '^10.0.0',
-                'vue' => '^2.6.11',
-                'vue-infinite-loading' => '^2.4.5',
-                'vue-meta' => '^2.4.0',
-                'vue-router' => '^3.4.2',
-                'vue-template-compiler' => '^2.6.11',
-            ] + $packages;
+            'axios' => '^0.19',
+            'bootstrap' => '^4.5.2',
+            'cross-env' => '^7.0',
+            'highlight.js' => '^10.2.0',
+            'jquery' => '^3.5.1',
+            'laravel-mix' => '^5.0.1',
+            'lodash' => '^4.17.19',
+            'medium-zoom' => '^1.0.6',
+            'moment' => '^2.29.0',
+            'nprogress' => '^0.2.0',
+            'popper.js' => '^1.16.1',
+            'resolve-url-loader' => '^3.1.0',
+            'sass' => '^1.26.11',
+            'sass-loader' => '^10.0.0',
+            'vue' => '^2.6.11',
+            'vue-infinite-loading' => '^2.4.5',
+            'vue-meta' => '^2.4.0',
+            'vue-router' => '^3.4.2',
+            'vue-template-compiler' => '^2.6.11',
+        ] + $packages;
     }
 
     /**
@@ -130,7 +130,7 @@ class UiCommand extends Command
      */
     private function exportSass()
     {
-        copy(dirname(__DIR__, 2) . '/resources/sass/ui.scss', resource_path('sass/canvas-ui.scss'));
+        copy(dirname(__DIR__, 2).'/resources/sass/ui.scss', resource_path('sass/canvas-ui.scss'));
     }
 
     /**
@@ -140,7 +140,7 @@ class UiCommand extends Command
      */
     private function exportJavascript()
     {
-        File::copyDirectory(dirname(__DIR__, 2) . '/resources/js/ui', resource_path('js/canvas-ui'));
+        File::copyDirectory(dirname(__DIR__, 2).'/resources/js/ui', resource_path('js/canvas-ui'));
     }
 
     /**
@@ -150,13 +150,13 @@ class UiCommand extends Command
      */
     private function exportViews()
     {
-        if (file_exists($view = $this->getViewPath('canvas-ui.blade.php')) && !$this->option('force')) {
-            if (!$this->confirm('The [canvas-ui.blade.php] view already exists. Do you want to replace it?')) {
+        if (file_exists($view = $this->getViewPath('canvas-ui.blade.php')) && ! $this->option('force')) {
+            if (! $this->confirm('The [canvas-ui.blade.php] view already exists. Do you want to replace it?')) {
                 return;
             }
         }
 
-        copy(dirname(__DIR__, 2) . '/resources/views/ui.blade.php', $view);
+        copy(dirname(__DIR__, 2).'/resources/views/ui.blade.php', $view);
     }
 
     /**
@@ -171,13 +171,13 @@ class UiCommand extends Command
             str_replace(
                 '{{namespace}}',
                 $this->laravel->getNamespace(),
-                file_get_contents(dirname(__DIR__, 2) . '/resources/stubs/controllers/CanvasUiController.stub')
+                file_get_contents(dirname(__DIR__, 2).'/resources/stubs/controllers/CanvasUiController.stub')
             )
         );
 
         file_put_contents(
             base_path('routes/web.php'),
-            file_get_contents(dirname(__DIR__, 2) . '/resources/stubs/routes.stub'),
+            file_get_contents(dirname(__DIR__, 2).'/resources/stubs/routes.stub'),
             FILE_APPEND
         );
     }
@@ -219,7 +219,7 @@ class UiCommand extends Command
     {
         file_put_contents(
             base_path('webpack.mix.js'),
-            file_get_contents(dirname(__DIR__, 2) . '/resources/stubs/webpack.stub'),
+            file_get_contents(dirname(__DIR__, 2).'/resources/stubs/webpack.stub'),
             FILE_APPEND
         );
     }
