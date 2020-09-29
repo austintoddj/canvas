@@ -40,26 +40,26 @@ class UiCommand extends Command
         // NPM packages...
         $this->updateNodePackages(function ($packages) {
             return [
-                    'axios' => '^0.19',
-                    'bootstrap' => '^4.5.2',
-                    'cross-env' => '^7.0',
-                    'highlight.js' => '^10.2.0',
-                    'jquery' => '^3.5.1',
-                    'laravel-mix' => '^5.0.1',
-                    'lodash' => '^4.17.19',
-                    'medium-zoom' => '^1.0.6',
-                    'moment' => '^2.29.0',
-                    'nprogress' => '^0.2.0',
-                    'popper.js' => '^1.16.1',
-                    'resolve-url-loader' => '^3.1.0',
-                    'sass' => '^1.26.11',
-                    'sass-loader' => '^10.0.0',
-                    'vue' => '^2.6.11',
-                    'vue-infinite-loading' => '^2.4.5',
-                    'vue-meta' => '^2.4.0',
-                    'vue-router' => '^3.4.2',
-                    'vue-template-compiler' => '^2.6.11',
-                ] + $packages;
+                'axios' => '^0.19',
+                'bootstrap' => '^4.5.2',
+                'cross-env' => '^7.0',
+                'highlight.js' => '^10.2.0',
+                'jquery' => '^3.5.1',
+                'laravel-mix' => '^5.0.1',
+                'lodash' => '^4.17.19',
+                'medium-zoom' => '^1.0.6',
+                'moment' => '^2.29.0',
+                'nprogress' => '^0.2.0',
+                'popper.js' => '^1.16.1',
+                'resolve-url-loader' => '^3.1.0',
+                'sass' => '^1.26.11',
+                'sass-loader' => '^10.0.0',
+                'vue' => '^2.6.11',
+                'vue-infinite-loading' => '^2.4.5',
+                'vue-meta' => '^2.4.0',
+                'vue-router' => '^3.4.2',
+                'vue-template-compiler' => '^2.6.11',
+            ] + $packages;
         });
 
         // Sass configuration...
