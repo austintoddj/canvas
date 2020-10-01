@@ -52,7 +52,7 @@ class CanvasTest extends TestCase
     /** @test */
     public function it_can_get_the_base_storage_path()
     {
-        $this->assertSame(config('canvas.storage_path') . '/images', Canvas::baseStoragePath());
+        $this->assertSame(config('canvas.storage_path').'/images', Canvas::baseStoragePath());
         $this->assertIsString(Canvas::baseStoragePath());
     }
 }
