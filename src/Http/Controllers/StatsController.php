@@ -43,7 +43,7 @@ class StatsController extends Controller
             $post = Post::where('user_id', $request->user('canvas')->id)->find($id);
         }
 
-        if (!$post || !$post->published) {
+        if (! $post || ! $post->published) {
             return response()->json(null, 404);
         }
 
