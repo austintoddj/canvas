@@ -19,7 +19,7 @@ class UploadsController extends Controller
     {
         $payload = $request->file();
 
-        if (!$payload) {
+        if (! $payload) {
             return response()->json(null, 400);
         }
 
