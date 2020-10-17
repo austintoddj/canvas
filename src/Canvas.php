@@ -100,7 +100,7 @@ class Canvas
      */
     public static function basePath(): string
     {
-        return config('canvas.domain') ?? '/' . config('canvas.path');
+        return config('canvas.domain') ?? '/'.config('canvas.path');
     }
 
     /**
