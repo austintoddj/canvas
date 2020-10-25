@@ -70,7 +70,7 @@ class StatsController extends Controller
 
         $post = Post::when($user->isContributor, function ($query) use ($user) {
             return $query->where('user_id', $user->id);
-        }, function ($query) use ($user) {
+        }, function ($query) {
             return $query;
         })->find($id);
 

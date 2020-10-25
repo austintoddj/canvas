@@ -38,7 +38,7 @@ class UserCommandTest extends TestCase
 
     public function testCanvasUserCommandCanCreateANewContributor(): void
     {
-        $this->artisan("canvas:user contributor --email contributor@example.com")
+        $this->artisan('canvas:user contributor --email contributor@example.com')
              ->assertExitCode(0)
              ->expectsOutput('New user created.');
 
@@ -50,7 +50,7 @@ class UserCommandTest extends TestCase
 
     public function testCanvasUserCommandCanCreateANewEditor(): void
     {
-        $this->artisan("canvas:user editor --email editor@example.com")
+        $this->artisan('canvas:user editor --email editor@example.com')
              ->assertExitCode(0)
              ->expectsOutput('New user created.');
 
@@ -62,7 +62,7 @@ class UserCommandTest extends TestCase
 
     public function testCanvasUserCommandCanCreateANewAdmin(): void
     {
-        $this->artisan("canvas:user admin --email admin@example.com")
+        $this->artisan('canvas:user admin --email admin@example.com')
              ->assertExitCode(0)
              ->expectsOutput('New user created.');
 

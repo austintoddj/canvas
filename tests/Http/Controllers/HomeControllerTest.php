@@ -2,7 +2,6 @@
 
 namespace Canvas\Tests\Http\Controllers;
 
-use Canvas\Models\User;
 use Canvas\Tests\TestCase;
 use Exception;
 

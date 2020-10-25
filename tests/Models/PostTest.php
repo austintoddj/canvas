@@ -181,7 +181,6 @@ class PostTest extends TestCase
 
     public function testPublishedScope(): void
     {
-
         factory(Post::class)->create([
             'user_id' => $this->admin->id,
             'published_at' => now()->subDay(),
