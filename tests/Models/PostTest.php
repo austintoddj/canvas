@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Ramsey\Uuid\Uuid;
 
 /**
  * Class PostTest.
@@ -106,7 +105,7 @@ class PostTest extends TestCase
         ];
 
         $primaryPost = factory(Post::class)->create([
-            'user_id' => $this->admin->id
+            'user_id' => $this->admin->id,
         ]);
         $response = $this->actingAs($this->admin, 'canvas')->postJson("/canvas/api/posts/{$primaryPost->id}", $data);
 
@@ -117,7 +116,7 @@ class PostTest extends TestCase
         ]);
 
         $secondaryPost = factory(Post::class)->create([
-            'user_id' => $this->editor->id
+            'user_id' => $this->editor->id,
         ]);
         $response = $this->actingAs($this->editor, 'canvas')->postJson("/canvas/api/posts/{$secondaryPost->id}", $data);
 

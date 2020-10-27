@@ -37,9 +37,8 @@ class UserControllerTest extends TestCase
              ->getJson('canvas/api/users')
              ->assertSuccessful()
             ->assertJson([
-                'data.0.id' => $this->admin->id
+                'data.0.id' => $this->admin->id,
             ]);
-
 
         dd($response['data'][0]['id']);
 //             ->assertJsonExactFragment($this->contributor->id, 'data.0.id')

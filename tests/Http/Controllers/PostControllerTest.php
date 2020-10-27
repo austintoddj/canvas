@@ -211,12 +211,10 @@ class PostControllerTest extends TestCase
 
     public function testSyncNewTags(): void
     {
-
     }
 
     public function testSyncNewTopic(): void
     {
-
     }
 
     public function testSyncExistingTags(): void
@@ -265,7 +263,6 @@ class PostControllerTest extends TestCase
 
     public function testSyncExistingTopic(): void
     {
-
     }
 
     public function testInvalidSlugsAreValidated(): void

@@ -27,7 +27,7 @@ class TagTest extends TestCase
         ];
 
         $primaryTag = factory(Tag::class)->create([
-            'user_id' => $this->admin->id
+            'user_id' => $this->admin->id,
         ]);
         $response = $this->actingAs($this->admin, 'canvas')->postJson("/canvas/api/tags/{$primaryTag->id}", $data);
 
@@ -38,10 +38,10 @@ class TagTest extends TestCase
         ]);
 
         $secondaryAdmin = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
         $secondaryTag = factory(Tag::class)->create([
-            'user_id' => $secondaryAdmin->id
+            'user_id' => $secondaryAdmin->id,
         ]);
 
         $response = $this->actingAs($secondaryAdmin, 'canvas')->postJson("/canvas/api/tags/{$secondaryTag->id}", $data);

@@ -28,7 +28,7 @@ class TopicTest extends TestCase
         ];
 
         $primaryTopic = factory(Topic::class)->create([
-            'user_id' => $this->admin->id
+            'user_id' => $this->admin->id,
         ]);
         $response = $this->actingAs($this->admin, 'canvas')->postJson("/canvas/api/topics/{$primaryTopic->id}", $data);
 
@@ -39,10 +39,10 @@ class TopicTest extends TestCase
         ]);
 
         $secondaryAdmin = factory(User::class)->create([
-            'role' => User::ADMIN
+            'role' => User::ADMIN,
         ]);
         $secondaryTopic = factory(Topic::class)->create([
-            'user_id' => $secondaryAdmin->id
+            'user_id' => $secondaryAdmin->id,
         ]);
 
         $response = $this->actingAs($secondaryAdmin, 'canvas')->postJson("/canvas/api/topics/{$secondaryTopic->id}", $data);
