@@ -39,7 +39,7 @@ class TopicControllerTest extends TestCase
                  'name' => $topic->name,
                  'user_id' => $topic->user->id,
                  'slug' => $topic->slug,
-                 'posts_count' => (string)$topic->posts->count(),
+                 'posts_count' => (string) $topic->posts->count(),
                  'total' => 5,
              ]);
     }
@@ -89,7 +89,7 @@ class TopicControllerTest extends TestCase
              ->assertFragment([
                  'topic_id' => $topic->id,
                  'post_id' => $post->id,
-                 'views_count' => (string)$post->views->count(),
+                 'views_count' => (string) $post->views->count(),
              ]);
     }
 

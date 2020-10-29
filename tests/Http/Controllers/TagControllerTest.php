@@ -39,7 +39,7 @@ class TagControllerTest extends TestCase
                  'name' => $tag->name,
                  'user_id' => $tag->user->id,
                  'slug' => $tag->slug,
-                 'posts_count' => (string)$tag->posts->count(),
+                 'posts_count' => (string) $tag->posts->count(),
                  'total' => 5,
              ]);
     }
@@ -89,7 +89,7 @@ class TagControllerTest extends TestCase
              ->assertFragment([
                  'tag_id' => $tag->id,
                  'post_id' => $post->id,
-                 'views_count' => (string)$post->views->count(),
+                 'views_count' => (string) $post->views->count(),
              ]);
     }
 
