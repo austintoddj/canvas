@@ -365,7 +365,7 @@ class PostControllerTest extends TestCase
                 [
                     'name' => $tag->name,
                     'slug' => $tag->slug,
-                ]
+                ],
             ],
         ];
 
