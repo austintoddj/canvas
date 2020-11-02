@@ -28,21 +28,21 @@ class UserControllerTest extends TestCase
              ->assertFragment([
                  'id' => $this->admin->id,
                  'role' => User::ADMIN,
-                 'posts_count' => (string)$this->admin->posts()->count(),
+                 'posts_count' => (string) $this->admin->posts()->count(),
                  'default_avatar' => $this->admin->default_avatar,
                  'default_locale' => $this->admin->default_locale,
              ])
              ->assertFragment([
                  'id' => $this->editor->id,
                  'role' => User::EDITOR,
-                 'posts_count' => (string)$this->editor->posts()->count(),
+                 'posts_count' => (string) $this->editor->posts()->count(),
                  'default_avatar' => $this->editor->default_avatar,
                  'default_locale' => $this->editor->default_locale,
              ])
              ->assertFragment([
                  'id' => $this->contributor->id,
                  'role' => User::CONTRIBUTOR,
-                 'posts_count' => (string)$this->contributor->posts()->count(),
+                 'posts_count' => (string) $this->contributor->posts()->count(),
                  'default_avatar' => $this->contributor->default_avatar,
                  'default_locale' => $this->contributor->default_locale,
              ]);
@@ -74,7 +74,7 @@ class UserControllerTest extends TestCase
              ->assertFragment([
                  'id' => $this->contributor->id,
                  'role' => User::CONTRIBUTOR,
-                 'posts_count' => (string)$this->contributor->posts()->count(),
+                 'posts_count' => (string) $this->contributor->posts()->count(),
                  'default_avatar' => $this->contributor->default_avatar,
                  'default_locale' => $this->contributor->default_locale,
              ]);
@@ -96,7 +96,7 @@ class UserControllerTest extends TestCase
              ->decodeResponseJson()
              ->assertFragment([
                  'id' => $post->id,
-                 'views_count' => (string)$post->views->count(),
+                 'views_count' => (string) $post->views->count(),
                  'total' => $this->admin->posts()->count(),
              ]);
     }
