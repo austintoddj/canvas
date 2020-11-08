@@ -21,8 +21,8 @@ class SearchController extends Controller
     {
         $posts = Post::query()
                      ->when(request()->user('canvas')->isContributor,
-                         fn(Builder $query) => $query->where('user_id', request()->user('canvas')->id),
-                         fn(Builder $query) => $query)
+                         fn (Builder $query) => $query->where('user_id', request()->user('canvas')->id),
+                         fn (Builder $query) => $query)
                      ->select('id', 'title')
                      ->latest()
                      ->get();
