@@ -8,7 +8,7 @@ use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 /**
- * Class PostViewedEventTest
+ * Class PostViewedEventTest.
  *
  * @covers \Canvas\Events\PostViewed
  */

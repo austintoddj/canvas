@@ -42,9 +42,9 @@ class SessionTest extends TestCase
         ]);
 
         $this->get('/_test/session')->assertSessionHas([
-            "visited_posts.{$recentPost->id}"
+            "visited_posts.{$recentPost->id}",
         ])->assertSessionMissing([
-            "visited_posts.{$oldPost->id}"
+            "visited_posts.{$oldPost->id}",
         ]);
     }
 

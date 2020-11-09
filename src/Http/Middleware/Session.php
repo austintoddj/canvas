@@ -31,7 +31,7 @@ class Session
 
         if ($visitedPosts->isNotEmpty()) {
             $visitedPosts->each(function ($item, $id) {
-                if (!Date::createFromTimestamp($item['timestamp'])->isToday()) {
+                if (! Date::createFromTimestamp($item['timestamp'])->isToday()) {
                     session()->forget("visited_posts.{$id}");
                 }
             });
