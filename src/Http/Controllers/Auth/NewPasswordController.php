@@ -8,8 +8,8 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -26,8 +26,8 @@ class NewPasswordController extends Controller
     public function create(Request $request)
     {
         return view('canvas::auth.passwords.reset')->with([
-                'request' => $request,
-            ]
+            'request' => $request,
+        ]
         );
     }
 
@@ -48,7 +48,6 @@ class NewPasswordController extends Controller
         ]);
 
         try {
-
             [$id, $token] = explode('|', decrypt($request->token));
 
             $user = User::findOrFail($id);

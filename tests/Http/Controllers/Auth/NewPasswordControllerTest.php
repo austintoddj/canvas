@@ -29,7 +29,7 @@ class NewPasswordControllerTest extends TestCase
     {
         $this->withoutMix();
 
-        $token = encrypt($this->admin->id . '|' . Str::random());
+        $token = encrypt($this->admin->id.'|'.Str::random());
 
         cache(["password.reset.{$this->admin->id}" => $token],
             now()->addMinutes(60)
@@ -47,7 +47,7 @@ class NewPasswordControllerTest extends TestCase
 
     public function testNewPasswordRequestWillValidateAnInvalidEmail(): void
     {
-        $token = encrypt($this->admin->id . '|' . Str::random());
+        $token = encrypt($this->admin->id.'|'.Str::random());
 
         $response = $this->post(route('canvas.password.update'), [
             'token' => $token,
@@ -61,7 +61,7 @@ class NewPasswordControllerTest extends TestCase
 
     public function testNewPasswordRequestWillValidateUnconfirmedPasswords(): void
     {
-        $token = encrypt($this->admin->id . '|' . Str::random());
+        $token = encrypt($this->admin->id.'|'.Str::random());
 
         $response = $this->post(route('canvas.password.update'), [
             'token' => $token,
