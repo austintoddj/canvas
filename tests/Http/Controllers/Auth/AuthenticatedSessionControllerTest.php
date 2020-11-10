@@ -41,7 +41,7 @@ class AuthenticatedSessionControllerTest extends TestCase
             'password' => 'password',
         ]);
 //        ])->assertRedirect(route('canvas.login'));
-dd($response->exception);
+        dd($response->exception);
         $this->assertSame('The given data was invalid.', $response->exception->getMessage());
     }
 

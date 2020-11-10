@@ -4,7 +4,6 @@ namespace Canvas\Tests\Http\Controllers\Auth;
 
 use Canvas\Tests\TestCase;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Class NewPasswordControllerTest.
@@ -29,7 +28,7 @@ class NewPasswordControllerTest extends TestCase
     {
         $this->withoutMix();
 
-        $token = encrypt($this->admin->id . '|' . Str::random());
+        $token = encrypt($this->admin->id.'|'.Str::random());
 
         cache(["password.reset.{$this->admin->id}" => $token],
             now()->addMinutes(60)
@@ -47,7 +46,7 @@ class NewPasswordControllerTest extends TestCase
 
     public function testNewPasswordRequestWillValidateAnInvalidEmail(): void
     {
-        $token = encrypt($this->admin->id . '|' . Str::random());
+        $token = encrypt($this->admin->id.'|'.Str::random());
 
         $this->post(route('canvas.password.update'), [
             'token' => $token,
@@ -59,7 +58,7 @@ class NewPasswordControllerTest extends TestCase
 
     public function testNewPasswordRequestWillValidateUnconfirmedPasswords(): void
     {
-        $token = encrypt($this->admin->id . '|' . Str::random());
+        $token = encrypt($this->admin->id.'|'.Str::random());
 
         $this->post(route('canvas.password.update'), [
             'token' => $token,
