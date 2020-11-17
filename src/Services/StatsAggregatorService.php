@@ -39,12 +39,13 @@ class StatsAggregatorService
                          today()->endOfDay()->toDateTimeString(),
                      ])->get();
 
-        $visits = Visit::select('created_at')
-                       ->whereIn('post_id', $posts->pluck('id'))
-                       ->whereBetween('created_at', [
-                           today()->subDays($days)->startOfDay()->toDateTimeString(),
-                           today()->endOfDay()->toDateTimeString(),
-                       ])->get();
+        $visits = View::selectRaw('ip, agent, DATE(created_at) as created_at')
+                     ->whereIn('post_id', $posts->pluck('id'))
+                     ->distinct('ip, agent, day')
+                     ->whereBetween('created_at', [
+                         today()->subDays($days)->startOfDay()->toDateTimeString(),
+                         today()->endOfDay()->toDateTimeString(),
+                     ])->get();
 
         return [
             'totalViews' => $views->count(),
