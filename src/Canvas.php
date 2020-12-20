@@ -32,7 +32,7 @@ class Canvas
      */
     public static function availableLanguageCodes(): array
     {
-        $locales = preg_grep('/^([^.])/', scandir(dirname(__DIR__, 1) . '/resources/lang'));
+        $locales = preg_grep('/^([^.])/', scandir(dirname(__DIR__, 1).'/resources/lang'));
 
         return collect($locales)->each(function ($code) {
             return $code;
@@ -83,11 +83,11 @@ class Canvas
             'php artisan canvas:publish'
         );
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             throw new RuntimeException($message);
         }
 
-        return File::get($path) === File::get(__DIR__ . '/../public/mix-manifest.json');
+        return File::get($path) === File::get(__DIR__.'/../public/mix-manifest.json');
     }
 
     /**

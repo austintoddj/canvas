@@ -46,14 +46,14 @@ class CanvasTest extends TestCase
 
     public function testBasePath(): void
     {
-        $this->assertSame(Canvas::basePath(), '/' . config('canvas.path'));
+        $this->assertSame(Canvas::basePath(), '/'.config('canvas.path'));
 
         $this->assertIsString(Canvas::basePath());
     }
 
     public function testBaseStoragePath(): void
     {
-        $this->assertSame(config('canvas.storage_path') . '/images', Canvas::baseStoragePath());
+        $this->assertSame(config('canvas.storage_path').'/images', Canvas::baseStoragePath());
 
         $this->assertIsString(Canvas::baseStoragePath());
     }

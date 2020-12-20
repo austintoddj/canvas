@@ -21,11 +21,11 @@ class RouteTest extends TestCase
         $this->markTestSkipped();
 
         $this->actingAs($this->admin)
-             ->get(sprintf('%s',  config('canvas.path')))
+             ->get(sprintf('%s', config('canvas.path')))
              ->assertRedirect(route('canvas.login'))
              ->assertLocation('http://laravel.test/canvas/login');
 
-        $this->assertSame(Canvas::basePath(), '/' . config('canvas.path'));
+        $this->assertSame(Canvas::basePath(), '/'.config('canvas.path'));
     }
 
     public function testRouteWithSubdomainAndDefaultBasePath(): void
@@ -39,7 +39,7 @@ class RouteTest extends TestCase
              ->assertRedirect(route('canvas.login'))
              ->assertLocation('http://canvas.laravel.test/canvas/login');
 
-        $this->assertSame(Canvas::basePath(), '/' . config('canvas.path'));
+        $this->assertSame(Canvas::basePath(), '/'.config('canvas.path'));
     }
 
     public function testRouteWithSubdomainAndNullBasePath(): void
