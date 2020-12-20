@@ -31,7 +31,7 @@ class RouteTest extends TestCase
         Config::set('canvas.domain', 'http://canvas.laravel.test');
 
         $this->actingAs($this->admin)
-             ->get(config('canvas.domain') . '/canvas')
+             ->get(config('canvas.domain').'/canvas')
              ->assertRedirect(route('canvas.login'))
              ->assertLocation('http://canvas.laravel.test/canvas/login');
 
@@ -45,7 +45,7 @@ class RouteTest extends TestCase
         Config::set('canvas.domain', 'http://canvas.laravel.test');
 
         $this->actingAs($this->admin)
-             ->get(config('canvas.domain') . '/canvas')
+             ->get(config('canvas.domain').'/canvas')
              ->assertRedirect(route('canvas.login'));
 
         $this->assertSame(Canvas::basePath(), '/');
