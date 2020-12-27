@@ -101,7 +101,7 @@ class PostController extends Controller
                     ->with('tags', 'topic')
                     ->find($id);
 
-        if (!$post) {
+        if (! $post) {
             $post = new Post(['id' => $id]);
         }
 
@@ -117,7 +117,7 @@ class PostController extends Controller
         $tagsToSync = collect($request->input('tags', []))->map(function ($item) use ($tags) {
             $tag = $tags->firstWhere('slug', $item['slug']);
 
-            if (!$tag) {
+            if (! $tag) {
                 $tag = Tag::create([
                     'id' => $id = Uuid::uuid4()->toString(),
                     'name' => $item['name'],
@@ -126,13 +126,13 @@ class PostController extends Controller
                 ]);
             }
 
-            return (string)$tag->id;
+            return (string) $tag->id;
         })->toArray();
 
         $topicToSync = collect($request->input('topic', []))->map(function ($item) use ($topics) {
             $topic = $topics->firstWhere('slug', $item['slug']);
 
-            if (!$topic) {
+            if (! $topic) {
                 $topic = Topic::create([
                     'id' => $id = Uuid::uuid4()->toString(),
                     'name' => $item['name'],
@@ -141,7 +141,7 @@ class PostController extends Controller
                 ]);
             }
 
-            return (string)$topic->id;
+            return (string) $topic->id;
         })->toArray();
 
         $post->tags()->sync($tagsToSync);
