@@ -55,6 +55,13 @@
                             <button class="btn btn-success btn-block mt-3" type="submit">Sign in</button>
                         </div>
                     </div>
+
+
+                    <div class="form-group row">
+                        <div class="col-12">
+                            <a href="/" role="button" class="btn btn-info btn-block mt-3">Cancel</a>
+                        </div>
+                    </div>
                 </form>
 
                 <div class="d-flex justify-content-center mt-3">
