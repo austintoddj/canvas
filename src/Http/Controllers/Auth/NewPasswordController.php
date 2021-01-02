@@ -2,7 +2,7 @@
 
 namespace Canvas\Http\Controllers\Auth;
 
-use Canvas\Models\User;
+use App\Models\User;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;

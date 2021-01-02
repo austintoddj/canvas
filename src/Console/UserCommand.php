@@ -3,7 +3,7 @@
 namespace Canvas\Console;
 
 use Canvas\Canvas;
-use Canvas\Models\User;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Ramsey\Uuid\Uuid;

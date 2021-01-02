@@ -3,7 +3,7 @@
 namespace Canvas\Tests\Http\Controllers;
 
 use Canvas\Models\Post;
-use Canvas\Models\User;
+use App\Models\User;
 use Canvas\Models\View;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;

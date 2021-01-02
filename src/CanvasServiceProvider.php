@@ -11,7 +11,7 @@ use Canvas\Console\UserCommand;
 use Canvas\Events\PostViewed;
 use Canvas\Listeners\CaptureView;
 use Canvas\Listeners\CaptureVisit;
-use Canvas\Models\User;
+use App\Models\User;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Route;

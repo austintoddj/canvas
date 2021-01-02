@@ -3,7 +3,7 @@
 namespace Canvas\Tests;
 
 use Canvas\CanvasServiceProvider;
-use Canvas\Models\User;
+use App\Models\User;
 use Exception;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;

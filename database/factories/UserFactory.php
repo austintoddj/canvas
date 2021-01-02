@@ -4,7 +4,7 @@
 
 use Illuminate\Support\Str;
 
-$factory->define(\Canvas\Models\User::class, function (Faker\Generator $faker) {
+$factory->define(\App\Models\User::class, function (Faker\Generator $faker) {
     return [
         'id' => $faker->uuid,
         'name' => $faker->name,

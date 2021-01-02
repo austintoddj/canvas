@@ -4,7 +4,7 @@ namespace Canvas\Http\Controllers;
 
 use Canvas\Canvas;
 use Canvas\Http\Requests\UserRequest;
-use Canvas\Models\User;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;

@@ -2,7 +2,7 @@
 
 namespace Canvas\Tests\Http\Controllers\Auth;
 
-use Canvas\Models\User;
+use App\Models\User;
 use Canvas\Tests\TestCase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;

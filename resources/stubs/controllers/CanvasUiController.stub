@@ -3,7 +3,7 @@
 namespace {{namespace}}Http\Controllers;
 
 use {{namespace}}Http\Controllers\Controller;
-use Canvas\Models\User;
+use App\Models\User;
 use Canvas\Events\PostViewed;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;

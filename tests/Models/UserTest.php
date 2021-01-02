@@ -6,7 +6,7 @@ use Canvas\Canvas;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
-use Canvas\Models\User;
+use App\Models\User;
 use Canvas\Tests\TestCase;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,7 +15,9 @@ use Illuminate\Support\Str;
 /**
  * Class UserTest.
  *
- * @covers \Canvas\Models\User
+ * @covers \
+
+App\Models\User
  */
 class UserTest extends TestCase
 {
