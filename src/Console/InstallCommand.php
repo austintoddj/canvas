@@ -40,7 +40,7 @@ class InstallCommand extends Command
             $this->installCanvasServiceProvider();
         }
 
-        // $this->createDefaultUser($email = 'email@example.com', $password = 'password');
+        $this->createDefaultUser($email = 'email@example.com', $password = 'secret');
 
         $this->info('Installation complete.');
         $this->table(['Default Email', 'Default Password'], [[$email, $password]]);
