@@ -61,7 +61,7 @@ class NewPasswordController extends Controller
 
             $user->save();
 
-            Auth::guard('canvas')->login($user);
+            Auth::guard(config('canvas.auth_guard'))->login($user);
         } catch (Throwable $e) {
             return redirect()->route('canvas.password.request')->with('invalidResetToken', 'Invalid token');
         }

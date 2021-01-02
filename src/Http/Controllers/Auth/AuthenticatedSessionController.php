@@ -48,7 +48,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request)
     {
-        Auth::guard('canvas')->logout();
+        Auth::guard(config('canvas.auth_guard'))->logout();
 
         $request->session()->invalidate();
 

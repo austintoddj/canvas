@@ -36,7 +36,7 @@ class Authorize
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($this->auth->guard('canvas')->check()) {
+        if ($this->auth->guard(config('canvas.auth_guard'))->check()) {
             $this->auth->shouldUse('canvas');
         } else {
             throw new AuthenticationException(
