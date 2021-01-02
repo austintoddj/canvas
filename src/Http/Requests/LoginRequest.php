@@ -42,7 +42,7 @@ class LoginRequest extends FormRequest
      */
     public function authenticate()
     {
-        if (! Auth::guard('canvas')->attempt($this->only('email', 'password'), $this->filled('remember'))) {
+        if (! Auth::guard(config('canvas.auth_guard'))->attempt($this->only('email', 'password'), $this->filled('remember'))) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);
