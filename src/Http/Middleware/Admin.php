@@ -16,6 +16,6 @@ class Admin
      */
     public function handle(Request $request, Closure $next)
     {
-        return request()->user('canvas')->isAdmin ? $next($request) : abort(403);
+        return request()->user(config('canvas.auth_guard'))->isAdmin ? $next($request) : abort(403);
     }
 }

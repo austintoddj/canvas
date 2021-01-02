@@ -63,7 +63,7 @@ class TagController extends Controller
 
         $tag->fill($data);
 
-        $tag->user_id = $tag->user_id ?? request()->user('canvas')->id;
+        $tag->user_id = $tag->user_id ?? request()->user(config('canvas.auth_guard'))->id;
 
         $tag->save();
 

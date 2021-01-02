@@ -20,8 +20,8 @@ class SearchController extends Controller
     public function showPosts(): JsonResponse
     {
         $posts = Post::query()
-                     ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                         return $query->where('user_id', request()->user('canvas')->id);
+                     ->when(request()->user(config('canvas.auth_guard'))->isContributor, function (Builder $query) {
+                         return $query->where('user_id', request()->user(config('canvas.auth_guard'))->id);
                      }, function (Builder $query) {
                          return $query;
                      })

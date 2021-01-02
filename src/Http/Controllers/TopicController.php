@@ -63,7 +63,7 @@ class TopicController extends Controller
 
         $topic->fill($data);
 
-        $topic->user_id = $topic->user_id ?? request()->user('canvas')->id;
+        $topic->user_id = $topic->user_id ?? request()->user(config('canvas.auth_guard'))->id;
 
         $topic->save();
 

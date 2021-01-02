@@ -3,7 +3,7 @@
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 col-md-12">
             <nav class="navbar d-flex px-0 py-1">
                 <router-link :to="/" class="navbar-brand hover font-weight-bolder font-serif mr-3">
-                    <img v-if="logo" class="hidden lg:block h-8 w-auto" :src="logo">
+                    <img v-if="logo" class="h-8 w-auto" :src="logo">
                 </router-link>
 
                 <slot name="status" />
@@ -110,7 +110,7 @@ export default {
 
     methods: {
         logout() {
-            window.location.href = '/logout';
+            window.location.href = window.location.href + window.Canvas.path + '/logout';
         },
 
         showSearchModal() {

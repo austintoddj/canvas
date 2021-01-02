@@ -14,7 +14,7 @@ class TopicRequest extends FormRequest
      */
     public function authorize()
     {
-        return $this->user('canvas')->isAdmin;
+        return $this->user(config('canvas.auth_guard'))->isAdmin;
     }
 
     /**
@@ -30,7 +30,7 @@ class TopicRequest extends FormRequest
                 'required',
                 'alpha_dash',
                 Rule::unique('canvas_topics')->where(function ($query) {
-                    return $query->where('slug', request('slug'))->where('user_id', request()->user('canvas')->id);
+                    return $query->where('slug', request('slug'))->where('user_id', request()->user(config('canvas.auth_guard'))->id);
                 })->ignore(request('id'))->whereNull('deleted_at'),
             ],
         ];

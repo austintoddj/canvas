@@ -27,7 +27,7 @@ class StatsController extends Controller
                      ->when(request()->query('scope', 'user') === 'all', function (Builder $query) {
                          return $query;
                      }, function (Builder $query) {
-                         return $query->where('user_id', request()->user('canvas')->id);
+                         return $query->where('user_id', request()->user(config('canvas.auth_guard'))->id);
                      })
                      ->published()
                      ->latest()
@@ -66,8 +66,8 @@ class StatsController extends Controller
     public function show(string $id): JsonResponse
     {
         $post = Post::query()
-                    ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                        return $query->where('user_id', request()->user('canvas')->id);
+                    ->when(request()->user(config('canvas.auth_guard'))->isContributor, function (Builder $query) {
+                        return $query->where('user_id', request()->user(config('canvas.auth_guard'))->id);
                     }, function (Builder $query) {
                         return $query;
                     })

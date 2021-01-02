@@ -22,8 +22,8 @@ class PostController extends Controller
     public function index(): JsonResponse
     {
         $posts = Post::query()
-                     ->when(request()->user('canvas')->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
-                         return $query->where('user_id', request()->user('canvas')->id);
+                     ->when(request()->user(config('canvas.auth_guard'))->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
+                         return $query->where('user_id', request()->user(config('canvas.auth_guard'))->id);
                      }, function (Builder $query) {
                          return $query;
                      })
@@ -37,8 +37,8 @@ class PostController extends Controller
                      ->paginate();
 
         $draftCount = Post::query()
-                          ->when(request()->user('canvas')->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
-                              return $query->where('user_id', request()->user('canvas')->id);
+                          ->when(request()->user(config('canvas.auth_guard'))->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
+                              return $query->where('user_id', request()->user(config('canvas.auth_guard'))->id);
                           }, function (Builder $query) {
                               return $query;
                           })
@@ -46,8 +46,8 @@ class PostController extends Controller
                           ->count();
 
         $publishedCount = Post::query()
-                              ->when(request()->user('canvas')->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
-                                  return $query->where('user_id', request()->user('canvas')->id);
+                              ->when(request()->user(config('canvas.auth_guard'))->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
+                                  return $query->where('user_id', request()->user(config('canvas.auth_guard'))->id);
                               }, function (Builder $query) {
                                   return $query;
                               })
@@ -93,8 +93,8 @@ class PostController extends Controller
         $data = $request->validated();
 
         $post = Post::query()
-                    ->when($request->user('canvas')->isContributor, function (Builder $query) {
-                        return $query->where('user_id', request()->user('canvas')->id);
+                    ->when($request->user(config('canvas.auth_guard'))->isContributor, function (Builder $query) {
+                        return $query->where('user_id', request()->user(config('canvas.auth_guard'))->id);
                     }, function (Builder $query) {
                         return $query;
                     })
@@ -107,7 +107,7 @@ class PostController extends Controller
 
         $post->fill($data);
 
-        $post->user_id = $post->user_id ?? request()->user('canvas')->id;
+        $post->user_id = $post->user_id ?? request()->user(config('canvas.auth_guard'))->id;
 
         $post->save();
 
@@ -122,7 +122,7 @@ class PostController extends Controller
                     'id' => $id = Uuid::uuid4()->toString(),
                     'name' => $item['name'],
                     'slug' => $item['slug'],
-                    'user_id' => request()->user('canvas')->id,
+                    'user_id' => request()->user(config('canvas.auth_guard'))->id,
                 ]);
             }
 
@@ -137,7 +137,7 @@ class PostController extends Controller
                     'id' => $id = Uuid::uuid4()->toString(),
                     'name' => $item['name'],
                     'slug' => $item['slug'],
-                    'user_id' => request()->user('canvas')->id,
+                    'user_id' => request()->user(config('canvas.auth_guard'))->id,
                 ]);
             }
 
@@ -160,8 +160,8 @@ class PostController extends Controller
     public function show($id): JsonResponse
     {
         $post = Post::query()
-                    ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                        return $query->where('user_id', request()->user('canvas')->id);
+                    ->when(request()->user(config('canvas.auth_guard'))->isContributor, function (Builder $query) {
+                        return $query->where('user_id', request()->user(config('canvas.auth_guard'))->id);
                     }, function (Builder $query) {
                         return $query;
                     })
@@ -189,8 +189,8 @@ class PostController extends Controller
     public function destroy($id)
     {
         $post = Post::query()
-                    ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                        return $query->where('user_id', request()->user('canvas')->id);
+                    ->when(request()->user(config('canvas.auth_guard'))->isContributor, function (Builder $query) {
+                        return $query->where('user_id', request()->user(config('canvas.auth_guard'))->id);
                     }, function (Builder $query) {
                         return $query;
                     })
