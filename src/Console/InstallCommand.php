@@ -2,7 +2,7 @@
 
 namespace Canvas\Console;
 
-use Canvas\Models\User;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -40,7 +40,7 @@ class InstallCommand extends Command
             $this->installCanvasServiceProvider();
         }
 
-        $this->createDefaultUser($email = 'email@example.com', $password = 'password');
+        // $this->createDefaultUser($email = 'email@example.com', $password = 'password');
 
         $this->info('Installation complete.');
         $this->table(['Default Email', 'Default Password'], [[$email, $password]]);
