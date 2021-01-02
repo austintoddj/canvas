@@ -82,22 +82,22 @@ class CreateCanvasTables extends Migration
             $table->timestamps();
         });
 
-        Schema::create('canvas_users', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('username')->unique()->nullable();
-            $table->string('password');
-            $table->text('summary')->nullable();
-            $table->string('avatar')->nullable();
-            $table->tinyInteger('dark_mode')->nullable();
-            $table->tinyInteger('digest')->nullable();
-            $table->string('locale')->nullable();
-            $table->tinyInteger('role')->nullable();
-            $table->rememberToken();
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        // Schema::create('canvas_users', function (Blueprint $table) {
+        //     $table->uuid('id')->primary();
+        //     $table->string('name');
+        //     $table->string('email')->unique();
+        //     $table->string('username')->unique()->nullable();
+        //     $table->string('password');
+        //     $table->text('summary')->nullable();
+        //     $table->string('avatar')->nullable();
+        //     $table->tinyInteger('dark_mode')->nullable();
+        //     $table->tinyInteger('digest')->nullable();
+        //     $table->string('locale')->nullable();
+        //     $table->tinyInteger('role')->nullable();
+        //     $table->rememberToken();
+        //     $table->timestamps();
+        //     $table->softDeletes();
+        // });
     }
 
     /**
