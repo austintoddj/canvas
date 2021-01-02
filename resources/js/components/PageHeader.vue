@@ -2,8 +2,8 @@
     <div class="border-bottom">
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 col-md-12">
             <nav class="navbar d-flex px-0 py-1">
-                <router-link :to="{ name: 'home' }" class="navbar-brand hover font-weight-bolder font-serif mr-3">
-                    Canvas
+                <router-link :to="/" class="navbar-brand hover font-weight-bolder font-serif mr-3">
+                    <img v-if="logo" class="hidden lg:block h-8 w-auto" :src="logo">
                 </router-link>
 
                 <slot name="status" />
@@ -46,12 +46,17 @@
 
                         <div class="dropdown-divider" />
 
+                        <router-link :to="{ name: 'stats' }" class="dropdown-item">
+                            <span>{{ trans.stats }}</span>
+                        </router-link>
+
                         <router-link
                             :to="{ name: 'edit-user', params: { id: settings.user.id } }"
                             class="dropdown-item"
                         >
                             {{ trans.your_profile }}
                         </router-link>
+
                         <router-link :to="{ name: 'posts' }" class="dropdown-item">
                             <span>{{ trans.posts }}</span>
                         </router-link>
@@ -63,9 +68,6 @@
                         </router-link>
                         <router-link v-if="isAdmin" :to="{ name: 'topics' }" class="dropdown-item">
                             <span>{{ trans.topics }}</span>
-                        </router-link>
-                        <router-link :to="{ name: 'stats' }" class="dropdown-item">
-                            <span>{{ trans.stats }}</span>
                         </router-link>
 
                         <div class="dropdown-divider" />
@@ -102,6 +104,7 @@ export default {
         ...mapGetters({
             isAdmin: 'settings/isAdmin',
             trans: 'settings/trans',
+            logo: 'logo',
         }),
     },
 

@@ -10,6 +10,7 @@ const initialState = {
     user: window.Canvas.user,
     version: window.Canvas.version,
     roles: window.Canvas.roles,
+    logo: window.Canvas.logo,
 };
 
 const state = { ...initialState };
@@ -94,6 +95,10 @@ const getters = {
     isAdmin(state) {
         return state.user.role === 3;
     },
+    
+    logo(state) { 
+        return state.logo
+    }
 };
 
 export default {

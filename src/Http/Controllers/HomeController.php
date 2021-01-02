@@ -28,6 +28,7 @@ class HomeController extends Controller
                 'unsplash' => config('canvas.unsplash.access_key'),
                 'user' => request()->user('canvas'),
                 'version' => Canvas::installedVersion(),
+                'logo' => config('canvas.logo'),
             ],
         ]);
     }
