@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name') }} ― Canvas</title>
+    <title>{{ config('app.name') }}</title>
 
     <link rel="stylesheet" type="text/css" href="{{ mix('css/app.css', 'vendor/canvas') }}">
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
@@ -24,13 +24,6 @@
     @if($config['user']['dark_mode']) data-theme="dark" @endif
     @if(in_array($config['user']['locale'], ['ar', 'fa'])) data-lang="rtl" @endif
 >
-
-@if(!\Canvas\Canvas::assetsUpToDate())
-    <div class="alert alert-danger border-0 text-center rounded-0 mb-0">
-        {{ trans('canvas::app.assets_are_not_up_to_date') }}
-        {{ trans('canvas::app.to_update_run') }}<br/><code>php artisan canvas:publish</code>
-    </div>
-@endif
 
 <div id="canvas">
     <router-view></router-view>

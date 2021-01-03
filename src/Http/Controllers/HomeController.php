@@ -29,6 +29,7 @@ class HomeController extends Controller
                 'user' => request()->user(config('canvas.auth_guard')),
                 'version' => Canvas::installedVersion(),
                 'logo' => config('canvas.logo'),
+                'base_url' => url('/'),
             ],
         ]);
     }

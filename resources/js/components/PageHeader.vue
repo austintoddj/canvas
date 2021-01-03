@@ -2,9 +2,9 @@
     <div class="border-bottom">
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 col-md-12">
             <nav class="navbar d-flex px-0 py-1">
-                <router-link :to="/" class="navbar-brand hover font-weight-bolder font-serif mr-3">
-                    <img v-if="logo" class="h-8 w-auto" :src="logo">
-                </router-link>
+                <a :href="basePath" class="navbar-brand hover font-weight-bolder font-serif mr-3">
+                    <img v-if="logo" class="h-8 w-auto" :src="logo" />
+                </a>
 
                 <slot name="status" />
 
@@ -104,8 +104,14 @@ export default {
         ...mapGetters({
             isAdmin: 'settings/isAdmin',
             trans: 'settings/trans',
-            logo: 'logo',
         }),
+    },
+
+    data() {
+        return {
+            logo: window.Canvas.logo,
+            basePath: window.Canvas.base_url,
+        };
     },
 
     methods: {

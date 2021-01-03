@@ -95,10 +95,10 @@ const getters = {
     isAdmin(state) {
         return state.user.role === 3;
     },
-    
-    logo(state) { 
-        return state.logo
-    }
+
+    logo(state) {
+        return state.logo;
+    },
 };
 
 export default {
