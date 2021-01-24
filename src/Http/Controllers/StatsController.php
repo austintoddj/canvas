@@ -76,7 +76,7 @@ class StatsController extends Controller
                     })
                     ->find($id);
 
-        if (!$post || !$post->published) {
+        if (! $post || ! $post->published) {
             return response()->json(null, 404);
         }
 
@@ -174,7 +174,7 @@ class StatsController extends Controller
         $dataCountLastMonth = $previous->count();
 
         if ($dataCountLastMonth != 0) {
-            $difference = (int)$dataCountThisMonth - (int)$dataCountLastMonth;
+            $difference = (int) $dataCountThisMonth - (int) $dataCountLastMonth;
             $growth = ($difference / $dataCountLastMonth) * 100;
         } else {
             $growth = $dataCountThisMonth * 100;
