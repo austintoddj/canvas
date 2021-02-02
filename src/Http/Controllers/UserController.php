@@ -56,7 +56,7 @@ class UserController extends Controller
 
         $user = User::query()->find($id);
 
-        if (!$user) {
+        if (! $user) {
             if ($user = User::onlyTrashed()->firstWhere('email', $data['email'])) {
                 $user->restore();
 
@@ -71,7 +71,7 @@ class UserController extends Controller
             }
         }
 
-        if (!Arr::has($data, 'locale') || !Arr::has(Canvas::availableLanguageCodes(), $data['locale'])) {
+        if (! Arr::has($data, 'locale') || ! Arr::has(Canvas::availableLanguageCodes(), $data['locale'])) {
             $data['locale'] = config('app.fallback_locale');
         }
 

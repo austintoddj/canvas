@@ -52,7 +52,7 @@ class TagController extends Controller
 
         $tag = Tag::query()->find($id);
 
-        if (!$tag) {
+        if (! $tag) {
             if ($tag = Tag::onlyTrashed()->firstWhere('slug', $data['slug'])) {
                 $tag->restore();
 
