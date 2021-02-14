@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Canvas;
 
@@ -34,7 +34,7 @@ final class Canvas
      */
     public static function availableLanguageCodes(): array
     {
-        $locales = preg_grep('/^([^.])/', scandir(dirname(__DIR__, 1) . '/resources/lang'));
+        $locales = preg_grep('/^([^.])/', scandir(dirname(__DIR__, 1).'/resources/lang'));
 
         return collect($locales)->each(function ($code) {
             return $code;
@@ -85,11 +85,11 @@ final class Canvas
             'php artisan canvas:publish'
         );
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             throw new RuntimeException($message);
         }
 
-        return File::get($path) === File::get(__DIR__ . '/../public/mix-manifest.json');
+        return File::get($path) === File::get(__DIR__.'/../public/mix-manifest.json');
     }
 
     /**
@@ -135,8 +135,7 @@ final class Canvas
         int $size = 200,
         string $default = 'retro',
         string $rating = 'g'
-    ): string
-    {
+    ): string {
         $hash = md5(trim(Str::lower($email)));
 
         return "https://secure.gravatar.com/avatar/{$hash}?s={$size}&d={$default}&r={$rating}";
@@ -150,7 +149,7 @@ final class Canvas
      */
     public static function enabledDarkMode(?int $enabled): bool
     {
-        return (bool)$enabled ?: false;
+        return (bool) $enabled ?: false;
     }
 
     /**
