@@ -34,7 +34,6 @@ class StatsAggregator
     {
         // TODO: Fix this
 
-
         $views = View::query()
                      ->select('created_at')
                      ->whereIn('post_id', $posts->pluck('id'))
