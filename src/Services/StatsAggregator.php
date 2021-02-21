@@ -145,7 +145,7 @@ class StatsAggregator
         $dataCountLastMonth = $previous->count();
 
         if ($dataCountLastMonth != 0) {
-            $difference = (int)$dataCountThisMonth - (int)$dataCountLastMonth;
+            $difference = (int) $dataCountThisMonth - (int) $dataCountLastMonth;
             $growth = ($difference / $dataCountLastMonth) * 100;
         } else {
             $growth = $dataCountThisMonth * 100;
@@ -171,8 +171,7 @@ class StatsAggregator
         DateInterval $interval,
         int $recurrences,
         int $exclusive = 1
-    ): array
-    {
+    ): array {
         $period = new DatePeriod($start_date, $interval, $recurrences, $exclusive);
         $dates = new Collection();
 
