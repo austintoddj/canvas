@@ -258,7 +258,7 @@ class PostControllerTest extends TestCase
     {
         $post = factory(Post::class)->create([
             'user_id' => $this->contributor->id,
-            'body' => null
+            'body' => null,
         ]);
 
         factory(View::class)->create([
