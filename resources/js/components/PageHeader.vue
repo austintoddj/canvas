@@ -116,7 +116,9 @@ export default {
 
     methods: {
         logout() {
-            window.location.href = window.location.href + window.Canvas.path + '/logout';
+//            window.location.href = window.location.href + window.Canvas.path + '/logout';
+            location.replace(window.location.href + window.Canvas.path + '/logout')
+
         },
 
         showSearchModal() {
