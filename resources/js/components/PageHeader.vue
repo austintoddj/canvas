@@ -46,6 +46,10 @@
 
                         <div class="dropdown-divider" />
 
+                        <router-link :to="{ name: dashboardRoute }" class="dropdown-item">
+                            <span>Dashboard</span>
+                        </router-link>
+
                         <router-link :to="{ name: 'stats' }" class="dropdown-item">
                             <span>{{ trans.stats }}</span>
                         </router-link>
@@ -111,14 +115,16 @@ export default {
         return {
             logo: window.Canvas.logo,
             basePath: window.Canvas.base_url,
+            dashboardRoute: () => {
+                return window.Canvas.base_url + window.Canvas.path
+            }
         };
     },
 
     methods: {
         logout() {
-//            window.location.href = window.location.href + window.Canvas.path + '/logout';
+            // window.location.href = window.location.href + window.Canvas.path + '/logout';
             location.replace(window.location.href + window.Canvas.path + '/logout')
-
         },
 
         showSearchModal() {
