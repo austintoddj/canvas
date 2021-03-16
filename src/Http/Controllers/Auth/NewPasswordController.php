@@ -27,8 +27,8 @@ final class NewPasswordController extends Controller
     public function create(Request $request)
     {
         return view('canvas::auth.passwords.reset')->with([
-                'request' => $request,
-            ]
+            'request' => $request,
+        ]
         );
     }
 

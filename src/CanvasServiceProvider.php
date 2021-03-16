@@ -28,7 +28,7 @@ final class CanvasServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/canvas.php', 'canvas');
+        $this->mergeConfigFrom(__DIR__.'/../config/canvas.php', 'canvas');
     }
 
     /**
@@ -39,8 +39,8 @@ final class CanvasServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'canvas');
-        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'canvas');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'canvas');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'canvas');
         $this->configurePublishing();
         $this->configureRoutes();
         $this->configureCommands();
@@ -85,8 +85,8 @@ final class CanvasServiceProvider extends ServiceProvider
              ->domain(config('canvas.domain'))
              ->prefix(config('canvas.path'))
              ->group(function () {
-                 $this->loadRoutesFrom(__DIR__ . '/../routes/auth.php');
-                 $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+                 $this->loadRoutesFrom(__DIR__.'/../routes/auth.php');
+                 $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
              });
     }
 
@@ -115,7 +115,7 @@ final class CanvasServiceProvider extends ServiceProvider
     private function registerMigrations(): void
     {
         if ($this->app->runningInConsole()) {
-            $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+            $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         }
     }
 
@@ -146,19 +146,19 @@ final class CanvasServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../public' => public_path('vendor/canvas'),
+                __DIR__.'/../public' => public_path('vendor/canvas'),
             ], 'canvas-assets');
 
             $this->publishes([
-                __DIR__ . '/../config/canvas.php' => config_path('canvas.php'),
+                __DIR__.'/../config/canvas.php' => config_path('canvas.php'),
             ], 'canvas-config');
 
             $this->publishes([
-                __DIR__ . '/../resources/lang' => resource_path('lang/vendor/canvas'),
+                __DIR__.'/../resources/lang' => resource_path('lang/vendor/canvas'),
             ], 'canvas-lang');
 
             $this->publishes([
-                __DIR__ . '/../resources/stubs/providers/CanvasServiceProvider.stub' => app_path(
+                __DIR__.'/../resources/stubs/providers/CanvasServiceProvider.stub' => app_path(
                     'Providers/CanvasServiceProvider.php'
                 ),
             ], 'canvas-provider');

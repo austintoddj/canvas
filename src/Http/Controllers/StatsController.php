@@ -6,8 +6,8 @@ namespace Canvas\Http\Controllers;
 
 use Canvas\Models\Post;
 use Canvas\Services\StatsAggregator;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 
 final class StatsController extends Controller

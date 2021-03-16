@@ -53,7 +53,7 @@ final class TopicController extends Controller
 
         $topic = Topic::find($id);
 
-        if (!$topic) {
+        if (! $topic) {
             if ($topic = Topic::onlyTrashed()->firstWhere('slug', $data['slug'])) {
                 $topic->restore();
 
