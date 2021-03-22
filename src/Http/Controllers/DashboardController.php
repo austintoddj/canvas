@@ -47,16 +47,16 @@ final class DashboardController extends Controller
         }])->get();
 
         $historicalPosts = $builder->withCount(['views' => function (Builder $query) use ($lookback) {
-                    return $query->whereBetween('created_at', [
-                        $lookback['start'],
-                        $lookback['end'],
-                    ]);
-                }])
+            return $query->whereBetween('created_at', [
+                $lookback['start'],
+                $lookback['end'],
+            ]);
+        }])
                 ->withCount(['visits' => function (Builder $query) use ($lookback) {
-                    return $query->whereBetween('created_at', [
-                        $lookback['start'],
-                        $lookback['end'],
-                    ]);
+            return $query->whereBetween('created_at', [
+                $lookback['start'],
+                $lookback['end'],
+            ]);
                 }])->get();
 
         return response()->json([
@@ -125,7 +125,7 @@ final class DashboardController extends Controller
     // }
 
     /**
-     * Undocumented function
+     * Undocumented function.
      *
      * @param string|null $from
      * @param string|null $to
@@ -144,11 +144,11 @@ final class DashboardController extends Controller
         return [
             'lookup' => [
                 'start' => $primaryStart->toDateTimeString(),
-                'end' => $primaryEnd->toDateTimeString()
+                'end' => $primaryEnd->toDateTimeString(),
             ],
             'lookback' => [
                 'start' => $secondaryStart->toDateTimeString(),
-                'end' => $secondaryEnd->toDateTimeString()
+                'end' => $secondaryEnd->toDateTimeString(),
             ],
         ];
     }
