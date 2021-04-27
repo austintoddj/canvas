@@ -14,8 +14,6 @@ class AuthenticateTest extends TestCase
 {
     use RefreshDatabase;
 
-
-
     /**
      * @return array
      */
