@@ -8,8 +8,8 @@ use Canvas\Http\Controllers\TopicController;
 use Canvas\Http\Controllers\UploadsController;
 use Canvas\Http\Controllers\UserController;
 use Canvas\Http\Controllers\ViewController;
-use Canvas\Http\Middleware\VerifyAdmin;
 use Canvas\Http\Middleware\AuthenticateSession;
+use Canvas\Http\Middleware\VerifyAdmin;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware([AuthenticateSession::class])->group(function () {
