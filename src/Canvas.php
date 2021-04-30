@@ -170,7 +170,7 @@ class Canvas
     {
         // TODO: Can this just be accessed in the controller?
 
-        return (bool)$enabled;
+        return (bool) $enabled;
     }
 
     /**
