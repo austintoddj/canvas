@@ -42,18 +42,18 @@ class PostController extends Controller
                      ->paginate();
 
         $draftCount = Post::when($scopeToUser, function (Builder $query) {
-                              return $query->where('user_id', request()->user('canvas')->id);
-                          }, function (Builder $query) {
-                              return $query;
-                          })
+            return $query->where('user_id', request()->user('canvas')->id);
+        }, function (Builder $query) {
+            return $query;
+        })
                           ->draft()
                           ->count();
 
         $publishedCount = Post::when($scopeToUser, function (Builder $query) {
-                                  return $query->where('user_id', request()->user('canvas')->id);
-                              }, function (Builder $query) {
-                                  return $query;
-                              })
+            return $query->where('user_id', request()->user('canvas')->id);
+        }, function (Builder $query) {
+            return $query;
+        })
                               ->published()
                               ->count();
 
@@ -181,10 +181,10 @@ class PostController extends Controller
     public function stats(string $id): JsonResponse
     {
         $post = Post::when(request()->user('canvas')->isContributor, function (Builder $query) {
-                        return $query->where('user_id', request()->user('canvas')->id);
-                    }, function (Builder $query) {
-                        return $query;
-                    })
+            return $query->where('user_id', request()->user('canvas')->id);
+        }, function (Builder $query) {
+            return $query;
+        })
                     ->published()
                     ->findOrFail($id);
 
