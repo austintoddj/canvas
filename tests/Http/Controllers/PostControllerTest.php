@@ -5,8 +5,6 @@ namespace Canvas\Tests\Http\Controllers;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
-use Canvas\Models\View;
-use Canvas\Models\Visit;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Ramsey\Uuid\Uuid;
