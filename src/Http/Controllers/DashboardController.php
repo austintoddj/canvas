@@ -11,13 +11,13 @@ use Canvas\Models\View;
 use Canvas\Models\Visit;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
-use Illuminate\Support\Collection;
 use DateInterval;
 use DatePeriod;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Collection;
 
 class DashboardController extends Controller
 {
@@ -47,7 +47,6 @@ class DashboardController extends Controller
                        ->pluck('id')
                        ->toArray();
 
-
         $views = View::select('created_at')
                      ->whereBetween('created_at', [
                          $this->lookup['start'],
@@ -70,25 +69,25 @@ class DashboardController extends Controller
         ]);
     }
 
-     public function sources(): JsonResponse
-     {
-         // code...
-     }
+    public function sources(): JsonResponse
+    {
+        // code...
+    }
 
-     public function pages(): JsonResponse
-     {
-         // code...
-     }
+    public function pages(): JsonResponse
+    {
+        // code...
+    }
 
-     public function countries(): JsonResponse
-     {
-         // code...
-     }
+    public function countries(): JsonResponse
+    {
+        // code...
+    }
 
-     public function devices(): JsonResponse
-     {
-         // code...
-     }
+    public function devices(): JsonResponse
+    {
+        // code...
+    }
 
     /**
      * Display a listing of the resource.
@@ -245,7 +244,6 @@ class DashboardController extends Controller
 //                break;
 //        }
 
-
 //
 //
 //        $days = $primaryStart->diffInDays($primaryEnd);
@@ -297,7 +295,6 @@ class DashboardController extends Controller
         //     DatePeriod::EXCLUDE_START_DATE,
         //     'g:i A'
         // );
-
 
         dd($period);
 
