@@ -48,7 +48,7 @@ class PostController extends Controller
             }, function (Builder $query) {
                 return $query;
             })->draft()->count(),
-            'published_count' => !$wantsDrafts ? $posts->total() : Post::when($scopeToUser, function (Builder $query) {
+            'published_count' => ! $wantsDrafts ? $posts->total() : Post::when($scopeToUser, function (Builder $query) {
                 return $query->where('user_id', request()->user('canvas')->id);
             }, function (Builder $query) {
                 return $query;
@@ -114,7 +114,7 @@ class PostController extends Controller
         $tagsToSync = collect($request->input('tags', []))->map(function ($item) use ($tags) {
             $tag = $tags->firstWhere('slug', $item['slug']);
 
-            if (!$tag) {
+            if (! $tag) {
                 $tag = Tag::create([
                     'id' => Uuid::uuid4()->toString(),
                     'name' => $item['name'],
@@ -123,13 +123,13 @@ class PostController extends Controller
                 ]);
             }
 
-            return (string)$tag->id;
+            return (string) $tag->id;
         })->toArray();
 
         $topicToSync = collect($request->input('topic', []))->map(function ($item) use ($topics) {
             $topic = $topics->firstWhere('slug', $item['slug']);
 
-            if (!$topic) {
+            if (! $topic) {
                 $topic = Topic::create([
                     'id' => Uuid::uuid4()->toString(),
                     'name' => $item['name'],
@@ -138,7 +138,7 @@ class PostController extends Controller
                 ]);
             }
 
-            return (string)$topic->id;
+            return (string) $topic->id;
         })->toArray();
 
         $post->tags()->sync($tagsToSync);
