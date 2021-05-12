@@ -23,8 +23,6 @@ class DashboardController extends Controller
     public function views(): JsonResponse
     {
         [$period, $lookup, $lookback] = $this->getRangeLookups(request()->query('from'), request()->query('to'));
-
-
     }
 
     public function visits(): JsonResponse
@@ -209,17 +207,17 @@ class DashboardController extends Controller
         $primaryStart = Carbon::parse($from) ?? now()->subDays(30);
         $primaryEnd = Carbon::parse($to) ?? now();
 
-         return [
-             'period' => $days,
-             'lookup' => [
-                 'start' => $primaryStart->toDateTimeString(),
-                 'end' => $primaryEnd->toDateTimeString(),
-             ],
-             'lookback' => [
-                 'start' => $secondaryStart->toDateTimeString(),
-                 'end' => $secondaryEnd->toDateTimeString(),
-             ],
-         ];
+        return [
+            'period' => $days,
+            'lookup' => [
+                'start' => $primaryStart->toDateTimeString(),
+                'end' => $primaryEnd->toDateTimeString(),
+            ],
+            'lookback' => [
+                'start' => $secondaryStart->toDateTimeString(),
+                'end' => $secondaryEnd->toDateTimeString(),
+            ],
+        ];
     }
 
     protected function datePlots(Collection $data): Collection
