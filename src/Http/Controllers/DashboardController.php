@@ -204,24 +204,21 @@ class DashboardController extends Controller
 
     protected function rangeLookups($from, $to): array
     {
-        if (!$from || !$to) {
-
+        if (! $from || ! $to) {
         }
 
         $primaryStart = Carbon::parse($from) ?? now()->subDays(30);
         $primaryEnd = Carbon::parse($to) ?? now();
 
-
-
         return [
-//            'period' => $days,
+            //            'period' => $days,
             'lookup' => [
                 'start' => $primaryStart->toDateTimeString(),
                 'end' => $primaryEnd->toDateTimeString(),
             ],
             'lookback' => [
-//                'start' => $secondaryStart->toDateTimeString(),
-//                'end' => $secondaryEnd->toDateTimeString(),
+                //                'start' => $secondaryStart->toDateTimeString(),
+                //                'end' => $secondaryEnd->toDateTimeString(),
             ],
         ];
     }
