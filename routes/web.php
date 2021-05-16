@@ -1,10 +1,10 @@
 <?php
 
-use Canvas\Http\Controllers\TrafficController;
 use Canvas\Http\Controllers\PostController;
 use Canvas\Http\Controllers\SearchController;
 use Canvas\Http\Controllers\TagController;
 use Canvas\Http\Controllers\TopicController;
+use Canvas\Http\Controllers\TrafficController;
 use Canvas\Http\Controllers\UploadsController;
 use Canvas\Http\Controllers\UserController;
 use Canvas\Http\Controllers\ViewController;

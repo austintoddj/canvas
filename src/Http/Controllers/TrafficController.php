@@ -23,8 +23,6 @@ class TrafficController extends Controller
 {
     public function views(): JsonResponse
     {
-
-
         CarbonInterval::hours(24);
         $data = CarbonPeriod::createFromArray([
             now()->startOfDay(),
@@ -295,7 +293,7 @@ class TrafficController extends Controller
      */
     protected function percentOfChange($numberOne, $numberTwo)
     {
-        $difference = (int)$numberOne - (int)$numberTwo;
+        $difference = (int) $numberOne - (int) $numberTwo;
 
         $change = $numberOne != 0 ? ($difference / $numberTwo) * 100 : $numberOne * 100;
 
@@ -318,8 +316,7 @@ class TrafficController extends Controller
         int $recurrences,
         int $exclusive = 1,
         string $format = 'Y-m-d'
-    ): array
-    {
+    ): array {
         $period = new DatePeriod($start_date, $interval, $recurrences, $exclusive);
         $dates = new Collection();
 

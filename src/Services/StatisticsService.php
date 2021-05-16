@@ -6,5 +6,4 @@ namespace Canvas\Services;
 
 class StatisticsService
 {
-
 }
