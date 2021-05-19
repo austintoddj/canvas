@@ -21,8 +21,6 @@ class StatisticsService
 //            request()->query('to')
 //        ]);
 
-
-
 //        dd(CarbonPeriod::createFromArray([
 //            request()->query('from'),
 //            request()->query('to'),
@@ -32,7 +30,7 @@ class StatisticsService
 
         return [
             'count' => 0,
-            'change' => 0
+            'change' => 0,
         ];
     }
 }

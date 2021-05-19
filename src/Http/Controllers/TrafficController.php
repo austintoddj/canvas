@@ -12,7 +12,6 @@ use Canvas\Models\Visit;
 use Canvas\Services\StatisticsService;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
-use Carbon\CarbonPeriod;
 use DateInterval;
 use DatePeriod;
 use DateTimeInterface;
