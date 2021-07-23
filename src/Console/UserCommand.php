@@ -6,9 +6,9 @@ namespace Canvas\Console;
 
 use Canvas\Canvas;
 use Canvas\Models\User;
+use Faker\Factory;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
-use Faker\Factory;
 use Ramsey\Uuid\Uuid;
 
 class UserCommand extends Command
