@@ -71,7 +71,7 @@ class Post extends Model
      * @var array
      */
     protected $appends = [
-        'read_time'
+        'read_time',
     ];
 
     /**
@@ -161,10 +161,10 @@ class Post extends Model
         // The user is optional since we append this attribute
         // to every model and we may be creating a new one
         return vsprintf('%d %s %s', [
-                $minutes,
-                Str::plural(trans('canvas::app.min', [], optional(request()->user())->locale), $minutes),
-                trans('canvas::app.read', [], optional(request()->user())->locale),
-            ]
+            $minutes,
+            Str::plural(trans('canvas::app.min', [], optional(request()->user())->locale), $minutes),
+            trans('canvas::app.read', [], optional(request()->user())->locale),
+        ]
         );
     }
 
@@ -175,7 +175,7 @@ class Post extends Model
      */
     public function getPublishedAttribute(): bool
     {
-        return !is_null($this->published_at) && $this->published_at <= now()->toDateTimeString();
+        return ! is_null($this->published_at) && $this->published_at <= now()->toDateTimeString();
     }
 
     /**
