@@ -70,6 +70,7 @@ class AuthenticateTest extends TestCase
 
     /**
      * @dataProvider protectedRoutesProvider
+     *
      * @param $method
      * @param $endpoint
      */

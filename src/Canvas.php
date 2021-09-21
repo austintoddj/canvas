@@ -113,7 +113,7 @@ class Canvas
     /**
      * Return a valid host URL or null.
      *
-     * @param string|null $url
+     * @param  string|null  $url
      * @return string|null
      */
     public static function parseReferer(?string $url): ?string
@@ -128,10 +128,10 @@ class Canvas
     /**
      * Generate a Gravatar for a given email.
      *
-     * @param string $email
-     * @param int $size
-     * @param string $default
-     * @param string $rating
+     * @param  string  $email
+     * @param  int  $size
+     * @param  string  $default
+     * @param  string  $rating
      * @return string
      */
     public static function gravatar(
@@ -148,7 +148,7 @@ class Canvas
     /**
      * Return true if dark mode is enabled.
      *
-     * @param int|null $enabled
+     * @param  int|null  $enabled
      * @return bool
      */
     public static function enabledDarkMode(?int $enabled): bool
@@ -159,7 +159,7 @@ class Canvas
     /**
      * Return true if the app is configured to use Arabic or Farsi.
      *
-     * @param string|null $locale
+     * @param  string|null  $locale
      * @return bool
      */
     public static function usingRightToLeftLanguage(?string $locale): bool

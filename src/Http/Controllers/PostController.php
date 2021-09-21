@@ -87,9 +87,10 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param PostRequest $request
+     * @param  PostRequest  $request
      * @param $id
      * @return JsonResponse
+     *
      * @throws Exception
      */
     public function store(PostRequest $request, $id): JsonResponse
@@ -182,7 +183,7 @@ class PostController extends Controller
     /**
      * Display stats for the specified resource.
      *
-     * @param string $id
+     * @param  string  $id
      * @return JsonResponse
      */
     public function stats(string $id): JsonResponse
@@ -208,6 +209,7 @@ class PostController extends Controller
      *
      * @param $id
      * @return mixed
+     *
      * @throws Exception
      */
     public function destroy($id)

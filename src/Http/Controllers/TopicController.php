@@ -42,7 +42,7 @@ class TopicController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param TopicRequest $request
+     * @param  TopicRequest  $request
      * @param $id
      * @return JsonResponse
      */
@@ -102,6 +102,7 @@ class TopicController extends Controller
      *
      * @param $id
      * @return mixed
+     *
      * @throws Exception
      */
     public function destroy($id)

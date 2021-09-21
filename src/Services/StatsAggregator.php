@@ -27,7 +27,7 @@ class StatsAggregator
     /**
      * Create a new service instance.
      *
-     * @param User $user
+     * @param  User  $user
      */
     public function __construct(User $user)
     {
@@ -37,8 +37,8 @@ class StatsAggregator
     /**
      * Get monthly insights on a given set of posts.
      *
-     * @param Collection $posts
-     * @param int $days
+     * @param  Collection  $posts
+     * @param  int  $days
      * @return array
      */
     public function getStatsForPosts(Collection $posts, int $days = 30): array
@@ -72,7 +72,7 @@ class StatsAggregator
     /**
      * Get total insights on a given post.
      *
-     * @param Post $post
+     * @param  Post  $post
      * @return array
      */
     public function getStatsForPost(Post $post): array
@@ -120,8 +120,8 @@ class StatsAggregator
      *
      * example: [ Y-m-d => total ]
      *
-     * @param Collection $data
-     * @param int $days
+     * @param  Collection  $data
+     * @param  int  $days
      * @return Collection
      */
     protected function calculateTotalForDays(Collection $data, int $days = 30): Collection
@@ -157,8 +157,8 @@ class StatsAggregator
      * Given two collections of monthly data, compare the totals and return the
      * overall directional trend as well as the percentage increase/decrease.
      *
-     * @param Collection $current
-     * @param Collection $previous
+     * @param  Collection  $current
+     * @param  Collection  $previous
      * @return array
      */
     protected function compareMonthOverMonth(Collection $current, Collection $previous): array
@@ -182,10 +182,10 @@ class StatsAggregator
     /**
      * Generate a date range array of formatted strings.
      *
-     * @param DateTimeInterface $start_date
-     * @param DateInterval $interval
-     * @param int $recurrences
-     * @param int $exclusive
+     * @param  DateTimeInterface  $start_date
+     * @param  DateInterval  $interval
+     * @param  int  $recurrences
+     * @param  int  $exclusive
      * @return array
      */
     protected function generateDateRange(
@@ -207,7 +207,7 @@ class StatsAggregator
     /**
      * Get the human-friendly estimated reading time of a given text.
      *
-     * @param null|string $text
+     * @param  null|string  $text
      * @return string
      */
     protected function calculateReadTime(?string $text): string
@@ -230,7 +230,7 @@ class StatsAggregator
     /**
      * Get the 10 most popular reading times rounded to the nearest 30 minutes.
      *
-     * @param Post $post
+     * @param  Post  $post
      * @return array
      */
     protected function calculatePopularReadingTimes(Post $post): array
@@ -278,7 +278,7 @@ class StatsAggregator
     /**
      * Get the top referring websites for a post.
      *
-     * @param Post $post
+     * @param  Post  $post
      * @return array
      */
     protected function calculateTopReferers(Post $post): array
