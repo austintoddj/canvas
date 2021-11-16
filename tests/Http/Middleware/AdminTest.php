@@ -41,6 +41,7 @@ class AdminTest extends TestCase
 
     /**
      * @dataProvider protectedRoutesProvider
+     *
      * @param $method
      * @param $endpoint
      */
@@ -53,6 +54,7 @@ class AdminTest extends TestCase
 
     /**
      * @dataProvider protectedRoutesProvider
+     *
      * @param $method
      * @param $endpoint
      */
@@ -65,6 +67,7 @@ class AdminTest extends TestCase
 
     /**
      * @dataProvider protectedRoutesProvider
+     *
      * @param $method
      * @param $endpoint
      */
