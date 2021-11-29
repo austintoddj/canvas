@@ -35,6 +35,7 @@ class CanvasServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      *
      * @return void
+     *
      * @throws BindingResolutionException
      */
     public function boot(): void
@@ -55,6 +56,7 @@ class CanvasServiceProvider extends ServiceProvider
      * Register the events and listeners.
      *
      * @return void
+     *
      * @throws BindingResolutionException
      */
     private function registerEvents(): void

@@ -78,8 +78,8 @@ class UiCommand extends Command
     /**
      * Update the "package.json" file.
      *
-     * @param callable $callback
-     * @param bool $dev
+     * @param  callable  $callback
+     * @param  bool  $dev
      * @return void
      */
     protected function updateNodePackages(callable $callback, $dev = true)
@@ -147,7 +147,7 @@ class UiCommand extends Command
     /**
      * Get full view path relative to the application's configured view path.
      *
-     * @param string $path
+     * @param  string  $path
      * @return string
      */
     protected function getViewPath($path)

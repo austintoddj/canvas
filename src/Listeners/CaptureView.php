@@ -15,7 +15,7 @@ class CaptureView
      * hour. The ID of the post is stored in session to be validated against
      * until it "expires" and is pruned by the Session middleware class.
      *
-     * @param PostViewed $event
+     * @param  PostViewed  $event
      * @return void
      */
     public function handle(PostViewed $event): void
@@ -37,7 +37,7 @@ class CaptureView
     /**
      * Check if a given post exists in the session.
      *
-     * @param Post $post
+     * @param  Post  $post
      * @return bool
      */
     private function wasRecentlyViewed(Post $post): bool
@@ -50,7 +50,7 @@ class CaptureView
     /**
      * Add a given post to the session.
      *
-     * @param Post $post
+     * @param  Post  $post
      * @return void
      */
     private function storeInSession(Post $post): void

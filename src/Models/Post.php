@@ -177,7 +177,7 @@ class Post extends Model
     /**
      * Scope a query to include published posts.
      *
-     * @param Builder $query
+     * @param  Builder  $query
      * @return Builder
      */
     public function scopePublished(Builder $query): Builder
@@ -188,7 +188,7 @@ class Post extends Model
     /**
      * Scope a query to include drafted posts.
      *
-     * @param Builder $query
+     * @param  Builder  $query
      * @return Builder
      */
     public function scopeDraft(Builder $query): Builder

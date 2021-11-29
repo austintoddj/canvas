@@ -9,7 +9,6 @@ use Canvas\Http\Requests\TrafficLookupRequest;
 use Canvas\Models\Post;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
-use Canvas\Services\StatisticsService;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Carbon\CarbonPeriod;
@@ -171,7 +170,7 @@ class TrafficController extends Controller
     /**
      * Display stats for the specified resource.
      *
-     * @param string $id
+     * @param  string  $id
      * @return JsonResponse
      */
     public function stats(string $id): JsonResponse
@@ -304,11 +303,11 @@ class TrafficController extends Controller
     /**
      * Return an array of formatted date/time strings.
      *
-     * @param DateTimeInterface $start_date
-     * @param DateInterval $interval
-     * @param int $recurrences
-     * @param int $exclusive
-     * @param string $format
+     * @param  DateTimeInterface  $start_date
+     * @param  DateInterval  $interval
+     * @param  int  $recurrences
+     * @param  int  $exclusive
+     * @param  string  $format
      * @return array
      */
     protected function generateDateRange(

@@ -124,7 +124,7 @@ class Canvas
     /**
      * Return a valid host URL or null.
      *
-     * @param string|null $url
+     * @param  string|null  $url
      * @return string|null
      */
     public static function parseReferer(?string $url): ?string
@@ -141,10 +141,10 @@ class Canvas
     /**
      * Generate a Gravatar for a given email.
      *
-     * @param string $email
-     * @param int $size
-     * @param string $default
-     * @param string $rating
+     * @param  string  $email
+     * @param  int  $size
+     * @param  string  $default
+     * @param  string  $rating
      * @return string
      */
     public static function gravatar(
@@ -163,7 +163,7 @@ class Canvas
     /**
      * Return true if dark mode is enabled.
      *
-     * @param int|null $enabled
+     * @param  int|null  $enabled
      * @return bool
      */
     public static function enabledDarkMode(?int $enabled): bool
@@ -176,7 +176,7 @@ class Canvas
     /**
      * Return true if the app is configured to use Arabic or Farsi.
      *
-     * @param string|null $locale
+     * @param  string|null  $locale
      * @return bool
      */
     public static function usingRightToLeftLanguage(?string $locale): bool
@@ -192,8 +192,8 @@ class Canvas
      *
      * example: [ Y-m-d => total ]
      *
-     * @param Collection $data
-     * @param int $days
+     * @param  Collection  $data
+     * @param  int  $days
      * @return Collection
      */
     public static function calculateTotalForDays(Collection $data, int $days = 30): Collection
@@ -231,8 +231,8 @@ class Canvas
      * Given two collections of monthly data, compare the totals and return the
      * overall directional trend as well as the percentage increase/decrease.
      *
-     * @param Collection $current
-     * @param Collection $previous
+     * @param  Collection  $current
+     * @param  Collection  $previous
      * @return array
      */
     public static function compareMonthOverMonth(Collection $current, Collection $previous): array
@@ -258,10 +258,10 @@ class Canvas
     /**
      * Generate a date range array of formatted strings.
      *
-     * @param DateTimeInterface $start_date
-     * @param DateInterval $interval
-     * @param int $recurrences
-     * @param int $exclusive
+     * @param  DateTimeInterface  $start_date
+     * @param  DateInterval  $interval
+     * @param  int  $recurrences
+     * @param  int  $exclusive
      * @return array
      */
     public static function generateDateRange(
@@ -285,7 +285,7 @@ class Canvas
     /**
      * Get the human-friendly estimated reading time of a given text.
      *
-     * @param null|string $text
+     * @param  null|string  $text
      * @return string
      */
     public static function calculateReadTime(?string $text): string
@@ -310,7 +310,7 @@ class Canvas
     /**
      * Get the 10 most popular reading times rounded to the nearest 30 minutes.
      *
-     * @param Post $post
+     * @param  Post  $post
      * @return array
      */
     public static function calculatePopularReadingTimes(Post $post): array
@@ -360,7 +360,7 @@ class Canvas
     /**
      * Get the top referring websites for a post.
      *
-     * @param Post $post
+     * @param  Post  $post
      * @return array
      */
     public static function calculateTopReferers(Post $post): array

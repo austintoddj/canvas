@@ -15,7 +15,7 @@ class CaptureVisit
      * day. The post ID and the IP of the request are both stored in session to
      * be validated against until pruned by the Session middleware class.
      *
-     * @param PostViewed $event
+     * @param  PostViewed  $event
      * @return void
      */
     public function handle(PostViewed $event): void
@@ -39,8 +39,8 @@ class CaptureVisit
     /**
      * Check if a given post and IP are unique to the session.
      *
-     * @param Post $post
-     * @param string $ip
+     * @param  Post  $post
+     * @param  string  $ip
      * @return bool
      */
     private function visitIsUnique(Post $post, string $ip): bool
@@ -59,8 +59,8 @@ class CaptureVisit
     /**
      * Add a given post and IP to the session.
      *
-     * @param Post $post
-     * @param string $ip
+     * @param  Post  $post
+     * @param  string  $ip
      * @return void
      */
     private function storeInSession(Post $post, string $ip): void

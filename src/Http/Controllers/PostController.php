@@ -79,9 +79,10 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StorePostRequest $request
+     * @param  StorePostRequest  $request
      * @param $id
      * @return \Illuminate\Http\JsonResponse
+     *
      * @throws Exception
      */
     public function store(StorePostRequest $request, $id): JsonResponse
@@ -175,6 +176,7 @@ class PostController extends Controller
      *
      * @param $id
      * @return \Illuminate\Http\JsonResponse
+     *
      * @throws Exception
      */
     public function destroy($id): JsonResponse

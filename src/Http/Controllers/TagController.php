@@ -44,7 +44,7 @@ class TagController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreTagRequest $request
+     * @param  StoreTagRequest  $request
      * @param $id
      * @return \Illuminate\Http\JsonResponse
      */
@@ -104,6 +104,7 @@ class TagController extends Controller
      *
      * @param $id
      * @return \Illuminate\Http\JsonResponse
+     *
      * @throws Exception
      */
     public function destroy($id): JsonResponse

@@ -66,8 +66,8 @@ class InstallCommand extends Command
     /**
      * Create a new default user.
      *
-     * @param string $email
-     * @param string $password
+     * @param  string  $email
+     * @param  string  $password
      * @return void
      */
     protected function createDefaultUser(string $email, string $password)
