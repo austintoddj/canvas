@@ -79,15 +79,16 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-<<<<<<< HEAD
+     * <<<<<<< HEAD
+     *
      * @param  StorePostRequest  $request
      * @param $id
-     * @return \Illuminate\Http\JsonResponse
-=======
      * @param  PostRequest  $request
      * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     *                                       =======
      * @return JsonResponse
->>>>>>> develop
+     *                      >>>>>>> develop
      *
      * @throws Exception
      */
@@ -178,15 +179,14 @@ class PostController extends Controller
     }
 
     /**
-<<<<<<< HEAD
+     * <<<<<<< HEAD
      * Remove the specified resource from storage.
      *
      * @param $id
-     * @return \Illuminate\Http\JsonResponse
-=======
-     * Display stats for the specified resource.
-     *
      * @param  string  $id
+     * @return \Illuminate\Http\JsonResponse
+     *                                       =======
+     *                                       Display stats for the specified resource.
      * @return JsonResponse
      */
     public function stats(string $id): JsonResponse
@@ -212,7 +212,7 @@ class PostController extends Controller
      *
      * @param $id
      * @return mixed
->>>>>>> develop
+     *               >>>>>>> develop
      *
      * @throws Exception
      */

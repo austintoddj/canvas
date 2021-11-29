@@ -31,11 +31,12 @@ class PasswordResetLinkController extends Controller
     /**
      * Handle an incoming password reset link request.
      *
-<<<<<<< HEAD
+     * <<<<<<< HEAD
+     *
      * @param  PasswordResetLinkRequest  $request
-=======
+     *                                             =======
      * @param  Request  $request
->>>>>>> develop
+     *                            >>>>>>> develop
      * @return RedirectResponse
      *
      * @throws Exception

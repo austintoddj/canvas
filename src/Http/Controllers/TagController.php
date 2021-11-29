@@ -44,11 +44,12 @@ class TagController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-<<<<<<< HEAD
+     * <<<<<<< HEAD
+     *
      * @param  StoreTagRequest  $request
-=======
+     *                                    =======
      * @param  TagRequest  $request
->>>>>>> develop
+     *                               >>>>>>> develop
      * @param $id
      * @return \Illuminate\Http\JsonResponse
      */
@@ -107,11 +108,11 @@ class TagController extends Controller
      * Remove the specified resource from storage.
      *
      * @param $id
-<<<<<<< HEAD
+     * <<<<<<< HEAD
      * @return \Illuminate\Http\JsonResponse
-=======
+     *                                       =======
      * @return mixed
->>>>>>> develop
+     *               >>>>>>> develop
      *
      * @throws Exception
      */
