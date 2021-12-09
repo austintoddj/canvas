@@ -92,7 +92,7 @@ class Canvas
             throw new RuntimeException(vsprintf('%s%s. %s', [
                 trans('canvas::app.assets_are_not_up_to_date'),
                 trans('canvas::app.to_update_run'),
-                'php artisan canvas:publish'
+                'php artisan canvas:publish',
             ]));
         }
 
