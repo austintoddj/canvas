@@ -34,7 +34,7 @@
         "url-parse": "^1.5.9",
         "vue": "^2.6.11",
         "vue-filepond": "^6.0.2",
-        "vue-fuse": "^2.2.1",
+        "vue-fuse": "^3.0.2",
         "vue-infinite-loading": "^2.4.5",
         "vue-loader": "^15.9.5",
         "vue-multiselect": "^2.1.6",
