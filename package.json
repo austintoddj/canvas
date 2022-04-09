@@ -21,7 +21,7 @@
         "laravel-mix": "^6.0.6",
         "lodash": "^4.17.19",
         "md5": "^2.3.0",
-        "moment": "^2.29.1",
+        "moment": "^2.29.2",
         "nprogress": "^0.2.0",
         "numeral": "^2.0.6",
         "parchment": "^1.1.4",
