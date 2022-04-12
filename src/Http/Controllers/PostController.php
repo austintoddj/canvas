@@ -25,7 +25,7 @@ class PostController extends Controller
     public function index(): JsonResponse
     {
         $isContributor = request()->user('canvas')->isContributor;
-        $scopeToAuthor = !$isContributor && request()->query('author');
+        $scopeToAuthor = ! $isContributor && request()->query('author');
         $wantsDrafts = request()->query('type', 'published') == 'draft';
 
         $posts = Post::query()
@@ -36,10 +36,10 @@ class PostController extends Controller
                          return $query;
                      })
                      ->when($scopeToAuthor, function (Builder $query) {
-                        return $query->where('user_id', request()->query('author'));
-                    }, function (Builder $query) {
-                        return $query;
-                    })
+                         return $query->where('user_id', request()->query('author'));
+                     }, function (Builder $query) {
+                         return $query;
+                     })
                      ->when($wantsDrafts, function (Builder $query) {
                          return $query->draft();
                      }, function (Builder $query) {
