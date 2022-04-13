@@ -5,7 +5,6 @@ namespace Canvas\Tests\Http\Controllers;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
-use Canvas\Models\User;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Ramsey\Uuid\Uuid;
@@ -37,7 +36,7 @@ class PostControllerTest extends TestCase
              ->getJson(route('canvas.posts.index'))
              ->assertSuccessful()
              ->assertJsonStructure([
-                 'users'
+                 'users',
              ])
              ->assertJsonFragment([
                  'id' => $published->id,
@@ -66,8 +65,8 @@ class PostControllerTest extends TestCase
              ->getJson(route('canvas.posts.index', ['type' => 'published']))
              ->assertSuccessful()
              ->assertJsonStructure([
-                'users'
-            ])
+                 'users',
+             ])
              ->assertJsonFragment([
                  'id' => $published->id,
                  'total' => $this->admin->posts()->published()->count(),
@@ -100,8 +99,8 @@ class PostControllerTest extends TestCase
              ->getJson(route('canvas.posts.index'))
              ->assertSuccessful()
              ->assertJsonStructure([
-                'users'
-            ])
+                 'users',
+             ])
              ->assertJsonFragment([
                  'id' => $byAdmin->id,
                  'id' => $byEditor->id,
@@ -110,7 +109,7 @@ class PostControllerTest extends TestCase
                  'published_count' => Post::published()->count(),
              ])
              ->assertJsonMissing([
-                 'id' => $byContributor->id
+                 'id' => $byContributor->id,
              ]);
     }
 
@@ -135,17 +134,17 @@ class PostControllerTest extends TestCase
              ->getJson(route('canvas.posts.index'))
              ->assertSuccessful()
              ->assertJsonStructure([
-                'users'
-            ])
+                 'users',
+             ])
              ->assertJsonFragment([
-                'id' => $byContributor->id,
+                 'id' => $byContributor->id,
                  'total' => $this->contributor->posts()->count(),
                  'drafts_count' => $this->contributor->posts()->draft()->count(),
                  'published_count' => $this->contributor->posts()->published()->count(),
              ])
              ->assertJsonMissing([
-                'id' => $byAdmin->id,
-                'id' => $byEditor->id,
+                 'id' => $byAdmin->id,
+                 'id' => $byEditor->id,
              ]);
     }
 
@@ -170,17 +169,17 @@ class PostControllerTest extends TestCase
              ->getJson(route('canvas.posts.index', ['author' => $this->editor->id]))
              ->assertSuccessful()
              ->assertJsonStructure([
-                'users'
-            ])
+                 'users',
+             ])
              ->assertJsonFragment([
-                'id' => $byContributor->id,
+                 'id' => $byContributor->id,
                  'total' => $this->contributor->posts()->count(),
                  'drafts_count' => $this->contributor->posts()->draft()->count(),
                  'published_count' => $this->contributor->posts()->published()->count(),
              ])
              ->assertJsonMissing([
-                'id' => $byAdmin->id,
-                'id' => $byEditor->id,
+                 'id' => $byAdmin->id,
+                 'id' => $byEditor->id,
              ]);
     }
 
@@ -200,10 +199,10 @@ class PostControllerTest extends TestCase
              ->getJson(route('canvas.posts.index', ['author' => $this->editor->id, 'type' => 'published']))
              ->assertSuccessful()
              ->assertJsonStructure([
-                'users'
-            ])
+                 'users',
+             ])
              ->assertJsonFragment([
-                'id' => $byEditor->id,
+                 'id' => $byEditor->id,
                  'total' => $this->editor->posts()->published()->count(),
                  'drafts_count' => $this->editor->posts()->draft()->count(),
                  'published_count' => $this->editor->posts()->published()->count(),
@@ -229,16 +228,16 @@ class PostControllerTest extends TestCase
              ->getJson(route('canvas.posts.index', ['author' => $this->editor->id, 'type' => 'draft']))
              ->assertSuccessful()
              ->assertJsonStructure([
-                'users'
-            ])
+                 'users',
+             ])
              ->assertJsonFragment([
-                'id' => $byEditor->id,
+                 'id' => $byEditor->id,
                  'total' => $this->editor->posts()->draft()->count(),
                  'drafts_count' => $this->editor->posts()->draft()->count(),
                  'published_count' => $this->editor->posts()->published()->count(),
              ])
              ->assertJsonMissing([
-                'id' => $byAdmin->id,
+                 'id' => $byAdmin->id,
              ]);
     }
 
@@ -263,11 +262,11 @@ class PostControllerTest extends TestCase
              ->getJson(route('canvas.posts.index', ['type' => 'draft']))
              ->assertSuccessful()
              ->assertJsonStructure([
-                'users'
-            ])
+                 'users',
+             ])
              ->assertJsonFragment([
-                'id' => $byAdmin->id,
-                'id' => $byEditor->id,
+                 'id' => $byAdmin->id,
+                 'id' => $byEditor->id,
                  'total' => Post::draft()->count(),
                  'drafts_count' => Post::draft()->count(),
                  'published_count' => Post::published()->count(),
