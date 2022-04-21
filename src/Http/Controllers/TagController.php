@@ -28,7 +28,7 @@ class TagController extends Controller
                ->select('id', 'name', 'created_at')
                 ->when($sortAscending, function (Builder $query) {
                     return $query->oldest();
-                }, function(Builder $query) {
+                }, function (Builder $query) {
                     return $query->latest();
                 })
                ->withCount('posts')
