@@ -51,7 +51,7 @@
         "eslint-loader": "^4.0.2",
         "eslint-plugin-prettier": "^3.3.0",
         "eslint-plugin-sort-imports-es6-autofix": "^0.5.0",
-        "eslint-plugin-vue": "^7.3.0",
+        "eslint-plugin-vue": "^8.7.1",
         "postcss": "^8.1",
         "prettier": "^2.2.1",
         "webpack-bundle-analyzer": "^4.3.0"
