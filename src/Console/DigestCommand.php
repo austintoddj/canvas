@@ -32,33 +32,42 @@ class DigestCommand extends Command
      */
     public function handle()
     {
-        $startDate = today()->subDays(7)->startOfDay();
+        $startDate = today()->subWeek()->startOfDay();
         $endDate = today()->endOfDay();
 
-        $recipients = User::whereIn('id', Post::published()->pluck('user_id')->unique())->get();
+        // Grab users that have published content
+        $recipients = User::query()->whereIn('id', Post::query()->published()->pluck('user_id')->unique())->get();
 
         foreach ($recipients as $user) {
-            if ($user->digest != true) {
+            // Skip users that have opted out of email notifications
+            if (!$user->digest) {
                 continue;
             }
 
-            $posts = Post::where('user_id', $user->id)
-                         ->published()
-                         ->withCount(['views' => function (Builder $query) use ($startDate, $endDate) {
-                             $query->whereBetween('created_at', [
-                                 $startDate,
-                                 $endDate,
-                             ]);
-                         }])
-                         ->withCount(['visits' => function (Builder $query) use ($startDate, $endDate) {
-                             $query->whereBetween('created_at', [
-                                 $startDate,
-                                 $endDate,
-                             ]);
-                         }])
-                         ->get();
+            // Grab user posts with associated traffic totals
+            $posts = Post::query()
+                ->where('user_id', $user->id)
+                ->published()
+                ->withCount([
+                    'views' => function (Builder $query) use ($startDate, $endDate) {
+                        $query->whereBetween('created_at', [
+                            $startDate,
+                            $endDate,
+                        ]);
+                    }
+                ])
+                ->withCount([
+                    'visits' => function (Builder $query) use ($startDate, $endDate) {
+                        $query->whereBetween('created_at', [
+                            $startDate,
+                            $endDate,
+                        ]);
+                    }
+                ])
+                ->get();
 
-            $data = [
+            // Send the email
+            Mail::to($user->email)->send(new WeeklyDigest([
                 'posts' => $posts->toArray(),
                 'totals' => [
                     'views' => $posts->sum('views_count'),
@@ -67,9 +76,7 @@ class DigestCommand extends Command
                 'startDate' => $startDate->format('M j'),
                 'endDate' => $endDate->format('M j'),
                 'locale' => $user->locale,
-            ];
-
-            Mail::to($user->email)->send(new WeeklyDigest($data));
+            ]));
         }
     }
 }
