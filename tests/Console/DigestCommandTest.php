@@ -94,7 +94,6 @@ class DigestCommandTest extends TestCase
             $this->assertArrayHasKey('views_count', $mail->data['posts'][0]);
             $this->assertSame(10, $mail->data['totals']['views']);
 
-
             return $mail->hasTo($user->email);
         });
     }

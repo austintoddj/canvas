@@ -40,7 +40,7 @@ class DigestCommand extends Command
 
         foreach ($recipients as $user) {
             // Skip users that have opted out of email notifications
-            if (!$user->digest) {
+            if (! $user->digest) {
                 continue;
             }
 
@@ -54,7 +54,7 @@ class DigestCommand extends Command
                             $startDate,
                             $endDate,
                         ]);
-                    }
+                    },
                 ])
                 ->withCount([
                     'visits' => function (Builder $query) use ($startDate, $endDate) {
@@ -62,7 +62,7 @@ class DigestCommand extends Command
                             $startDate,
                             $endDate,
                         ]);
-                    }
+                    },
                 ])
                 ->get();
 
