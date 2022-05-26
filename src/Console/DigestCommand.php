@@ -42,7 +42,7 @@ class DigestCommand extends Command
                           ->get();
 
         foreach ($recipients as $user) {
-            if (!$user->digest) {
+            if (! $user->digest) {
                 continue;
             }
 
