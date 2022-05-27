@@ -36,7 +36,7 @@ class UserCommand extends Command
         $email = $this->ask('What email should be attached to the user?');
         $password = 'password';
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->error('Please enter a valid email.');
 
             return;
@@ -66,6 +66,6 @@ class UserCommand extends Command
 
         $this->info('New user created.');
         $this->table(['Email', 'Password'], [[$email, $password]]);
-        $this->info('First things first, head to <info>' . route('canvas.login') . '</info> and update your credentials.');
+        $this->info('First things first, head to <info>'.route('canvas.login').'</info> and update your credentials.');
     }
 }
