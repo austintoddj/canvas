@@ -4703,6 +4703,11 @@ parchment@^1.1.4:
   resolved "https://registry.yarnpkg.com/parchment/-/parchment-1.1.4.tgz#aeded7ab938fe921d4c34bc339ce1168bc2ffde5"
   integrity sha512-J5FBQt/pM2inLzg4hEWmzQx/8h8D0CiDxaG3vyp9rKrQRSDgBlhjdP5jQGgosEajXPSQouXGHOmVdgo7QmJuOg==
 
+parchment@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/parchment/-/parchment-2.0.0.tgz#cb69eeb70199e34cd94505a989f059154e0b2caf"
+  integrity sha512-lLq8Q43ZcH3lfhY5F22F8lSkWay7nQMWeIpAIwywe1NFd5tWkhH7cyboM71MXz+00ZTGR86UM+0K9cGIx/jR7g==
+
 parent-module@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/parent-module/-/parent-module-1.0.1.tgz#691d2709e78c79fae3a156622452d00762caaaa2"
