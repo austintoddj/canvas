@@ -116,4 +116,4 @@ class CreateCanvasTables extends Migration
         Schema::dropIfExists('canvas_visits');
         Schema::dropIfExists('canvas_users');
     }
-};
+}
