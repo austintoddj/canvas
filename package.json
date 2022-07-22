@@ -10,7 +10,7 @@
     "dependencies": {
         "axios": "^0.21.1",
         "bootstrap": "^4.6.0",
-        "chart.js": "^2.9.4",
+        "chart.js": "^3.8.0",
         "filepond": "^4.25.1",
         "filepond-plugin-file-validate-size": "^2.2.1",
         "filepond-plugin-file-validate-type": "^1.2.5",
