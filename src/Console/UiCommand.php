@@ -118,7 +118,7 @@ class UiCommand extends Command
             }
         }
 
-        copy(dirname(__DIR__, 2) . '/resources/ui/views/ui.blade.php', $view);
+        copy(dirname(__DIR__, 2).'/resources/ui/views/ui.blade.php', $view);
     }
 
     /**
@@ -139,7 +139,7 @@ class UiCommand extends Command
 
         file_put_contents(
             base_path('routes/web.php'),
-            file_get_contents(dirname(__DIR__, 2) . '/resources/ui/routes/web.stub'),
+            file_get_contents(dirname(__DIR__, 2).'/resources/ui/routes/web.stub'),
             FILE_APPEND
         );
     }
