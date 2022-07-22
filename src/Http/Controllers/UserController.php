@@ -7,7 +7,6 @@ namespace Canvas\Http\Controllers;
 use Canvas\Canvas;
 use Canvas\Http\Requests\StoreUserRequest;
 use Canvas\Models\User;
-use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
@@ -55,7 +54,7 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreUserRequest $request
+     * @param  StoreUserRequest  $request
      * @param $id
      * @return JsonResponse
      */
@@ -129,7 +128,6 @@ class UserController extends Controller
      *
      * @param $id
      * @return JsonResponse
-     *
      */
     public function destroy($id): JsonResponse
     {

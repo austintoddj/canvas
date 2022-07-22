@@ -97,7 +97,7 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StorePostRequest $request
+     * @param  StorePostRequest  $request
      * @param $id
      * @return JsonResponse
      *
