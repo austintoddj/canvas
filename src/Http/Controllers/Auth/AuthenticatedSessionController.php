@@ -28,9 +28,10 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      *
-     * @throws \Illuminate\Validation\ValidationException
      * @param  \Canvas\Http\Requests\AuthenticatedSessionRequest  $request
      * @return \Illuminate\Http\RedirectResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(AuthenticatedSessionRequest $request)
     {

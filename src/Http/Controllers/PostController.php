@@ -11,7 +11,6 @@ use Canvas\Models\Topic;
 use Canvas\Models\User;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Ramsey\Uuid\Uuid;
 
@@ -97,10 +96,11 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @throws Exception
      * @param  \Canvas\Http\Requests\StorePostRequest  $request
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws Exception
      */
     public function store(StorePostRequest $request, string $id)
     {
@@ -170,7 +170,7 @@ class PostController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function show(string $id)
@@ -191,9 +191,10 @@ class PostController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @throws Exception
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws Exception
      */
     public function destroy(string $id)
     {

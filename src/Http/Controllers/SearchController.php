@@ -9,7 +9,6 @@ use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Canvas\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
 

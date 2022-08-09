@@ -5,7 +5,6 @@ namespace Canvas\Tests;
 use Canvas\CanvasServiceProvider;
 use Canvas\Models\User;
 use Exception;
-use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
@@ -35,9 +34,9 @@ abstract class TestCase extends OrchestraTestCase
     protected $admin;
 
     /**
-     * @throws Exception
-     *
      * @return void
+     *
+     * @throws Exception
      */
     protected function setUp(): void
     {
@@ -50,7 +49,6 @@ abstract class TestCase extends OrchestraTestCase
 
     /**
      * @param  \Illuminate\Foundation\Application  $app
-     *
      * @return array
      */
     protected function getPackageProviders($app): array
@@ -62,7 +60,6 @@ abstract class TestCase extends OrchestraTestCase
 
     /**
      * @param  \Illuminate\Foundation\Application  $app
-     *
      * @return void
      */
     protected function resolveApplicationCore($app): void
@@ -75,8 +72,7 @@ abstract class TestCase extends OrchestraTestCase
     }
 
     /**
-     * @param \Illuminate\Foundation\Application $app
-     *
+     * @param  \Illuminate\Foundation\Application  $app
      * @return void
      */
     protected function getEnvironmentSetUp($app): void
@@ -105,11 +101,10 @@ abstract class TestCase extends OrchestraTestCase
     }
 
     /**
-     * @throws Exception
-     *
      * @param  \Illuminate\Foundation\Application  $app
-     *
      * @return void
+     *
+     * @throws Exception
      */
     protected function setUpDatabase($app)
     {

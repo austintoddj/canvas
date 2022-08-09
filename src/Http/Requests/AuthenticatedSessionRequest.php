@@ -38,8 +38,9 @@ class AuthenticatedSessionRequest extends FormRequest
     /**
      * Attempt to authenticate the request's credentials.
      *
-     * @throws \Illuminate\Validation\ValidationException
      * @return void
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function authenticate()
     {

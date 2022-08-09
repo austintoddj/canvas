@@ -31,10 +31,11 @@ class AuthenticateSession
     /**
      * Handle the incoming request.
      *
-     * @throws \Illuminate\Auth\AuthenticationException
      * @param  \Illuminate\Http\Request  $request
      * @param  Closure  $next
      * @return mixed
+     *
+     * @throws \Illuminate\Auth\AuthenticationException
      */
     public function handle(Request $request, Closure $next)
     {

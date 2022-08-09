@@ -8,7 +8,6 @@ use Canvas\Http\Requests\StoreTagRequest;
 use Canvas\Models\Tag;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Ramsey\Uuid\Uuid;
 
@@ -52,7 +51,7 @@ class TagController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Canvas\Http\Requests\StoreTagRequest  $request
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(StoreTagRequest $request, string $id)
@@ -83,7 +82,7 @@ class TagController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function show(string $id)
@@ -96,7 +95,7 @@ class TagController extends Controller
     /**
      * Display the specified relationship.
      *
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function posts(string $id)
@@ -109,9 +108,10 @@ class TagController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @throws Exception
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws Exception
      */
     public function destroy(string $id)
     {

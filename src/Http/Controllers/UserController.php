@@ -8,7 +8,6 @@ use Canvas\Canvas;
 use Canvas\Http\Requests\StoreUserRequest;
 use Canvas\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
@@ -55,7 +54,7 @@ class UserController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Canvas\Http\Requests\StoreUserRequest  $request
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(StoreUserRequest $request, string $id)
@@ -100,7 +99,7 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function show(string $id)
@@ -113,7 +112,7 @@ class UserController extends Controller
     /**
      * Display the specified relationship.
      *
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function posts(string $id)
@@ -126,7 +125,7 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(string $id)

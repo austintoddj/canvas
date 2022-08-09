@@ -14,7 +14,6 @@ use Canvas\Events\PostViewed;
 use Canvas\Listeners\CaptureView;
 use Canvas\Listeners\CaptureVisit;
 use Canvas\Models\User;
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -34,8 +33,9 @@ class CanvasServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      *
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      * @return void
+     *
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
     public function boot()
     {
@@ -54,8 +54,9 @@ class CanvasServiceProvider extends ServiceProvider
     /**
      * Register the events and listeners.
      *
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      * @return void
+     *
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
     private function registerEvents()
     {
