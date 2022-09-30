@@ -3,7 +3,6 @@
 namespace Canvas\Tests;
 
 use Canvas\Canvas;
-use Canvas\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 /**
