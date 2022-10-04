@@ -107,7 +107,7 @@ return [
     'editor' => 'Editor',
     'admin' => 'Admin',
     'role' => 'Role',
-    'everyone' => 'Everyone'
+    'everyone' => 'Everyone',
 ];
 
 //return [
