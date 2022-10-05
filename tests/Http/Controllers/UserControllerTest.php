@@ -43,11 +43,11 @@ class UserControllerTest extends TestCase
         $newUser = factory(User::class)->create([
             // The 3 users (Admin, Editor, Contributor) take precedence in the database for
             // some reason, so adding a second here ensures this user is new ¯\_(ツ)_/¯
-            'created_at' => now()->addSecond()
+            'created_at' => now()->addSecond(),
         ]);
 
         $oldUser = factory(User::class)->create([
-            'created_at' => now()->subDay()
+            'created_at' => now()->subDay(),
         ]);
 
         $response = $this->actingAs($this->admin, 'canvas')

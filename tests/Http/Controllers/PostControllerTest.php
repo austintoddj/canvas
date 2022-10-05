@@ -279,11 +279,11 @@ class PostControllerTest extends TestCase
     public function testPostsCanBeSortedByCreationDateWithAGivenQueryParameter(): void
     {
         $newPost = factory(Post::class)->create([
-            'created_at' => now()->subHour()
+            'created_at' => now()->subHour(),
         ]);
 
         $oldPost = factory(Post::class)->create([
-            'created_at' => now()->subDay()
+            'created_at' => now()->subDay(),
         ]);
 
         $response = $this->actingAs($this->admin, 'canvas')

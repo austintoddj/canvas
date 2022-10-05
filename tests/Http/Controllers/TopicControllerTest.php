@@ -38,11 +38,11 @@ class TopicControllerTest extends TestCase
     public function testTopicsCanBeSortedByCreationDateWithAGivenQueryParameter(): void
     {
         $newTopic = factory(Topic::class)->create([
-            'created_at' => now()->subHour()
+            'created_at' => now()->subHour(),
         ]);
 
         $oldTopic = factory(Topic::class)->create([
-            'created_at' => now()->subDay()
+            'created_at' => now()->subDay(),
         ]);
 
         $response = $this->actingAs($this->admin, 'canvas')
@@ -69,15 +69,15 @@ class TopicControllerTest extends TestCase
         $posts = factory(Post::class, 10)->create();
 
         $lessPopularTopic = factory(Topic::class)->create([
-            'created_at' => now()->subHour()
+            'created_at' => now()->subHour(),
         ]);
 
         $popularTopic = factory(Topic::class)->create([
-            'created_at' => now()->subDay()
+            'created_at' => now()->subDay(),
         ]);
 
         $unpopularTopic = factory(Topic::class)->create([
-            'created_at' => now()->subMonth()
+            'created_at' => now()->subMonth(),
         ]);
 
         $popularTopic->posts()->sync($posts->take(10)->pluck('id'));

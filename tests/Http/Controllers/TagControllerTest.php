@@ -38,11 +38,11 @@ class TagControllerTest extends TestCase
     public function testTagsCanBeSortedByCreationDateWithAGivenQueryParameter(): void
     {
         $newTag = factory(Tag::class)->create([
-            'created_at' => now()->subHour()
+            'created_at' => now()->subHour(),
         ]);
 
         $oldTag = factory(Tag::class)->create([
-            'created_at' => now()->subDay()
+            'created_at' => now()->subDay(),
         ]);
 
         $response = $this->actingAs($this->admin, 'canvas')
@@ -69,15 +69,15 @@ class TagControllerTest extends TestCase
         $posts = factory(Post::class, 10)->create();
 
         $lessPopularTag = factory(Tag::class)->create([
-            'created_at' => now()->subHour()
+            'created_at' => now()->subHour(),
         ]);
 
         $popularTag = factory(Tag::class)->create([
-            'created_at' => now()->subDay()
+            'created_at' => now()->subDay(),
         ]);
 
         $unpopularTag = factory(Tag::class)->create([
-            'created_at' => now()->subMonth()
+            'created_at' => now()->subMonth(),
         ]);
 
         $popularTag->posts()->sync($posts->take(10)->pluck('id'));
