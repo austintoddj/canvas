@@ -115,7 +115,7 @@ return [
     'least_popular' => 'Least popular',
     'everything' => 'Everything',
     'usage' => 'Usage',
-    'status' => 'Status'
+    'status' => 'Status',
 ];
 
 //return [
