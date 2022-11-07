@@ -43,10 +43,10 @@ class NewPasswordController extends Controller
 
         $key = "password.reset.{$user->id}";
 
-        if (!Cache::get($key)) {
+        if (! Cache::get($key)) {
             return redirect()
                 ->route('canvas.reset-password.view', [
-                    'token' => $token
+                    'token' => $token,
                 ])->with('invalidResetToken', trans('canvas::app.this_password_reset_token_is_invalid', [], app()->getLocale()));
         }
 
