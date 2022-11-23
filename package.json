@@ -8,7 +8,7 @@
         "watch": "mix watch"
     },
     "dependencies": {
-        "axios": "^0.21.1",
+        "axios": "^1.2.0",
         "bootstrap": "^4.6.0",
         "chart.js": "^2.9.4",
         "filepond": "^4.25.1",
