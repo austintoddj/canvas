@@ -55,8 +55,6 @@ return new class extends Migration
      */
     private const VISITS_TABLE = 'canvas_visits';
 
-
-
     /**
      * Run the migrations.
      *

@@ -120,7 +120,7 @@ class PostController extends Controller
         if ($incomingTopic = request()->input('topic')) {
             $existingTopic = Topic::query()->firstWhere('slug', $incomingTopic['slug']);
 
-            if (!$existingTopic) {
+            if (! $existingTopic) {
                 $topic = Topic::query()->create([
                     'id' => Uuid::uuid4()->toString(),
                     'name' => $incomingTopic['name'],

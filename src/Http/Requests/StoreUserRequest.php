@@ -17,7 +17,6 @@ class StoreUserRequest extends FormRequest
     public function authorize()
     {
         return request()->user('canvas')->isAdmin || request()->user('canvas')->id === $this->route('id');
-
     }
 
     /**

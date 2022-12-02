@@ -3,12 +3,10 @@
 namespace Canvas\Tests\Models;
 
 use Canvas\Models\Post;
-use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Canvas\Models\User;
 use Canvas\Tests\TestCase;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
