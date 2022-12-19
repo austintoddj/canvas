@@ -12,7 +12,7 @@
     "lint": "eslint --ext .js,.vue --fix resources/js"
   },
   "dependencies": {
-    "@headlessui/vue": "^1.7.4",
+    "@headlessui/vue": "^1.7.7",
     "@heroicons/vue": "^2.0.13",
     "@tailwindcss/aspect-ratio": "^0.4.0",
     "@tailwindcss/forms": "^0.5.2",
