@@ -18,7 +18,7 @@
         "axios": "^1.2",
         "dayjs": "^1.11",
         "eslint": "^8.29",
-        "eslint-config-prettier": "^8.5",
+        "eslint-config-prettier": "^8.6",
         "eslint-plugin-vue": "^9.8",
         "laravel-mix": "^6.0",
         "postcss": "^8.4",
