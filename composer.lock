@@ -612,16 +612,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v9.46.0",
+            "version": "v9.47.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "62b05b6de5733d89378a279e40230a71e5ab5d92"
+                "reference": "92810d88f9a4252095a56c05541b07940363367c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/62b05b6de5733d89378a279e40230a71e5ab5d92",
-                "reference": "62b05b6de5733d89378a279e40230a71e5ab5d92",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/92810d88f9a4252095a56c05541b07940363367c",
+                "reference": "92810d88f9a4252095a56c05541b07940363367c",
                 "shasum": ""
             },
             "require": {
@@ -712,6 +712,7 @@
                 "mockery/mockery": "^1.5.1",
                 "orchestra/testbench-core": "^7.16",
                 "pda/pheanstalk": "^4.0",
+                "phpstan/phpdoc-parser": "^1.15",
                 "phpstan/phpstan": "^1.4.7",
                 "phpunit/phpunit": "^9.5.8",
                 "predis/predis": "^1.1.9|^2.0.2",
@@ -794,7 +795,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2023-01-03T15:12:31+00:00"
+            "time": "2023-01-10T16:10:09+00:00"
         },
         {
             "name": "laravel/serializable-closure",
