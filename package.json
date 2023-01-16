@@ -17,7 +17,7 @@
         "@vue/compiler-sfc": "^3.2",
         "axios": "^1.2",
         "dayjs": "^1.11",
-        "eslint": "^8.31",
+        "eslint": "^8.32",
         "eslint-config-prettier": "^8.6",
         "eslint-plugin-vue": "^9.8",
         "laravel-mix": "^6.0",
