@@ -1744,9 +1744,9 @@ autoprefixer@^10.4.0:
     postcss-value-parser "^4.2.0"
 
 axios@^1.2:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.2.3.tgz#31a3d824c0ebf754a004b585e5f04a5f87e6c4ff"
-  integrity sha512-pdDkMYJeuXLZ6Xj/Q5J3Phpe+jbGdsSzlQaFVkMQzRUL05+6+tetX8TV3p4HrU4kzuO9bt+io/yGQxuyxA/xcw==
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.2.5.tgz#858c129d286e7ee3b1e970961cde410ba3ea3740"
+  integrity sha512-9pU/8mmjSSOb4CXVsvGIevN+MlO/t9OWtKadTaLuN85Gge3HGorUckgp8A/2FH4V4hJ7JuQ3LIeI7KAV9ITZrQ==
   dependencies:
     follow-redirects "^1.15.0"
     form-data "^4.0.0"
