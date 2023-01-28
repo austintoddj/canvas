@@ -77,7 +77,7 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StorePostRequest $request
+     * @param  StorePostRequest  $request
      * @return void
      */
     public function store(StorePostRequest $request)
@@ -86,7 +86,7 @@ class PostController extends Controller
         // return response()->json($post->refresh(), 201)
 
         $post = Post::query()->make([
-            'id' => Uuid::uuid4()->toString()
+            'id' => Uuid::uuid4()->toString(),
         ]);
 
         $post->fill($request->validated());

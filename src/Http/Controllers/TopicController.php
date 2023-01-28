@@ -9,7 +9,6 @@ use Canvas\Models\Topic;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Routing\Controller;
-use Ramsey\Uuid\Uuid;
 
 class TopicController extends Controller
 {
@@ -46,7 +45,7 @@ class TopicController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreTopicRequest $request
+     * @param  StoreTopicRequest  $request
      * @return void
      */
     public function store(StoreTopicRequest $request)

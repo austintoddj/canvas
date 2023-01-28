@@ -9,7 +9,6 @@ use Canvas\Models\Tag;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Routing\Controller;
-use Ramsey\Uuid\Uuid;
 
 class TagController extends Controller
 {
@@ -46,7 +45,7 @@ class TagController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreTagRequest $request
+     * @param  StoreTagRequest  $request
      * @return void
      */
     public function store(StoreTagRequest $request)

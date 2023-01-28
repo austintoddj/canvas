@@ -138,10 +138,6 @@ return [
     'role_integer' => 'The role must be an integer.',
 ];
 
-
-
-
-
 //return [
 //    'a_descriptive_summary' => 'A descriptive summary...',
 //    'a_unique_slug' => 'a-unique-slug',
