@@ -32,7 +32,7 @@ class TagTest extends TestCase
             ->postJson(route('canvas.tags.store'), [
                 'name' => 'A new tag',
                 'slug' => 'a-new-tag',
-                'user_id' => $primaryAdmin->id
+                'user_id' => $primaryAdmin->id,
             ]);
 
         $this->assertDatabaseHas('canvas_tags', [
@@ -47,7 +47,7 @@ class TagTest extends TestCase
             ->postJson(route('canvas.tags.store'), [
                 'name' => 'A new tag',
                 'slug' => 'a-new-tag',
-                'user_id' => $secondaryAdmin->id
+                'user_id' => $secondaryAdmin->id,
             ]);
 
         $this->assertDatabaseHas('canvas_tags', [

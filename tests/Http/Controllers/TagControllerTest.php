@@ -8,7 +8,6 @@ use Canvas\Models\User;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Ramsey\Uuid\Uuid;
 
 /**
  * Class TagControllerTest.
@@ -120,7 +119,7 @@ class TagControllerTest extends TestCase
         $data = [
             'name' => 'A new tag',
             'slug' => 'a-new-tag',
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ];
 
         $response = $this->actingAs($user, 'canvas')
@@ -139,7 +138,7 @@ class TagControllerTest extends TestCase
         $data = [
             'name' => $deletedTag->name,
             'slug' => $deletedTag->slug,
-            'user_id' => $deletedTag->user_id
+            'user_id' => $deletedTag->user_id,
         ];
 
         $response = $this->actingAs($deletedTag->user, 'canvas')
@@ -161,7 +160,7 @@ class TagControllerTest extends TestCase
         $data = [
             'name' => 'An updated tag',
             'slug' => 'an-updated-tag',
-            'user_id' => $tag->user_id
+            'user_id' => $tag->user_id,
         ];
 
         $response = $this->actingAs($tag->user, 'canvas')
@@ -179,7 +178,7 @@ class TagControllerTest extends TestCase
              ->postJson(route('canvas.tags.store'), [
                  'name' => 'A new tag',
                  'slug' => 'a new.slug',
-                 'user_id' => $user->id
+                 'user_id' => $user->id,
              ])
              ->assertStatus(422)
              ->assertJsonStructure([

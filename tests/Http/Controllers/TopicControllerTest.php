@@ -8,7 +8,6 @@ use Canvas\Models\User;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Ramsey\Uuid\Uuid;
 
 /**
  * Class TopicControllerTest.
@@ -120,7 +119,7 @@ class TopicControllerTest extends TestCase
         $data = [
             'name' => 'A new topic',
             'slug' => 'a-new-topic',
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ];
 
         $response = $this->actingAs($user, 'canvas')
@@ -139,7 +138,7 @@ class TopicControllerTest extends TestCase
         $data = [
             'name' => $deletedTopic->name,
             'slug' => $deletedTopic->slug,
-            'user_id' => $deletedTopic->user_id
+            'user_id' => $deletedTopic->user_id,
         ];
 
         $response = $this->actingAs($deletedTopic->user, 'canvas')
@@ -161,7 +160,7 @@ class TopicControllerTest extends TestCase
         $data = [
             'name' => 'An updated topic',
             'slug' => 'an-updated-topic',
-            'user_id' => $topic->user_id
+            'user_id' => $topic->user_id,
         ];
 
         $response = $this->actingAs($topic->user, 'canvas')
@@ -179,7 +178,7 @@ class TopicControllerTest extends TestCase
             ->postJson(route('canvas.topics.store'), [
                 'name' => 'A new topic',
                 'slug' => 'a new.slug',
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ])
              ->assertStatus(422)
              ->assertJsonStructure([

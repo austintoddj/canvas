@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Canvas\Http\Controllers;
 
-use Canvas\Canvas;
 use Canvas\Http\Requests\StoreUserRequest;
 use Canvas\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Hash;
 use Ramsey\Uuid\Uuid;
 
 class UserController extends Controller
@@ -53,7 +50,7 @@ class UserController extends Controller
     {
         $user = User::query()->create([
             'id' => Uuid::uuid4()->toString(),
-            ...$request->validated()
+            ...$request->validated(),
         ]);
 
         return response()->json($user->refresh());

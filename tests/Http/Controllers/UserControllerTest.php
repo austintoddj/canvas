@@ -299,9 +299,9 @@ class UserControllerTest extends TestCase
 
         $this->actingAs($admin, 'canvas')
             ->postJson(route('canvas.users.store'), [
-                 'name' => $admin->name,
-                 'email' => $editor->email,
-             ])
+                'name' => $admin->name,
+                'email' => $editor->email,
+            ])
              ->assertStatus(422)
              ->assertJsonStructure([
                  'errors' => [
@@ -316,9 +316,9 @@ class UserControllerTest extends TestCase
 
         $this->actingAs($admin, 'canvas')
             ->postJson(route('canvas.users.store'), [
-                 'name' => $admin->name,
-                 'email' => 'not-an-email',
-             ])
+                'name' => $admin->name,
+                'email' => 'not-an-email',
+            ])
              ->assertStatus(422)
              ->assertJsonStructure([
                  'errors' => [

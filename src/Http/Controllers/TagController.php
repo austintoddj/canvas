@@ -53,7 +53,7 @@ class TagController extends Controller
     {
         $tag = Tag::query()->create([
             'id' => Uuid::uuid4()->toString(),
-            ...$request->validated()
+            ...$request->validated(),
         ]);
 
         return response()->json($tag->refresh());

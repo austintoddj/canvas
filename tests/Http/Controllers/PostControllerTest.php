@@ -4,7 +4,6 @@ namespace Canvas\Tests\Http\Controllers;
 
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
-use Canvas\Models\Topic;
 use Canvas\Models\User;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -365,7 +364,7 @@ class PostControllerTest extends TestCase
             'id' => $user->posts()->first()->id,
             'slug' => 'updated-slug',
             'title' => 'Updated Title',
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ];
 
         $this->actingAs($user, 'canvas')

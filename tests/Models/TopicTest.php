@@ -32,7 +32,7 @@ class TopicTest extends TestCase
             ->postJson(route('canvas.topics.store'), [
                 'name' => 'A new topic',
                 'slug' => 'a-new-topic',
-                'user_id' => $primaryAdmin->id
+                'user_id' => $primaryAdmin->id,
             ]);
 
         $this->assertDatabaseHas('canvas_topics', [
@@ -47,7 +47,7 @@ class TopicTest extends TestCase
             ->postJson(route('canvas.topics.store'), [
                 'name' => 'A new topic',
                 'slug' => 'a-new-topic',
-                'user_id' => $secondaryAdmin->id
+                'user_id' => $secondaryAdmin->id,
             ]);
 
         $this->assertDatabaseHas('canvas_topics', [

@@ -48,7 +48,7 @@ class PostTest extends TestCase
             ->postJson(route('canvas.posts.store'), [
                 'slug' => 'a-new-post',
                 'title' => 'A new post',
-                'user_id' => $admin->id
+                'user_id' => $admin->id,
             ]);
 
         $this->assertDatabaseHas('canvas_posts', [
@@ -63,7 +63,7 @@ class PostTest extends TestCase
             ->postJson(route('canvas.posts.store'), [
                 'slug' => 'a-new-post',
                 'title' => 'A new post',
-                'user_id' => $editor->id
+                'user_id' => $editor->id,
             ]);
 
         $this->assertDatabaseHas('canvas_posts', [

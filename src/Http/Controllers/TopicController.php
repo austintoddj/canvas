@@ -53,7 +53,7 @@ class TopicController extends Controller
     {
         $topic = Topic::query()->create([
             'id' => Uuid::uuid4()->toString(),
-            ...$request->validated()
+            ...$request->validated(),
         ]);
 
         return response()->json($topic->refresh());

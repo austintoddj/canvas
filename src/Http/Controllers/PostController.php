@@ -84,7 +84,7 @@ class PostController extends Controller
     {
         $post = Post::query()->create([
             'id' => Uuid::uuid4()->toString(),
-            ...$request->validated()
+            ...$request->validated(),
         ]);
 
         $post->user()->associate($request->user('canvas'));
@@ -167,7 +167,7 @@ class PostController extends Controller
     /**
      * Find or create the tags to sync.
      *
-     * @param array $incomingTags
+     * @param  array  $incomingTags
      * @return array
      */
     private function tagsToSync(array $incomingTags = []): array
