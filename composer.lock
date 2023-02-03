@@ -567,16 +567,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v9.50.1",
+            "version": "v9.50.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "3b400f76619cd5257a69fdd6b897043b6522a89a"
+                "reference": "39932773c09658ddea9045958f305e67f9304995"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/3b400f76619cd5257a69fdd6b897043b6522a89a",
-                "reference": "3b400f76619cd5257a69fdd6b897043b6522a89a",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/39932773c09658ddea9045958f305e67f9304995",
+                "reference": "39932773c09658ddea9045958f305e67f9304995",
                 "shasum": ""
             },
             "require": {
@@ -751,7 +751,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2023-02-01T17:36:26+00:00"
+            "time": "2023-02-02T20:52:46+00:00"
         },
         {
             "name": "laravel/serializable-closure",
@@ -5011,23 +5011,23 @@
         },
         {
             "name": "orchestra/testbench",
-            "version": "v7.20.0",
+            "version": "v7.21.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/orchestral/testbench.git",
-                "reference": "bd481b00d1535797edfc87aa8be5063408b27b63"
+                "reference": "3ee8d5689cb9d13d8d39785c5e93e4cc18731fc6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/orchestral/testbench/zipball/bd481b00d1535797edfc87aa8be5063408b27b63",
-                "reference": "bd481b00d1535797edfc87aa8be5063408b27b63",
+                "url": "https://api.github.com/repos/orchestral/testbench/zipball/3ee8d5689cb9d13d8d39785c5e93e4cc18731fc6",
+                "reference": "3ee8d5689cb9d13d8d39785c5e93e4cc18731fc6",
                 "shasum": ""
             },
             "require": {
                 "fakerphp/faker": "^1.21",
-                "laravel/framework": "^9.45",
+                "laravel/framework": "^9.50.2",
                 "mockery/mockery": "^1.5.1",
-                "orchestra/testbench-core": "^7.20",
+                "orchestra/testbench-core": "^7.21",
                 "php": "^8.0",
                 "phpunit/phpunit": "^9.5.10",
                 "spatie/laravel-ray": "^1.28",
@@ -5064,22 +5064,22 @@
             ],
             "support": {
                 "issues": "https://github.com/orchestral/testbench/issues",
-                "source": "https://github.com/orchestral/testbench/tree/v7.20.0"
+                "source": "https://github.com/orchestral/testbench/tree/v7.21.0"
             },
-            "time": "2023-02-01T02:20:22+00:00"
+            "time": "2023-02-03T02:10:41+00:00"
         },
         {
             "name": "orchestra/testbench-core",
-            "version": "v7.20.0",
+            "version": "v7.21.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/orchestral/testbench-core.git",
-                "reference": "f37b3ef9a1d679609d87477073836036faf5671b"
+                "reference": "07d48ce0fd781626e809e1a7591b75a89e6a2911"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/orchestral/testbench-core/zipball/f37b3ef9a1d679609d87477073836036faf5671b",
-                "reference": "f37b3ef9a1d679609d87477073836036faf5671b",
+                "url": "https://api.github.com/repos/orchestral/testbench-core/zipball/07d48ce0fd781626e809e1a7591b75a89e6a2911",
+                "reference": "07d48ce0fd781626e809e1a7591b75a89e6a2911",
                 "shasum": ""
             },
             "require": {
@@ -5087,7 +5087,7 @@
             },
             "require-dev": {
                 "fakerphp/faker": "^1.21",
-                "laravel/framework": "^9.45",
+                "laravel/framework": "^9.50.2",
                 "laravel/pint": "^1.4",
                 "mockery/mockery": "^1.5.1",
                 "orchestra/canvas": "^7.0",
@@ -5101,7 +5101,7 @@
             "suggest": {
                 "brianium/paratest": "Allow using parallel tresting (^6.4).",
                 "fakerphp/faker": "Allow using Faker for testing (^1.21).",
-                "laravel/framework": "Required for testing (^9.45).",
+                "laravel/framework": "Required for testing (^9.50.2).",
                 "mockery/mockery": "Allow using Mockery for testing (^1.5.1).",
                 "nunomaduro/collision": "Allow using Laravel style tests output and parallel testing (^6.2).",
                 "orchestra/testbench-browser-kit": "Allow using legacy Laravel BrowserKit for testing (^7.0).",
@@ -5152,7 +5152,7 @@
                 "issues": "https://github.com/orchestral/testbench/issues",
                 "source": "https://github.com/orchestral/testbench-core"
             },
-            "time": "2023-02-01T02:08:55+00:00"
+            "time": "2023-02-03T02:00:17+00:00"
         },
         {
             "name": "phar-io/manifest",
