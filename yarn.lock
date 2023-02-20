@@ -952,9 +952,9 @@
   integrity sha512-qAov7JULOBBes5CU+MiGpwMKoXxLHXS703WEZkOPxYjPD2p7f286ozlFxw7JjA2MmVgbnis2Wvgg/4hT7nRFIg==
 
 "@heroicons/vue@^2.0":
-  version "2.0.15"
-  resolved "https://registry.yarnpkg.com/@heroicons/vue/-/vue-2.0.15.tgz#2c8b26549cca2cc91a319b09546ef6d7b57eac75"
-  integrity sha512-Ab98jXcuYPCDtwOmdr5REtUfJCrZf7cnOnh9bD99bM5h1yfTnCPBKjMmJ9gcmyGu51Dzf11Mx/A7rKxAXjccvg==
+  version "2.0.16"
+  resolved "https://registry.yarnpkg.com/@heroicons/vue/-/vue-2.0.16.tgz#eb21f6ab32605570fa21a0172da4a6ab02670834"
+  integrity sha512-saVAExLlGu6epqmS543qeWd/UOJUxpTJyK9aXeFGqS3VIW8X7yyJQmUGT40A38gBEAxMOdTdH9jFSh8sjPFM7A==
 
 "@humanwhocodes/config-array@^0.11.8":
   version "0.11.8"
