@@ -268,12 +268,12 @@ class PostControllerTest extends TestCase
     {
         $admin = User::factory()
             ->admin()
-            ->has(Post::factory()->published()->state(fn() => ['created_at' => now()->subHour()]))
+            ->has(Post::factory()->published()->state(fn () => ['created_at' => now()->subHour()]))
             ->create();
 
         $editor = User::factory()
             ->editor()
-            ->has(Post::factory()->published()->state(fn() => ['created_at' => now()->subDay()]))
+            ->has(Post::factory()->published()->state(fn () => ['created_at' => now()->subDay()]))
             ->create();
 
         $response = $this->actingAs($admin, 'canvas')
