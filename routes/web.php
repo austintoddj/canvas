@@ -67,7 +67,6 @@ Route::middleware([AuthenticateSession::class])->group(function () {
 
                 Route::get('{id}', 'show')->name('show');
                 Route::put('{id}', 'store')->name('store');
-
             });
 
         Route::prefix('images')

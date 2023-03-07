@@ -5,7 +5,6 @@ namespace Canvas\Tests\Http\Requests;
 use Canvas\Models\User;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Ramsey\Uuid\Uuid;
 
 /**
  * Class ShowUserRequestTest.

@@ -5,7 +5,6 @@ namespace Canvas\Tests\Http\Requests;
 use Canvas\Models\User;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Ramsey\Uuid\Uuid;
 
 /**
  * Class StoreUserRequestTest.
@@ -141,7 +140,7 @@ class StoreUserRequestTest extends TestCase
             ->putJson(route('canvas.users.store', ['id' => $admin->id]), [
                 'name' => $admin->name,
                 'email' => $admin->email,
-                'username' => $editor->username
+                'username' => $editor->username,
             ])
             ->assertStatus(422)
             ->assertJsonStructure([

@@ -184,7 +184,7 @@ class UserControllerTest extends TestCase
             ->putJson(route('canvas.users.store', ['id' => Uuid::uuid4()->toString()]), $data)
             ->assertJsonStructure([
                 'i18n',
-                'user'
+                'user',
             ])
             ->assertSuccessful();
 
