@@ -29,8 +29,8 @@ class StoreImageRequest extends FormRequest
         return [
             'file' => [
                 'required',
-                File::types(['png', 'jpg'])->max(config('canvas.upload_filesize'))
-            ]
+                File::types(['png', 'jpg'])->max(config('canvas.upload_filesize')),
+            ],
         ];
     }
 
@@ -44,12 +44,12 @@ class StoreImageRequest extends FormRequest
         return [
             'file.required' => trans('canvas::app.id_required'),
             'id.uuid' => trans('canvas::app.id_uuid'),
-//            'name.required' => trans('canvas::app.name_required'),
-//            'name.string' => trans('canvas::app.name_string'),
-//            'slug.required' => trans('canvas::app.slug_required'),
-//            'slug.alpha_dash' => trans('canvas::app.slug_alpha_dash'),
-//            'slug.unique' => trans('canvas::app.slug_unique'),
-//            'user_id.uuid' => trans('canvas::app.user_id_uuid'),
+            //            'name.required' => trans('canvas::app.name_required'),
+            //            'name.string' => trans('canvas::app.name_string'),
+            //            'slug.required' => trans('canvas::app.slug_required'),
+            //            'slug.alpha_dash' => trans('canvas::app.slug_alpha_dash'),
+            //            'slug.unique' => trans('canvas::app.slug_unique'),
+            //            'user_id.uuid' => trans('canvas::app.user_id_uuid'),
         ];
     }
 }

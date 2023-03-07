@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Canvas\Http\Controllers;
 
 use Canvas\Http\Requests\StoreUserRequest;
-use Canvas\Models\User;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;

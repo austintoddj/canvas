@@ -148,7 +148,7 @@ class PostController extends Controller
      */
     public function stats(string $id)
     {
-         abort_unless(Uuid::isValid($id), 400);
+        abort_unless(Uuid::isValid($id), 400);
     }
 
     /**

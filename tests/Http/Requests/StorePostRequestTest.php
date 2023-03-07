@@ -24,7 +24,7 @@ class StorePostRequestTest extends TestCase
         $this->actingAs($post->user, 'canvas')
             ->putJson(route('canvas.posts.store', ['id' => $post->id]), [
                 'title' => $post->title,
-                'user_id' => $post->user->id
+                'user_id' => $post->user->id,
             ])
             ->assertStatus(422)
             ->assertJsonStructure([

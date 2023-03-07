@@ -47,10 +47,10 @@ class ImageController extends Controller
         if (empty(request()->getContent())) {
             return response()->json(null, 400);
         }
-//dd(request()->getContent());
+        //dd(request()->getContent());
         $file = pathinfo(request()->getContent());
         dd($file);
-//dd('here');
+        //dd('here');
         $storagePath = Canvas::baseStoragePathForImages();
 
         $path = "{$storagePath}/{$file['basename']}";
