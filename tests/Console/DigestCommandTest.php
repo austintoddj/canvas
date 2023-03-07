@@ -4,9 +4,6 @@ namespace Canvas\Tests\Console;
 
 use Canvas\Mail\WeeklyDigest;
 use Canvas\Models\Post;
-use Canvas\Models\User;
-use Canvas\Models\View;
-use Canvas\Models\Visit;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
