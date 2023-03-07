@@ -2,7 +2,6 @@
 
 namespace Canvas\Tests\Console;
 
-use Canvas\Models\User;
 use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
