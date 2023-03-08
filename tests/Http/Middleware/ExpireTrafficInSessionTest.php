@@ -31,19 +31,19 @@ class ExpireTrafficInSessionTest extends TestCase
     public function testOldVisitsArePrunedFromSession(): void
     {
         $recent = Visit::factory()->create([
-            'created_at' => now()
+            'created_at' => now(),
         ]);
 
         $old = Visit::factory()->create([
-            'created_at' => now()->subDay()
+            'created_at' => now()->subDay(),
         ]);
 
-        session()->put('canvas.visited_posts.' . $recent->id, [
+        session()->put('canvas.visited_posts.'.$recent->id, [
             'timestamp' => now()->timestamp,
             'ip' => '127.0.0.1',
         ]);
 
-        session()->put('canvas.visited_posts.' . $old->id, [
+        session()->put('canvas.visited_posts.'.$old->id, [
             'timestamp' => now()->subDay()->timestamp,
             'ip' => '127.0.0.1',
         ]);
@@ -56,15 +56,15 @@ class ExpireTrafficInSessionTest extends TestCase
     public function testOldViewsArePrunedFromSession(): void
     {
         $recent = View::factory()->create([
-            'created_at' => now()
+            'created_at' => now(),
         ]);
 
         $old = View::factory()->create([
-            'created_at' => now()->subDay()
+            'created_at' => now()->subDay(),
         ]);
 
-        session()->put('canvas.viewed_posts.' . $recent->id, now()->timestamp);
-        session()->put('canvas.viewed_posts.' . $old->id, now()->subHours(2)->timestamp);
+        session()->put('canvas.viewed_posts.'.$recent->id, now()->timestamp);
+        session()->put('canvas.viewed_posts.'.$old->id, now()->subHours(2)->timestamp);
 
         $this->get('/_test/session')
             ->assertSessionHas("canvas.viewed_posts.{$recent->id}")
