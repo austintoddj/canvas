@@ -12,10 +12,10 @@ use Carbon\CarbonInterval;
 use DateInterval;
 use DatePeriod;
 use DateTimeInterface;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
-use Illuminate\Routing\Controller;
 
 class StatController extends Controller
 {
