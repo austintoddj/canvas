@@ -34,7 +34,7 @@ class StoreImageRequest extends FormRequest
                     'png',
                     'jpg',
                     'gif',
-                    'svg'
+                    'svg',
                 ])->max(config('canvas.upload_filesize')),
             ],
         ];

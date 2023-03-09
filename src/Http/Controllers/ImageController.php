@@ -40,7 +40,7 @@ class ImageController extends Controller
 
         $path = vsprintf('%s/%s', [
             Canvas::baseStoragePathForImages(),
-            $file['basename']
+            $file['basename'],
         ]);
 
         Storage::disk(config('canvas.storage_disk'))->delete($path);
