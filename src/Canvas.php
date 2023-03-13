@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace Canvas;
 
-use Canvas\Models\Post;
-use Carbon\CarbonInterval;
-use DateInterval;
-use DatePeriod;
-use DateTimeInterface;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;

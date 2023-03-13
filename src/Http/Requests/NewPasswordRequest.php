@@ -40,7 +40,7 @@ class NewPasswordRequest extends FormRequest
     public function messages()
     {
         return [
-            'token.required' => (trans('canvas::app.token_required')),
+            'token.required' => trans('canvas::app.token_required'),
             'email.required' => trans('canvas::app.email_required'),
             'password.required' => trans('canvas::app.password_required'),
             'password.confirmed' => trans('canvas::app.password_confirmed'),

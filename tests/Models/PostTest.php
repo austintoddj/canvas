@@ -97,12 +97,12 @@ class PostTest extends TestCase
 
     public function testPublishedAttribute(): void
     {
-        $this->assertTrue((Post::factory()->published()->create())->published);
+        $this->assertTrue(Post::factory()->published()->create()->published);
     }
 
     public function testDraftAttribute(): void
     {
-        $this->assertTrue((Post::factory()->draft()->create())->draft);
+        $this->assertTrue(Post::factory()->draft()->create()->draft);
     }
 
     public function testPublishedScope(): void
