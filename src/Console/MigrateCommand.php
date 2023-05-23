@@ -30,6 +30,7 @@ class MigrateCommand extends Command
     public function handle()
     {
         $this->callSilent('migrate', [
+            '--database' => config('canvas.database_connection'),
             '--path' => 'vendor/austintoddj/canvas/database/migrations',
             '--force' => $this->option('force') ?? true,
         ]);

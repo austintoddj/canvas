@@ -6,10 +6,9 @@ namespace Canvas\Models;
 
 use Canvas\Database\Factories\TopicFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Topic extends Model
+class Topic extends AbstractCanvasModel
 {
     use HasFactory, SoftDeletes;
 
