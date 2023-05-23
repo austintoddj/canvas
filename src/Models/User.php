@@ -7,9 +7,9 @@ namespace Canvas\Models;
 use Canvas\Canvas;
 use Canvas\Database\Factories\UserFactory;
 use Canvas\Traits\HasRole;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Contracts\Auth\Authenticatable;
 
 class User extends AbstractCanvasModel implements Authenticatable
 {
