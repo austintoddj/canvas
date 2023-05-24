@@ -2,8 +2,8 @@
 
 namespace Canvas;
 
-use Composer\InstalledVersions;
 use Canvas\Models\User;
+use Composer\InstalledVersions;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use RuntimeException;
