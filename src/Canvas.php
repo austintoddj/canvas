@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Canvas;
 
-use Canvas\Models\User;
 use Composer\InstalledVersions;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
