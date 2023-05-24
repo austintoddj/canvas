@@ -25,7 +25,7 @@ class UploadsController extends Controller
         // are not supported at this time
         $file = reset($payload);
 
-        $path = $file->storePublicly(Canvas::baseStoragePath(), [
+        $path = $file->store(Canvas::baseStoragePath(), [
             'disk' => config('canvas.storage_disk'),
         ]);
 
