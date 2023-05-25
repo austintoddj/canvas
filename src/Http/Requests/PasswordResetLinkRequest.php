@@ -25,8 +25,10 @@ class PasswordResetLinkRequest extends FormRequest
      */
     public function rules()
     {
+        $connection = config('canvas.database_connection');
+
         return [
-            'email' => 'required|email:filter|exists:canvas_users',
+            'email' => "required|email:filter|exists:{$connection}.canvas_users",
         ];
     }
 

@@ -62,7 +62,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create(self::USERS_TABLE, function (Blueprint $table) {
+        Schema::connection(config('canvas.database_connection'))->create(self::USERS_TABLE, function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('email')->unique();
@@ -84,7 +84,7 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        Schema::create(self::TAGS_TABLE, function (Blueprint $table) {
+        Schema::connection(config('canvas.database_connection'))->create(self::TAGS_TABLE, function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('slug');
             $table->string('name');
@@ -99,7 +99,7 @@ return new class extends Migration
             $table->unique(['slug', 'user_id']);
         });
 
-        Schema::create(self::TOPICS_TABLE, function (Blueprint $table) {
+        Schema::connection(config('canvas.database_connection'))->create(self::TOPICS_TABLE, function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('slug');
             $table->string('name');
@@ -114,7 +114,7 @@ return new class extends Migration
             $table->unique(['slug', 'user_id']);
         });
 
-        Schema::create(self::POSTS_TABLE, function (Blueprint $table) {
+        Schema::connection(config('canvas.database_connection'))->create(self::POSTS_TABLE, function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('slug');
             $table->string('title');
@@ -132,14 +132,14 @@ return new class extends Migration
             $table->unique(['slug', 'user_id']);
         });
 
-        Schema::create(self::POSTS_TAGS_TABLE, function (Blueprint $table) {
+        Schema::connection(config('canvas.database_connection'))->create(self::POSTS_TAGS_TABLE, function (Blueprint $table) {
             $table->foreignUuid('post_id')->index()->references('id')->on(self::POSTS_TABLE);
             $table->foreignUuid('tag_id')->index()->references('id')->on(self::TAGS_TABLE);
 
             $table->unique(['post_id', 'tag_id']);
         });
 
-        Schema::create(self::VIEWS_TABLE, function (Blueprint $table) {
+        Schema::connection(config('canvas.database_connection'))->create(self::VIEWS_TABLE, function (Blueprint $table) {
             $table->increments('id');
             $table->foreignUuid('post_id')->index()->references('id')->on(self::POSTS_TABLE);
             $table->string('ip')->nullable();
@@ -150,7 +150,7 @@ return new class extends Migration
             $table->index('created_at');
         });
 
-        Schema::create(self::VISITS_TABLE, function (Blueprint $table) {
+        Schema::connection(config('canvas.database_connection'))->create(self::VISITS_TABLE, function (Blueprint $table) {
             $table->increments('id');
             $table->foreignUuid('post_id')->references('id')->on(self::POSTS_TABLE);
             $table->string('ip')->nullable();
@@ -169,12 +169,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists(self::USERS_TABLE);
-        Schema::dropIfExists(self::TAGS_TABLE);
-        Schema::dropIfExists(self::TOPICS_TABLE);
-        Schema::dropIfExists(self::POSTS_TABLE);
-        Schema::dropIfExists(self::POSTS_TAGS_TABLE);
-        Schema::dropIfExists(self::VIEWS_TABLE);
-        Schema::dropIfExists(self::VISITS_TABLE);
+        Schema::connection(config('canvas.database_connection'))->dropIfExists(self::USERS_TABLE);
+        Schema::connection(config('canvas.database_connection'))->dropIfExists(self::TAGS_TABLE);
+        Schema::connection(config('canvas.database_connection'))->dropIfExists(self::TOPICS_TABLE);
+        Schema::connection(config('canvas.database_connection'))->dropIfExists(self::POSTS_TABLE);
+        Schema::connection(config('canvas.database_connection'))->dropIfExists(self::POSTS_TAGS_TABLE);
+        Schema::connection(config('canvas.database_connection'))->dropIfExists(self::VIEWS_TABLE);
+        Schema::connection(config('canvas.database_connection'))->dropIfExists(self::VISITS_TABLE);
     }
 };
