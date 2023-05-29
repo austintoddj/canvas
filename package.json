@@ -23,7 +23,7 @@
         "dayjs": "^1.11",
         "eslint": "^8.31",
         "eslint-config-prettier": "^8.7",
-        "eslint-plugin-vue": "^9.8",
+        "eslint-plugin-vue": "^9.14",
         "laravel-mix": "^6.0",
         "postcss": "^8.4",
         "prettier": "^2.8",
