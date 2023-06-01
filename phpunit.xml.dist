@@ -32,5 +32,6 @@
         <env name="APP_ENV" value="testing"/>
         <env name="APP_KEY" value="base64:cnx7anOUDil+KtEGdGiHBnY764aA05eU80oECtOqfYs="/>
         <env name="APP_URL" value="http://laravel.test"/>
+        <env name="CANVAS_DB_CONNECTION" value="sqlite"/>
     </php>
 </phpunit>
