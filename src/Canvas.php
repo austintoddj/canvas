@@ -42,7 +42,7 @@ class Canvas
     /**
      * Return an encoded string of app translations.
      *
-     * @param $locale
+     * @param  $locale
      * @return string
      */
     public static function availableTranslations($locale)
