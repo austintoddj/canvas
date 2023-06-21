@@ -12,8 +12,8 @@ class Session
     /**
      * Handle the incoming request.
      *
-     * @param $request
-     * @param $next
+     * @param  $request
+     * @param  $next
      * @return Response
      */
     public function handle(Request $request, Closure $next)

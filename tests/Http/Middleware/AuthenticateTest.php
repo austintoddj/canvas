@@ -71,8 +71,8 @@ class AuthenticateTest extends TestCase
     /**
      * @dataProvider protectedRoutesProvider
      *
-     * @param $method
-     * @param $endpoint
+     * @param  $method
+     * @param  $endpoint
      */
     public function testUnauthenticatedUsersAreRedirectedToLogin($method, $endpoint): void
     {

@@ -42,8 +42,8 @@ class AdminTest extends TestCase
     /**
      * @dataProvider protectedRoutesProvider
      *
-     * @param $method
-     * @param $endpoint
+     * @param  $method
+     * @param  $endpoint
      */
     public function testContributorAccessIsRestricted($method, $endpoint)
     {
@@ -55,8 +55,8 @@ class AdminTest extends TestCase
     /**
      * @dataProvider protectedRoutesProvider
      *
-     * @param $method
-     * @param $endpoint
+     * @param  $method
+     * @param  $endpoint
      */
     public function testEditorAccessIsRestricted($method, $endpoint)
     {
@@ -68,8 +68,8 @@ class AdminTest extends TestCase
     /**
      * @dataProvider protectedRoutesProvider
      *
-     * @param $method
-     * @param $endpoint
+     * @param  $method
+     * @param  $endpoint
      */
     public function testAdminAccessIsGranted($method, $endpoint)
     {

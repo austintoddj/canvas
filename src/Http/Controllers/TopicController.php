@@ -43,7 +43,7 @@ class TopicController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  TopicRequest  $request
-     * @param $id
+     * @param  $id
      * @return JsonResponse
      */
     public function store(TopicRequest $request, $id): JsonResponse
@@ -74,7 +74,7 @@ class TopicController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param $id
+     * @param  $id
      * @return JsonResponse
      */
     public function show($id): JsonResponse
@@ -87,7 +87,7 @@ class TopicController extends Controller
     /**
      * Display the specified relationship.
      *
-     * @param $id
+     * @param  $id
      * @return JsonResponse
      */
     public function posts($id): JsonResponse
@@ -100,7 +100,7 @@ class TopicController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param $id
+     * @param  $id
      * @return mixed
      *
      * @throws Exception
