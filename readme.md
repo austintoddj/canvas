@@ -73,6 +73,25 @@ Canvas exposes its UI at `/canvas` by default. This can be changed by updating e
 */
 
 'path' => env('CANVAS_PATH_NAME', 'canvas'),
+
+/*
+|--------------------------------------------------------------------------
+| Credit Details : Login Page / Reset Page / Forgot Password Page
+|--------------------------------------------------------------------------
+|
+| This is the Credit management section to manage weather we want to show
+| copyright details and customize it
+| : CANVAS_CREDIT_DISPLAY : true/false will show and hide the copyright section
+| : CANVAS_CREDIT_NAME : override the default "Canvas" text.
+| : CANVAS_CREDIT_URI : override the default "https://trycanvas.app" uri with custom.
+|
+*/
+'credit' => [
+    'display' => env('CANVAS_CREDIT_DISPLAY', true),
+    'name' => env('CANVAS_CREDIT_NAME', 'Canvas'),
+    'uri' => env('CANVAS_CREDIT_URI', 'https://trycanvas.app'),
+],
+
 ```
 
 Sometimes, you may want to apply custom roles or permissions when accessing Canvas. You can create and attach any additional middleware here:

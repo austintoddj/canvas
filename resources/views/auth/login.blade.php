@@ -62,8 +62,10 @@
                 </div>
             </div>
         </div>
+        @if(config('canvas.credit.display', true))
         <div class="mt-5 text-center">
-            <p class="text-muted">Powered by <a href="https://trycanvas.app" class="text-primary text-decoration-none">Canvas</a></p>
+            <p class="text-muted">Powered by <a href="{{config('canvas.credit.uri', 'https://trycanvas.app')}}" class="text-primary text-decoration-none">{{config('canvas.credit.name', 'Canvas')}}</a></p>
         </div>
+        @endif
     </main>
 @endsection
