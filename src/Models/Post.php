@@ -71,7 +71,7 @@ class Post extends Model
      * @var array
      */
     protected $casts = [
-        'published_at' => 'datetime:Y-m-d',
+        'published_at' => 'datetime:Y-m-d H:i:s',
         'meta' => 'array',
     ];
 
