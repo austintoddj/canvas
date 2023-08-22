@@ -167,6 +167,11 @@ export default {
             Quill.register(EmbedImageBlot, true);
             Quill.register(EmbedContentBlot, true);
 
+            let Block = Quill.import('blots/block');
+            Block.tagName = 'div';
+            Block.blotName = 'P';
+            Quill.register(Block);
+
             const icons = Quill.import('ui/icons');
             icons.header[3] = require('!html-loader!quill/assets/icons/header-3.svg');
 
