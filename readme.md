@@ -19,9 +19,9 @@ monthly trends on your content, get insights into reader traffic and more!
 
 ## System Requirements
 
-- PHP >= 8.0
-- Laravel >= 9.0
-- One of the [five supported databases](https://laravel.com/docs/9.x/database#introduction) by Laravel
+-   PHP >= 8.0
+-   Laravel >= 9.0
+-   One of the [five supported databases](https://laravel.com/docs/9.x/database#introduction) by Laravel
 
 ## Installation
 
@@ -124,11 +124,11 @@ Canvas uses the storage disk for media uploads. You may configure the different 
 
 Canvas comes with 3 pre-defined roles out-of-the-box:
 
-- **Contributor** (Can create and edit their own posts, but cannot publish. An Editor needs to approve and publish for
-  them.)
-- **Editor** (Can edit and publish any posts on the site.)
-- **Admin** (Trusted staff user who should be able to manage all content and users, as well as site settings and
-  options.)
+-   **Contributor** (Can create and edit their own posts, but cannot publish. An Editor needs to approve and publish for
+    them.)
+-   **Editor** (Can edit and publish any posts on the site.)
+-   **Admin** (Trusted staff user who should be able to manage all content and users, as well as site settings and
+    options.)
 
 When you install a fresh version of Canvas, you'll have a default admin user set up automatically. From there, you can
 perform any basic CRUD actions on users, as well as assign their various roles.
@@ -304,10 +304,9 @@ Canvas is open-sourced software licensed under the [MIT license](license).
 
 ## Credits
 
-- [@austintoddj](https://twitter.com/austintoddj)
-- [@talvbansal](https://twitter.com/talv)
-- [@reliq](https://twitter.com/IAmReliq)
-- [@mithicher](https://twitter.com/mithicher)
-- [@themsaid](https://twitter.com/themsaid)
-- [@NinaLimpi](https://twitter.com/NinaLimpi)
-
+-   [@austintoddj](https://twitter.com/austintoddj)
+-   [@talvbansal](https://twitter.com/talv)
+-   [@reliq](https://twitter.com/IAmReliq)
+-   [@mithicher](https://twitter.com/mithicher)
+-   [@themsaid](https://twitter.com/themsaid)
+-   [@NinaLimpi](https://twitter.com/NinaLimpi)

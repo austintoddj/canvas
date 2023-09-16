@@ -26,7 +26,7 @@ class TopicController extends Controller
 
         return response()->json(
             Topic::query()
-               ->select('id', 'name', 'created_at')
+                ->select('id', 'name', 'created_at')
                 ->withCount('posts')
                 ->when($sortByPopular, function (Builder $query) {
                     return $query->orderBy('posts_count', 'desc');
@@ -39,7 +39,7 @@ class TopicController extends Controller
                 }, function (Builder $query) {
                     return $query->latest();
                 })
-               ->paginate()
+                ->paginate()
         );
     }
 

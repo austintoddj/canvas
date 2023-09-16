@@ -2,18 +2,18 @@
 
 Thank you for considering contributing to Canvas! One of the ongoing goals for Canvas is to make it as accessible as possible. If you come across any translation mistakes or issues and want to make a contribution, please [create a pull request](https://github.com/austintoddj/canvas/pulls). If you don't see your native language included in the `lang` directory, feel free to add it.
 
-- [OS Tools](#before-you-get-started)
-- [Setup](#setup)
-	- [Git](#git)
-	- [Database](#database)
-	- [Directories](#directories)
-	- [Installation](#installation)
-	- [Developing](#developing)
+-   [OS Tools](#before-you-get-started)
+-   [Setup](#setup)
+    -   [Git](#git)
+    -   [Database](#database)
+    -   [Directories](#directories)
+    -   [Installation](#installation)
+    -   [Developing](#developing)
 
 ## Before you get started
 
-- Make sure the [Vue DevTools](https://chrome.google.com/webstore/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd?hl=en) extension is installed in your Chrome browser
-- Add the following function from [Caleb Porzio](https://calebporzio.com/bash-alias-composer-link-use-local-folders-as-composer-dependancies/) to your `~/.bashrc`, `~/.bash_profile` or `~/.zshrc`:
+-   Make sure the [Vue DevTools](https://chrome.google.com/webstore/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd?hl=en) extension is installed in your Chrome browser
+-   Add the following function from [Caleb Porzio](https://calebporzio.com/bash-alias-composer-link-use-local-folders-as-composer-dependancies/) to your `~/.bashrc`, `~/.bash_profile` or `~/.zshrc`:
 
 ```bash
 composer-link() {composer config repositories.local '{"type": "path", "url": "'$1'"}' --file composer.json}
@@ -77,7 +77,7 @@ php artisan storage:link
 ```
 
 Statistics are a core component to the app, so it's best to have a large dataset in place when developing. To
- generate some, add the following factories to your Laravel app:
+generate some, add the following factories to your Laravel app:
 
 ```php
 <?php
@@ -162,7 +162,7 @@ You can now run `php artisan db:seed` and you will have a substantial amount of 
 ### Developing
 
 Instead of making and compiling frontend changes in the package, then having to re-publish the assets in the
- Laravel app again and again, we can utilize a symlink: 
+Laravel app again and again, we can utilize a symlink:
 
 ```bash
 # remove the existing assets from the Laravel app

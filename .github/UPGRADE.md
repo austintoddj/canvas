@@ -16,12 +16,12 @@ php artisan canvas:migrate
 php artisan canvas:publish
 ```
 
-- [Upgrading to 7.0.0 from 6.0](#upgrading-to-700-from-60)
-- [Upgrading to 6.0.0 from 5.4](#upgrading-to-600-from-54)
-- [Upgrading to 5.4.0 from 5.3](#upgrading-to-540-from-53)
-- [Upgrading to 5.3.0 from 5.2](#upgrading-to-530-from-52)
-- [Upgrading to 5.2.0 from 5.1](#upgrading-to-520-from-51)
-- [Upgrading to 5.1.0 from 5.0](#upgrading-to-510-from-50)
+-   [Upgrading to 7.0.0 from 6.0](#upgrading-to-700-from-60)
+-   [Upgrading to 6.0.0 from 5.4](#upgrading-to-600-from-54)
+-   [Upgrading to 5.4.0 from 5.3](#upgrading-to-540-from-53)
+-   [Upgrading to 5.3.0 from 5.2](#upgrading-to-530-from-52)
+-   [Upgrading to 5.2.0 from 5.1](#upgrading-to-520-from-51)
+-   [Upgrading to 5.1.0 from 5.0](#upgrading-to-510-from-50)
 
 ## Upgrading to 7.0.0 from 6.0
 
@@ -36,21 +36,21 @@ some manual steps to take. Don't worry, they're simple and straightforward.
 > Note: The process for migrating data will be unique based on your choice of IDE and database.
 
 The first thing to do is export all data in your Canvas-related tables to a SQL dump. It's important that your export
-does **not include** the table structure. You only want INSERT statements in the actual export. *If you do include
-CREATE TABLE statements, it'll modify the new tables when importing later*.
+does **not include** the table structure. You only want INSERT statements in the actual export. _If you do include
+CREATE TABLE statements, it'll modify the new tables when importing later_.
 
 For example, I use [Table Plus](https://tableplus.com). When I exported my data, I made sure to un-check the
 _Include table structure_ and _Drop table if exists_ in the export selection screen.
 
 The following tables need to be included in the export:
 
-- `canvas_users`
-- `canvas_posts`
-- `canvas_posts_tags`
-- `canvas_tags`
-- `canvas_topics`
-- `canvas_views`
-- `canvas_visits`
+-   `canvas_users`
+-   `canvas_posts`
+-   `canvas_posts_tags`
+-   `canvas_tags`
+-   `canvas_topics`
+-   `canvas_views`
+-   `canvas_visits`
 
 Once completed, you can drop those tables from your database.
 
@@ -111,20 +111,20 @@ underlying structure of WordPress and similar apps.
 
 The first step is to export all data in Canvas-related tables to a SQL dump. The important part of this step is to make
 sure your export does **not include** the table structure. You only want INSERT statements in the actual export
-. *If you do include CREATE TABLE statements, it'll modify the new tables when importing later*.
+. _If you do include CREATE TABLE statements, it'll modify the new tables when importing later_.
 
 For example, I use [Sequel Pro](http://sequelpro.com). When I exported my data, I made sure to un-check the
 Structure and DROP TABLE syntax elements in the export selection screen.
 
 The following tables need to be included in the export:
 
-- `canvas_posts`
-- `canvas_posts_tags`
-- `canvas_posts_topics`
-- `canvas_tags`
-- `canvas_topics`
-- `canvas_views`
-- `canvas_visits`
+-   `canvas_posts`
+-   `canvas_posts_tags`
+-   `canvas_posts_topics`
+-   `canvas_tags`
+-   `canvas_topics`
+-   `canvas_views`
+-   `canvas_visits`
 
 Once completed, you can drop those tables from your database.
 
@@ -155,9 +155,9 @@ determine if you should run into any errors while performing this action.
 
 Once the import is complete, the `user_id` column in the following tables will need to be addressed:
 
-- `canvas_posts`
-- `canvas_tags`
-- `canvas_topics`
+-   `canvas_posts`
+-   `canvas_tags`
+-   `canvas_topics`
 
 Since those values reflect the user ID from the default `users` table, you'll need to make sure you manually update
 those to the correct user IDs when you have them established in `canvas_users`.
@@ -168,7 +168,7 @@ Since we don't rely on the default `users` table anymore, you'll need create you
 simple, just run the following Artisan command:
 
 ```bash
-php artisan canvas:user admin --email {email} 
+php artisan canvas:user admin --email {email}
 ```
 
 That's it! You should jump in right away and update your credentials. Now that you've given yourself Admin access
@@ -271,7 +271,7 @@ php artisan view:clear
 ## Upgrading to 5.2.0 from 5.1
 
 > **Important:** The `Canvas\Http\Middleware\ViewThrottle` middleware was renamed to `Canvas\Http\Middleware
-> \Session`. Update any usages of this class.
+\Session`. Update any usages of this class.
 
 > **Important:** The `meta` field for posts will now only support a title, description, and canonical link. The
 > `og_*` and `twitter_*` tags were unnecessarily specific, so they were deprecated. If you use those tags in your

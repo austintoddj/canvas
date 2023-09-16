@@ -1,4 +1,5 @@
 const mix = require('laravel-mix')
+/* eslint-disable-next-line */
 const BundleAnalyzerPlugin =
     require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
@@ -28,6 +29,7 @@ mix.webpackConfig({
         }
     })
     .setPublicPath('public')
+    .copyDirectory('resources/img', 'public/img')
     .js('resources/js/app.js', 'public/js')
     .vue({ version: 3 })
     .postCss('resources/css/app.css', 'public/css', [require('tailwindcss')])

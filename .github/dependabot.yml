@@ -1,38 +1,37 @@
 version: 2
 updates:
-
   # Maintain dependencies for GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    target-branch: "develop"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    target-branch: 'develop'
     schedule:
-      interval: "daily"
+      interval: 'daily'
     assignees:
-      - "austintoddj"
+      - 'austintoddj'
     labels:
-      - "github-actions"
-      - "dependencies"
+      - 'github-actions'
+      - 'dependencies'
 
   # Maintain dependencies for npm
-  - package-ecosystem: "npm"
-    directory: "/"
-    target-branch: "develop"
+  - package-ecosystem: 'npm'
+    directory: '/'
+    target-branch: 'develop'
     schedule:
-      interval: "daily"
+      interval: 'daily'
     assignees:
-      - "austintoddj"
+      - 'austintoddj'
     labels:
-      - "npm"
-      - "dependencies"
+      - 'npm'
+      - 'dependencies'
 
   # Maintain dependencies for Composer
-  - package-ecosystem: "composer"
-    directory: "/"
-    target-branch: "develop"
+  - package-ecosystem: 'composer'
+    directory: '/'
+    target-branch: 'develop'
     schedule:
-      interval: "daily"
+      interval: 'daily'
     assignees:
-      - "austintoddj"
+      - 'austintoddj'
     labels:
-      - "composer"
-      - "dependencies"
+      - 'composer'
+      - 'dependencies'

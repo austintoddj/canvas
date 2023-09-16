@@ -7,6 +7,7 @@
 
     <title>{{ config('app.name') }} ― Canvas</title>
 
+    <link rel="icon" type="image/x-icon" href="{{ mix('img/favicon.png', 'vendor/canvas') }}" />
     <link rel="stylesheet" type="text/css" href="{{ mix('css/app.css', 'vendor/canvas') }}">
 </head>
 <body>
