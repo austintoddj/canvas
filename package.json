@@ -53,7 +53,7 @@
         "eslint-plugin-sort-imports-es6-autofix": "^0.5.0",
         "eslint-plugin-vue": "^7.3.0",
         "postcss": "^8.1",
-        "prettier": "^2.2.1",
+        "prettier": "^3.0.3",
         "webpack-bundle-analyzer": "^4.3.0"
     }
 }
