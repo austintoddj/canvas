@@ -89,8 +89,6 @@ class CanvasServiceProvider extends ServiceProvider
              });
 
         $this->loadRoutesFrom(__DIR__.'/../routes/default.php');
-
-
     }
 
     /**
