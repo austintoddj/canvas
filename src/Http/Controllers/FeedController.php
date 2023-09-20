@@ -13,7 +13,7 @@ class FeedController extends Controller
      */
     public function __invoke(Request $request)
     {
-        $posts  = Post::query()
+        $posts = Post::query()
             ->select('id', 'slug', 'title', 'user_id', 'summary', 'published_at')
             ->latest()
             ->published()
