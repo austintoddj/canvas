@@ -91,4 +91,5 @@ return [
         'enabled' => env('CANVAS_MAIL_ENABLED', false),
     ],
 
+    'description' => env('CANVAS_DESCRIPTION', 'A simple description for your blog.')
 ];

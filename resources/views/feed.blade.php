@@ -5,7 +5,7 @@
     <channel>
         <title><![CDATA[ {{ url("/") }} ]]></title>
         <link><![CDATA[ {{ url("/feed") }} ]]></link>
-        <description><![CDATA[ {{ config("app.name") }} ]]>
+        <description><![CDATA[ {{ config("canvas.description") }} ]]>
         </description>
         <language>{{ app()->getLocale() }}</language>
         <pubDate>{{ now() }}</pubDate>
