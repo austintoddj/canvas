@@ -87,6 +87,10 @@ class CanvasServiceProvider extends ServiceProvider
              ->group(function () {
                  $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
              });
+
+        $this->loadRoutesFrom(__DIR__.'/../routes/default.php');
+
+
     }
 
     /**
