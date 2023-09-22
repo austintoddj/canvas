@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b23f78cd3676496528b60f550e296509",
+    "content-hash": "7689161be4658b08fb267a634c9b7efe",
     "packages": [
         {
             "name": "brick/math",
@@ -5461,16 +5461,16 @@
         },
         {
             "name": "orchestra/canvas",
-            "version": "v8.9.0",
+            "version": "v8.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/orchestral/canvas.git",
-                "reference": "00a41451aa288d92741f8b314fa056abbe79c237"
+                "reference": "8232da2e8608028907bdef023227c8376f3f6d15"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/orchestral/canvas/zipball/00a41451aa288d92741f8b314fa056abbe79c237",
-                "reference": "00a41451aa288d92741f8b314fa056abbe79c237",
+                "url": "https://api.github.com/repos/orchestral/canvas/zipball/8232da2e8608028907bdef023227c8376f3f6d15",
+                "reference": "8232da2e8608028907bdef023227c8376f3f6d15",
                 "shasum": ""
             },
             "require": {
@@ -5527,9 +5527,9 @@
             "description": "Code Generators for Laravel Applications and Packages",
             "support": {
                 "issues": "https://github.com/orchestral/canvas/issues",
-                "source": "https://github.com/orchestral/canvas/tree/v8.9.0"
+                "source": "https://github.com/orchestral/canvas/tree/v8.10.0"
             },
-            "time": "2023-09-19T04:58:28+00:00"
+            "time": "2023-09-20T15:03:01+00:00"
         },
         {
             "name": "orchestra/canvas-core",
@@ -5662,16 +5662,16 @@
         },
         {
             "name": "orchestra/testbench-core",
-            "version": "v8.11.1",
+            "version": "v8.11.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/orchestral/testbench-core.git",
-                "reference": "1f382c9d55100c2c641d4cba50bbde764aa93054"
+                "reference": "a18dcf6b6e27fc7e7c7017115b6a16bc848b4512"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/orchestral/testbench-core/zipball/1f382c9d55100c2c641d4cba50bbde764aa93054",
-                "reference": "1f382c9d55100c2c641d4cba50bbde764aa93054",
+                "url": "https://api.github.com/repos/orchestral/testbench-core/zipball/a18dcf6b6e27fc7e7c7017115b6a16bc848b4512",
+                "reference": "a18dcf6b6e27fc7e7c7017115b6a16bc848b4512",
                 "shasum": ""
             },
             "require": {
@@ -5739,7 +5739,7 @@
                 "issues": "https://github.com/orchestral/testbench/issues",
                 "source": "https://github.com/orchestral/testbench-core"
             },
-            "time": "2023-09-19T10:57:14+00:00"
+            "time": "2023-09-21T02:56:43+00:00"
         },
         {
             "name": "orchestra/workbench",

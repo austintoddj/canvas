@@ -28,8 +28,12 @@ $red: rgba(204, 84, 84, 1);
 $green: rgba(3, 168, 124, 1);
 
 $box-shadow-sm: 0 1px 2px 0 rgba($black, 0.05);
-$box-shadow: 0 1px 3px 0 rgba($black, 0.1), 0 1px 2px 0 rgba($black, 0.06);
-$box-shadow-lg: 0 10px 15px -3px rgba($black, 0.1), 0 4px 6px -2px rgba($black, 0.05);
+$box-shadow:
+    0 1px 3px 0 rgba($black, 0.1),
+    0 1px 2px 0 rgba($black, 0.06);
+$box-shadow-lg:
+    0 10px 15px -3px rgba($black, 0.1),
+    0 4px 6px -2px rgba($black, 0.05);
 
 $border-radius: 0.5rem;
 $border-radius-sm: 0.4rem;
@@ -62,7 +66,9 @@ $text-muted: $gray-500;
     right: 0;
     width: 100px;
     height: 100%;
-    box-shadow: 0 0 10px $green, 0 0 5px $green;
+    box-shadow:
+        0 0 10px $green,
+        0 0 5px $green;
     opacity: 1;
 
     -webkit-transform: rotate(3deg) translate(0px, -4px);
@@ -88,9 +94,15 @@ $text-muted: $gray-500;
 }
 
 .card {
-    transition: box-shadow 0.2s ease, -webkit-transform 0.3s cubic-bezier(0.34, 2, 0.6, 1);
-    transition: transform 0.3s cubic-bezier(0.34, 2, 0.6, 1), box-shadow 0.2s ease;
-    transition: transform 0.3s cubic-bezier(0.34, 2, 0.6, 1), box-shadow 0.2s ease,
+    transition:
+        box-shadow 0.2s ease,
+        -webkit-transform 0.3s cubic-bezier(0.34, 2, 0.6, 1);
+    transition:
+        transform 0.3s cubic-bezier(0.34, 2, 0.6, 1),
+        box-shadow 0.2s ease;
+    transition:
+        transform 0.3s cubic-bezier(0.34, 2, 0.6, 1),
+        box-shadow 0.2s ease,
         -webkit-transform 0.3s cubic-bezier(0.34, 2, 0.6, 1);
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
 }
@@ -98,7 +110,9 @@ $text-muted: $gray-500;
 .card:hover {
     -webkit-transform: translateY(-5px);
     transform: translateY(-5px);
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.12), 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+    box-shadow:
+        0 4px 8px 0 rgba(0, 0, 0, 0.12),
+        0 2px 4px 0 rgba(0, 0, 0, 0.08);
 }
 
 .post-content {

@@ -29,7 +29,9 @@
     right: 0;
     width: 100px;
     height: 100%;
-    box-shadow: 0 0 10px $green, 0 0 5px $green;
+    box-shadow:
+        0 0 10px $green,
+        0 0 5px $green;
     opacity: 1;
 
     -webkit-transform: rotate(3deg) translate(0px, -4px);
