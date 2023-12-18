@@ -30,7 +30,7 @@
         "resolve-url-loader": "^5.0.0",
         "sass": "^1.30.0",
         "sass-loader": "^10.1.0",
-        "unsplash-js": "^6.0.0",
+        "unsplash-js": "^7.0.19",
         "url-parse": "^1.5.9",
         "vue": "^2.6.11",
         "vue-filepond": "^6.0.2",
