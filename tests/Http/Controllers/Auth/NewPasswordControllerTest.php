@@ -56,7 +56,7 @@ class NewPasswordControllerTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->post(route('canvas.reset-password'), [
-            'token' =>  encrypt($user->id.'|'.Str::random()),
+            'token' => encrypt($user->id.'|'.Str::random()),
             'email' => 'not-an-email',
             'password' => 'password',
             'password_confirmation' => 'password',
@@ -70,7 +70,7 @@ class NewPasswordControllerTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->post(route('canvas.reset-password'), [
-            'token' =>  encrypt($user->id.'|'.Str::random()),
+            'token' => encrypt($user->id.'|'.Str::random()),
             'email' => $user->email,
             'password' => 'password',
             'password_confirmation' => 'secret',
