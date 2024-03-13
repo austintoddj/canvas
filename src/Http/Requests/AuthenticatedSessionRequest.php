@@ -29,8 +29,10 @@ class AuthenticatedSessionRequest extends FormRequest
     {
         $this->redirect = route('canvas.login.view');
 
+        $connection = config('canvas.database_connection');
+
         return [
-            'email' => 'required|email:filter|exists:canvas_users',
+            'email' => "required|email:filter|exists:{$connection}.canvas_users",
             'password' => 'required',
         ];
     }

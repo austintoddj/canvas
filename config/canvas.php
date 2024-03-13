@@ -4,6 +4,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Canvas Database Connection
+    |--------------------------------------------------------------------------
+    |
+    | This is the database connection you want Canvas to use while storing &
+    | reading your content. By default Canvas uses the default one. However, you can change that
+    | to anything you want.
+    |
+    */
+
+    'database_connection' => env('CANVAS_DB_CONNECTION', 'mysql'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Base Domain
     |--------------------------------------------------------------------------
     |

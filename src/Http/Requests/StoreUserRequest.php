@@ -27,19 +27,21 @@ class StoreUserRequest extends FormRequest
      */
     public function rules()
     {
+        $connection = config('canvas.database_connection');
+
         return [
             'name' => 'required|string',
             'email' => [
                 'required',
                 'email:filter',
-                Rule::unique('canvas_users')->where(function (Builder $query) {
+                Rule::unique("{$connection}.canvas_users")->where(function (Builder $query) {
                     return $query->where('email', request('email'));
                 })->ignore($this->route('id'))->whereNull('deleted_at'),
             ],
             'username' => [
                 'nullable',
                 'alpha_dash',
-                Rule::unique('canvas_users')->where(function (Builder $query) {
+                Rule::unique("{$connection}.canvas_users")->where(function (Builder $query) {
                     return $query->where('username', request('username'));
                 })->ignore($this->route('id'))->whereNull('deleted_at'),
             ],

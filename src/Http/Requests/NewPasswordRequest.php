@@ -25,9 +25,11 @@ class NewPasswordRequest extends FormRequest
      */
     public function rules()
     {
+        $connection = config('canvas.database_connection');
+
         return [
             'token' => 'required',
-            'email' => 'required|email:filter|exists:canvas_users',
+            'email' => "required|email:filter|exists:{$connection}.canvas_users",
             'password' => 'required|confirmed|min:8',
         ];
     }

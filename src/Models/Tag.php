@@ -6,10 +6,9 @@ namespace Canvas\Models;
 
 use Canvas\Database\Factories\TagFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Tag extends Model
+class Tag extends AbstractCanvasModel
 {
     use HasFactory, SoftDeletes;
 

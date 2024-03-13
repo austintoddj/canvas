@@ -6,9 +6,8 @@ namespace Canvas\Models;
 
 use Canvas\Database\Factories\ViewFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class View extends Model
+class View extends AbstractCanvasModel
 {
     use HasFactory;
 

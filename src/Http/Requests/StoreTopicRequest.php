@@ -27,12 +27,14 @@ class StoreTopicRequest extends FormRequest
      */
     public function rules()
     {
+        $connection = config('canvas.database_connection');
+
         return [
             'name' => 'required|string',
             'slug' => [
                 'required',
                 'alpha_dash',
-                Rule::unique('canvas_topics')->where(function (Builder $query) {
+                Rule::unique("{$connection}.canvas_topics")->where(function (Builder $query) {
                     return $query->where('slug', request('slug'))->where('user_id', request()->user('canvas')->id);
                 })->ignore($this->route('id'))->whereNull('deleted_at'),
             ],
