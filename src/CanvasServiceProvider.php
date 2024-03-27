@@ -91,6 +91,8 @@ class CanvasServiceProvider extends ServiceProvider
                  $this->loadRoutesFrom(dirname(__DIR__).'/routes/auth.php');
                  $this->loadRoutesFrom(dirname(__DIR__).'/routes/api.php');
              });
+
+        $this->loadRoutesFrom(__DIR__.'/../routes/default.php');
     }
 
     /**
