@@ -29,7 +29,6 @@ class UploadsController extends Controller
         // Use pathinfo to separate the filename and extension
         $path_parts = pathinfo($file->getClientOriginalName());
 
-        $path_parts = pathinfo($file->getClientOriginalName());
         $first_name = Str::kebab($path_parts['filename']);
         $unique_id = substr(md5($path_parts['filename']), 0, 8);
         
