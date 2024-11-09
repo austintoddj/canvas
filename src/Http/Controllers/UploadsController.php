@@ -21,14 +21,21 @@ class UploadsController extends Controller
             return response()->json(null, 400);
         }
 
-        // Only grab the first element because single file uploads
-        // are not supported at this time
+        // Only grab the first element because single file uploads are not supported at this time
         $file = reset($payload);
 
-        $path = $file->store(Canvas::baseStoragePath(), [
+        // Generate a unique identifier based on a hash of the original filename
+        $path_parts = pathinfo($file->getClientOriginalName());
+        $first_name = Str::kebab($path_parts['filename']);
+        $unique_id = substr(md5($path_parts['filename']), 0, 8);
+        $filename = $first_name . '-' . $unique_id . '.' . $path_parts['extension'];
+
+        // Store the file using the generated filename
+        $path = $file->storeAs(Canvas::baseStoragePath(), $filename, [
             'disk' => config('canvas.storage_disk'),
         ]);
 
+        // Return the URL of the stored file
         return Storage::disk(config('canvas.storage_disk'))->url($path);
     }
 
