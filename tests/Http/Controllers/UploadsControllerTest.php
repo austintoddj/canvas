@@ -6,6 +6,7 @@ use Canvas\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Class UploadsControllerTest.
@@ -16,10 +17,23 @@ class UploadsControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake(config('canvas.storage_disk'));
+    }
+
+    protected function generateExpectedFilename($file)
+    {
+        $path_parts = pathinfo($file->getClientOriginalName());
+        $first_name = Str::kebab($path_parts['filename']);
+        $unique_id = substr(md5($path_parts['filename']), 0, 8);
+        
+        return $first_name . '-' . $unique_id . '.' . $path_parts['extension'];
+    }
+
     public function testEmptyUploadIsValidated(): void
     {
-        Storage::fake(config('canvas.storage_disk'));
-
         $this->actingAs($this->admin, 'canvas')
              ->postJson('canvas/api/uploads', [null])
              ->assertStatus(400);
@@ -27,69 +41,48 @@ class UploadsControllerTest extends TestCase
 
     public function testUploadedImageCanBeStored(): void
     {
-        Storage::fake(config('canvas.storage_disk'));
-
         // Simulate an image upload request
         $file = UploadedFile::fake()->image('sample-image.jpg');
+        
+        // Store the file and check if it was successful
         $response = $this->actingAs($this->admin, 'canvas')
                          ->postJson('canvas/api/uploads', [$file])
                          ->assertSuccessful();
 
-        // Construct the expected filename based on the unique hash logic
-        $path_parts = pathinfo($file->getClientOriginalName());
-        $first_name = \Illuminate\Support\Str::kebab($path_parts['filename']);
-        $unique_id = substr(md5($path_parts['filename']), 0, 8);
-        $expected_filename = $first_name . '-' . $unique_id . '.' . $path_parts['extension'];
-
-        // Build the expected path in storage
+        // Build the expected filename and path
+        $expected_filename = $this->generateExpectedFilename($file);
         $expected_path = sprintf('%s/%s', Canvas::baseStoragePath(), $expected_filename);
 
-        // Assert that the response content is the URL of the stored file
+        // Check that the file was stored at the expected path
         $this->assertSame(
             $response->getOriginalContent(),
             Storage::disk(config('canvas.storage_disk'))->url($expected_path)
-        ); 
-
-        // Confirm that the response content is a string (URL)
+        );
         $this->assertIsString($response->getContent());
-
-        // Assert that the file actually exists in the specified path
         Storage::disk(config('canvas.storage_disk'))->assertExists($expected_path);
     }
 
     public function testDeleteUploadedImage(): void
     {
-        Storage::fake(config('canvas.storage_disk'));
-
-        // Attempt to delete with an empty payload to check validation
-        $this->actingAs($this->admin, 'canvas')
-             ->deleteJson('canvas/api/uploads', [null])
-             ->assertStatus(400);
-
-        // Simulate uploading a file to storage
+        // First, upload a file to delete later
         $file = UploadedFile::fake()->image('sample-image.jpg');
+        $expected_filename = $this->generateExpectedFilename($file);
+        $expected_path = sprintf('%s/%s', Canvas::baseStoragePath(), $expected_filename);
+
+        // Store the file
         $this->actingAs($this->admin, 'canvas')
              ->postJson('canvas/api/uploads', [$file])
              ->assertSuccessful();
 
-        // Construct the expected filename based on the unique hash logic
-        $path_parts = pathinfo($file->getClientOriginalName());
-        $first_name = \Illuminate\Support\Str::kebab($path_parts['filename']);
-        $unique_id = substr(md5($path_parts['filename']), 0, 8);
-        $expected_filename = $first_name . '-' . $unique_id . '.' . $path_parts['extension'];
-
-        // Build the expected path in storage
-        $expected_path = sprintf('%s/%s', Canvas::baseStoragePath(), $expected_filename);
-
-        // Confirm the file was successfully uploaded
+        // Ensure the file was uploaded and exists
         Storage::disk(config('canvas.storage_disk'))->assertExists($expected_path);
 
-        // Delete the uploaded file and verify deletion
+        // Delete the uploaded file and verify it was removed
         $this->actingAs($this->admin, 'canvas')
              ->deleteJson('canvas/api/uploads', [$expected_filename])
-             ->assertSuccessful();
+             ->assertStatus(204);
 
-        // Confirm that the file has been removed from storage
+        // Confirm that the file no longer exists in storage
         Storage::disk(config('canvas.storage_disk'))->assertMissing($expected_path);
     }
 }
