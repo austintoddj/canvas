@@ -25,7 +25,15 @@ class UploadsController extends Controller
         // are not supported at this time
         $file = reset($payload);
 
-        $path = $file->store(Canvas::baseStoragePath(), [
+        // Use pathinfo to separate the filename and extension
+        $path_parts = pathinfo($file->getClientOriginalName());
+    
+        $first_name = \Illuminate\Support\Str::kebab($path_parts['filename']);
+    
+        // Construct the new filename with time() before the extension
+        $name = $first_name . '-' . time() . '.' . $path_parts['extension'];
+
+        $path = $file->storeAs(Canvas::baseStoragePath(), $name, [
             'disk' => config('canvas.storage_disk'),
         ]);
 
