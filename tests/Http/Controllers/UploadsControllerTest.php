@@ -48,7 +48,7 @@ class UploadsControllerTest extends TestCase
         $this->assertSame(
             $response->getOriginalContent(),
             Storage::disk(config('canvas.storage_disk'))->url($expected_path)
-        );
+        ); 
 
         // Confirm that the response content is a string (URL)
         $this->assertIsString($response->getContent());
