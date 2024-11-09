@@ -5,6 +5,7 @@ namespace Canvas\Http\Controllers;
 use Canvas\Canvas;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class UploadsController extends Controller
 {
@@ -21,21 +22,23 @@ class UploadsController extends Controller
             return response()->json(null, 400);
         }
 
-        // Only grab the first element because single file uploads are not supported at this time
+        // Only grab the first element because single file uploads
+        // are not supported at this time
         $file = reset($payload);
 
-        // Generate a unique identifier based on a hash of the original filename
+        // Use pathinfo to separate the filename and extension
+        $path_parts = pathinfo($file->getClientOriginalName());
+
         $path_parts = pathinfo($file->getClientOriginalName());
         $first_name = Str::kebab($path_parts['filename']);
         $unique_id = substr(md5($path_parts['filename']), 0, 8);
-        $filename = $first_name . '-' . $unique_id . '.' . $path_parts['extension'];
+        
+        $name = $first_name . '-' . $unique_id . '.' . $path_parts['extension'];
 
-        // Store the file using the generated filename
-        $path = $file->storeAs(Canvas::baseStoragePath(), $filename, [
+        $path = $file->storeAs(Canvas::baseStoragePath(), $name, [
             'disk' => config('canvas.storage_disk'),
         ]);
 
-        // Return the URL of the stored file
         return Storage::disk(config('canvas.storage_disk'))->url($path);
     }
 
