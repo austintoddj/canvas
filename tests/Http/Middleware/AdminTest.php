@@ -17,7 +17,7 @@ class AdminTest extends TestCase
     /**
      * @return array
      */
-    public function protectedRoutesProvider(): array
+    public static function protectedRoutesProvider(): array
     {
         return [
             // Tag routes...

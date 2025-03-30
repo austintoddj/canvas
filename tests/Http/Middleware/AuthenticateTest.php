@@ -17,7 +17,7 @@ class AuthenticateTest extends TestCase
     /**
      * @return array
      */
-    public function protectedRoutesProvider(): array
+    public static function protectedRoutesProvider(): array
     {
         return [
             // Base routes...
