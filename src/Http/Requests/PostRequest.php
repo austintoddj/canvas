@@ -27,7 +27,7 @@ class PostRequest extends FormRequest
         return [
             'slug' => [
                 'required',
-                'alpha_dash',
+                'regex:/^[a-zA-Z0-9\/_-]+$/',
                 Rule::unique('canvas_posts')->where(function ($query) {
                     return $query->where('slug', request('slug'))->where('user_id', request()->user('canvas')->id);
                 })->ignore(request('id'))->whereNull('deleted_at'),
