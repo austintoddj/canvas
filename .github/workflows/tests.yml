@@ -3,20 +3,20 @@ name: tests
 on:
   push:
     branches:
-      - '*'
+      - "*"
   pull_request:
   schedule:
     - cron: '0 0 * * *'
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
-        php: [7.3, 7.4, 8.0, 8.1, 8.2]
-        laravel: [^6.0, ^7.0, ^8.0, ^9.0, ^10.0, ^11.0, ^12.0]
+        php: ['7.3', '7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
+        laravel: [^6.0, ^7.0, ^8.0, ^9.0, ^10.0, ^11.0, ^12.0, ^13.0]
         include:
           - laravel: ^6.0
             testbench: ^4.0
@@ -30,8 +30,10 @@ jobs:
             testbench: ^8.0
           - laravel: ^11.0
             testbench: ^9.0
-          - laravel: '^12.0'
+          - laravel: ^12.0
             testbench: ^10.0
+          - laravel: ^13.0
+            testbench: ^11.0
         exclude:
           - php: 7.3
             laravel: ^9.0
@@ -69,6 +71,16 @@ jobs:
             laravel: ^6.0
           - php: 8.2
             laravel: ^7.0
+          - laravel: ^13.0
+            php: '7.3'
+          - laravel: ^13.0
+            php: '7.4'
+          - laravel: ^13.0
+            php: '8.0'
+          - laravel: ^13.0
+            php: '8.1'
+          - laravel: ^13.0
+            php: '8.2'
 
     name: Laravel ${{ matrix.laravel }} on PHP ${{ matrix.php }}
 
