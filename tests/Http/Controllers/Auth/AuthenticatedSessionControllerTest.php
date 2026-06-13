@@ -45,6 +45,6 @@ it('redirects authenticated users to canvas', function (): void {
 });
 it('logs out successfully', function (): void {
     $this->actingAs($this->admin, 'canvas')
-        ->get(route('canvas.logout'))
+        ->post(route('canvas.logout'))
         ->assertRedirect(route('canvas.login'));
 });

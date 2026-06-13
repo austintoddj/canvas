@@ -84,21 +84,19 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id): JsonResponse
+    public function show(User $user): JsonResponse
     {
-        $user = User::query()->withCount('posts')->find($id);
+        $user->loadCount('posts');
 
-        return $user ? response()->json($user, 200) : response()->json(null, 404);
+        return response()->json($user, 200);
     }
 
     /**
      * Display the specified relationship.
      */
-    public function posts($id): JsonResponse
+    public function posts(User $user): JsonResponse
     {
-        $user = User::query()->with('posts')->find($id);
-
-        return $user ? response()->json($user->posts()->withCount('views')->paginate(), 200) : response()->json(null, 200);
+        return response()->json($user->posts()->withCount('views')->paginate(), 200);
     }
 
     /**
@@ -108,14 +106,12 @@ class UserController extends Controller
      *
      * @throws Exception
      */
-    public function destroy($id)
+    public function destroy(User $user)
     {
         // Prevent a user from deleting their own account
-        if (request()->user('canvas')->id == $id) {
+        if (request()->user('canvas')->id === $user->id) {
             return response()->json(null, 403);
         }
-
-        $user = User::query()->findOrFail($id);
 
         $user->delete();
 

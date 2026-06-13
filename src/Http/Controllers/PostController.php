@@ -9,6 +9,7 @@ use Canvas\Models\Topic;
 use Canvas\Services\StatsAggregator;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Ramsey\Uuid\Uuid;
@@ -152,16 +153,11 @@ class PostController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id): JsonResponse
+    public function show(Post $post): JsonResponse
     {
-        $post = Post::query()
-            ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                return $query->where('user_id', request()->user('canvas')->id);
-            }, function (Builder $query) {
-                return $query;
-            })
-            ->with('tags:name,slug', 'topic:name,slug')
-            ->findOrFail($id);
+        $this->ensurePostIsVisibleToCurrentUser($post);
+
+        $post->loadMissing('tags:name,slug', 'topic:name,slug');
 
         return response()->json([
             'post' => $post,
@@ -173,16 +169,13 @@ class PostController extends Controller
     /**
      * Display stats for the specified resource.
      */
-    public function stats(string $id): JsonResponse
+    public function stats(Post $post): JsonResponse
     {
-        $post = Post::query()
-            ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                return $query->where('user_id', request()->user('canvas')->id);
-            }, function (Builder $query) {
-                return $query;
-            })
-            ->published()
-            ->findOrFail($id);
+        $this->ensurePostIsVisibleToCurrentUser($post);
+
+        if (! $post->published) {
+            throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
+        }
 
         $stats = new StatsAggregator(request()->user('canvas'));
 
@@ -198,18 +191,21 @@ class PostController extends Controller
      *
      * @throws Exception
      */
-    public function destroy($id)
+    public function destroy(Post $post)
     {
-        $post = Post::query()
-            ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                return $query->where('user_id', request()->user('canvas')->id);
-            }, function (Builder $query) {
-                return $query;
-            })
-            ->findOrFail($id);
+        $this->ensurePostIsVisibleToCurrentUser($post);
 
         $post->delete();
 
         return response()->json(null, 204);
+    }
+
+    private function ensurePostIsVisibleToCurrentUser(Post $post): void
+    {
+        $user = request()->user('canvas');
+
+        if ($user->isContributor && $post->user_id !== $user->id) {
+            throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
+        }
     }
 }

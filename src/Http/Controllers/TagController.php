@@ -66,20 +66,16 @@ class TagController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id): JsonResponse
+    public function show(Tag $tag): JsonResponse
     {
-        $tag = Tag::query()->findOrFail($id);
-
         return response()->json($tag, 200);
     }
 
     /**
      * Display the specified relationship.
      */
-    public function posts($id): JsonResponse
+    public function posts(Tag $tag): JsonResponse
     {
-        $tag = Tag::query()->with('posts')->findOrFail($id);
-
         return response()->json($tag->posts()->withCount('views')->paginate(), 200);
     }
 
@@ -90,9 +86,8 @@ class TagController extends Controller
      *
      * @throws Exception
      */
-    public function destroy($id)
+    public function destroy(Tag $tag)
     {
-        $tag = Tag::query()->findOrFail($id);
 
         $tag->delete();
 

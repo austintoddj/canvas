@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas;
 
 use Canvas\Console\DigestCommand;
@@ -13,7 +15,7 @@ use Canvas\Http\Requests\FormRequest;
 use Canvas\Listeners\CaptureView;
 use Canvas\Listeners\CaptureVisit;
 use Canvas\Models\User;
-use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Validation\ValidatesWhenResolved;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Routing\Redirector;
@@ -30,12 +32,6 @@ class CanvasServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/canvas.php', 'canvas');
     }
 
-    /**
-     * Bootstrap any application services.
-     *
-     *
-     * @throws BindingResolutionException
-     */
     public function boot(): void
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'canvas');
@@ -49,12 +45,6 @@ class CanvasServiceProvider extends ServiceProvider
         $this->registerEvents();
     }
 
-    /**
-     * Register the events and listeners.
-     *
-     *
-     * @throws BindingResolutionException
-     */
     private function registerEvents(): void
     {
         $mappings = [
@@ -64,12 +54,11 @@ class CanvasServiceProvider extends ServiceProvider
             ],
         ];
 
+        /** @var Dispatcher $events */
         $events = $this->app->make(Dispatcher::class);
 
         foreach ($mappings as $event => $listeners) {
-            foreach ($listeners as $listener) {
-                $events->listen($event, $listener);
-            }
+            $events->listen($event, $listeners);
         }
     }
 
@@ -78,11 +67,10 @@ class CanvasServiceProvider extends ServiceProvider
      */
     private function configureRoutes(): void
     {
-        Route::namespace('Canvas\Http\Controllers')
-            ->middleware(config('canvas.middleware'))
+        Route::middleware(config('canvas.middleware'))
             ->domain(config('canvas.domain'))
             ->prefix(config('canvas.path'))
-            ->group(function () {
+            ->group(function (): void {
                 $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
             });
     }
@@ -92,6 +80,10 @@ class CanvasServiceProvider extends ServiceProvider
      */
     private function configureCommands(): void
     {
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
         $this->commands([
             DigestCommand::class,
             InstallCommand::class,
@@ -107,9 +99,7 @@ class CanvasServiceProvider extends ServiceProvider
      */
     private function registerMigrations(): void
     {
-        if ($this->app->runningInConsole()) {
-            $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-        }
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
     /**
@@ -117,12 +107,12 @@ class CanvasServiceProvider extends ServiceProvider
      */
     private function registerAuthDriver(): void
     {
-        $this->app->make('config')->set('auth.providers.canvas_users', [
+        $this->app['config']->set('auth.providers.canvas_users', [
             'driver' => 'eloquent',
             'model' => User::class,
         ]);
 
-        $this->app->make('config')->set('auth.guards.canvas', [
+        $this->app['config']->set('auth.guards.canvas', [
             'driver' => 'session',
             'provider' => 'canvas_users',
         ]);
@@ -133,11 +123,11 @@ class CanvasServiceProvider extends ServiceProvider
      */
     private function registerFormRequests(): void
     {
-        $this->app->afterResolving(ValidatesWhenResolved::class, function ($resolved) {
+        $this->app->afterResolving(ValidatesWhenResolved::class, function (ValidatesWhenResolved $resolved): void {
             $resolved->validateResolved();
         });
 
-        $this->app->resolving(FormRequest::class, function (FormRequest $request, $app) {
+        $this->app->resolving(FormRequest::class, function (FormRequest $request, Application $app): FormRequest {
             $request = FormRequest::createFrom($app['request'], $request);
 
             return $request->setContainer($app)

@@ -198,6 +198,9 @@ following cron entry to your server:
 * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
 ```
 
+If you keep the published `app/Providers/CanvasServiceProvider.php`, the `canvas:digest` schedule is preconfigured.
+If you remove it, register your own schedule entry for `canvas:digest` in your application's scheduler.
+
 ## API
 
 Installing [Canvas UI](#canvas-ui) will be the most efficient way to get up and running with a frontend interface to display your data. However many users will opt for creating this by hand since it gives flexibility to their design aesthetic.

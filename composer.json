@@ -42,6 +42,7 @@
         "illuminate/view": "^11.0|^12.0|^13.0"
     },
     "require-dev": {
+        "larastan/larastan": "^3.10",
         "laravel/pint": "^1.29",
         "mockery/mockery": "^1.6",
         "orchestra/testbench": "^9.15|^10.8|^11.0",
@@ -60,7 +61,19 @@
         }
     },
     "scripts": {
-        "test": "vendor/bin/pest",
+        "post-autoload-dump": "@prepare",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "@build",
+            "@php vendor/bin/testbench serve"
+        ],
+        "lint": [
+            "@php vendor/bin/phpstan analyse"
+        ],
+        "test": [
+            "@php vendor/bin/pest"
+        ],
         "test:parallel": "vendor/bin/pest --parallel",
         "test:ci": "vendor/bin/pest --parallel --compact",
         "pint": "pint",

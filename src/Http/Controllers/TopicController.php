@@ -66,20 +66,16 @@ class TopicController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id): JsonResponse
+    public function show(Topic $topic): JsonResponse
     {
-        $topic = Topic::query()->findOrFail($id);
-
         return response()->json($topic, 200);
     }
 
     /**
      * Display the specified relationship.
      */
-    public function posts($id): JsonResponse
+    public function posts(Topic $topic): JsonResponse
     {
-        $topic = Topic::query()->with('posts')->findOrFail($id);
-
         return response()->json($topic->posts()->withCount('views')->paginate(), 200);
     }
 
@@ -90,9 +86,8 @@ class TopicController extends Controller
      *
      * @throws Exception
      */
-    public function destroy($id)
+    public function destroy(Topic $topic)
     {
-        $topic = Topic::query()->findOrFail($id);
 
         $topic->delete();
 

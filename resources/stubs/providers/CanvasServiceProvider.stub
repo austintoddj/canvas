@@ -2,38 +2,25 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\ServiceProvider;
 
 class CanvasServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register()
+    public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot()
+    public function boot(): void
     {
-        $this->app->booted(function () {
-            $schedule = resolve(Schedule::class);
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
             $schedule->command('canvas:digest')
                 ->weekly()
                 ->mondays()
                 ->timezone(config('app.timezone'))
                 ->at('08:00')
-                ->when(function () {
-                    return config('canvas.mail.enabled');
-                });
+                ->when(fn (): bool => (bool) config('canvas.mail.enabled'));
         });
     }
 }

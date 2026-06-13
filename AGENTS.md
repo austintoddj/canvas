@@ -1,9 +1,9 @@
 # AGENTS.md
 
 ## Project Context
-Canvas is a Laravel package that adds a full blog/publishing system to an existing Laravel application. We are currently in a major modernization effort (target: modern Laravel 11/12/13 standards, PHP 8.2+, strict types, clean architecture, and removal of legacy patterns).
+Canvas is a Laravel package that adds a full blog/publishing system to an existing Laravel application.
 
-## Core Rules (Always Follow)
+## Core Rules
 
 ### Avoid Redundancy
 - Before implementing any new feature, class, method, or UI component, **search the codebase** for similar existing functionality.
@@ -17,11 +17,22 @@ Canvas is a Laravel package that adds a full blog/publishing system to an existi
 - Follow PSR-12 + Laravel Pint rules strictly.
 - Prefer dependency injection and service classes over fat controllers or static facades where it improves testability/clarity.
 - Update tests alongside code changes.
+- Use descriptive names for variables and methods. For example, isRegisteredForDiscounts, not discount(). 
+- Check for existing components to reuse before writing a new one.
 
 ### Testing Standards
 - Use Pest for tests. Prefer function-style tests, `dataset()`s, and shared setup in `tests/Pest.php`.
 - Keep `tests/TestCase.php` focused on Testbench/package environment setup only.
 - Run the relevant Pest file first while iterating, then run the full parallel suite before finishing.
+
+### Documentation Files
+- You must only create documentation files if explicitly requested by the user.
+
+### Replies
+- Be concise in your explanations - focus on what's important rather than explaining obvious details.
+
+### Verification Scripts
+- Do not create verification scripts or tinker when tests cover that functionality and prove they work. Unit and feature tests are more important.
 
 ### Package-Specific Guidelines
 - Respect the existing structure (`src/`, `config/`, `resources/`, etc.) unless we're intentionally refactoring it.
@@ -29,19 +40,10 @@ Canvas is a Laravel package that adds a full blog/publishing system to an existi
 - Keep the "distraction-free writing" philosophy intact.
 - Prefer class-based factories and `Model::factory()` over legacy `factory()` helpers.
 - Keep package-specific request base classes in `src/Http/Requests/` when they are needed to avoid framework coupling.
-- Prefer the smallest practical set of `illuminate/*` packages; do not reintroduce `laravel/framework` without a strong reason.
+- Prefer the smallest practical set of `illuminate/*` packages.
 
 ## Development Commands
 - `composer install`
 - `composer test` (Pest)
 - `composer test:parallel`
 - `composer pint` or `vendor/bin/pint`
-
-## When Making Changes
-1. Read relevant files first.
-2. Check for redundancy.
-3. Make the smallest effective change.
-4. Update tests if behavior changes.
-5. Run Pint.
-6. Run the relevant Pest tests, then the full parallel suite if the change touches behavior.
-7. Explain what you did and why.
