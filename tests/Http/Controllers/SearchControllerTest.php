@@ -4,7 +4,7 @@ use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 
-it('a contributor can only search their own posts', function (): void {
+it('lets a contributor search only their own posts', function (): void {
     Post::factory()->count(3)->create([
         'user_id' => $this->contributor->id,
     ]);
@@ -26,7 +26,7 @@ it('a contributor can only search their own posts', function (): void {
     $this->assertArrayHasKey('route', $response[0]);
     $this->assertSame('edit-post', $response[0]['route']);
 });
-it('an editor can search all posts', function (): void {
+it('lets an editor search all posts', function (): void {
     Post::factory()->count(3)->create([
         'user_id' => $this->editor->id,
     ]);
@@ -48,7 +48,7 @@ it('an editor can search all posts', function (): void {
     $this->assertArrayHasKey('route', $response[0]);
     $this->assertSame('edit-post', $response[0]['route']);
 });
-it('an admin can search all posts', function (): void {
+it('lets an admin search all posts', function (): void {
     Post::factory()->count(3)->create([
         'user_id' => $this->editor->id,
     ]);
@@ -70,7 +70,7 @@ it('an admin can search all posts', function (): void {
     $this->assertArrayHasKey('route', $response[0]);
     $this->assertSame('edit-post', $response[0]['route']);
 });
-it('an admin can search all tags', function (): void {
+it('lets an admin search all tags', function (): void {
     Tag::factory()->count(2)->create();
 
     $response = $this->actingAs($this->admin, 'canvas')
@@ -85,7 +85,7 @@ it('an admin can search all tags', function (): void {
     $this->assertArrayHasKey('route', $response[0]);
     $this->assertSame('edit-tag', $response[0]['route']);
 });
-it('an admin can search all topics', function (): void {
+it('lets an admin search all topics', function (): void {
     Topic::factory()->count(3)->create();
 
     $response = $this->actingAs($this->admin, 'canvas')
@@ -100,7 +100,7 @@ it('an admin can search all topics', function (): void {
     $this->assertArrayHasKey('route', $response[0]);
     $this->assertSame('edit-topic', $response[0]['route']);
 });
-it('an admin can search all users', function (): void {
+it('lets an admin search all users', function (): void {
     $response = $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/search/users')
         ->assertSuccessful()

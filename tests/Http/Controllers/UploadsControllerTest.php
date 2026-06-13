@@ -3,14 +3,14 @@
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-it('empty upload is validated', function (): void {
+it('validates an empty upload', function (): void {
     Storage::fake(config('canvas.storage_disk'));
 
     $this->actingAs($this->admin, 'canvas')
         ->postJson('canvas/api/uploads', [null])
         ->assertStatus(400);
 });
-it('uploaded image can be stored', function (): void {
+it('stores an uploaded image', function (): void {
     Storage::fake(config('canvas.storage_disk'));
 
     $response = $this->actingAs($this->admin, 'canvas')
@@ -28,7 +28,7 @@ it('uploaded image can be stored', function (): void {
 
     Storage::disk(config('canvas.storage_disk'))->assertExists($path);
 });
-it('delete uploaded image', function (): void {
+it('deletes an uploaded image', function (): void {
     Storage::fake(config('canvas.storage_disk'));
 
     $this->actingAs($this->admin, 'canvas')

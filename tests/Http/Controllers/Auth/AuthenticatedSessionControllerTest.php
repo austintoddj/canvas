@@ -4,7 +4,7 @@ use Canvas\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
-it('the login page', function (): void {
+it('renders the login page', function (): void {
     $this->withoutMix();
 
     $this->get(route('canvas.login'))
@@ -12,7 +12,7 @@ it('the login page', function (): void {
         ->assertViewIs('canvas::auth.login')
         ->assertSeeText('Please sign in');
 });
-it('login request will validate an invalid email', function (): void {
+it('validates an invalid email on login', function (): void {
     $response = $this->post('/canvas/login', [
         'email' => 'not-an-email',
         'password' => 'password',
@@ -20,7 +20,7 @@ it('login request will validate an invalid email', function (): void {
 
     $this->assertInstanceOf(ValidationException::class, $response->exception);
 });
-it('login request will validate an unknown password', function (): void {
+it('validates an unknown password on login', function (): void {
     $response = $this->post('/canvas/login', [
         'email' => $this->admin->email,
         'password' => 'what-is-my-password',
@@ -28,7 +28,7 @@ it('login request will validate an unknown password', function (): void {
 
     $this->assertInstanceOf(ValidationException::class, $response->exception);
 });
-it('successful login', function (): void {
+it('logs in successfully', function (): void {
     $user = User::factory()->create([
         'password' => Hash::make('password'),
     ]);
@@ -38,12 +38,12 @@ it('successful login', function (): void {
         'password' => 'password',
     ])->assertRedirect(config('canvas.path'));
 });
-it('authenticated user will redirect to canvas', function (): void {
+it('redirects authenticated users to canvas', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->get('canvas/login')
         ->assertRedirect(config('canvas.path'));
 });
-it('successful logout', function (): void {
+it('logs out successfully', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->get(route('canvas.logout'))
         ->assertRedirect(route('canvas.login'));

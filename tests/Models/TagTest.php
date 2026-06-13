@@ -6,7 +6,7 @@ use Canvas\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-it('tags can share the same slug with unique users', function (): void {
+it('allows tags to share the same slug across different users', function (): void {
     $data = [
         'name' => 'A new tag',
         'slug' => 'a-new-tag',
@@ -38,7 +38,7 @@ it('tags can share the same slug with unique users', function (): void {
         'user_id' => $response->original['user_id'],
     ]);
 });
-it('posts relationship', function (): void {
+it('defines the posts relationship', function (): void {
     $tag = Tag::factory()->create();
     $post = Post::factory()->create();
 
@@ -48,13 +48,13 @@ it('posts relationship', function (): void {
     $this->assertInstanceOf(BelongsToMany::class, $tag->posts());
     $this->assertInstanceOf(Post::class, $tag->posts->first());
 });
-it('user relationship', function (): void {
+it('defines the user relationship', function (): void {
     $tag = Tag::factory()->create();
 
     $this->assertInstanceOf(BelongsTo::class, $tag->user());
     $this->assertInstanceOf(User::class, $tag->user);
 });
-it('detach posts on delete', function (): void {
+it('detaches posts on delete', function (): void {
     $tag = Tag::factory()->create();
     $post = Post::factory()->create();
 

@@ -12,19 +12,19 @@ dataset('protectedRoutes', [
     ['GET', 'canvas/api/search/users'],
 ]);
 
-it('contributor access is restricted', function ($method, $endpoint): void {
+it('restricts contributor access', function ($method, $endpoint): void {
     $this->actingAs($this->contributor, 'canvas')
         ->call($method, $endpoint)
         ->assertForbidden();
 })->with('protectedRoutes');
 
-it('editor access is restricted', function ($method, $endpoint): void {
+it('restricts editor access', function ($method, $endpoint): void {
     $this->actingAs($this->editor, 'canvas')
         ->call($method, $endpoint)
         ->assertForbidden();
 })->with('protectedRoutes');
 
-it('admin access is granted', function ($method, $endpoint): void {
+it('grants admin access', function ($method, $endpoint): void {
     $this->actingAs($this->admin, 'canvas')
         ->call($method, $endpoint)
         ->assertSuccessful();

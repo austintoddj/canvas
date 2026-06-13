@@ -6,7 +6,7 @@ use Canvas\Models\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Ramsey\Uuid\Uuid;
 
-it('list all tags', function (): void {
+it('lists all tags', function (): void {
     Tag::factory()->count(2)->create();
 
     $response = $this->actingAs($this->admin, 'canvas')
@@ -19,14 +19,14 @@ it('list all tags', function (): void {
 
     $this->assertCount(2, $response->getOriginalContent());
 });
-it('create data for tag', function (): void {
+it('returns data for creating a tag', function (): void {
     $response = $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/tags/create')
         ->assertSuccessful();
 
     $this->assertInstanceOf(Tag::class, $response->getOriginalContent());
 });
-it('existing tag data', function (): void {
+it('returns existing tag data', function (): void {
     $tag = Tag::factory()->create();
 
     $response = $this->actingAs($this->admin, 'canvas')
@@ -35,7 +35,7 @@ it('existing tag data', function (): void {
 
     $this->assertTrue($tag->is($response->getOriginalContent()));
 });
-it('list posts for tag', function (): void {
+it('lists posts for a tag', function (): void {
     $tag = Tag::factory()->create();
     $post = Post::factory()->create();
 
@@ -55,12 +55,12 @@ it('list posts for tag', function (): void {
 
     $this->assertCount(1, $response->getOriginalContent());
 });
-it('tag not found', function (): void {
+it('returns not found for unknown tags', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/tags/not-a-tag')
         ->assertNotFound();
 });
-it('store new tag', function (): void {
+it('stores a new tag', function (): void {
     $data = [
         'id' => Uuid::uuid4()->toString(),
         'name' => 'A new tag',
@@ -75,7 +75,7 @@ it('store new tag', function (): void {
 
     $this->assertSame($data['id'], $response->getOriginalContent()->id);
 });
-it('deleted tags can be refreshed', function (): void {
+it('restores deleted tags when refreshed', function (): void {
     $deletedTag = Tag::factory()->create([
         'id' => Uuid::uuid4()->toString(),
         'name' => 'A deleted tag',
@@ -98,7 +98,7 @@ it('deleted tags can be refreshed', function (): void {
 
     $this->assertSame($deletedTag['id'], $response->getOriginalContent()->id);
 });
-it('update existing tag', function (): void {
+it('updates an existing tag', function (): void {
     $tag = Tag::factory()->create();
 
     $data = [
@@ -129,7 +129,7 @@ it('invalid slugs are validated', function (): void {
             ],
         ]);
 });
-it('delete existing tag', function (): void {
+it('deletes an existing tag', function (): void {
     $tag = Tag::factory()->create();
 
     $this->actingAs($this->admin, 'canvas')
@@ -146,7 +146,7 @@ it('delete existing tag', function (): void {
         'slug' => $tag->slug,
     ]);
 });
-it('de sync post relationship', function (): void {
+it('desyncs the post relationship', function (): void {
     $tag = Tag::factory()->create();
     $post = Post::factory()->create();
 

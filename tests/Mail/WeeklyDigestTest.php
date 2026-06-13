@@ -3,7 +3,7 @@
 use Canvas\Mail\WeeklyDigest;
 use Canvas\Models\Post;
 
-it('instantiation', function (): void {
+it('can be instantiated', function (): void {
     $data = [
         'posts' => Post::all()->toArray(),
         'totals' => [

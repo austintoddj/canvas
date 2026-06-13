@@ -3,7 +3,7 @@
 use Canvas\Mail\ResetPassword;
 use Illuminate\Support\Str;
 
-it('instantiation', function (): void {
+it('can be instantiated', function (): void {
     $token = Str::random(60);
 
     $mailable = new ResetPassword($token);

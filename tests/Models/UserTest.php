@@ -17,10 +17,10 @@ it('dark mode is cast to boolean', function (): void {
 it('role is cast to integer', function (): void {
     $this->assertIsInt(User::factory()->create()->role);
 });
-it('default avatar appends to the model', function (): void {
+it('appends the default avatar to the model', function (): void {
     $this->assertArrayHasKey('default_avatar', User::factory()->create()->toArray());
 });
-it('default locale appends to the model', function (): void {
+it('appends the default locale to the model', function (): void {
     $this->assertArrayHasKey('default_locale', User::factory()->create()->toArray());
 });
 it('password is hidden for arrays', function (): void {
@@ -31,7 +31,7 @@ it('remember token is hidden for arrays', function (): void {
         'remember_token' => Str::random(60),
     ])->toArray());
 });
-it('posts relationship', function (): void {
+it('defines the posts relationship', function (): void {
     Post::factory()->create([
         'user_id' => $this->admin->id,
     ]);
@@ -39,7 +39,7 @@ it('posts relationship', function (): void {
     $this->assertInstanceOf(HasMany::class, $this->admin->posts());
     $this->assertInstanceOf(Post::class, $this->admin->posts->first());
 });
-it('tags relationship', function (): void {
+it('defines the tags relationship', function (): void {
     Tag::factory()->create([
         'user_id' => $this->admin->id,
     ]);
@@ -47,7 +47,7 @@ it('tags relationship', function (): void {
     $this->assertInstanceOf(HasMany::class, $this->admin->tags());
     $this->assertInstanceOf(Tag::class, $this->admin->tags->first());
 });
-it('topics relationship', function (): void {
+it('defines the topics relationship', function (): void {
     Topic::factory()->create([
         'user_id' => $this->admin->id,
     ]);
@@ -55,23 +55,23 @@ it('topics relationship', function (): void {
     $this->assertInstanceOf(HasMany::class, $this->admin->topics());
     $this->assertInstanceOf(Topic::class, $this->admin->topics->first());
 });
-it('contributor attribute', function (): void {
+it('computes the contributor attribute', function (): void {
     $this->assertTrue($this->contributor->isContributor);
 });
-it('editor attribute', function (): void {
+it('computes the editor attribute', function (): void {
     $this->assertTrue($this->editor->isEditor);
 });
-it('admin attribute', function (): void {
+it('computes the admin attribute', function (): void {
     $this->assertTrue($this->admin->isAdmin);
 });
-it('default avatar attribute', function (): void {
+it('computes the default avatar attribute', function (): void {
     $user = User::factory()->create([
         'avatar' => null,
     ]);
 
     $this->assertSame($user->defaultAvatar, Canvas::gravatar($user->email));
 });
-it('default locale attribute', function (): void {
+it('computes the default locale attribute', function (): void {
     $user = User::factory()->create([
         'locale' => null,
     ]);

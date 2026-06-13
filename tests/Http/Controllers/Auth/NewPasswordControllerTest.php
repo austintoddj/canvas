@@ -3,7 +3,7 @@
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
-it('the reset password page', function (): void {
+it('renders the reset password page', function (): void {
     $this->withoutMix();
 
     $this->get(route('canvas.password.reset', [
@@ -13,7 +13,7 @@ it('the reset password page', function (): void {
         ->assertViewIs('canvas::auth.passwords.reset')
         ->assertSeeText('Reset password');
 });
-it('password can be reset', function (): void {
+it('resets the password', function (): void {
     $this->withoutMix();
 
     $token = encrypt($this->admin->id.'|'.Str::random());
@@ -31,7 +31,7 @@ it('password can be reset', function (): void {
 
     $this->assertEmpty(cache()->get("password.reset.{$this->admin->id}"));
 });
-it('new password request will validate an invalid email', function (): void {
+it('validates an invalid email on password reset', function (): void {
     $token = encrypt($this->admin->id.'|'.Str::random());
 
     $response = $this->post(route('canvas.password.update'), [
@@ -43,7 +43,7 @@ it('new password request will validate an invalid email', function (): void {
 
     $this->assertInstanceOf(ValidationException::class, $response->exception);
 });
-it('new password request will validate unconfirmed passwords', function (): void {
+it('validates unconfirmed passwords on password reset', function (): void {
     $token = encrypt($this->admin->id.'|'.Str::random());
 
     $response = $this->post(route('canvas.password.update'), [
@@ -55,7 +55,7 @@ it('new password request will validate unconfirmed passwords', function (): void
 
     $this->assertInstanceOf(ValidationException::class, $response->exception);
 });
-it('new password request will validate bad tokens', function (): void {
+it('validates invalid tokens on password reset', function (): void {
     $this->post(route('canvas.password.update'), [
         'token' => Str::random(),
         'email' => $this->admin->email,

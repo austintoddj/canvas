@@ -7,7 +7,7 @@ use Canvas\Models\View;
 use Canvas\Models\Visit;
 use Illuminate\Support\Facades\Mail;
 
-it('digest command will send an email to users with mail enabled', function (): void {
+it('sends digest emails to users with mail enabled', function (): void {
     Mail::fake();
 
     $user = User::factory()->create([
@@ -49,7 +49,7 @@ it('digest command will send an email to users with mail enabled', function (): 
         return $mail->hasTo($user->email);
     });
 });
-it('digest command will not send an email to users with mail disabled', function (): void {
+it('does not send digest emails to users with mail disabled', function (): void {
     Mail::fake();
 
     $user = User::factory()->create([

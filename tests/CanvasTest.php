@@ -3,16 +3,16 @@
 use Canvas\Canvas;
 use Canvas\Models\User;
 
-it('installed version', function (): void {
+it('returns the installed version', function (): void {
     $this->assertEmpty(Canvas::installedVersion());
 });
-it('available language codes', function (): void {
+it('returns available language codes', function (): void {
     $this->assertIsArray(Canvas::availableLanguageCodes());
 });
-it('available translations', function (): void {
+it('returns available translations', function (): void {
     $this->assertIsString(Canvas::availableTranslations(config('app.locale')));
 });
-it('available roles', function (): void {
+it('returns available roles', function (): void {
     $this->assertSame([
         User::CONTRIBUTOR => 'Contributor',
         User::EDITOR => 'Editor',
@@ -22,22 +22,22 @@ it('available roles', function (): void {
 it('assets are up to date', function (): void {
     $this->assertTrue(Canvas::assetsUpToDate());
 });
-it('base path', function (): void {
+it('returns the base path', function (): void {
     $this->assertSame(Canvas::basePath(), '/'.config('canvas.path'));
 
     $this->assertIsString(Canvas::basePath());
 });
-it('base storage path', function (): void {
+it('returns the base storage path', function (): void {
     $this->assertSame(config('canvas.storage_path').'/images', Canvas::baseStoragePath());
 
     $this->assertIsString(Canvas::baseStoragePath());
 });
-it('parse referer', function (): void {
+it('parses the referer', function (): void {
     $this->assertSame(Canvas::parseReferer('https://www.example.com'), 'www.example.com');
     $this->assertNull(Canvas::parseReferer(null));
     $this->assertNull(Canvas::parseReferer('://www.example.c'));
 });
-it('gravatar', function (): void {
+it('returns a gravatar URL', function (): void {
     $size = 80;
     $default = 'identicon';
     $rating = 'pg';
@@ -49,12 +49,12 @@ it('gravatar', function (): void {
     $this->assertStringContainsString(sprintf('d=%s', $default), $url);
     $this->assertStringContainsString(sprintf('r=%s', $rating), $url);
 });
-it('enabled dark mode', function (): void {
+it('detects enabled dark mode', function (): void {
     $this->assertTrue(Canvas::enabledDarkMode(1));
     $this->assertFalse(Canvas::enabledDarkMode(0));
     $this->assertFalse(Canvas::enabledDarkMode(null));
 });
-it('using right to left language', function (): void {
+it('detects right-to-left languages', function (): void {
     $this->assertTrue(Canvas::usingRightToLeftLanguage('ar'));
     $this->assertTrue(Canvas::usingRightToLeftLanguage('fa'));
     $this->assertFalse(Canvas::usingRightToLeftLanguage('en'));

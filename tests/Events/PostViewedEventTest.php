@@ -3,7 +3,7 @@
 use Canvas\Events\PostViewed;
 use Canvas\Models\Post;
 
-it('instantiation', function (): void {
+it('can be instantiated', function (): void {
     $post = Post::factory()->create();
 
     $event = new PostViewed($post);

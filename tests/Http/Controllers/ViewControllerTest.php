@@ -1,6 +1,6 @@
 <?php
 
-it('script variables', function (): void {
+it('returns script variables', function (): void {
     $this->withoutMix();
 
     $this->actingAs($this->admin, 'canvas')

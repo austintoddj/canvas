@@ -4,7 +4,7 @@ use Canvas\Models\Post;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
 
-it('user stats are fetched by default', function (): void {
+it('fetches user stats by default', function (): void {
     Post::factory()->count(3)->create([
         'user_id' => $this->admin->id,
     ])->each(function ($post) {
@@ -35,7 +35,7 @@ it('user stats are fetched by default', function (): void {
             'visits' => 6,
         ]);
 });
-it('all post stats can be fetched with a given query scope', function (): void {
+it('fetches all post stats with a given query scope', function (): void {
     Post::factory()->count(3)->create([
         'user_id' => $this->admin->id,
     ])->each(function ($post) {

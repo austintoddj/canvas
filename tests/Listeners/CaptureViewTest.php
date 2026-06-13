@@ -4,7 +4,7 @@ use Canvas\Events\PostViewed;
 use Canvas\Listeners\CaptureView;
 use Canvas\Models\Post;
 
-it('instantiation', function (): void {
+it('can be instantiated', function (): void {
     $post = Post::factory()->create();
 
     $event = new PostViewed($post);
@@ -19,7 +19,7 @@ it('instantiation', function (): void {
 
     $this->assertCount(1, $post->views);
 });
-it('views are counted in session once per hour', function (): void {
+it('counts views in the session once per hour', function (): void {
     $post = Post::factory()->create();
 
     $event = new PostViewed($post);

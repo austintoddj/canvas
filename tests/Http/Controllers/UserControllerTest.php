@@ -6,7 +6,7 @@ use Canvas\Models\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Ramsey\Uuid\Uuid;
 
-it('list all users', function (): void {
+it('lists all users', function (): void {
     $response = $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/users')
         ->assertSuccessful();
@@ -17,21 +17,21 @@ it('list all users', function (): void {
 
     $this->assertCount(3, $response->getOriginalContent());
 });
-it('create data for user', function (): void {
+it('returns data for creating a user', function (): void {
     $response = $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/users/create')
         ->assertSuccessful();
 
     $this->assertInstanceOf(User::class, $response->getOriginalContent());
 });
-it('existing user data', function (): void {
+it('returns existing user data', function (): void {
     $response = $this->actingAs($this->admin, 'canvas')
         ->getJson("canvas/api/users/{$this->contributor->id}")
         ->assertSuccessful();
 
     $this->assertTrue($this->contributor->is($response->getOriginalContent()));
 });
-it('list posts for user', function (): void {
+it('lists posts for a user', function (): void {
     $post = Post::factory()->create([
         'user_id' => $this->admin->id,
     ]);
@@ -50,12 +50,12 @@ it('list posts for user', function (): void {
 
     $this->assertCount(1, $response->getOriginalContent());
 });
-it('user not found', function (): void {
+it('returns not found for unknown users', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/users/not-a-user')
         ->assertNotFound();
 });
-it('store new user', function (): void {
+it('stores a new user', function (): void {
     $data = [
         'id' => Uuid::uuid4()->toString(),
         'name' => 'Name',
@@ -72,7 +72,7 @@ it('store new user', function (): void {
 
     $this->assertSame($data['id'], $response->getOriginalContent()['user']->id);
 });
-it('deleted users can be refreshed', function (): void {
+it('restores deleted users when refreshed', function (): void {
     $deletedUser = User::factory()->create([
         'id' => Uuid::uuid4()->toString(),
         'name' => 'Deleted User',
@@ -96,7 +96,7 @@ it('deleted users can be refreshed', function (): void {
 
     $this->assertSame($deletedUser['id'], $response->getOriginalContent()['user']->id);
 });
-it('update existing user', function (): void {
+it('updates an existing user', function (): void {
     $user = User::factory()->create();
 
     $data = [
@@ -198,7 +198,7 @@ it('users cannot delete their own account', function (): void {
         ->deleteJson("canvas/api/users/{$this->admin->id}")
         ->assertForbidden();
 });
-it('delete existing user', function (): void {
+it('deletes an existing user', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($this->admin, 'canvas')

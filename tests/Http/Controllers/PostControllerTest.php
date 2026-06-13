@@ -7,7 +7,7 @@ use Canvas\Models\View;
 use Canvas\Models\Visit;
 use Ramsey\Uuid\Uuid;
 
-it('published posts are fetched by default', function (): void {
+it('fetches published posts by default', function (): void {
     $primaryPost = Post::factory()->count(1)->create([
         'user_id' => $this->admin->id,
         'published_at' => now()->subDay(),
@@ -40,7 +40,7 @@ it('published posts are fetched by default', function (): void {
             'id' => $secondaryPost->id,
         ]);
 });
-it('published posts can be fetched with a given query type', function (): void {
+it('fetches published posts with a given query type', function (): void {
     $primaryPost = Post::factory()->count(1)->create([
         'user_id' => $this->admin->id,
         'published_at' => now()->subDay(),
@@ -73,7 +73,7 @@ it('published posts can be fetched with a given query type', function (): void {
             'id' => $secondaryPost->id,
         ]);
 });
-it('draft posts can be fetched with a given query type', function (): void {
+it('fetches draft posts with a given query type', function (): void {
     $primaryPost = Post::factory()->count(1)->create([
         'user_id' => $this->admin->id,
         'published_at' => now()->subDay(),
@@ -106,7 +106,7 @@ it('draft posts can be fetched with a given query type', function (): void {
             'id' => $primaryPost->id,
         ]);
 });
-it('user posts are fetched by default', function (): void {
+it('fetches user posts by default', function (): void {
     $primaryPost = Post::factory()->count(1)->create([
         'user_id' => $this->admin->id,
         'published_at' => now()->subDay(),
@@ -139,7 +139,7 @@ it('user posts are fetched by default', function (): void {
             'id' => $secondaryPost->id,
         ]);
 });
-it('all posts can be fetched with a given query scope', function (): void {
+it('fetches all posts with a given query scope', function (): void {
     Post::factory()->count(2)->create([
         'user_id' => $this->admin->id,
         'published_at' => now()->subDay(),
@@ -168,7 +168,7 @@ it('all posts can be fetched with a given query scope', function (): void {
             'publishedCount' => $this->admin->posts()->published()->count(),
         ]);
 });
-it('user posts can be fetched with a given query scope', function (): void {
+it('fetches user posts with a given query scope', function (): void {
     Post::factory()->count(2)->create([
         'user_id' => $this->admin->id,
         'published_at' => now()->subDay(),
@@ -197,7 +197,7 @@ it('user posts can be fetched with a given query scope', function (): void {
             'publishedCount' => $this->admin->posts()->published()->count(),
         ]);
 });
-it('new post data', function (): void {
+it('returns data for creating a post', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/posts/create')
         ->assertSuccessful()
@@ -207,7 +207,7 @@ it('new post data', function (): void {
             'topics',
         ]);
 });
-it('existing post data', function (): void {
+it('returns existing post data', function (): void {
     $post = Post::factory()->create();
 
     $this->actingAs($this->admin, 'canvas')
@@ -222,7 +222,7 @@ it('existing post data', function (): void {
             'id' => $post->id,
         ]);
 });
-it('an admin can fetch stats for any post', function (): void {
+it('lets an admin fetch stats for any post', function (): void {
     $post = Post::factory()->create([
         'user_id' => $this->contributor->id,
         'published_at' => now()->subWeek(),
@@ -268,7 +268,7 @@ it('an admin can fetch stats for any post', function (): void {
             ],
         ]);
 });
-it('an editor can fetch any post stats', function (): void {
+it('lets an editor fetch stats for any post', function (): void {
     $post = Post::factory()->create([
         'user_id' => $this->contributor->id,
     ]);
@@ -298,7 +298,7 @@ it('an editor can fetch any post stats', function (): void {
             ],
         ]);
 });
-it('a contributor can fetch their own post stats', function (): void {
+it('lets a contributor fetch stats for their own posts', function (): void {
     $post = Post::factory()->create([
         'user_id' => $this->contributor->id,
     ]);
@@ -328,7 +328,7 @@ it('a contributor can fetch their own post stats', function (): void {
             ],
         ]);
 });
-it('a contributor is unable to access stats for another user', function (): void {
+it('blocks contributors from accessing post stats for other users', function (): void {
     $post = Post::factory()->create([
         'user_id' => $this->admin->id,
     ]);
@@ -355,12 +355,12 @@ it('scheduled posts do not display stats', function (): void {
         ->getJson("canvas/api/posts/{$post->id}/stats")
         ->assertNotFound();
 });
-it('post not found', function (): void {
+it('returns not found for unknown posts', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/posts/not-a-post')
         ->assertNotFound();
 });
-it('contributor access restricted', function (): void {
+it('restricts contributor access', function (): void {
     $post = Post::factory()->create([
         'user_id' => $this->admin->id,
     ]);
@@ -369,7 +369,7 @@ it('contributor access restricted', function (): void {
         ->getJson("canvas/api/posts/{$post->id}")
         ->assertNotFound();
 });
-it('store new post', function (): void {
+it('stores a new post', function (): void {
     $data = [
         'id' => Uuid::uuid4()->toString(),
         'slug' => 'a-new-post',
@@ -386,7 +386,7 @@ it('store new post', function (): void {
             'user_id' => $this->admin->id,
         ]);
 });
-it('update existing post', function (): void {
+it('updates an existing post', function (): void {
     $post = Post::factory()->create();
 
     $data = [
@@ -403,7 +403,7 @@ it('update existing post', function (): void {
             'slug' => $data['slug'],
         ]);
 });
-it('a contributor can only update their own post', function (): void {
+it('lets contributors update only their own posts', function (): void {
     $post = Post::factory()->create([
         'user_id' => $this->contributor->id,
     ]);
@@ -422,7 +422,7 @@ it('a contributor can only update their own post', function (): void {
             'slug' => $data['slug'],
         ]);
 });
-it('sync new tags', function (): void {
+it('syncs new tags', function (): void {
     $post = Post::factory()->create();
 
     $data = [
@@ -454,7 +454,7 @@ it('sync new tags', function (): void {
         'post_id' => $post->id,
     ]);
 });
-it('sync existing tags', function (): void {
+it('syncs existing tags', function (): void {
     $post = Post::factory()->create();
     $tag = Tag::factory()->create();
 
@@ -484,7 +484,7 @@ it('sync existing tags', function (): void {
         'tag_id' => $tag->id,
     ]);
 });
-it('sync new topic', function (): void {
+it('syncs a new topic', function (): void {
     $post = Post::factory()->create();
 
     $data = [
@@ -512,7 +512,7 @@ it('sync new topic', function (): void {
         'post_id' => $post->id,
     ]);
 });
-it('sync existing topic', function (): void {
+it('syncs an existing topic', function (): void {
     $post = Post::factory()->create();
     $topic = Topic::factory()->create();
 
@@ -556,7 +556,7 @@ it('invalid slugs are validated', function (): void {
             ],
         ]);
 });
-it('delete existing post', function (): void {
+it('deletes an existing post', function (): void {
     $post = Post::factory()->create([
         'user_id' => $this->editor->id,
         'slug' => 'a-new-post',
@@ -580,7 +580,7 @@ it('delete existing post', function (): void {
         'slug' => $post->slug,
     ]);
 });
-it('de sync related taxonomy', function (): void {
+it('desyncs related taxonomy', function (): void {
     $post = Post::factory()->create([
         'user_id' => $this->admin->id,
         'slug' => 'a-new-post',

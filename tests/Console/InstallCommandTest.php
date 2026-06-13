@@ -2,7 +2,7 @@
 
 use Canvas\Models\User;
 
-it('canvas installation command', function (): void {
+it('runs the canvas install command', function (): void {
     $this->artisan('canvas:install')
         ->assertExitCode(0)
         ->expectsOutput('Installation complete.');

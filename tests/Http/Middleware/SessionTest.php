@@ -10,7 +10,7 @@ beforeEach(function (): void {
     });
 });
 
-it('old visits are pruned from session', function (): void {
+it('prunes old visits from the session', function (): void {
     $recentPost = Post::factory()->create();
     $oldPost = Post::factory()->create();
 
@@ -30,7 +30,7 @@ it('old visits are pruned from session', function (): void {
         "visited_posts.{$oldPost->id}",
     ]);
 });
-it('old views are pruned from session', function (): void {
+it('prunes old views from the session', function (): void {
     $recentPost = Post::factory()->create();
     $oldPost = Post::factory()->create();
 

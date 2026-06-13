@@ -4,7 +4,7 @@ use Canvas\Mail\ResetPassword;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
-it('the forgot password page', function (): void {
+it('renders the forgot password page', function (): void {
     $this->withoutMix();
 
     $this->get(route('canvas.password.request'))
@@ -12,14 +12,14 @@ it('the forgot password page', function (): void {
         ->assertViewIs('canvas::auth.passwords.email')
         ->assertSeeText('Send Password Reset Link');
 });
-it('forgot password link request will validate an invalid email', function (): void {
+it('validates an invalid email for forgot-password links', function (): void {
     $response = $this->post(route('canvas.password.email'), [
         'email' => 'not-an-email',
     ]);
 
     $this->assertInstanceOf(ValidationException::class, $response->exception);
 });
-it('the password reset link can be sent', function (): void {
+it('sends a password reset link', function (): void {
     Mail::fake();
 
     $this->post(route('canvas.password.email'), [

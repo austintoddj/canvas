@@ -35,13 +35,13 @@ dataset('protectedRoutes', [
     ['GET', 'canvas/api/search/users'],
 ]);
 
-it('unauthenticated users are redirected to login', function ($method, $endpoint): void {
+it('redirects unauthenticated users to login', function ($method, $endpoint): void {
     $this->assertGuest()
         ->call($method, $endpoint)
         ->assertRedirect(route('canvas.login'));
 })->with('protectedRoutes');
 
-it('authenticated users are redirected to canvas', function (): void {
+it('redirects authenticated users to canvas', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->get(route('canvas.login'))
         ->assertRedirect(config('canvas.path'));

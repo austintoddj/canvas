@@ -6,7 +6,7 @@ use Canvas\Models\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Ramsey\Uuid\Uuid;
 
-it('list all topics', function (): void {
+it('lists all topics', function (): void {
     Topic::factory()->count(2)->create();
 
     $response = $this->actingAs($this->admin, 'canvas')
@@ -19,14 +19,14 @@ it('list all topics', function (): void {
 
     $this->assertCount(2, $response->getOriginalContent());
 });
-it('create data for topic', function (): void {
+it('returns data for creating a topic', function (): void {
     $response = $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/topics/create')
         ->assertSuccessful();
 
     $this->assertInstanceOf(Topic::class, $response->getOriginalContent());
 });
-it('existing topic data', function (): void {
+it('returns existing topic data', function (): void {
     $topic = Topic::factory()->create();
 
     $response = $this->actingAs($this->admin, 'canvas')
@@ -35,7 +35,7 @@ it('existing topic data', function (): void {
 
     $this->assertTrue($topic->is($response->getOriginalContent()));
 });
-it('list posts for topic', function (): void {
+it('lists posts for a topic', function (): void {
     $topic = Topic::factory()->create();
     $post = Post::factory()->create();
 
@@ -55,12 +55,12 @@ it('list posts for topic', function (): void {
 
     $this->assertCount(1, $response->getOriginalContent());
 });
-it('topic not found', function (): void {
+it('returns not found for unknown topics', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/topics/not-a-topic')
         ->assertNotFound();
 });
-it('store new topic', function (): void {
+it('stores a new topic', function (): void {
     $data = [
         'id' => Uuid::uuid4()->toString(),
         'name' => 'A new topic',
@@ -75,7 +75,7 @@ it('store new topic', function (): void {
 
     $this->assertSame($data['id'], $response->getOriginalContent()->id);
 });
-it('deleted topics can be refreshed', function (): void {
+it('restores deleted topics when refreshed', function (): void {
     $deletedTopic = Topic::factory()->create([
         'id' => Uuid::uuid4()->toString(),
         'name' => 'A deleted topic',
@@ -98,7 +98,7 @@ it('deleted topics can be refreshed', function (): void {
 
     $this->assertSame($deletedTopic['id'], $response->getOriginalContent()->id);
 });
-it('update existing topic', function (): void {
+it('updates an existing topic', function (): void {
     $topic = Topic::factory()->create();
 
     $data = [
@@ -129,7 +129,7 @@ it('invalid slugs are validated', function (): void {
             ],
         ]);
 });
-it('delete existing topic', function (): void {
+it('deletes an existing topic', function (): void {
     $topic = Topic::factory()->create();
 
     $this->actingAs($this->admin, 'canvas')
@@ -146,7 +146,7 @@ it('delete existing topic', function (): void {
         'slug' => $topic->slug,
     ]);
 });
-it('de sync post relationship', function (): void {
+it('desyncs the post relationship', function (): void {
     $topic = Topic::factory()->create();
     $post = Post::factory()->create();
 

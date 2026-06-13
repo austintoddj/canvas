@@ -4,7 +4,7 @@ use Canvas\Models\Post;
 use Canvas\Models\Visit;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-it('post relationship', function (): void {
+it('defines the post relationship', function (): void {
     $post = Post::factory()->create();
 
     $visit = Visit::factory()->create([

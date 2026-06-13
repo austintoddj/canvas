@@ -2,22 +2,22 @@
 
 use Canvas\Models\User;
 
-it('canvas user command will validate an empty email', function (): void {
+it('validates an empty email for the canvas user command', function (): void {
     $this->artisan('canvas:user admin')
         ->assertExitCode(0)
         ->expectsOutput('Please enter a valid email.');
 });
-it('canvas user command will validate an invalid email', function (): void {
+it('validates an invalid email for the canvas user command', function (): void {
     $this->artisan('canvas:user admin --email bad.email')
         ->assertExitCode(0)
         ->expectsOutput('Please enter a valid email.');
 });
-it('canvas user command will validate an invalid role', function (): void {
+it('validates an invalid role for the canvas user command', function (): void {
     $this->artisan('canvas:user ad --email email@example.com')
         ->assertExitCode(0)
         ->expectsOutput('Please enter a valid role.');
 });
-it('canvas user command can create a new contributor', function (): void {
+it('creates a new contributor with the canvas user command', function (): void {
     $this->artisan('canvas:user contributor --email contributor@example.com')
         ->assertExitCode(0)
         ->expectsOutput('New user created.');
@@ -27,7 +27,7 @@ it('canvas user command can create a new contributor', function (): void {
         'role' => User::CONTRIBUTOR,
     ]);
 });
-it('canvas user command can create a new editor', function (): void {
+it('creates a new editor with the canvas user command', function (): void {
     $this->artisan('canvas:user editor --email editor@example.com')
         ->assertExitCode(0)
         ->expectsOutput('New user created.');
@@ -37,7 +37,7 @@ it('canvas user command can create a new editor', function (): void {
         'role' => User::EDITOR,
     ]);
 });
-it('canvas user command can create a new admin', function (): void {
+it('creates a new admin with the canvas user command', function (): void {
     $this->artisan('canvas:user admin --email admin@example.com')
         ->assertExitCode(0)
         ->expectsOutput('New user created.');
