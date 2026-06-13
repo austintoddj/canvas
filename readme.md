@@ -17,9 +17,9 @@ Canvas is a fully open source package to extend your existing [Laravel](https://
 
 ## System Requirements
 
-- PHP >= 7.3
-- Laravel >= 6.0
-- One of the [five supported databases](https://laravel.com/docs/10.x/database#introduction) by Laravel
+- PHP >= 8.2
+- Laravel 11, 12, or 13
+- One of the [databases supported by Laravel](https://laravel.com/docs/database)
 
 ## Installation
 
@@ -171,7 +171,7 @@ that you'd like.
 
 ## E-mail Notifications
 
-**Want a weekly summary?** Canvas allows users to receive a weekly digest of their authored content. Once your application is [configured for sending mail](https://laravel.com/docs/10.x/mail), update `config/canvas.php`:
+**Want a weekly summary?** Canvas allows users to receive a weekly digest of their authored content. Once your application is [configured for sending mail](https://laravel.com/docs/mail), update `config/canvas.php`:
 
 ```php
 /*
@@ -191,7 +191,7 @@ that you'd like.
 ]
 ```
 
-Since this feature runs on [Laravel's Scheduler](https://laravel.com/docs/10.x/scheduling), you'll need to add the 
+Since this feature runs on [Laravel's Scheduler](https://laravel.com/docs/scheduling), you'll need to add the 
 following cron entry to your server:
 
 ```bash
@@ -296,10 +296,16 @@ Thank you for considering contributing to Canvas! The [contribution guide can be
 
 ## Testing
 
-Run the tests with:
+Run the tests with Pest:
 
 ```bash
 composer test
+```
+
+For the parallel suite used in CI, run:
+
+```bash
+composer test:parallel
 ```
 
 ## Troubleshooting
@@ -309,13 +315,4 @@ If you're running into problems, feel free to [open a new issue](https://github.
 ## License
 
 Canvas is open-sourced software licensed under the [MIT license](license).
-
-## Credits
-
-- [@austintoddj](https://twitter.com/austintoddj)
-- [@talvbansal](https://twitter.com/talv)
-- [@reliq](https://twitter.com/IAmReliq)
-- [@mithicher](https://twitter.com/mithicher)
-- [@themsaid](https://twitter.com/themsaid)
-- [@NinaLimpi](https://twitter.com/NinaLimpi)
 

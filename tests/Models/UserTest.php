@@ -1,123 +1,80 @@
 <?php
 
-namespace Canvas\Tests\Models;
-
 use Canvas\Canvas;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Canvas\Models\User;
-use Canvas\Tests\TestCase;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 
-/**
- * Class UserTest.
- *
- * @covers \Canvas\Models\User
- */
-class UserTest extends TestCase
-{
-    use RefreshDatabase;
+it('digest is cast to boolean', function (): void {
+    $this->assertIsBool(User::factory()->create()->digest);
+});
+it('dark mode is cast to boolean', function (): void {
+    $this->assertIsBool(User::factory()->create()->dark_mode);
+});
+it('role is cast to integer', function (): void {
+    $this->assertIsInt(User::factory()->create()->role);
+});
+it('default avatar appends to the model', function (): void {
+    $this->assertArrayHasKey('default_avatar', User::factory()->create()->toArray());
+});
+it('default locale appends to the model', function (): void {
+    $this->assertArrayHasKey('default_locale', User::factory()->create()->toArray());
+});
+it('password is hidden for arrays', function (): void {
+    $this->assertArrayNotHasKey('password', User::factory()->create()->toArray());
+});
+it('remember token is hidden for arrays', function (): void {
+    $this->assertArrayNotHasKey('remember_token', User::factory()->create([
+        'remember_token' => Str::random(60),
+    ])->toArray());
+});
+it('posts relationship', function (): void {
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+    ]);
 
-    public function testDigestIsCastToBoolean(): void
-    {
-        $this->assertIsBool(factory(User::class)->create()->digest);
-    }
+    $this->assertInstanceOf(HasMany::class, $this->admin->posts());
+    $this->assertInstanceOf(Post::class, $this->admin->posts->first());
+});
+it('tags relationship', function (): void {
+    Tag::factory()->create([
+        'user_id' => $this->admin->id,
+    ]);
 
-    public function testDarkModeIsCastToBoolean(): void
-    {
-        $this->assertIsBool(factory(User::class)->create()->dark_mode);
-    }
+    $this->assertInstanceOf(HasMany::class, $this->admin->tags());
+    $this->assertInstanceOf(Tag::class, $this->admin->tags->first());
+});
+it('topics relationship', function (): void {
+    Topic::factory()->create([
+        'user_id' => $this->admin->id,
+    ]);
 
-    public function testRoleIsCastToInteger(): void
-    {
-        $this->assertIsInt(factory(User::class)->create()->role);
-    }
+    $this->assertInstanceOf(HasMany::class, $this->admin->topics());
+    $this->assertInstanceOf(Topic::class, $this->admin->topics->first());
+});
+it('contributor attribute', function (): void {
+    $this->assertTrue($this->contributor->isContributor);
+});
+it('editor attribute', function (): void {
+    $this->assertTrue($this->editor->isEditor);
+});
+it('admin attribute', function (): void {
+    $this->assertTrue($this->admin->isAdmin);
+});
+it('default avatar attribute', function (): void {
+    $user = User::factory()->create([
+        'avatar' => null,
+    ]);
 
-    public function testDefaultAvatarAppendsToTheModel(): void
-    {
-        $this->assertArrayHasKey('default_avatar', factory(User::class)->create()->toArray());
-    }
+    $this->assertSame($user->defaultAvatar, Canvas::gravatar($user->email));
+});
+it('default locale attribute', function (): void {
+    $user = User::factory()->create([
+        'locale' => null,
+    ]);
 
-    public function testDefaultLocaleAppendsToTheModel(): void
-    {
-        $this->assertArrayHasKey('default_locale', factory(User::class)->create()->toArray());
-    }
-
-    public function testPasswordIsHiddenForArrays(): void
-    {
-        $this->assertArrayNotHasKey('password', factory(User::class)->create()->toArray());
-    }
-
-    public function testRememberTokenIsHiddenForArrays(): void
-    {
-        $this->assertArrayNotHasKey('remember_token', factory(User::class)->create([
-            'remember_token' => Str::random(60),
-        ])->toArray());
-    }
-
-    public function testPostsRelationship(): void
-    {
-        factory(Post::class)->create([
-            'user_id' => $this->admin->id,
-        ]);
-
-        $this->assertInstanceOf(HasMany::class, $this->admin->posts());
-        $this->assertInstanceOf(Post::class, $this->admin->posts->first());
-    }
-
-    public function testTagsRelationship(): void
-    {
-        factory(Tag::class)->create([
-            'user_id' => $this->admin->id,
-        ]);
-
-        $this->assertInstanceOf(HasMany::class, $this->admin->tags());
-        $this->assertInstanceOf(Tag::class, $this->admin->tags->first());
-    }
-
-    public function testTopicsRelationship(): void
-    {
-        factory(Topic::class)->create([
-            'user_id' => $this->admin->id,
-        ]);
-
-        $this->assertInstanceOf(HasMany::class, $this->admin->topics());
-        $this->assertInstanceOf(Topic::class, $this->admin->topics->first());
-    }
-
-    public function testContributorAttribute(): void
-    {
-        $this->assertTrue($this->contributor->isContributor);
-    }
-
-    public function testEditorAttribute(): void
-    {
-        $this->assertTrue($this->editor->isEditor);
-    }
-
-    public function testAdminAttribute(): void
-    {
-        $this->assertTrue($this->admin->isAdmin);
-    }
-
-    public function testDefaultAvatarAttribute(): void
-    {
-        $user = factory(User::class)->create([
-            'avatar' => null,
-        ]);
-
-        $this->assertSame($user->defaultAvatar, Canvas::gravatar($user->email));
-    }
-
-    public function testDefaultLocaleAttribute(): void
-    {
-        $user = factory(User::class)->create([
-            'locale' => null,
-        ]);
-
-        $this->assertSame($user->defaultLocale, config('app.locale'));
-    }
-}
+    $this->assertSame($user->defaultLocale, config('app.locale'));
+});

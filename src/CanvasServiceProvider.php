@@ -9,11 +9,14 @@ use Canvas\Console\PublishCommand;
 use Canvas\Console\UiCommand;
 use Canvas\Console\UserCommand;
 use Canvas\Events\PostViewed;
+use Canvas\Http\Requests\FormRequest;
 use Canvas\Listeners\CaptureView;
 use Canvas\Listeners\CaptureVisit;
 use Canvas\Models\User;
 use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Contracts\Validation\ValidatesWhenResolved;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,8 +24,6 @@ class CanvasServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
     public function register(): void
     {
@@ -32,7 +33,6 @@ class CanvasServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      *
-     * @return void
      *
      * @throws BindingResolutionException
      */
@@ -43,6 +43,7 @@ class CanvasServiceProvider extends ServiceProvider
         $this->configurePublishing();
         $this->configureRoutes();
         $this->configureCommands();
+        $this->registerFormRequests();
         $this->registerMigrations();
         $this->registerAuthDriver();
         $this->registerEvents();
@@ -51,7 +52,6 @@ class CanvasServiceProvider extends ServiceProvider
     /**
      * Register the events and listeners.
      *
-     * @return void
      *
      * @throws BindingResolutionException
      */
@@ -75,24 +75,20 @@ class CanvasServiceProvider extends ServiceProvider
 
     /**
      * Configure the routes offered by the application.
-     *
-     * @return void
      */
     private function configureRoutes(): void
     {
         Route::namespace('Canvas\Http\Controllers')
-             ->middleware(config('canvas.middleware'))
-             ->domain(config('canvas.domain'))
-             ->prefix(config('canvas.path'))
-             ->group(function () {
-                 $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
-             });
+            ->middleware(config('canvas.middleware'))
+            ->domain(config('canvas.domain'))
+            ->prefix(config('canvas.path'))
+            ->group(function () {
+                $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+            });
     }
 
     /**
      * Configure the commands offered by the application.
-     *
-     * @return void
      */
     private function configureCommands(): void
     {
@@ -108,8 +104,6 @@ class CanvasServiceProvider extends ServiceProvider
 
     /**
      * Register the package's migrations.
-     *
-     * @return void
      */
     private function registerMigrations(): void
     {
@@ -120,26 +114,39 @@ class CanvasServiceProvider extends ServiceProvider
 
     /**
      * Register the package's authentication driver.
-     *
-     * @return void
      */
     private function registerAuthDriver(): void
     {
-        $this->app->config->set('auth.providers.canvas_users', [
+        $this->app->make('config')->set('auth.providers.canvas_users', [
             'driver' => 'eloquent',
             'model' => User::class,
         ]);
 
-        $this->app->config->set('auth.guards.canvas', [
+        $this->app->make('config')->set('auth.guards.canvas', [
             'driver' => 'session',
             'provider' => 'canvas_users',
         ]);
     }
 
     /**
+     * Register the package's form request resolver.
+     */
+    private function registerFormRequests(): void
+    {
+        $this->app->afterResolving(ValidatesWhenResolved::class, function ($resolved) {
+            $resolved->validateResolved();
+        });
+
+        $this->app->resolving(FormRequest::class, function (FormRequest $request, $app) {
+            $request = FormRequest::createFrom($app['request'], $request);
+
+            return $request->setContainer($app)
+                ->setRedirector($app->make(Redirector::class));
+        });
+    }
+
+    /**
      * Configure publishing for the package.
-     *
-     * @return void
      */
     private function configurePublishing(): void
     {

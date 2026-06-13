@@ -17,46 +17,44 @@ class PostController extends Controller
 {
     /**
      * Display a listing of the resource.
-     *
-     * @return JsonResponse
      */
     public function index(): JsonResponse
     {
         $posts = Post::query()
-                    ->select('id', 'title', 'summary', 'featured_image', 'published_at', 'created_at', 'updated_at')
-                     ->when(request()->user('canvas')->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
-                         return $query->where('user_id', request()->user('canvas')->id);
-                     }, function (Builder $query) {
-                         return $query;
-                     })
-                     ->when(request()->query('type', 'published') != 'draft', function (Builder $query) {
-                         return $query->published();
-                     }, function (Builder $query) {
-                         return $query->draft();
-                     })
-                     ->latest()
-                     ->withCount('views')
-                     ->paginate();
+            ->select('id', 'title', 'summary', 'featured_image', 'published_at', 'created_at', 'updated_at')
+            ->when(request()->user('canvas')->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
+                return $query->where('user_id', request()->user('canvas')->id);
+            }, function (Builder $query) {
+                return $query;
+            })
+            ->when(request()->query('type', 'published') != 'draft', function (Builder $query) {
+                return $query->published();
+            }, function (Builder $query) {
+                return $query->draft();
+            })
+            ->latest()
+            ->withCount('views')
+            ->paginate();
 
         // TODO: The count() queries here are duplicated
 
         $draftCount = Post::query()
-                          ->when(request()->user('canvas')->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
-                              return $query->where('user_id', request()->user('canvas')->id);
-                          }, function (Builder $query) {
-                              return $query;
-                          })
-                          ->draft()
-                          ->count();
+            ->when(request()->user('canvas')->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
+                return $query->where('user_id', request()->user('canvas')->id);
+            }, function (Builder $query) {
+                return $query;
+            })
+            ->draft()
+            ->count();
 
         $publishedCount = Post::query()
-                              ->when(request()->user('canvas')->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
-                                  return $query->where('user_id', request()->user('canvas')->id);
-                              }, function (Builder $query) {
-                                  return $query;
-                              })
-                              ->published()
-                              ->count();
+            ->when(request()->user('canvas')->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
+                return $query->where('user_id', request()->user('canvas')->id);
+            }, function (Builder $query) {
+                return $query;
+            })
+            ->published()
+            ->count();
 
         return response()->json([
             'posts' => $posts,
@@ -67,8 +65,6 @@ class PostController extends Controller
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return JsonResponse
      */
     public function create(): JsonResponse
     {
@@ -87,9 +83,6 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  PostRequest  $request
-     * @param  $id
-     * @return JsonResponse
      *
      * @throws Exception
      */
@@ -98,13 +91,13 @@ class PostController extends Controller
         $data = $request->validated();
 
         $post = Post::query()
-                    ->when($request->user('canvas')->isContributor, function (Builder $query) {
-                        return $query->where('user_id', request()->user('canvas')->id);
-                    }, function (Builder $query) {
-                        return $query;
-                    })
-                    ->with('tags', 'topic')
-                    ->find($id);
+            ->when($request->user('canvas')->isContributor, function (Builder $query) {
+                return $query->where('user_id', request()->user('canvas')->id);
+            }, function (Builder $query) {
+                return $query;
+            })
+            ->with('tags', 'topic')
+            ->find($id);
 
         if (! $post) {
             $post = new Post(['id' => $id]);
@@ -158,20 +151,17 @@ class PostController extends Controller
 
     /**
      * Display the specified resource.
-     *
-     * @param  $id
-     * @return JsonResponse
      */
     public function show($id): JsonResponse
     {
         $post = Post::query()
-                    ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                        return $query->where('user_id', request()->user('canvas')->id);
-                    }, function (Builder $query) {
-                        return $query;
-                    })
-                    ->with('tags:name,slug', 'topic:name,slug')
-                    ->findOrFail($id);
+            ->when(request()->user('canvas')->isContributor, function (Builder $query) {
+                return $query->where('user_id', request()->user('canvas')->id);
+            }, function (Builder $query) {
+                return $query;
+            })
+            ->with('tags:name,slug', 'topic:name,slug')
+            ->findOrFail($id);
 
         return response()->json([
             'post' => $post,
@@ -182,20 +172,17 @@ class PostController extends Controller
 
     /**
      * Display stats for the specified resource.
-     *
-     * @param  string  $id
-     * @return JsonResponse
      */
     public function stats(string $id): JsonResponse
     {
         $post = Post::query()
-                    ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                        return $query->where('user_id', request()->user('canvas')->id);
-                    }, function (Builder $query) {
-                        return $query;
-                    })
-                    ->published()
-                    ->findOrFail($id);
+            ->when(request()->user('canvas')->isContributor, function (Builder $query) {
+                return $query->where('user_id', request()->user('canvas')->id);
+            }, function (Builder $query) {
+                return $query;
+            })
+            ->published()
+            ->findOrFail($id);
 
         $stats = new StatsAggregator(request()->user('canvas'));
 
@@ -207,7 +194,6 @@ class PostController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  $id
      * @return mixed
      *
      * @throws Exception
@@ -215,12 +201,12 @@ class PostController extends Controller
     public function destroy($id)
     {
         $post = Post::query()
-                    ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                        return $query->where('user_id', request()->user('canvas')->id);
-                    }, function (Builder $query) {
-                        return $query;
-                    })
-                    ->findOrFail($id);
+            ->when(request()->user('canvas')->isContributor, function (Builder $query) {
+                return $query->where('user_id', request()->user('canvas')->id);
+            }, function (Builder $query) {
+                return $query;
+            })
+            ->findOrFail($id);
 
         $post->delete();
 

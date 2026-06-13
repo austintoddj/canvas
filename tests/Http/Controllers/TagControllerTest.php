@@ -1,214 +1,178 @@
 <?php
 
-namespace Canvas\Tests\Http\Controllers;
-
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\View;
-use Canvas\Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Ramsey\Uuid\Uuid;
 
-/**
- * Class TagControllerTest.
- *
- * @covers \Canvas\Http\Controllers\TagController
- * @covers \Canvas\Http\Requests\TagRequest
- */
-class TagControllerTest extends TestCase
-{
-    use RefreshDatabase;
+it('list all tags', function (): void {
+    Tag::factory()->count(2)->create();
 
-    public function testListAllTags(): void
-    {
-        factory(Tag::class, 2)->create();
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/tags')
+        ->assertSuccessful();
 
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->getJson('canvas/api/tags')
-                         ->assertSuccessful();
+    $this->assertInstanceOf(Tag::class, $response->getOriginalContent()->first());
 
-        $this->assertInstanceOf(Tag::class, $response->getOriginalContent()->first());
+    $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
 
-        $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
+    $this->assertCount(2, $response->getOriginalContent());
+});
+it('create data for tag', function (): void {
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/tags/create')
+        ->assertSuccessful();
 
-        $this->assertCount(2, $response->getOriginalContent());
-    }
+    $this->assertInstanceOf(Tag::class, $response->getOriginalContent());
+});
+it('existing tag data', function (): void {
+    $tag = Tag::factory()->create();
 
-    public function testCreateDataForTag(): void
-    {
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->getJson('canvas/api/tags/create')
-                         ->assertSuccessful();
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson("canvas/api/tags/{$tag->id}")
+        ->assertSuccessful();
 
-        $this->assertInstanceOf(Tag::class, $response->getOriginalContent());
-    }
+    $this->assertTrue($tag->is($response->getOriginalContent()));
+});
+it('list posts for tag', function (): void {
+    $tag = Tag::factory()->create();
+    $post = Post::factory()->create();
 
-    public function testExistingTagData(): void
-    {
-        $tag = factory(Tag::class)->create();
+    View::factory()->create([
+        'post_id' => $post->id,
+    ]);
 
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->getJson("canvas/api/tags/{$tag->id}")
-                         ->assertSuccessful();
+    $tag->posts()->sync([$post->id]);
 
-        $this->assertTrue($tag->is($response->getOriginalContent()));
-    }
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson("canvas/api/tags/{$tag->id}/posts")
+        ->assertSuccessful();
 
-    public function testListPostsForTag(): void
-    {
-        $tag = factory(Tag::class)->create();
-        $post = factory(Post::class)->create();
+    $this->assertInstanceOf(Post::class, $response->getOriginalContent()->first());
 
-        factory(View::class)->create([
-            'post_id' => $post->id,
-        ]);
+    $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
 
-        $tag->posts()->sync([$post->id]);
+    $this->assertCount(1, $response->getOriginalContent());
+});
+it('tag not found', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/tags/not-a-tag')
+        ->assertNotFound();
+});
+it('store new tag', function (): void {
+    $data = [
+        'id' => Uuid::uuid4()->toString(),
+        'name' => 'A new tag',
+        'slug' => 'a-new-tag',
+    ];
 
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->getJson("canvas/api/tags/{$tag->id}/posts")
-                         ->assertSuccessful();
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/tags/{$data['id']}", $data)
+        ->assertSuccessful();
 
-        $this->assertInstanceOf(Post::class, $response->getOriginalContent()->first());
+    $this->assertInstanceOf(Tag::class, $response->getOriginalContent()->first());
 
-        $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
+    $this->assertSame($data['id'], $response->getOriginalContent()->id);
+});
+it('deleted tags can be refreshed', function (): void {
+    $deletedTag = Tag::factory()->create([
+        'id' => Uuid::uuid4()->toString(),
+        'name' => 'A deleted tag',
+        'slug' => 'a-deleted-tag',
+        'user_id' => $this->editor->id,
+        'deleted_at' => now(),
+    ]);
 
-        $this->assertCount(1, $response->getOriginalContent());
-    }
+    $data = [
+        'id' => Uuid::uuid4()->toString(),
+        'name' => $deletedTag->name,
+        'slug' => $deletedTag->slug,
+    ];
 
-    public function testTagNotFound(): void
-    {
-        $this->actingAs($this->admin, 'canvas')
-             ->getJson('canvas/api/tags/not-a-tag')
-             ->assertNotFound();
-    }
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/tags/{$data['id']}", $data)
+        ->assertSuccessful();
 
-    public function testStoreNewTag(): void
-    {
-        $data = [
-            'id' => Uuid::uuid4()->toString(),
+    $this->assertInstanceOf(Tag::class, $response->getOriginalContent()->first());
+
+    $this->assertSame($deletedTag['id'], $response->getOriginalContent()->id);
+});
+it('update existing tag', function (): void {
+    $tag = Tag::factory()->create();
+
+    $data = [
+        'name' => 'An updated tag',
+        'slug' => 'an-updated-tag',
+    ];
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/tags/{$tag->id}", $data)
+        ->assertSuccessful();
+
+    $this->assertInstanceOf(Tag::class, $response->getOriginalContent()->first());
+
+    $this->assertSame($data['slug'], $response->getOriginalContent()->slug);
+});
+it('invalid slugs are validated', function (): void {
+    $tag = Tag::factory()->create();
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/tags/{$tag->id}", [
             'name' => 'A new tag',
-            'slug' => 'a-new-tag',
-        ];
-
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->postJson("canvas/api/tags/{$data['id']}", $data)
-                         ->assertSuccessful();
-
-        $this->assertInstanceOf(Tag::class, $response->getOriginalContent()->first());
-
-        $this->assertSame($data['id'], $response->getOriginalContent()->id);
-    }
-
-    public function testDeletedTagsCanBeRefreshed(): void
-    {
-        $deletedTag = factory(Tag::class)->create([
-            'id' => Uuid::uuid4()->toString(),
-            'name' => 'A deleted tag',
-            'slug' => 'a-deleted-tag',
-            'user_id' => $this->editor->id,
-            'deleted_at' => now(),
+            'slug' => 'a new.slug',
+        ])
+        ->assertStatus(422)
+        ->assertJsonStructure([
+            'errors' => [
+                'slug',
+            ],
         ]);
+});
+it('delete existing tag', function (): void {
+    $tag = Tag::factory()->create();
 
-        $data = [
-            'id' => Uuid::uuid4()->toString(),
-            'name' => $deletedTag->name,
-            'slug' => $deletedTag->slug,
-        ];
+    $this->actingAs($this->admin, 'canvas')
+        ->deleteJson('canvas/api/tags/not-a-tag')
+        ->assertNotFound();
 
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->postJson("canvas/api/tags/{$data['id']}", $data)
-                         ->assertSuccessful();
+    $this->actingAs($this->admin, 'canvas')
+        ->deleteJson("canvas/api/tags/{$tag->id}")
+        ->assertSuccessful()
+        ->assertNoContent();
 
-        $this->assertInstanceOf(Tag::class, $response->getOriginalContent()->first());
+    $this->assertSoftDeleted('canvas_tags', [
+        'id' => $tag->id,
+        'slug' => $tag->slug,
+    ]);
+});
+it('de sync post relationship', function (): void {
+    $tag = Tag::factory()->create();
+    $post = Post::factory()->create();
 
-        $this->assertSame($deletedTag['id'], $response->getOriginalContent()->id);
-    }
+    $tag->posts()->sync([$post->id]);
 
-    public function testUpdateExistingTag(): void
-    {
-        $tag = factory(Tag::class)->create();
+    $this->assertDatabaseHas('canvas_posts_tags', [
+        'post_id' => $post->id,
+        'tag_id' => $tag->id,
+    ]);
 
-        $data = [
-            'name' => 'An updated tag',
-            'slug' => 'an-updated-tag',
-        ];
+    $this->assertCount(1, $tag->posts);
 
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->postJson("canvas/api/tags/{$tag->id}", $data)
-                         ->assertSuccessful();
+    $this->actingAs($this->admin, 'canvas')
+        ->deleteJson("canvas/api/posts/{$post->id}")
+        ->assertSuccessful()
+        ->assertNoContent();
 
-        $this->assertInstanceOf(Tag::class, $response->getOriginalContent()->first());
+    $this->assertSoftDeleted('canvas_posts', [
+        'id' => $post->id,
+        'slug' => $post->slug,
+    ]);
 
-        $this->assertSame($data['slug'], $response->getOriginalContent()->slug);
-    }
+    $this->assertDatabaseMissing('canvas_posts_tags', [
+        'post_id' => $post->id,
+        'tag_id' => $tag->id,
+    ]);
 
-    public function testInvalidSlugsAreValidated(): void
-    {
-        $tag = factory(Tag::class)->create();
-
-        $this->actingAs($this->admin, 'canvas')
-             ->postJson("canvas/api/tags/{$tag->id}", [
-                 'name' => 'A new tag',
-                 'slug' => 'a new.slug',
-             ])
-             ->assertStatus(422)
-             ->assertJsonStructure([
-                 'errors' => [
-                     'slug',
-                 ],
-             ]);
-    }
-
-    public function testDeleteExistingTag(): void
-    {
-        $tag = factory(Tag::class)->create();
-
-        $this->actingAs($this->admin, 'canvas')
-             ->deleteJson('canvas/api/tags/not-a-tag')
-             ->assertNotFound();
-
-        $this->actingAs($this->admin, 'canvas')
-             ->deleteJson("canvas/api/tags/{$tag->id}")
-             ->assertSuccessful()
-             ->assertNoContent();
-
-        $this->assertSoftDeleted('canvas_tags', [
-            'id' => $tag->id,
-            'slug' => $tag->slug,
-        ]);
-    }
-
-    public function testDeSyncPostRelationship(): void
-    {
-        $tag = factory(Tag::class)->create();
-        $post = factory(Post::class)->create();
-
-        $tag->posts()->sync([$post->id]);
-
-        $this->assertDatabaseHas('canvas_posts_tags', [
-            'post_id' => $post->id,
-            'tag_id' => $tag->id,
-        ]);
-
-        $this->assertCount(1, $tag->posts);
-
-        $this->actingAs($this->admin, 'canvas')
-             ->deleteJson("canvas/api/posts/{$post->id}")
-             ->assertSuccessful()
-             ->assertNoContent();
-
-        $this->assertSoftDeleted('canvas_posts', [
-            'id' => $post->id,
-            'slug' => $post->slug,
-        ]);
-
-        $this->assertDatabaseMissing('canvas_posts_tags', [
-            'post_id' => $post->id,
-            'tag_id' => $tag->id,
-        ]);
-
-        $this->assertCount(0, $tag->refresh()->posts);
-    }
-}
+    $this->assertCount(0, $tag->refresh()->posts);
+});

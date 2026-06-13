@@ -3,6 +3,7 @@
 namespace Canvas\Http\Controllers;
 
 use Canvas\Canvas;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
 
@@ -35,7 +36,7 @@ class UploadsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function destroy()
     {

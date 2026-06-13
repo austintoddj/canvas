@@ -42,7 +42,7 @@ class UserCommand extends Command
         $email = $this->option('email');
         $password = 'password';
 
-        $user = new User();
+        $user = new User;
         $user->fill([
             'id' => Uuid::uuid4()->toString(),
             'email' => $email,

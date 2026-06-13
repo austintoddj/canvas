@@ -26,8 +26,6 @@ class StatsAggregator
 
     /**
      * Create a new service instance.
-     *
-     * @param  User  $user
      */
     public function __construct(User $user)
     {
@@ -36,28 +34,24 @@ class StatsAggregator
 
     /**
      * Get monthly insights on a given set of posts.
-     *
-     * @param  Collection  $posts
-     * @param  int  $days
-     * @return array
      */
     public function getStatsForPosts(Collection $posts, int $days = 30): array
     {
         $views = View::query()
-                     ->select('created_at')
-                     ->whereIn('post_id', $posts->pluck('id'))
-                     ->whereBetween('created_at', [
-                         today()->subDays($days)->startOfDay()->toDateTimeString(),
-                         today()->endOfDay()->toDateTimeString(),
-                     ])->get();
+            ->select('created_at')
+            ->whereIn('post_id', $posts->pluck('id'))
+            ->whereBetween('created_at', [
+                today()->subDays($days)->startOfDay()->toDateTimeString(),
+                today()->endOfDay()->toDateTimeString(),
+            ])->get();
 
         $visits = Visit::query()
-                       ->select('created_at')
-                       ->whereIn('post_id', $posts->pluck('id'))
-                       ->whereBetween('created_at', [
-                           today()->subDays($days)->startOfDay()->toDateTimeString(),
-                           today()->endOfDay()->toDateTimeString(),
-                       ])->get();
+            ->select('created_at')
+            ->whereIn('post_id', $posts->pluck('id'))
+            ->whereBetween('created_at', [
+                today()->subDays($days)->startOfDay()->toDateTimeString(),
+                today()->endOfDay()->toDateTimeString(),
+            ])->get();
 
         return [
             'views' => $views->count(),
@@ -71,9 +65,6 @@ class StatsAggregator
 
     /**
      * Get total insights on a given post.
-     *
-     * @param  Post  $post
-     * @return array
      */
     public function getStatsForPost(Post $post): array
     {
@@ -119,15 +110,11 @@ class StatsAggregator
      * date strings and their related counts for a given number of days.
      *
      * example: [ Y-m-d => total ]
-     *
-     * @param  Collection  $data
-     * @param  int  $days
-     * @return Collection
      */
     protected function calculateTotalForDays(Collection $data, int $days = 30): Collection
     {
         // Filter the data to only include created_at date strings
-        $filtered = new Collection();
+        $filtered = new Collection;
 
         $data->sortBy('created_at')->each(function ($item) use ($filtered) {
             $filtered->push($item->created_at->toDateString());
@@ -140,7 +127,7 @@ class StatsAggregator
         $period = $this->generateDateRange(today()->subDays($days), CarbonInterval::day(), $days);
 
         // Compare the data and date range arrays, assigning counts where applicable
-        $results = new Collection();
+        $results = new Collection;
 
         foreach ($period as $date) {
             if (array_key_exists($date, $unique)) {
@@ -156,10 +143,6 @@ class StatsAggregator
     /**
      * Given two collections of monthly data, compare the totals and return the
      * overall directional trend as well as the percentage increase/decrease.
-     *
-     * @param  Collection  $current
-     * @param  Collection  $previous
-     * @return array
      */
     protected function compareMonthOverMonth(Collection $current, Collection $previous): array
     {
@@ -181,12 +164,6 @@ class StatsAggregator
 
     /**
      * Generate a date range array of formatted strings.
-     *
-     * @param  DateTimeInterface  $start_date
-     * @param  DateInterval  $interval
-     * @param  int  $recurrences
-     * @param  int  $exclusive
-     * @return array
      */
     protected function generateDateRange(
         DateTimeInterface $start_date,
@@ -195,7 +172,7 @@ class StatsAggregator
         int $exclusive = 1
     ): array {
         $period = new DatePeriod($start_date, $interval, $recurrences, $exclusive);
-        $dates = new Collection();
+        $dates = new Collection;
 
         foreach ($period as $date) {
             $dates->push($date->format('Y-m-d'));
@@ -206,9 +183,6 @@ class StatsAggregator
 
     /**
      * Get the human-friendly estimated reading time of a given text.
-     *
-     * @param  null|string  $text
-     * @return string
      */
     protected function calculateReadTime(?string $text): string
     {
@@ -229,9 +203,6 @@ class StatsAggregator
 
     /**
      * Get the 10 most popular reading times rounded to the nearest 30 minutes.
-     *
-     * @param  Post  $post
-     * @return array
      */
     protected function calculatePopularReadingTimes(Post $post): array
     {
@@ -239,7 +210,7 @@ class StatsAggregator
         $data = $post->views;
 
         // Filter the view data to only include hours:minutes
-        $collection = new Collection();
+        $collection = new Collection;
         $data->each(function ($item, $key) use ($collection) {
             $collection->push($item->created_at->minute(0)->format('H:i'));
         });
@@ -247,7 +218,7 @@ class StatsAggregator
         // Count the unique values and assign to their respective keys
         $filtered = array_count_values($collection->toArray());
 
-        $popularReadingTimes = new Collection();
+        $popularReadingTimes = new Collection;
         foreach ($filtered as $key => $value) {
             // Use each given time to create a 60 min range
             $start = Date::createFromTimeString($key);
@@ -277,9 +248,6 @@ class StatsAggregator
 
     /**
      * Get the top referring websites for a post.
-     *
-     * @param  Post  $post
-     * @return array
      */
     protected function calculateTopReferers(Post $post): array
     {
@@ -287,7 +255,7 @@ class StatsAggregator
         $data = $post->views;
 
         // Filter the view data to only include referrers
-        $collection = new Collection();
+        $collection = new Collection;
         $data->each(function ($item, $key) use ($collection) {
             if (empty(Canvas::parseReferer($item->referer))) {
                 $collection->push(trans('canvas::app.other', [], $this->user->locale));

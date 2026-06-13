@@ -1,55 +1,38 @@
 <?php
 
-namespace Canvas\Tests\Listeners;
-
 use Canvas\Events\PostViewed;
 use Canvas\Listeners\CaptureVisit;
 use Canvas\Models\Post;
-use Canvas\Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-/**
- * Class CaptureVisitTest.
- *
- * @covers \Canvas\Listeners\CaptureVisit
- */
-class CaptureVisitTest extends TestCase
-{
-    use RefreshDatabase;
+it('instantiation', function (): void {
+    $post = Post::factory()->create();
 
-    public function testInstantiation(): void
-    {
-        $post = factory(Post::class)->create();
+    $event = new PostViewed($post);
 
-        $event = new PostViewed($post);
+    $listener = new CaptureVisit;
 
-        $listener = new CaptureVisit();
+    $listener->handle($event);
+    $listener->handle($event);
 
-        $listener->handle($event);
-        $listener->handle($event);
+    $this->assertDatabaseHas('canvas_visits', [
+        'post_id' => $post->id,
+    ]);
 
-        $this->assertDatabaseHas('canvas_visits', [
-            'post_id' => $post->id,
-        ]);
+    $this->assertCount(1, $post->visits);
+});
+it('visits are counted by ip in session once per day', function (): void {
+    $post = Post::factory()->create();
 
-        $this->assertCount(1, $post->visits);
-    }
+    $event = new PostViewed($post);
 
-    public function testVisitsAreCountedByIpInSessionOncePerDay(): void
-    {
-        $post = factory(Post::class)->create();
+    $listener = new CaptureVisit;
 
-        $event = new PostViewed($post);
+    $listener->handle($event);
+    $listener->handle($event);
 
-        $listener = new CaptureVisit();
+    $this->assertDatabaseHas('canvas_visits', [
+        'post_id' => $post->id,
+    ]);
 
-        $listener->handle($event);
-        $listener->handle($event);
-
-        $this->assertDatabaseHas('canvas_visits', [
-            'post_id' => $post->id,
-        ]);
-
-        $this->assertCount(1, $post->visits);
-    }
-}
+    $this->assertCount(1, $post->visits);
+});

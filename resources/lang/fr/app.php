@@ -111,7 +111,7 @@ return [
     'tell_us_about_yourself' => 'Quelques mots à propos de vous ...',
     'tell_your_story' => 'Racontez votre histoire ...',
     'thirty_days' => '30 jours',
-    'timezone' => '', //Empty because the sentence words ar not in the same order in french where this keyword is used.
+    'timezone' => '', // Empty because the sentence words ar not in the same order in french where this keyword is used.
     'title' => 'Titre',
     'to' => 'à',
     'to_update_run' => 'Pour mettre à jour, exécutez :',

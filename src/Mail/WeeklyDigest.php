@@ -20,7 +20,6 @@ class WeeklyDigest extends Mailable
     /**
      * Create a new message instance.
      *
-     * @param  array  $data
      * @return void
      */
     public function __construct(array $data)
@@ -42,7 +41,7 @@ class WeeklyDigest extends Mailable
         );
 
         return $this->subject($subject)
-                    ->from(config('mail.from.address'), config('mail.from.name'))
-                    ->markdown('canvas::mail.digest');
+            ->from(config('mail.from.address'), config('mail.from.name'))
+            ->markdown('canvas::mail.digest');
     }
 }

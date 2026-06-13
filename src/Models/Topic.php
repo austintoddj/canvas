@@ -2,6 +2,9 @@
 
 namespace Canvas\Models;
 
+use Canvas\Database\Factories\TopicFactory;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Topic extends Model
 {
+    use HasFactory;
     use SoftDeletes;
 
     /**
@@ -54,9 +58,15 @@ class Topic extends Model
     protected $perPage = 10;
 
     /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): Factory
+    {
+        return TopicFactory::new();
+    }
+
+    /**
      * Get the posts relationship.
-     *
-     * @return BelongsToMany
      */
     public function posts(): BelongsToMany
     {
@@ -67,8 +77,6 @@ class Topic extends Model
 
     /**
      * Get the user relationship.
-     *
-     * @return BelongsTo
      */
     public function user(): BelongsTo
     {

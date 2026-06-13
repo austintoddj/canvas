@@ -84,7 +84,6 @@ class UiCommand extends Command
     /**
      * Update the "package.json" file.
      *
-     * @param  callable  $callback
      * @param  bool  $dev
      * @return void
      */
@@ -114,7 +113,6 @@ class UiCommand extends Command
     /**
      * Update the "package.json" scripts.
      *
-     * @param  callable  $callback
      * @param  bool  $dev
      * @return void
      */

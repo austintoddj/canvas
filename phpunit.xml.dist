@@ -1,36 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit backupGlobals="false"
-         backupStaticAttributes="false"
-         beStrictAboutTestsThatDoNotTestAnything="true"
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
          bootstrap="vendor/autoload.php"
+         cacheDirectory=".phpunit.cache"
          colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
-         processIsolation="false"
-         stopOnError="false"
-         stopOnFailure="true"
-         verbose="true"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+         failOnRisky="true"
+         failOnWarning="true"
+         stopOnFailure="false"
 >
-    <coverage processUncoveredFiles="true">
-        <include>
-            <directory suffix=".php">./src</directory>
-        </include>
-        <exclude>
-            <directory suffix=".php">./src/database</directory>
-            <file>./src/Http/routes.php</file>
-        </exclude>
-    </coverage>
     <testsuites>
         <testsuite name="Canvas Tests">
             <directory suffix="Test.php">./tests</directory>
         </testsuite>
     </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">./src</directory>
+        </include>
+        <exclude>
+            <file>./src/Http/routes.php</file>
+        </exclude>
+    </source>
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_KEY" value="base64:cnx7anOUDil+KtEGdGiHBnY764aA05eU80oECtOqfYs="/>
         <env name="APP_URL" value="http://laravel.test"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
     </php>
 </phpunit>

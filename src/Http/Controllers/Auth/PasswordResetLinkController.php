@@ -29,7 +29,6 @@ class PasswordResetLinkController extends Controller
     /**
      * Handle an incoming password reset link request.
      *
-     * @param  Request  $request
      * @return RedirectResponse
      *
      * @throws Exception

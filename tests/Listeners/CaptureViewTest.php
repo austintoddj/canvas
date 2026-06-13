@@ -1,54 +1,37 @@
 <?php
 
-namespace Canvas\Tests\Listeners;
-
 use Canvas\Events\PostViewed;
 use Canvas\Listeners\CaptureView;
 use Canvas\Models\Post;
-use Canvas\Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-/**
- * Class CaptureViewTest.
- *
- * @covers \Canvas\Listeners\CaptureView
- */
-class CaptureViewTest extends TestCase
-{
-    use RefreshDatabase;
+it('instantiation', function (): void {
+    $post = Post::factory()->create();
 
-    public function testInstantiation(): void
-    {
-        $post = factory(Post::class)->create();
+    $event = new PostViewed($post);
 
-        $event = new PostViewed($post);
+    $listener = new CaptureView;
 
-        $listener = new CaptureView();
+    $listener->handle($event);
 
-        $listener->handle($event);
+    $this->assertDatabaseHas('canvas_views', [
+        'post_id' => $post->id,
+    ]);
 
-        $this->assertDatabaseHas('canvas_views', [
-            'post_id' => $post->id,
-        ]);
+    $this->assertCount(1, $post->views);
+});
+it('views are counted in session once per hour', function (): void {
+    $post = Post::factory()->create();
 
-        $this->assertCount(1, $post->views);
-    }
+    $event = new PostViewed($post);
 
-    public function testViewsAreCountedInSessionOncePerHour(): void
-    {
-        $post = factory(Post::class)->create();
+    $listener = new CaptureView;
 
-        $event = new PostViewed($post);
+    $listener->handle($event);
+    $listener->handle($event);
 
-        $listener = new CaptureView();
+    $this->assertDatabaseHas('canvas_views', [
+        'post_id' => $post->id,
+    ]);
 
-        $listener->handle($event);
-        $listener->handle($event);
-
-        $this->assertDatabaseHas('canvas_views', [
-            'post_id' => $post->id,
-        ]);
-
-        $this->assertCount(1, $post->views);
-    }
-}
+    $this->assertCount(1, $post->views);
+});

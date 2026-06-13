@@ -1,214 +1,178 @@
 <?php
 
-namespace Canvas\Tests\Http\Controllers;
-
 use Canvas\Models\Post;
 use Canvas\Models\Topic;
 use Canvas\Models\View;
-use Canvas\Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Ramsey\Uuid\Uuid;
 
-/**
- * Class TopicControllerTest.
- *
- * @covers \Canvas\Http\Controllers\TopicController
- * @covers \Canvas\Http\Requests\TopicRequest
- */
-class TopicControllerTest extends TestCase
-{
-    use RefreshDatabase;
+it('list all topics', function (): void {
+    Topic::factory()->count(2)->create();
 
-    public function testListAllTopics(): void
-    {
-        factory(Topic::class, 2)->create();
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/topics')
+        ->assertSuccessful();
 
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->getJson('canvas/api/topics')
-                         ->assertSuccessful();
+    $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
 
-        $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
+    $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
 
-        $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
+    $this->assertCount(2, $response->getOriginalContent());
+});
+it('create data for topic', function (): void {
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/topics/create')
+        ->assertSuccessful();
 
-        $this->assertCount(2, $response->getOriginalContent());
-    }
+    $this->assertInstanceOf(Topic::class, $response->getOriginalContent());
+});
+it('existing topic data', function (): void {
+    $topic = Topic::factory()->create();
 
-    public function testCreateDataForTopic(): void
-    {
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->getJson('canvas/api/topics/create')
-                         ->assertSuccessful();
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson("canvas/api/topics/{$topic->id}")
+        ->assertSuccessful();
 
-        $this->assertInstanceOf(Topic::class, $response->getOriginalContent());
-    }
+    $this->assertTrue($topic->is($response->getOriginalContent()));
+});
+it('list posts for topic', function (): void {
+    $topic = Topic::factory()->create();
+    $post = Post::factory()->create();
 
-    public function testExistingTopicData(): void
-    {
-        $topic = factory(Topic::class)->create();
+    View::factory()->create([
+        'post_id' => $post->id,
+    ]);
 
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->getJson("canvas/api/topics/{$topic->id}")
-                         ->assertSuccessful();
+    $topic->posts()->sync([$post->id]);
 
-        $this->assertTrue($topic->is($response->getOriginalContent()));
-    }
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson("canvas/api/topics/{$topic->id}/posts")
+        ->assertSuccessful();
 
-    public function testListPostsForTopic(): void
-    {
-        $topic = factory(Topic::class)->create();
-        $post = factory(Post::class)->create();
+    $this->assertInstanceOf(Post::class, $response->getOriginalContent()->first());
 
-        factory(View::class)->create([
-            'post_id' => $post->id,
-        ]);
+    $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
 
-        $topic->posts()->sync([$post->id]);
+    $this->assertCount(1, $response->getOriginalContent());
+});
+it('topic not found', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/topics/not-a-topic')
+        ->assertNotFound();
+});
+it('store new topic', function (): void {
+    $data = [
+        'id' => Uuid::uuid4()->toString(),
+        'name' => 'A new topic',
+        'slug' => 'a-new-topic',
+    ];
 
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->getJson("canvas/api/topics/{$topic->id}/posts")
-                         ->assertSuccessful();
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/topics/{$data['id']}", $data)
+        ->assertSuccessful();
 
-        $this->assertInstanceOf(Post::class, $response->getOriginalContent()->first());
+    $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
 
-        $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
+    $this->assertSame($data['id'], $response->getOriginalContent()->id);
+});
+it('deleted topics can be refreshed', function (): void {
+    $deletedTopic = Topic::factory()->create([
+        'id' => Uuid::uuid4()->toString(),
+        'name' => 'A deleted topic',
+        'slug' => 'a-deleted-topic',
+        'user_id' => $this->editor->id,
+        'deleted_at' => now(),
+    ]);
 
-        $this->assertCount(1, $response->getOriginalContent());
-    }
+    $data = [
+        'id' => Uuid::uuid4()->toString(),
+        'name' => $deletedTopic->name,
+        'slug' => $deletedTopic->slug,
+    ];
 
-    public function testTopicNotFound(): void
-    {
-        $this->actingAs($this->admin, 'canvas')
-             ->getJson('canvas/api/topics/not-a-topic')
-             ->assertNotFound();
-    }
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/topics/{$data['id']}", $data)
+        ->assertSuccessful();
 
-    public function testStoreNewTopic(): void
-    {
-        $data = [
-            'id' => Uuid::uuid4()->toString(),
+    $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
+
+    $this->assertSame($deletedTopic['id'], $response->getOriginalContent()->id);
+});
+it('update existing topic', function (): void {
+    $topic = Topic::factory()->create();
+
+    $data = [
+        'name' => 'An updated topic',
+        'slug' => 'an-updated-topic',
+    ];
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/topics/{$topic->id}", $data)
+        ->assertSuccessful();
+
+    $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
+
+    $this->assertSame($data['slug'], $response->getOriginalContent()->slug);
+});
+it('invalid slugs are validated', function (): void {
+    $topic = Topic::factory()->create();
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/topics/{$topic->id}", [
             'name' => 'A new topic',
-            'slug' => 'a-new-topic',
-        ];
-
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->postJson("canvas/api/topics/{$data['id']}", $data)
-                         ->assertSuccessful();
-
-        $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
-
-        $this->assertSame($data['id'], $response->getOriginalContent()->id);
-    }
-
-    public function testDeletedTopicsCanBeRefreshed(): void
-    {
-        $deletedTopic = factory(Topic::class)->create([
-            'id' => Uuid::uuid4()->toString(),
-            'name' => 'A deleted topic',
-            'slug' => 'a-deleted-topic',
-            'user_id' => $this->editor->id,
-            'deleted_at' => now(),
+            'slug' => 'a new.slug',
+        ])
+        ->assertStatus(422)
+        ->assertJsonStructure([
+            'errors' => [
+                'slug',
+            ],
         ]);
+});
+it('delete existing topic', function (): void {
+    $topic = Topic::factory()->create();
 
-        $data = [
-            'id' => Uuid::uuid4()->toString(),
-            'name' => $deletedTopic->name,
-            'slug' => $deletedTopic->slug,
-        ];
+    $this->actingAs($this->admin, 'canvas')
+        ->deleteJson('canvas/api/topics/not-a-topic')
+        ->assertNotFound();
 
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->postJson("canvas/api/topics/{$data['id']}", $data)
-                         ->assertSuccessful();
+    $this->actingAs($this->admin, 'canvas')
+        ->deleteJson("canvas/api/topics/{$topic->id}")
+        ->assertSuccessful()
+        ->assertNoContent();
 
-        $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
+    $this->assertSoftDeleted('canvas_topics', [
+        'id' => $topic->id,
+        'slug' => $topic->slug,
+    ]);
+});
+it('de sync post relationship', function (): void {
+    $topic = Topic::factory()->create();
+    $post = Post::factory()->create();
 
-        $this->assertSame($deletedTopic['id'], $response->getOriginalContent()->id);
-    }
+    $topic->posts()->sync([$post->id]);
 
-    public function testUpdateExistingTopic(): void
-    {
-        $topic = factory(Topic::class)->create();
+    $this->assertDatabaseHas('canvas_posts_topics', [
+        'post_id' => $post->id,
+        'topic_id' => $topic->id,
+    ]);
 
-        $data = [
-            'name' => 'An updated topic',
-            'slug' => 'an-updated-topic',
-        ];
+    $this->assertCount(1, $topic->posts);
 
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->postJson("canvas/api/topics/{$topic->id}", $data)
-                         ->assertSuccessful();
+    $this->actingAs($this->admin, 'canvas')
+        ->deleteJson("canvas/api/posts/{$post->id}")
+        ->assertSuccessful()
+        ->assertNoContent();
 
-        $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
+    $this->assertSoftDeleted('canvas_posts', [
+        'id' => $post->id,
+        'slug' => $post->slug,
+    ]);
 
-        $this->assertSame($data['slug'], $response->getOriginalContent()->slug);
-    }
+    $this->assertDatabaseMissing('canvas_posts_topics', [
+        'post_id' => $post->id,
+        'topic_id' => $topic->id,
+    ]);
 
-    public function testInvalidSlugsAreValidated(): void
-    {
-        $topic = factory(Topic::class)->create();
-
-        $this->actingAs($this->admin, 'canvas')
-             ->postJson("canvas/api/topics/{$topic->id}", [
-                 'name' => 'A new topic',
-                 'slug' => 'a new.slug',
-             ])
-             ->assertStatus(422)
-             ->assertJsonStructure([
-                 'errors' => [
-                     'slug',
-                 ],
-             ]);
-    }
-
-    public function testDeleteExistingTopic(): void
-    {
-        $topic = factory(Topic::class)->create();
-
-        $this->actingAs($this->admin, 'canvas')
-             ->deleteJson('canvas/api/topics/not-a-topic')
-             ->assertNotFound();
-
-        $this->actingAs($this->admin, 'canvas')
-             ->deleteJson("canvas/api/topics/{$topic->id}")
-             ->assertSuccessful()
-             ->assertNoContent();
-
-        $this->assertSoftDeleted('canvas_topics', [
-            'id' => $topic->id,
-            'slug' => $topic->slug,
-        ]);
-    }
-
-    public function testDeSyncPostRelationship(): void
-    {
-        $topic = factory(Topic::class)->create();
-        $post = factory(Post::class)->create();
-
-        $topic->posts()->sync([$post->id]);
-
-        $this->assertDatabaseHas('canvas_posts_topics', [
-            'post_id' => $post->id,
-            'topic_id' => $topic->id,
-        ]);
-
-        $this->assertCount(1, $topic->posts);
-
-        $this->actingAs($this->admin, 'canvas')
-             ->deleteJson("canvas/api/posts/{$post->id}")
-             ->assertSuccessful()
-             ->assertNoContent();
-
-        $this->assertSoftDeleted('canvas_posts', [
-            'id' => $post->id,
-            'slug' => $post->slug,
-        ]);
-
-        $this->assertDatabaseMissing('canvas_posts_topics', [
-            'post_id' => $post->id,
-            'topic_id' => $topic->id,
-        ]);
-
-        $this->assertCount(0, $topic->refresh()->posts);
-    }
-}
+    $this->assertCount(0, $topic->refresh()->posts);
+});

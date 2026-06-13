@@ -1,13 +1,23 @@
 <?php
 
-/* @var \Illuminate\Database\Eloquent\Factory $factory */
-$factory->define(\Canvas\Models\Topic::class, function (Faker\Generator $faker) {
-    return [
-        'id' => $faker->uuid,
-        'slug' => $faker->slug,
-        'name' => $faker->word,
-        'user_id' => function () {
-            return factory(\Canvas\Models\User::class)->create()->id;
-        },
-    ];
-});
+namespace Canvas\Database\Factories;
+
+use Canvas\Models\Topic;
+use Canvas\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+
+class TopicFactory extends Factory
+{
+    protected $model = Topic::class;
+
+    public function definition(): array
+    {
+        return [
+            'id' => (string) Str::uuid(),
+            'slug' => fake()->slug(),
+            'name' => Str::headline(fake()->words(2, true)),
+            'user_id' => User::factory(),
+        ];
+    }
+}

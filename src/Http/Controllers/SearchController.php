@@ -14,20 +14,18 @@ class SearchController extends Controller
 {
     /**
      * Display the specified resource.
-     *
-     * @return JsonResponse
      */
     public function posts(): JsonResponse
     {
         $posts = Post::query()
-                     ->select('id', 'title')
-                     ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                         return $query->where('user_id', request()->user('canvas')->id);
-                     }, function (Builder $query) {
-                         return $query;
-                     })
-                     ->latest()
-                     ->get();
+            ->select('id', 'title')
+            ->when(request()->user('canvas')->isContributor, function (Builder $query) {
+                return $query->where('user_id', request()->user('canvas')->id);
+            }, function (Builder $query) {
+                return $query;
+            })
+            ->latest()
+            ->get();
 
         // TODO: Can ->map() drop into the above query?
 
@@ -44,15 +42,13 @@ class SearchController extends Controller
 
     /**
      * Display the specified resource.
-     *
-     * @return JsonResponse
      */
     public function tags(): JsonResponse
     {
         $tags = Tag::query()
-                   ->select('id', 'name')
-                   ->latest()
-                   ->get();
+            ->select('id', 'name')
+            ->latest()
+            ->get();
 
         $tags->map(function ($tag) {
             $tag['type'] = 'Tag';
@@ -66,15 +62,13 @@ class SearchController extends Controller
 
     /**
      * Display the specified resource.
-     *
-     * @return JsonResponse
      */
     public function topics(): JsonResponse
     {
         $topics = Topic::query()
-                       ->select('id', 'name')
-                       ->latest()
-                       ->get();
+            ->select('id', 'name')
+            ->latest()
+            ->get();
 
         $topics->map(function ($topic) {
             $topic['type'] = 'Topic';
@@ -88,15 +82,13 @@ class SearchController extends Controller
 
     /**
      * Display the specified resource.
-     *
-     * @return JsonResponse
      */
     public function users(): JsonResponse
     {
         $users = User::query()
-                     ->select('id', 'name', 'email')
-                     ->latest()
-                     ->get();
+            ->select('id', 'name', 'email')
+            ->latest()
+            ->get();
 
         $users->map(function ($user) {
             $user['type'] = 'User';

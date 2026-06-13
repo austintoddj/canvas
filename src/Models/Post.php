@@ -2,7 +2,10 @@
 
 namespace Canvas\Models;
 
+use Canvas\Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,6 +15,7 @@ use Illuminate\Support\Str;
 
 class Post extends Model
 {
+    use HasFactory;
     use SoftDeletes;
 
     /**
@@ -76,9 +80,15 @@ class Post extends Model
     ];
 
     /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): Factory
+    {
+        return PostFactory::new();
+    }
+
+    /**
      * Get the tags relationship.
-     *
-     * @return BelongsToMany
      */
     public function tags(): BelongsToMany
     {
@@ -92,8 +102,6 @@ class Post extends Model
 
     /**
      * Get the topic relationship.
-     *
-     * @return BelongsToMany
      */
     public function topic(): BelongsToMany
     {
@@ -109,8 +117,6 @@ class Post extends Model
 
     /**
      * Get the user relationship.
-     *
-     * @return BelongsTo
      */
     public function user(): BelongsTo
     {
@@ -119,8 +125,6 @@ class Post extends Model
 
     /**
      * Get the views relationship.
-     *
-     * @return HasMany
      */
     public function views(): HasMany
     {
@@ -129,8 +133,6 @@ class Post extends Model
 
     /**
      * Get the visits relationship.
-     *
-     * @return HasMany
      */
     public function visits(): HasMany
     {
@@ -139,8 +141,6 @@ class Post extends Model
 
     /**
      * Get the human-friendly estimated reading time of a given text.
-     *
-     * @return string
      */
     public function getReadTimeAttribute(): string
     {
@@ -162,8 +162,6 @@ class Post extends Model
 
     /**
      * Check to see if the post is published.
-     *
-     * @return bool
      */
     public function getPublishedAttribute(): bool
     {
@@ -172,9 +170,6 @@ class Post extends Model
 
     /**
      * Scope a query to only include published posts.
-     *
-     * @param  Builder  $query
-     * @return Builder
      */
     public function scopePublished(Builder $query): Builder
     {
@@ -183,9 +178,6 @@ class Post extends Model
 
     /**
      * Scope a query to only include drafted posts.
-     *
-     * @param  Builder  $query
-     * @return Builder
      */
     public function scopeDraft(Builder $query): Builder
     {

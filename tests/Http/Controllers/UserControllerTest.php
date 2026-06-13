@@ -1,261 +1,217 @@
 <?php
 
-namespace Canvas\Tests\Http\Controllers;
-
 use Canvas\Models\Post;
 use Canvas\Models\User;
 use Canvas\Models\View;
-use Canvas\Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Ramsey\Uuid\Uuid;
 
-/**
- * Class UserControllerTest.
- *
- * @covers \Canvas\Http\Controllers\UserController
- * @covers \Canvas\Http\Requests\UserRequest
- */
-class UserControllerTest extends TestCase
-{
-    use RefreshDatabase;
+it('list all users', function (): void {
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/users')
+        ->assertSuccessful();
 
-    public function testListAllUsers(): void
-    {
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->getJson('canvas/api/users')
-                         ->assertSuccessful();
+    $this->assertInstanceOf(User::class, $response->getOriginalContent()->first());
 
-        $this->assertInstanceOf(User::class, $response->getOriginalContent()->first());
+    $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
 
-        $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
+    $this->assertCount(3, $response->getOriginalContent());
+});
+it('create data for user', function (): void {
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/users/create')
+        ->assertSuccessful();
 
-        $this->assertCount(3, $response->getOriginalContent());
-    }
+    $this->assertInstanceOf(User::class, $response->getOriginalContent());
+});
+it('existing user data', function (): void {
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson("canvas/api/users/{$this->contributor->id}")
+        ->assertSuccessful();
 
-    public function testCreateDataForUser(): void
-    {
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->getJson('canvas/api/users/create')
-                         ->assertSuccessful();
+    $this->assertTrue($this->contributor->is($response->getOriginalContent()));
+});
+it('list posts for user', function (): void {
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+    ]);
 
-        $this->assertInstanceOf(User::class, $response->getOriginalContent());
-    }
+    View::factory()->create([
+        'post_id' => $post->id,
+    ]);
 
-    public function testExistingUserData(): void
-    {
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->getJson("canvas/api/users/{$this->contributor->id}")
-                         ->assertSuccessful();
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson("canvas/api/users/{$this->admin->id}/posts")
+        ->assertSuccessful();
 
-        $this->assertTrue($this->contributor->is($response->getOriginalContent()));
-    }
+    $this->assertInstanceOf(Post::class, $response->getOriginalContent()->first());
 
-    public function testListPostsForUser(): void
-    {
-        $post = factory(Post::class)->create([
-            'user_id' => $this->admin->id,
-        ]);
+    $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
 
-        factory(View::class)->create([
-            'post_id' => $post->id,
-        ]);
+    $this->assertCount(1, $response->getOriginalContent());
+});
+it('user not found', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/users/not-a-user')
+        ->assertNotFound();
+});
+it('store new user', function (): void {
+    $data = [
+        'id' => Uuid::uuid4()->toString(),
+        'name' => 'Name',
+        'email' => 'email@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ];
 
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->getJson("canvas/api/users/{$this->admin->id}/posts")
-                         ->assertSuccessful();
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/users/{$data['id']}", $data)
+        ->assertSuccessful();
 
-        $this->assertInstanceOf(Post::class, $response->getOriginalContent()->first());
+    $this->assertInstanceOf(User::class, $response->getOriginalContent()['user']);
 
-        $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
+    $this->assertSame($data['id'], $response->getOriginalContent()['user']->id);
+});
+it('deleted users can be refreshed', function (): void {
+    $deletedUser = User::factory()->create([
+        'id' => Uuid::uuid4()->toString(),
+        'name' => 'Deleted User',
+        'email' => 'email@example.com',
+        'deleted_at' => now(),
+    ]);
 
-        $this->assertCount(1, $response->getOriginalContent());
-    }
+    $data = [
+        'id' => Uuid::uuid4()->toString(),
+        'name' => 'Deleted User',
+        'email' => 'email@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ];
 
-    public function testUserNotFound(): void
-    {
-        $this->actingAs($this->admin, 'canvas')
-             ->getJson('canvas/api/users/not-a-user')
-             ->assertNotFound();
-    }
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/users/{$data['id']}", $data)
+        ->assertSuccessful();
 
-    public function testStoreNewUser(): void
-    {
-        $data = [
-            'id' => Uuid::uuid4()->toString(),
-            'name' => 'Name',
-            'email' => 'email@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ];
+    $this->assertInstanceOf(User::class, $response->getOriginalContent()['user']);
 
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->postJson("canvas/api/users/{$data['id']}", $data)
-                         ->assertSuccessful();
+    $this->assertSame($deletedUser['id'], $response->getOriginalContent()['user']->id);
+});
+it('update existing user', function (): void {
+    $user = User::factory()->create();
 
-        $this->assertInstanceOf(User::class, $response->getOriginalContent()['user']);
+    $data = [
+        'name' => 'New name',
+        'email' => 'new-email@example.com',
+    ];
 
-        $this->assertSame($data['id'], $response->getOriginalContent()['user']->id);
-    }
-
-    public function testDeletedUsersCanBeRefreshed(): void
-    {
-        $deletedUser = factory(User::class)->create([
-            'id' => Uuid::uuid4()->toString(),
-            'name' => 'Deleted User',
-            'email' => 'email@example.com',
-            'deleted_at' => now(),
-        ]);
-
-        $data = [
-            'id' => Uuid::uuid4()->toString(),
-            'name' => 'Deleted User',
-            'email' => 'email@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ];
-
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->postJson("canvas/api/users/{$data['id']}", $data)
-                         ->assertSuccessful();
-
-        $this->assertInstanceOf(User::class, $response->getOriginalContent()['user']);
-
-        $this->assertSame($deletedUser['id'], $response->getOriginalContent()['user']->id);
-    }
-
-    public function testUpdateExistingUser(): void
-    {
-        $user = factory(User::class)->create();
-
-        $data = [
-            'name' => 'New name',
-            'email' => 'new-email@example.com',
-        ];
-
-        $response = $this->actingAs($this->admin, 'canvas')
-                         ->postJson("canvas/api/users/{$user->id}", $data)
-                         ->assertSuccessful()
-                         ->assertJsonFragment([
-                             'id' => $user->id,
-                             'name' => $data['name'],
-                             'email' => $data['email'],
-                         ]);
-
-        $this->assertInstanceOf(User::class, $response->getOriginalContent()['user']);
-
-        $this->assertSame($data['email'], $response->getOriginalContent()['user']->email);
-    }
-
-    public function testInvalidPasswordCombinationsAreValidated(): void
-    {
-        $data = [
-            'id' => Uuid::uuid4()->toString(),
-            'name' => 'Name',
-            'email' => 'email@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'not-a-match',
-        ];
-
-        $this->actingAs($this->admin, 'canvas')
-             ->postJson("canvas/api/users/{$data['id']}", $data)
-             ->assertStatus(422)
-             ->assertJsonStructure([
-                 'errors' => [
-                     'password',
-                 ],
-             ]);
-    }
-
-    public function testShortPasswordsAreValidated(): void
-    {
-        $data = [
-            'id' => Uuid::uuid4()->toString(),
-            'name' => 'Name',
-            'email' => 'email@example.com',
-            'password' => 'pass',
-            'password_confirmation' => 'pass',
-        ];
-
-        $this->actingAs($this->admin, 'canvas')
-             ->postJson("canvas/api/users/{$data['id']}", $data)
-             ->assertStatus(422)
-             ->assertJsonStructure([
-                 'errors' => [
-                     'password',
-                 ],
-             ]);
-    }
-
-    public function testDuplicateUsernamesAreValidated(): void
-    {
-        $this->actingAs($this->admin, 'canvas')
-             ->postJson("canvas/api/users/{$this->admin->id}", [
-                 'name' => $this->admin->name,
-                 'email' => $this->admin->email,
-                 'username' => $this->editor->username,
-             ])
-             ->assertStatus(422)
-             ->assertJsonStructure([
-                 'errors' => [
-                     'username',
-                 ],
-             ]);
-    }
-
-    public function testDuplicateEmailsAreValidated(): void
-    {
-        $this->actingAs($this->admin, 'canvas')
-             ->postJson("canvas/api/users/{$this->admin->id}", [
-                 'name' => $this->admin->name,
-                 'email' => $this->editor->email,
-             ])
-             ->assertStatus(422)
-             ->assertJsonStructure([
-                 'errors' => [
-                     'email',
-                 ],
-             ]);
-    }
-
-    public function testInvalidEmailsAreValidated(): void
-    {
-        $this->actingAs($this->admin, 'canvas')
-             ->postJson("canvas/api/users/{$this->admin->id}", [
-                 'name' => $this->admin->name,
-                 'email' => 'not-an-email',
-             ])
-             ->assertStatus(422)
-             ->assertJsonStructure([
-                 'errors' => [
-                     'email',
-                 ],
-             ]);
-    }
-
-    public function testUsersCannotDeleteTheirOwnAccount(): void
-    {
-        $this->actingAs($this->admin, 'canvas')
-             ->deleteJson("canvas/api/users/{$this->admin->id}")
-             ->assertForbidden();
-    }
-
-    public function testDeleteExistingUser(): void
-    {
-        $user = factory(User::class)->create();
-
-        $this->actingAs($this->admin, 'canvas')
-             ->deleteJson('canvas/api/users/not-a-user')
-             ->assertNotFound();
-
-        $this->actingAs($this->admin, 'canvas')
-             ->deleteJson("canvas/api/users/{$user->id}")
-             ->assertSuccessful()
-             ->assertNoContent();
-
-        $this->assertSoftDeleted('canvas_users', [
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/users/{$user->id}", $data)
+        ->assertSuccessful()
+        ->assertJsonFragment([
             'id' => $user->id,
-            'email' => $user->email,
+            'name' => $data['name'],
+            'email' => $data['email'],
         ]);
-    }
-}
+
+    $this->assertInstanceOf(User::class, $response->getOriginalContent()['user']);
+
+    $this->assertSame($data['email'], $response->getOriginalContent()['user']->email);
+});
+it('invalid password combinations are validated', function (): void {
+    $data = [
+        'id' => Uuid::uuid4()->toString(),
+        'name' => 'Name',
+        'email' => 'email@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'not-a-match',
+    ];
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/users/{$data['id']}", $data)
+        ->assertStatus(422)
+        ->assertJsonStructure([
+            'errors' => [
+                'password',
+            ],
+        ]);
+});
+it('short passwords are validated', function (): void {
+    $data = [
+        'id' => Uuid::uuid4()->toString(),
+        'name' => 'Name',
+        'email' => 'email@example.com',
+        'password' => 'pass',
+        'password_confirmation' => 'pass',
+    ];
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/users/{$data['id']}", $data)
+        ->assertStatus(422)
+        ->assertJsonStructure([
+            'errors' => [
+                'password',
+            ],
+        ]);
+});
+it('duplicate usernames are validated', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/users/{$this->admin->id}", [
+            'name' => $this->admin->name,
+            'email' => $this->admin->email,
+            'username' => $this->editor->username,
+        ])
+        ->assertStatus(422)
+        ->assertJsonStructure([
+            'errors' => [
+                'username',
+            ],
+        ]);
+});
+it('duplicate emails are validated', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/users/{$this->admin->id}", [
+            'name' => $this->admin->name,
+            'email' => $this->editor->email,
+        ])
+        ->assertStatus(422)
+        ->assertJsonStructure([
+            'errors' => [
+                'email',
+            ],
+        ]);
+});
+it('invalid emails are validated', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/users/{$this->admin->id}", [
+            'name' => $this->admin->name,
+            'email' => 'not-an-email',
+        ])
+        ->assertStatus(422)
+        ->assertJsonStructure([
+            'errors' => [
+                'email',
+            ],
+        ]);
+});
+it('users cannot delete their own account', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->deleteJson("canvas/api/users/{$this->admin->id}")
+        ->assertForbidden();
+});
+it('delete existing user', function (): void {
+    $user = User::factory()->create();
+
+    $this->actingAs($this->admin, 'canvas')
+        ->deleteJson('canvas/api/users/not-a-user')
+        ->assertNotFound();
+
+    $this->actingAs($this->admin, 'canvas')
+        ->deleteJson("canvas/api/users/{$user->id}")
+        ->assertSuccessful()
+        ->assertNoContent();
+
+    $this->assertSoftDeleted('canvas_users', [
+        'id' => $user->id,
+        'email' => $user->email,
+    ]);
+});

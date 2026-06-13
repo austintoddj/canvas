@@ -1,11 +1,21 @@
 <?php
 
-/* @var \Illuminate\Database\Eloquent\Factory $factory */
-$factory->define(\Canvas\Models\View::class, function (Faker\Generator $faker) {
-    return [
-        'post_id' => $faker->uuid,
-        'ip' => $faker->ipv4,
-        'agent' => $faker->userAgent,
-        'referer' => $faker->url,
-    ];
-});
+namespace Canvas\Database\Factories;
+
+use Canvas\Models\View;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class ViewFactory extends Factory
+{
+    protected $model = View::class;
+
+    public function definition(): array
+    {
+        return [
+            'post_id' => null,
+            'ip' => fake()->ipv4(),
+            'agent' => fake()->userAgent(),
+            'referer' => fake()->url(),
+        ];
+    }
+}

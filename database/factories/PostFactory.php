@@ -1,23 +1,43 @@
 <?php
 
-/* @var \Illuminate\Database\Eloquent\Factory $factory */
-$factory->define(\Canvas\Models\Post::class, function (Faker\Generator $faker) {
-    return [
-        'id' => $faker->uuid,
-        'slug' => $faker->slug,
-        'title' => $faker->word,
-        'summary' => $faker->sentence,
-        'body' => $faker->realText(),
-        'published_at' => today()->toDateTimeString(),
-        'featured_image' => $faker->imageUrl(),
-        'featured_image_caption' => $faker->sentence,
-        'user_id' => function () {
-            return factory(\Canvas\Models\User::class)->create()->id;
-        },
-        'meta' => [
-            'title' => $faker->sentence,
-            'description' => $faker->sentence,
-            'canonical_link' => $faker->sentence,
-        ],
-    ];
-});
+namespace Canvas\Database\Factories;
+
+use Canvas\Models\Post;
+use Canvas\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+
+class PostFactory extends Factory
+{
+    protected $model = Post::class;
+
+    public function definition(): array
+    {
+        return [
+            'id' => (string) Str::uuid(),
+            'slug' => fake()->slug(),
+            'title' => Str::headline(fake()->words(3, true)),
+            'summary' => fake()->sentence(),
+            'body' => fake()->realText(),
+            'published_at' => now()->subDay(),
+            'featured_image' => fake()->imageUrl(),
+            'featured_image_caption' => fake()->sentence(),
+            'user_id' => User::factory(),
+            'meta' => [
+                'title' => fake()->sentence(),
+                'description' => fake()->sentence(),
+                'canonical_link' => fake()->url(),
+            ],
+        ];
+    }
+
+    public function draft(): static
+    {
+        return $this->state(fn () => ['published_at' => null]);
+    }
+
+    public function scheduled(): static
+    {
+        return $this->state(fn () => ['published_at' => now()->addWeek()]);
+    }
+}

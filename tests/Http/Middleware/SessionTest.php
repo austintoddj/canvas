@@ -1,65 +1,45 @@
 <?php
 
-namespace Canvas\Tests\Http\Middleware;
-
 use Canvas\Http\Middleware\Session;
 use Canvas\Models\Post;
-use Canvas\Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 
-/**
- * Class SessionTest.
- *
- * @covers \Canvas\Http\Middleware\Session
- */
-class SessionTest extends TestCase
-{
-    use RefreshDatabase;
+beforeEach(function (): void {
+    Route::middleware([Session::class])->any('/_test/session', function () {
+        return true;
+    });
+});
 
-    public function setUp(): void
-    {
-        parent::setUp();
+it('old visits are pruned from session', function (): void {
+    $recentPost = Post::factory()->create();
+    $oldPost = Post::factory()->create();
 
-        Route::middleware([Session::class])->any('/_test/session', function () {
-            return true;
-        });
-    }
+    session()->put('visited_posts.'.$recentPost->id, [
+        'timestamp' => now()->timestamp,
+        'ip' => '127.0.0.1',
+    ]);
 
-    public function testOldVisitsArePrunedFromSession(): void
-    {
-        $recentPost = factory(Post::class)->create();
-        $oldPost = factory(Post::class)->create();
+    session()->put('visited_posts.'.$oldPost->id, [
+        'timestamp' => now()->subDay()->timestamp,
+        'ip' => '127.0.0.1',
+    ]);
 
-        session()->put('visited_posts.'.$recentPost->id, [
-            'timestamp' => now()->timestamp,
-            'ip' => '127.0.0.1',
-        ]);
+    $this->get('/_test/session')->assertSessionHas([
+        "visited_posts.{$recentPost->id}",
+    ])->assertSessionMissing([
+        "visited_posts.{$oldPost->id}",
+    ]);
+});
+it('old views are pruned from session', function (): void {
+    $recentPost = Post::factory()->create();
+    $oldPost = Post::factory()->create();
 
-        session()->put('visited_posts.'.$oldPost->id, [
-            'timestamp' => now()->subDay()->timestamp,
-            'ip' => '127.0.0.1',
-        ]);
+    session()->put('viewed_posts.'.$recentPost->id, now()->timestamp);
+    session()->put('viewed_posts.'.$oldPost->id, now()->subHours(2)->timestamp);
 
-        $this->get('/_test/session')->assertSessionHas([
-            "visited_posts.{$recentPost->id}",
-        ])->assertSessionMissing([
-            "visited_posts.{$oldPost->id}",
-        ]);
-    }
-
-    public function testOldViewsArePrunedFromSession(): void
-    {
-        $recentPost = factory(Post::class)->create();
-        $oldPost = factory(Post::class)->create();
-
-        session()->put('viewed_posts.'.$recentPost->id, now()->timestamp);
-        session()->put('viewed_posts.'.$oldPost->id, now()->subHours(2)->timestamp);
-
-        $this->get('/_test/session')->assertSessionHas([
-            "viewed_posts.{$recentPost->id}",
-        ])->assertSessionMissing([
-            "viewed_posts.{$oldPost->id}",
-        ]);
-    }
-}
+    $this->get('/_test/session')->assertSessionHas([
+        "viewed_posts.{$recentPost->id}",
+    ])->assertSessionMissing([
+        "viewed_posts.{$oldPost->id}",
+    ]);
+});

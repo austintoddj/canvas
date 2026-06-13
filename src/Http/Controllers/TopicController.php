@@ -13,24 +13,20 @@ class TopicController extends Controller
 {
     /**
      * Display a listing of the resource.
-     *
-     * @return JsonResponse
      */
     public function index(): JsonResponse
     {
         return response()->json(
             Topic::query()
-               ->select('id', 'name', 'created_at')
-               ->latest()
-               ->withCount('posts')
-               ->paginate(), 200
+                ->select('id', 'name', 'created_at')
+                ->latest()
+                ->withCount('posts')
+                ->paginate(), 200
         );
     }
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return JsonResponse
      */
     public function create(): JsonResponse
     {
@@ -41,10 +37,6 @@ class TopicController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  TopicRequest  $request
-     * @param  $id
-     * @return JsonResponse
      */
     public function store(TopicRequest $request, $id): JsonResponse
     {
@@ -73,9 +65,6 @@ class TopicController extends Controller
 
     /**
      * Display the specified resource.
-     *
-     * @param  $id
-     * @return JsonResponse
      */
     public function show($id): JsonResponse
     {
@@ -86,9 +75,6 @@ class TopicController extends Controller
 
     /**
      * Display the specified relationship.
-     *
-     * @param  $id
-     * @return JsonResponse
      */
     public function posts($id): JsonResponse
     {
@@ -100,7 +86,6 @@ class TopicController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  $id
      * @return mixed
      *
      * @throws Exception

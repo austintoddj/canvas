@@ -10,8 +10,6 @@ class Admin
     /**
      * Handle the incoming request.
      *
-     * @param  $request
-     * @param  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next)

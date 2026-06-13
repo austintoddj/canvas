@@ -21,15 +21,32 @@
         }
     ],
     "require": {
-        "php": "^7.3|^8.0",
+        "php": "^8.2",
         "ext-json": "*",
-        "laravel/framework": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0|^13.0"
+        "illuminate/auth": "^11.0|^12.0|^13.0",
+        "illuminate/bus": "^11.0|^12.0|^13.0",
+        "illuminate/console": "^11.0|^12.0|^13.0",
+        "illuminate/container": "^11.0|^12.0|^13.0",
+        "illuminate/contracts": "^11.0|^12.0|^13.0",
+        "illuminate/database": "^11.0|^12.0|^13.0",
+        "illuminate/events": "^11.0|^12.0|^13.0",
+        "illuminate/filesystem": "^11.0|^12.0|^13.0",
+        "illuminate/http": "^11.0|^12.0|^13.0",
+        "illuminate/mail": "^11.0|^12.0|^13.0",
+        "illuminate/pagination": "^11.0|^12.0|^13.0",
+        "illuminate/queue": "^11.0|^12.0|^13.0",
+        "illuminate/routing": "^11.0|^12.0|^13.0",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "illuminate/translation": "^11.0|^12.0|^13.0",
+        "illuminate/validation": "^11.0|^12.0|^13.0",
+        "illuminate/view": "^11.0|^12.0|^13.0"
     },
     "require-dev": {
-        "laravel/legacy-factories": "^1.0",
-        "mockery/mockery": "^1.4",
-        "orchestra/testbench": "^4.0|^5.0|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
-        "phpunit/phpunit": "^9.0|^10.0|^11.5.3"
+        "laravel/pint": "^1.29",
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^9.15|^10.8|^11.0",
+        "pestphp/pest": "^3.8|^4.0",
+        "pestphp/pest-plugin-laravel": "^3.2|^4.0"
     },
     "autoload": {
         "psr-4": {
@@ -38,11 +55,17 @@
     },
     "autoload-dev": {
         "psr-4": {
+            "Canvas\\Database\\Factories\\": "database/factories/",
             "Canvas\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "vendor/bin/phpunit"
+        "test": "vendor/bin/pest",
+        "test:parallel": "vendor/bin/pest --parallel",
+        "test:ci": "vendor/bin/pest --parallel --compact",
+        "pint": "pint",
+        "pint:test": "pint --test",
+        "pint:fix": "pint"
     },
     "extra": {
         "laravel": {
@@ -52,6 +75,9 @@
         }
     },
     "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
         "sort-packages": true
     },
     "minimum-stability": "dev",

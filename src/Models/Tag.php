@@ -2,6 +2,9 @@
 
 namespace Canvas\Models;
 
+use Canvas\Database\Factories\TagFactory;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Tag extends Model
 {
+    use HasFactory;
     use SoftDeletes;
 
     /**
@@ -54,9 +58,15 @@ class Tag extends Model
     protected $perPage = 10;
 
     /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): Factory
+    {
+        return TagFactory::new();
+    }
+
+    /**
      * Get the posts relationship.
-     *
-     * @return BelongsToMany
      */
     public function posts(): BelongsToMany
     {
@@ -65,8 +75,6 @@ class Tag extends Model
 
     /**
      * Get the user relationship.
-     *
-     * @return BelongsTo
      */
     public function user(): BelongsTo
     {

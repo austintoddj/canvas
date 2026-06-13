@@ -1,33 +1,18 @@
 <?php
 
-namespace Canvas\Tests\Models;
-
 use Canvas\Models\Post;
 use Canvas\Models\View;
-use Canvas\Tests\TestCase;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-/**
- * Class ViewTest.
- *
- * @covers \Canvas\Models\View
- */
-class ViewTest extends TestCase
-{
-    use RefreshDatabase;
+it('post relationship', function (): void {
+    $post = Post::factory()->create();
 
-    public function testPostRelationship(): void
-    {
-        $post = factory(Post::class)->create();
+    $view = View::factory()->create([
+        'post_id' => $post->id,
+    ]);
 
-        $view = factory(View::class)->create([
-            'post_id' => $post->id,
-        ]);
+    $post->views()->saveMany([$view]);
 
-        $post->views()->saveMany([$view]);
-
-        $this->assertInstanceOf(BelongsTo::class, $view->post());
-        $this->assertInstanceOf(Post::class, $view->post()->first());
-    }
-}
+    $this->assertInstanceOf(BelongsTo::class, $view->post());
+    $this->assertInstanceOf(Post::class, $view->post()->first());
+});

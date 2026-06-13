@@ -43,20 +43,20 @@ class DigestCommand extends Command
             }
 
             $posts = Post::where('user_id', $user->id)
-                         ->published()
-                         ->withCount(['views' => function (Builder $query) use ($startDate, $endDate) {
-                             $query->whereBetween('created_at', [
-                                 $startDate,
-                                 $endDate,
-                             ]);
-                         }])
-                         ->withCount(['visits' => function (Builder $query) use ($startDate, $endDate) {
-                             $query->whereBetween('created_at', [
-                                 $startDate,
-                                 $endDate,
-                             ]);
-                         }])
-                         ->get();
+                ->published()
+                ->withCount(['views' => function (Builder $query) use ($startDate, $endDate) {
+                    $query->whereBetween('created_at', [
+                        $startDate,
+                        $endDate,
+                    ]);
+                }])
+                ->withCount(['visits' => function (Builder $query) use ($startDate, $endDate) {
+                    $query->whereBetween('created_at', [
+                        $startDate,
+                        $endDate,
+                    ]);
+                }])
+                ->get();
 
             $data = [
                 'posts' => $posts->toArray(),

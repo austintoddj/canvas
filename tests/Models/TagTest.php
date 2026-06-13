@@ -1,91 +1,70 @@
 <?php
 
-namespace Canvas\Tests\Models;
-
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\User;
-use Canvas\Tests\TestCase;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-/**
- * Class TagTest.
- *
- * @covers \Canvas\Models\Tag
- */
-class TagTest extends TestCase
-{
-    use RefreshDatabase;
+it('tags can share the same slug with unique users', function (): void {
+    $data = [
+        'name' => 'A new tag',
+        'slug' => 'a-new-tag',
+    ];
 
-    public function testTagsCanShareTheSameSlugWithUniqueUsers(): void
-    {
-        $data = [
-            'name' => 'A new tag',
-            'slug' => 'a-new-tag',
-        ];
+    $primaryTag = Tag::factory()->create([
+        'user_id' => $this->admin->id,
+    ]);
+    $response = $this->actingAs($this->admin, 'canvas')->postJson("/canvas/api/tags/{$primaryTag->id}", $data);
 
-        $primaryTag = factory(Tag::class)->create([
-            'user_id' => $this->admin->id,
-        ]);
-        $response = $this->actingAs($this->admin, 'canvas')->postJson("/canvas/api/tags/{$primaryTag->id}", $data);
+    $this->assertDatabaseHas('canvas_tags', [
+        'id' => $response->original['id'],
+        'slug' => $response->original['slug'],
+        'user_id' => $response->original['user_id'],
+    ]);
 
-        $this->assertDatabaseHas('canvas_tags', [
-            'id' => $response->original['id'],
-            'slug' => $response->original['slug'],
-            'user_id' => $response->original['user_id'],
-        ]);
+    $secondaryAdmin = User::factory()->create([
+        'role' => User::ADMIN,
+    ]);
+    $secondaryTag = Tag::factory()->create([
+        'user_id' => $secondaryAdmin->id,
+    ]);
 
-        $secondaryAdmin = factory(User::class)->create([
-            'role' => User::ADMIN,
-        ]);
-        $secondaryTag = factory(Tag::class)->create([
-            'user_id' => $secondaryAdmin->id,
-        ]);
+    $response = $this->actingAs($secondaryAdmin, 'canvas')->postJson("/canvas/api/tags/{$secondaryTag->id}", $data);
 
-        $response = $this->actingAs($secondaryAdmin, 'canvas')->postJson("/canvas/api/tags/{$secondaryTag->id}", $data);
+    $this->assertDatabaseHas('canvas_tags', [
+        'id' => $response->original['id'],
+        'slug' => $response->original['slug'],
+        'user_id' => $response->original['user_id'],
+    ]);
+});
+it('posts relationship', function (): void {
+    $tag = Tag::factory()->create();
+    $post = Post::factory()->create();
 
-        $this->assertDatabaseHas('canvas_tags', [
-            'id' => $response->original['id'],
-            'slug' => $response->original['slug'],
-            'user_id' => $response->original['user_id'],
-        ]);
-    }
+    $post->tags()->sync($tag);
 
-    public function testPostsRelationship(): void
-    {
-        $tag = factory(Tag::class)->create();
-        $post = factory(Post::class)->create();
+    $this->assertCount(1, $post->tags);
+    $this->assertInstanceOf(BelongsToMany::class, $tag->posts());
+    $this->assertInstanceOf(Post::class, $tag->posts->first());
+});
+it('user relationship', function (): void {
+    $tag = Tag::factory()->create();
 
-        $post->tags()->sync($tag);
+    $this->assertInstanceOf(BelongsTo::class, $tag->user());
+    $this->assertInstanceOf(User::class, $tag->user);
+});
+it('detach posts on delete', function (): void {
+    $tag = Tag::factory()->create();
+    $post = Post::factory()->create();
 
-        $this->assertCount(1, $post->tags);
-        $this->assertInstanceOf(BelongsToMany::class, $tag->posts());
-        $this->assertInstanceOf(Post::class, $tag->posts->first());
-    }
+    $tag->posts()->sync([$post->id]);
 
-    public function testUserRelationship(): void
-    {
-        $tag = factory(Tag::class)->create();
+    $tag->delete();
 
-        $this->assertInstanceOf(BelongsTo::class, $tag->user());
-        $this->assertInstanceOf(User::class, $tag->user);
-    }
-
-    public function testDetachPostsOnDelete(): void
-    {
-        $tag = factory(Tag::class)->create();
-        $post = factory(Post::class)->create();
-
-        $tag->posts()->sync([$post->id]);
-
-        $tag->delete();
-
-        $this->assertEquals(0, $tag->posts->count());
-        $this->assertDatabaseMissing('canvas_posts_tags', [
-            'post_id' => $post->id,
-            'tag_id' => $tag->id,
-        ]);
-    }
-}
+    $this->assertEquals(0, $tag->posts->count());
+    $this->assertDatabaseMissing('canvas_posts_tags', [
+        'post_id' => $post->id,
+        'tag_id' => $tag->id,
+    ]);
+});

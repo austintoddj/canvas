@@ -12,21 +12,19 @@ class StatsController extends Controller
 {
     /**
      * Display a listing of the resource.
-     *
-     * @return JsonResponse
      */
     public function __invoke(): JsonResponse
     {
         $posts = Post::query()
-                     ->when(request()->query('scope', 'user') === 'all', function (Builder $query) {
-                         return $query;
-                     }, function (Builder $query) {
-                         return $query->where('user_id', request()->user('canvas')->id);
-                     })
-                     ->withCount('views', 'visits')
-                     ->published()
-                     ->latest()
-                     ->get();
+            ->when(request()->query('scope', 'user') === 'all', function (Builder $query) {
+                return $query;
+            }, function (Builder $query) {
+                return $query->where('user_id', request()->user('canvas')->id);
+            })
+            ->withCount('views', 'visits')
+            ->published()
+            ->latest()
+            ->get();
 
         $stats = new StatsAggregator(request()->user('canvas'));
 

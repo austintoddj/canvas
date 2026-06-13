@@ -16,8 +16,6 @@ class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
-     *
-     * @return JsonResponse
      */
     public function index(): JsonResponse
     {
@@ -32,8 +30,6 @@ class UserController extends Controller
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return JsonResponse
      */
     public function create(): JsonResponse
     {
@@ -45,10 +41,6 @@ class UserController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  UserRequest  $request
-     * @param  $id
-     * @return JsonResponse
      */
     public function store(UserRequest $request, $id): JsonResponse
     {
@@ -91,9 +83,6 @@ class UserController extends Controller
 
     /**
      * Display the specified resource.
-     *
-     * @param  $id
-     * @return JsonResponse
      */
     public function show($id): JsonResponse
     {
@@ -104,9 +93,6 @@ class UserController extends Controller
 
     /**
      * Display the specified relationship.
-     *
-     * @param  $id
-     * @return JsonResponse
      */
     public function posts($id): JsonResponse
     {
@@ -118,7 +104,6 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  $id
      * @return mixed
      *
      * @throws Exception

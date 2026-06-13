@@ -12,8 +12,6 @@ class Canvas
 {
     /**
      * Return the installed version.
-     *
-     * @return string
      */
     public static function installedVersion(): string
     {
@@ -26,8 +24,6 @@ class Canvas
 
     /**
      * Return a list of available language codes.
-     *
-     * @return array
      */
     public static function availableLanguageCodes(): array
     {
@@ -40,9 +36,6 @@ class Canvas
 
     /**
      * Return an encoded string of app translations.
-     *
-     * @param  $locale
-     * @return string
      */
     public static function availableTranslations($locale): string
     {
@@ -51,8 +44,6 @@ class Canvas
 
     /**
      * Return an array of available user roles.
-     *
-     * @return array
      */
     public static function availableRoles(): array
     {
@@ -65,8 +56,6 @@ class Canvas
 
     /**
      * Return true if the publishable assets are up to date.
-     *
-     * @return bool
      */
     public static function assetsUpToDate(): bool
     {
@@ -91,8 +80,6 @@ class Canvas
 
     /**
      * Return the configured base path url.
-     *
-     * @return string
      */
     public static function basePath(): string
     {
@@ -101,8 +88,6 @@ class Canvas
 
     /**
      * Return the configured storage path url.
-     *
-     * @return string
      */
     public static function baseStoragePath(): string
     {
@@ -111,9 +96,6 @@ class Canvas
 
     /**
      * Return a valid host URL or null.
-     *
-     * @param  string|null  $url
-     * @return string|null
      */
     public static function parseReferer(?string $url): ?string
     {
@@ -126,12 +108,6 @@ class Canvas
 
     /**
      * Generate a Gravatar for a given email.
-     *
-     * @param  string  $email
-     * @param  int  $size
-     * @param  string  $default
-     * @param  string  $rating
-     * @return string
      */
     public static function gravatar(
         string $email,
@@ -146,9 +122,6 @@ class Canvas
 
     /**
      * Return true if dark mode is enabled.
-     *
-     * @param  int|null  $enabled
-     * @return bool
      */
     public static function enabledDarkMode(?int $enabled): bool
     {
@@ -157,9 +130,6 @@ class Canvas
 
     /**
      * Return true if the app is configured to use Arabic or Farsi.
-     *
-     * @param  string|null  $locale
-     * @return bool
      */
     public static function usingRightToLeftLanguage(?string $locale): bool
     {

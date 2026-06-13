@@ -3,12 +3,19 @@
 namespace Canvas\Models;
 
 use Canvas\Canvas;
+use Canvas\Database\Factories\UserFactory;
+use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class User extends Authenticatable
+class User extends Model implements AuthenticatableContract
 {
+    use AuthenticatableTrait;
+    use HasFactory;
     use SoftDeletes;
 
     /**
@@ -105,9 +112,15 @@ class User extends Authenticatable
     protected $perPage = 10;
 
     /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): Factory
+    {
+        return UserFactory::new();
+    }
+
+    /**
      * Get the posts relationship.
-     *
-     * @return HasMany
      */
     public function posts(): HasMany
     {
@@ -116,8 +129,6 @@ class User extends Authenticatable
 
     /**
      * Get the tags relationship.
-     *
-     * @return HasMany
      */
     public function tags(): HasMany
     {
@@ -126,8 +137,6 @@ class User extends Authenticatable
 
     /**
      * Get the topics relationship.
-     *
-     * @return HasMany
      */
     public function topics(): HasMany
     {
@@ -136,8 +145,6 @@ class User extends Authenticatable
 
     /**
      * Check to see if the user is a Contributor.
-     *
-     * @return bool
      */
     public function getIsContributorAttribute(): bool
     {
@@ -146,8 +153,6 @@ class User extends Authenticatable
 
     /**
      * Check to see if the user is an Editor.
-     *
-     * @return bool
      */
     public function getIsEditorAttribute(): bool
     {
@@ -156,8 +161,6 @@ class User extends Authenticatable
 
     /**
      * Check to see if the user is an Admin.
-     *
-     * @return bool
      */
     public function getIsAdminAttribute(): bool
     {
@@ -166,8 +169,6 @@ class User extends Authenticatable
 
     /**
      * Return a default user avatar.
-     *
-     * @return string
      */
     public function getDefaultAvatarAttribute(): string
     {
@@ -176,8 +177,6 @@ class User extends Authenticatable
 
     /**
      * Return a default user locale.
-     *
-     * @return string
      */
     public function getDefaultLocaleAttribute(): string
     {

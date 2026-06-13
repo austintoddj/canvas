@@ -18,8 +18,6 @@ class Authenticate
 
     /**
      * Create a new middleware instance.
-     *
-     * @param  Auth  $auth
      */
     public function __construct(Auth $auth)
     {
@@ -29,8 +27,6 @@ class Authenticate
     /**
      * Handle the incoming request.
      *
-     * @param  Request  $request
-     * @param  Closure  $next
      * @return mixed
      *
      * @throws AuthenticationException
