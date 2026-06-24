@@ -4,7 +4,6 @@ namespace Canvas\Services;
 
 use Canvas\Canvas;
 use Canvas\Models\Post;
-use Canvas\Models\User;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
 use Carbon\CarbonInterval;
@@ -19,15 +18,13 @@ class StatsAggregator
 {
     /**
      * The authenticated user instance.
-     *
-     * @var User
      */
-    protected $user;
+    protected object $user;
 
     /**
      * Create a new service instance.
      */
-    public function __construct(User $user)
+    public function __construct(object $user)
     {
         $this->user = $user;
     }

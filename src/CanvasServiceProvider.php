@@ -4,21 +4,26 @@ declare(strict_types=1);
 
 namespace Canvas;
 
+use Canvas\Console\AssignRoleCommand;
 use Canvas\Console\DigestCommand;
 use Canvas\Console\InstallCommand;
+use Canvas\Console\ListUsersCommand;
+use Canvas\Console\MakeAdminCommand;
 use Canvas\Console\MigrateCommand;
 use Canvas\Console\PublishCommand;
+use Canvas\Console\RemoveAccessCommand;
 use Canvas\Console\UiCommand;
-use Canvas\Console\UserCommand;
 use Canvas\Events\PostViewed;
 use Canvas\Http\Requests\FormRequest;
 use Canvas\Listeners\CaptureView;
 use Canvas\Listeners\CaptureVisit;
-use Canvas\Models\User;
+use Canvas\Models\Post;
+use Canvas\Policies\PostPolicy;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Validation\ValidatesWhenResolved;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -41,7 +46,7 @@ class CanvasServiceProvider extends ServiceProvider
         $this->configureCommands();
         $this->registerFormRequests();
         $this->registerMigrations();
-        $this->registerAuthDriver();
+        $this->registerGates();
         $this->registerEvents();
     }
 
@@ -67,6 +72,12 @@ class CanvasServiceProvider extends ServiceProvider
      */
     private function configureRoutes(): void
     {
+        Route::bind('user', function (mixed $value): mixed {
+            $userModel = config('canvas.user_model');
+
+            return $userModel::query()->findOrFail($value);
+        });
+
         Route::middleware(config('canvas.middleware'))
             ->domain(config('canvas.domain'))
             ->prefix(config('canvas.path'))
@@ -85,12 +96,15 @@ class CanvasServiceProvider extends ServiceProvider
         }
 
         $this->commands([
+            AssignRoleCommand::class,
             DigestCommand::class,
             InstallCommand::class,
+            ListUsersCommand::class,
             MigrateCommand::class,
+            MakeAdminCommand::class,
             PublishCommand::class,
+            RemoveAccessCommand::class,
             UiCommand::class,
-            UserCommand::class,
         ]);
     }
 
@@ -102,20 +116,17 @@ class CanvasServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
-    /**
-     * Register the package's authentication driver.
-     */
-    private function registerAuthDriver(): void
+    private function registerGates(): void
     {
-        $this->app['config']->set('auth.providers.canvas_users', [
-            'driver' => 'eloquent',
-            'model' => User::class,
-        ]);
+        Gate::policy(Post::class, PostPolicy::class);
 
-        $this->app['config']->set('auth.guards.canvas', [
-            'driver' => 'session',
-            'provider' => 'canvas_users',
-        ]);
+        Gate::define('manage-users', static function ($user): bool {
+            return (bool) ($user->isAdmin ?? false);
+        });
+
+        Gate::define('manage-taxonomy', static function ($user): bool {
+            return (bool) ($user->isAdmin ?? false);
+        });
     }
 
     /**

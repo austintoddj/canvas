@@ -3,7 +3,7 @@
 namespace Canvas\Tests;
 
 use Canvas\CanvasServiceProvider;
-use Canvas\Models\User;
+use Canvas\Tests\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
@@ -67,11 +67,15 @@ abstract class TestCase extends OrchestraTestCase
             'provider' => 'canvas_users',
         ]);
 
+        $config->set('canvas.user_model', User::class);
+        $config->set('canvas.guard', 'canvas');
+
     }
 
     protected function defineDatabaseMigrations(): void
     {
         $this->loadLaravelMigrations();
+        $this->loadMigrationsFrom(__DIR__.'/database/migrations');
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 }

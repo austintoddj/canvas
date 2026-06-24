@@ -3,7 +3,8 @@
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
-use Canvas\Models\User;
+use Canvas\Tests\Models\User;
+use Illuminate\Support\Facades\Route;
 use Ramsey\Uuid\Uuid;
 
 dataset('protectedRoutes', [
@@ -41,6 +42,10 @@ dataset('protectedRoutes', [
     ['GET', 'canvas/api/search/users'],
 ]);
 
+beforeEach(function (): void {
+    Route::get('/login', fn () => 'login')->name('login');
+});
+
 it('redirects unauthenticated users to login', function ($method, $endpoint): void {
     $endpoint = strtr($endpoint, [
         '{id}' => Uuid::uuid4()->toString(),
@@ -52,15 +57,5 @@ it('redirects unauthenticated users to login', function ($method, $endpoint): vo
 
     $this->assertGuest()
         ->call($method, $endpoint)
-        ->assertRedirect(route('canvas.login'));
+        ->assertRedirect('/login');
 })->with('protectedRoutes');
-
-it('redirects authenticated users to canvas', function (): void {
-    $this->actingAs($this->admin, 'canvas')
-        ->get(route('canvas.login'))
-        ->assertRedirect(config('canvas.path'));
-
-    $this->actingAs($this->admin, 'canvas')
-        ->get('canvas/api')
-        ->assertSuccessful();
-});

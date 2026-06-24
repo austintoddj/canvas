@@ -2,7 +2,9 @@
 
 namespace Canvas\Database\Factories;
 
-use Canvas\Models\User;
+use Canvas\Enums\Role;
+use Canvas\Models\CanvasUser;
+use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -28,33 +30,38 @@ class UserFactory extends Factory
             'dark_mode' => false,
             'digest' => false,
             'locale' => 'en',
-            'role' => fake()->numberBetween(User::CONTRIBUTOR, User::ADMIN),
+            'role' => null,
             'remember_token' => Str::random(10),
         ];
     }
 
     public function contributor(): static
     {
-        return $this->state(fn () => ['role' => User::CONTRIBUTOR]);
+        return $this->afterCreating(function (User $user): void {
+            CanvasUser::factory()->create([
+                'user_id' => $user->id,
+                'role' => Role::Contributor,
+            ]);
+        });
     }
 
     public function editor(): static
     {
-        return $this->state(fn () => ['role' => User::EDITOR]);
+        return $this->afterCreating(function (User $user): void {
+            CanvasUser::factory()->create([
+                'user_id' => $user->id,
+                'role' => Role::Editor,
+            ]);
+        });
     }
 
     public function admin(): static
     {
-        return $this->state(fn () => ['role' => User::ADMIN]);
-    }
-
-    public function digestEnabled(): static
-    {
-        return $this->state(fn () => ['digest' => true]);
-    }
-
-    public function digestDisabled(): static
-    {
-        return $this->state(fn () => ['digest' => false]);
+        return $this->afterCreating(function (User $user): void {
+            CanvasUser::factory()->create([
+                'user_id' => $user->id,
+                'role' => Role::Admin,
+            ]);
+        });
     }
 }

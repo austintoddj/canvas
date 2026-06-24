@@ -1,8 +1,8 @@
 <?php
 
 use Canvas\Models\Post;
-use Canvas\Models\User;
 use Canvas\Models\View;
+use Canvas\Tests\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Ramsey\Uuid\Uuid;
 
@@ -210,7 +210,7 @@ it('deletes an existing user', function (): void {
         ->assertSuccessful()
         ->assertNoContent();
 
-    $this->assertSoftDeleted('canvas_users', [
+    $this->assertSoftDeleted('users', [
         'id' => $user->id,
         'email' => $user->email,
     ]);

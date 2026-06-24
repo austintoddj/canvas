@@ -1,7 +1,6 @@
 <?php
 
 use Canvas\Canvas;
-use Canvas\Models\User;
 
 it('returns the installed version', function (): void {
     $this->assertEmpty(Canvas::installedVersion());
@@ -14,9 +13,9 @@ it('returns available translations', function (): void {
 });
 it('returns available roles', function (): void {
     $this->assertSame([
-        User::CONTRIBUTOR => 'Contributor',
-        User::EDITOR => 'Editor',
-        User::ADMIN => 'Admin',
+        1 => 'Contributor',
+        2 => 'Editor',
+        3 => 'Admin',
     ], Canvas::availableRoles());
 });
 it('assets are up to date', function (): void {

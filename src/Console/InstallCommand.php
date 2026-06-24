@@ -2,7 +2,8 @@
 
 namespace Canvas\Console;
 
-use Canvas\Models\User;
+use Canvas\Enums\Role;
+use Canvas\Models\CanvasUser;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -58,7 +59,7 @@ class InstallCommand extends Command
 
         $this->info('Installation complete.');
         $this->table(['Default Email', 'Default Password'], [[$email, $password]]);
-        $this->info('First things first, head to <comment>'.route('canvas.login').'</comment> and update your credentials.');
+        $this->info('First things first, sign in through your application and grant Canvas access to the new user.');
     }
 
     /**
@@ -68,12 +69,22 @@ class InstallCommand extends Command
      */
     protected function createDefaultUser(string $email, string $password)
     {
-        User::create([
+        $userModel = config('canvas.user_model');
+
+        $user = $userModel::create([
             'id' => Uuid::uuid4()->toString(),
             'name' => 'Example User',
             'email' => $email,
             'password' => Hash::make($password),
-            'role' => User::ADMIN,
+        ]);
+
+        CanvasUser::create([
+            'user_id' => $user->id,
+            'role' => Role::Admin,
+            'preferences' => [
+                'dark_mode' => false,
+                'digest' => false,
+            ],
         ]);
     }
 

@@ -23,12 +23,14 @@ class PostRequest extends FormRequest
      */
     public function rules()
     {
+        $user = $this->user(config('canvas.guard'));
+
         return [
             'slug' => [
                 'required',
                 'alpha_dash',
-                Rule::unique('canvas_posts')->where(function ($query) {
-                    return $query->where('slug', request('slug'))->where('user_id', request()->user('canvas')->id);
+                Rule::unique('canvas_posts')->where(function ($query) use ($user) {
+                    return $query->where('slug', request('slug'))->where('user_id', $user->id);
                 })->ignore(request('id'))->whereNull('deleted_at'),
             ],
             'title' => 'required',

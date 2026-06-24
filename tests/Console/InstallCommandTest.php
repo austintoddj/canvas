@@ -1,14 +1,17 @@
 <?php
 
-use Canvas\Models\User;
+use Canvas\Enums\Role;
 
 it('runs the canvas install command', function (): void {
     $this->artisan('canvas:install')
         ->assertExitCode(0)
         ->expectsOutput('Installation complete.');
 
-    $this->assertDatabaseHas('canvas_users', [
+    $this->assertDatabaseHas('users', [
         'email' => 'email@example.com',
-        'role' => User::ADMIN,
+    ]);
+
+    $this->assertDatabaseHas('canvas_users', [
+        'role' => Role::Admin->value,
     ]);
 });

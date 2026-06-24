@@ -41,6 +41,7 @@ class TagController extends Controller
     public function store(TagRequest $request, $id): JsonResponse
     {
         $data = $request->validated();
+        $user = $request->user(config('canvas.guard'));
 
         $tag = Tag::query()->find($id);
 
@@ -56,7 +57,7 @@ class TagController extends Controller
 
         $tag->fill($data);
 
-        $tag->user_id = $tag->user_id ?? request()->user('canvas')->id;
+        $tag->user_id = $tag->user_id ?? $user->id;
 
         $tag->save();
 

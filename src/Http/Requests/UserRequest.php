@@ -23,16 +23,19 @@ class UserRequest extends FormRequest
      */
     public function rules()
     {
+        $userModel = config('canvas.user_model');
+        $table = $userModel::query()->getModel()->getTable();
+
         return [
             'name' => 'required|string',
             'email' => [
                 'required',
                 'email',
-                Rule::unique('canvas_users')->where(function ($query) {
+                Rule::unique($table)->where(function ($query) {
                     return $query->where('email', request('email'));
                 })->ignore(request('id'))->whereNull('deleted_at'),
             ],
-            'username' => 'nullable|alpha_dash|unique:canvas_users,username,'.request('id'),
+            'username' => 'nullable|alpha_dash|unique:'.$table.',username,'.request('id'),
             'password' => 'sometimes|nullable|min:8|confirmed',
             'summary' => 'nullable|string',
             'avatar' => 'nullable|string',

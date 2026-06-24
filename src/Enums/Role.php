@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Canvas\Enums;
+
+enum Role: int
+{
+    case Contributor = 1;
+    case Editor = 2;
+    case Admin = 3;
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Contributor => 'Contributor',
+            self::Editor => 'Editor',
+            self::Admin => 'Admin',
+        };
+    }
+
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
+
+    public static function names(): array
+    {
+        return array_map(
+            static fn (self $role): string => $role->name,
+            self::cases(),
+        );
+    }
+}

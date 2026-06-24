@@ -2,7 +2,7 @@
 
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
-use Canvas\Models\User;
+use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -23,9 +23,7 @@ it('allows tags to share the same slug across different users', function (): voi
         'user_id' => $response->original['user_id'],
     ]);
 
-    $secondaryAdmin = User::factory()->create([
-        'role' => User::ADMIN,
-    ]);
+    $secondaryAdmin = User::factory()->admin()->create();
     $secondaryTag = Tag::factory()->create([
         'user_id' => $secondaryAdmin->id,
     ]);

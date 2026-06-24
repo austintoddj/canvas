@@ -4,7 +4,6 @@ namespace Canvas\Http\Controllers;
 
 use Canvas\Canvas;
 use Canvas\Http\Requests\UserRequest;
-use Canvas\Models\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
@@ -19,9 +18,11 @@ class UserController extends Controller
      */
     public function index(): JsonResponse
     {
+        $userModel = config('canvas.user_model');
+
         return response()->json(
-            User::query()
-                ->select('id', 'name', 'email', 'avatar', 'role')
+            $userModel::query()
+                ->select('id', 'name', 'email')
                 ->latest()
                 ->withCount('posts')
                 ->paginate(), 200
@@ -33,9 +34,10 @@ class UserController extends Controller
      */
     public function create(): JsonResponse
     {
-        return response()->json(User::query()->make([
+        $userModel = config('canvas.user_model');
+
+        return response()->json($userModel::query()->make([
             'id' => Uuid::uuid4()->toString(),
-            'role' => User::CONTRIBUTOR,
         ]), 200);
     }
 
@@ -45,11 +47,12 @@ class UserController extends Controller
     public function store(UserRequest $request, $id): JsonResponse
     {
         $data = $request->validated();
+        $userModel = config('canvas.user_model');
 
-        $user = User::query()->find($id);
+        $user = $userModel::query()->find($id);
 
         if (! $user) {
-            if ($user = User::onlyTrashed()->firstWhere('email', $data['email'])) {
+            if ($user = $userModel::onlyTrashed()->firstWhere('email', $data['email'])) {
                 $user->restore();
 
                 return response()->json([
@@ -57,7 +60,7 @@ class UserController extends Controller
                     'i18n' => collect(trans('canvas::app', [], $user->locale))->toJson(),
                 ], 201);
             } else {
-                $user = new User([
+                $user = new $userModel([
                     'id' => $id,
                 ]);
             }
@@ -84,7 +87,7 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(User $user): JsonResponse
+    public function show($user): JsonResponse
     {
         $user->loadCount('posts');
 
@@ -94,7 +97,7 @@ class UserController extends Controller
     /**
      * Display the specified relationship.
      */
-    public function posts(User $user): JsonResponse
+    public function posts($user): JsonResponse
     {
         return response()->json($user->posts()->withCount('views')->paginate(), 200);
     }
@@ -106,10 +109,10 @@ class UserController extends Controller
      *
      * @throws Exception
      */
-    public function destroy(User $user)
+    public function destroy($user)
     {
         // Prevent a user from deleting their own account
-        if (request()->user('canvas')->id === $user->id) {
+        if (request()->user(config('canvas.guard'))->id === $user->id) {
             return response()->json(null, 403);
         }
 

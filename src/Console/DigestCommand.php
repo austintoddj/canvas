@@ -4,7 +4,6 @@ namespace Canvas\Console;
 
 use Canvas\Mail\WeeklyDigest;
 use Canvas\Models\Post;
-use Canvas\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Mail;
@@ -35,10 +34,12 @@ class DigestCommand extends Command
         $startDate = today()->subDays(7)->startOfDay();
         $endDate = today()->endOfDay();
 
-        $recipients = User::whereIn('id', Post::published()->pluck('user_id')->unique())->get();
+        $userModel = config('canvas.user_model');
+
+        $recipients = $userModel::whereIn('id', Post::published()->pluck('user_id')->unique())->get();
 
         foreach ($recipients as $user) {
-            if ($user->digest != true) {
+            if (! $user->digest) {
                 continue;
             }
 

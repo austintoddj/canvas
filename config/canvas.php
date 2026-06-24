@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+
 return [
 
     /*
@@ -30,12 +32,38 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | User Model
+    |--------------------------------------------------------------------------
+    |
+    | Canvas resolves the host application's user model through this class.
+    | The package only stores Canvas-specific access data in canvas_users.
+    |
+    */
+
+    'user_model' => env('CANVAS_USER_MODEL', User::class),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Auth Guard
+    |--------------------------------------------------------------------------
+    |
+    | This is the guard Canvas uses to resolve authenticated users. Host apps
+    | may point this at a dedicated staff guard or leave the default Canvas
+    | guard in place during the transition.
+    |
+    */
+
+    'guard' => env('CANVAS_GUARD', 'web'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Route Middleware
     |--------------------------------------------------------------------------
     |
-    | These middleware will be attached to every route in Canvas, giving you
-    | the chance to add your own middleware to this list or change any of
-    | the existing middleware. Or, you can simply stick with the list.
+    | These middleware are applied to all Canvas routes in addition to the
+    | native auth middleware (`auth:{guard}`) derived from the configured
+    | Canvas guard. Keep this list for app-level concerns like tenancy,
+    | throttling, or custom request context.
     |
     */
 

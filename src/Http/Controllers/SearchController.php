@@ -5,10 +5,10 @@ namespace Canvas\Http\Controllers;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
-use Canvas\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 
 class SearchController extends Controller
 {
@@ -17,10 +17,13 @@ class SearchController extends Controller
      */
     public function posts(): JsonResponse
     {
+        $user = request()->user(config('canvas.guard'));
+        $canViewAllPosts = Gate::forUser($user)->allows('viewAll', Post::class);
+
         $posts = Post::query()
             ->select('id', 'title')
-            ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                return $query->where('user_id', request()->user('canvas')->id);
+            ->when(! $canViewAllPosts, function (Builder $query) use ($user) {
+                return $query->where('user_id', $user->id);
             }, function (Builder $query) {
                 return $query;
             })
@@ -85,7 +88,9 @@ class SearchController extends Controller
      */
     public function users(): JsonResponse
     {
-        $users = User::query()
+        $userModel = config('canvas.user_model');
+
+        $users = $userModel::query()
             ->select('id', 'name', 'email')
             ->latest()
             ->get();

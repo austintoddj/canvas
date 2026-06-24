@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 use Ramsey\Uuid\Uuid;
 
 class PostController extends Controller
@@ -21,10 +22,13 @@ class PostController extends Controller
      */
     public function index(): JsonResponse
     {
+        $user = request()->user(config('canvas.guard'));
+        $canViewAllPosts = Gate::forUser($user)->allows('viewAll', Post::class);
+
         $posts = Post::query()
             ->select('id', 'title', 'summary', 'featured_image', 'published_at', 'created_at', 'updated_at')
-            ->when(request()->user('canvas')->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
-                return $query->where('user_id', request()->user('canvas')->id);
+            ->when(! $canViewAllPosts || request()->query('scope', 'user') != 'all', function (Builder $query) use ($user) {
+                return $query->where('user_id', $user->id);
             }, function (Builder $query) {
                 return $query;
             })
@@ -40,8 +44,8 @@ class PostController extends Controller
         // TODO: The count() queries here are duplicated
 
         $draftCount = Post::query()
-            ->when(request()->user('canvas')->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
-                return $query->where('user_id', request()->user('canvas')->id);
+            ->when(! $canViewAllPosts || request()->query('scope', 'user') != 'all', function (Builder $query) use ($user) {
+                return $query->where('user_id', $user->id);
             }, function (Builder $query) {
                 return $query;
             })
@@ -49,8 +53,8 @@ class PostController extends Controller
             ->count();
 
         $publishedCount = Post::query()
-            ->when(request()->user('canvas')->isContributor || request()->query('scope', 'user') != 'all', function (Builder $query) {
-                return $query->where('user_id', request()->user('canvas')->id);
+            ->when(! $canViewAllPosts || request()->query('scope', 'user') != 'all', function (Builder $query) use ($user) {
+                return $query->where('user_id', $user->id);
             }, function (Builder $query) {
                 return $query;
             })
@@ -90,15 +94,13 @@ class PostController extends Controller
     public function store(PostRequest $request, $id): JsonResponse
     {
         $data = $request->validated();
+        $user = $request->user(config('canvas.guard'));
 
-        $post = Post::query()
-            ->when($request->user('canvas')->isContributor, function (Builder $query) {
-                return $query->where('user_id', request()->user('canvas')->id);
-            }, function (Builder $query) {
-                return $query;
-            })
-            ->with('tags', 'topic')
-            ->find($id);
+        $post = Post::query()->with('tags', 'topic')->find($id);
+
+        if ($post && Gate::forUser($user)->denies('update', $post)) {
+            throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
+        }
 
         if (! $post) {
             $post = new Post(['id' => $id]);
@@ -106,14 +108,14 @@ class PostController extends Controller
 
         $post->fill($data);
 
-        $post->user_id = $post->user_id ?? request()->user('canvas')->id;
+        $post->user_id = $post->user_id ?? $user->id;
 
         $post->save();
 
         $tags = Tag::query()->get(['id', 'name', 'slug']);
         $topics = Topic::query()->get(['id', 'name', 'slug']);
 
-        $tagsToSync = collect($request->input('tags', []))->map(function ($item) use ($tags) {
+        $tagsToSync = collect($request->input('tags', []))->map(function ($item) use ($tags, $user) {
             $tag = $tags->firstWhere('slug', $item['slug']);
 
             if (! $tag) {
@@ -121,14 +123,14 @@ class PostController extends Controller
                     'id' => $id = Uuid::uuid4()->toString(),
                     'name' => $item['name'],
                     'slug' => $item['slug'],
-                    'user_id' => request()->user('canvas')->id,
+                    'user_id' => $user->id,
                 ]);
             }
 
             return (string) $tag->id;
         })->toArray();
 
-        $topicToSync = collect($request->input('topic', []))->map(function ($item) use ($topics) {
+        $topicToSync = collect($request->input('topic', []))->map(function ($item) use ($topics, $user) {
             $topic = $topics->firstWhere('slug', $item['slug']);
 
             if (! $topic) {
@@ -136,7 +138,7 @@ class PostController extends Controller
                     'id' => $id = Uuid::uuid4()->toString(),
                     'name' => $item['name'],
                     'slug' => $item['slug'],
-                    'user_id' => request()->user('canvas')->id,
+                    'user_id' => $user->id,
                 ]);
             }
 
@@ -177,7 +179,7 @@ class PostController extends Controller
             throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
         }
 
-        $stats = new StatsAggregator(request()->user('canvas'));
+        $stats = new StatsAggregator(request()->user(config('canvas.guard')));
 
         $results = $stats->getStatsForPost($post);
 
@@ -202,9 +204,9 @@ class PostController extends Controller
 
     private function ensurePostIsVisibleToCurrentUser(Post $post): void
     {
-        $user = request()->user('canvas');
+        $user = request()->user(config('canvas.guard'));
 
-        if ($user->isContributor && $post->user_id !== $user->id) {
+        if (Gate::forUser($user)->denies('view', $post)) {
             throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
         }
     }

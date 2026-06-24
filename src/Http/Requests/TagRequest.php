@@ -13,7 +13,7 @@ class TagRequest extends FormRequest
      */
     public function authorize()
     {
-        return $this->user('canvas')->isAdmin;
+        return $this->user(config('canvas.guard'))->can('manage-taxonomy');
     }
 
     /**
@@ -29,7 +29,7 @@ class TagRequest extends FormRequest
                 'required',
                 'alpha_dash',
                 Rule::unique('canvas_tags')->where(function ($query) {
-                    return $query->where('slug', request('slug'))->where('user_id', request()->user('canvas')->id);
+                    return $query->where('slug', request('slug'))->where('user_id', request()->user(config('canvas.guard'))->id);
                 })->ignore(request('id'))->whereNull('deleted_at'),
             ],
         ];

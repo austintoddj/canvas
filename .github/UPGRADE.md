@@ -2,11 +2,60 @@
 
 ## Table of Contents
 
+- [Upgrading to 7.0.0 from 6.x](#upgrading-to-700-from-6x)
 - [Upgrading to 6.0.0 from 5.4](#upgrading-to-600-from-54)
 - [Upgrading to 5.4.0 from 5.3](#upgrading-to-540-from-53)
 - [Upgrading to 5.3.0 from 5.2](#upgrading-to-530-from-52)
 - [Upgrading to 5.2.0 from 5.1](#upgrading-to-520-from-51)
 - [Upgrading to 5.1.0 from 5.0](#upgrading-to-510-from-50)
+
+## Upgrading to 7.0.0 from 6.x
+
+> **Important:** v7 is a breaking release. Canvas no longer ships its own login/password-reset flow or a Canvas-owned auth guard. The package now uses the host application's `User` model for identity and stores Canvas-specific access in `canvas_users`.
+
+### What changed
+
+- Removed `canvas/login`, `canvas/logout`, `canvas/forgot-password`, and `canvas/reset-password` routes.
+- Removed the `canvas:user` command in favor of:
+  - `canvas:make-admin {user}`
+  - `canvas:assign-role {user} {role}`
+  - `canvas:remove-access {user}`
+  - `canvas:list-users`
+- Removed `Canvas\Http\Middleware\Authenticate`; Canvas now uses native Laravel auth middleware (`auth:{guard}`).
+- Removed `Canvas\Http\Middleware\Admin`; Canvas now uses Laravel gate/policy authorization via `can:` middleware.
+- Replaced the package `User` model with `Canvas\Models\CanvasUser` for role metadata.
+- Added configurable `canvas.user_model` and `canvas.guard` settings.
+
+### Before upgrading
+
+1. Make sure your host application already has a working authentication system and a login route.
+2. Decide which host user model Canvas should use (defaults to `App\Models\User`).
+3. Update any automation or scripts that still call `canvas:user` or rely on Canvas password reset routes.
+
+### Database changes
+
+- `canvas_users` now uses `user_id` as its primary key.
+- `canvas_users` no longer stores password, email, remember token, or soft-delete data.
+- Canvas-authored content now allows `user_id` to be nullable on posts, tags, and topics.
+
+### Configuration changes
+
+Add or confirm the following settings:
+
+```php
+'user_model' => env('CANVAS_USER_MODEL', App\Models\User::class),
+'guard' => env('CANVAS_GUARD', 'web'),
+'middleware' => ['web'],
+```
+
+Canvas automatically applies `auth:{guard}` to protected routes and uses Laravel `can:` middleware for role-based access. Your host app must own login/logout/password reset flows for that guard.
+
+### Post-upgrade
+
+- Recreate any Canvas admins using `canvas:make-admin`.
+- Reassign users with `canvas:assign-role`.
+- Remove access with `canvas:remove-access`.
+- Use `canvas:list-users` to confirm roles.
 
 ## Upgrading to 6.0.0 from 5.4
 

@@ -17,6 +17,8 @@ class ViewController extends Controller
      */
     public function __invoke()
     {
+        $user = request()->user(config('canvas.guard'));
+
         return view('canvas::layout')->with([
             'jsVars' => [
                 'languageCodes' => Canvas::availableLanguageCodes(),
@@ -24,9 +26,9 @@ class ViewController extends Controller
                 'path' => Canvas::basePath(),
                 'roles' => Canvas::availableRoles(),
                 'timezone' => config('app.timezone'),
-                'translations' => Canvas::availableTranslations(request()->user('canvas')->locale),
+                'translations' => Canvas::availableTranslations($user->locale),
                 'unsplash' => config('canvas.unsplash.access_key'),
-                'user' => request()->user('canvas'),
+                'user' => $user,
                 'version' => Canvas::installedVersion(),
             ],
         ]);

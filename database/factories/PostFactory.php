@@ -3,7 +3,7 @@
 namespace Canvas\Database\Factories;
 
 use Canvas\Models\Post;
-use Canvas\Models\User;
+use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 

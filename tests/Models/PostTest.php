@@ -3,9 +3,9 @@
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
-use Canvas\Models\User;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
+use Canvas\Tests\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

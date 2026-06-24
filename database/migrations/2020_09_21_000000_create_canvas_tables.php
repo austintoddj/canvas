@@ -22,33 +22,36 @@ class CreateCanvasTables extends Migration
             $table->dateTime('published_at')->nullable();
             $table->string('featured_image')->nullable();
             $table->string('featured_image_caption')->nullable();
-            $table->uuid('user_id')->index();
+            $table->uuid('user_id')->nullable()->index();
             $table->json('meta')->nullable();
             $table->timestamps();
             $table->softDeletes();
             $table->unique(['slug', 'user_id']);
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
         });
 
         Schema::create('canvas_tags', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('slug');
             $table->string('name');
-            $table->uuid('user_id')->index();
+            $table->uuid('user_id')->nullable()->index();
             $table->timestamps();
             $table->softDeletes();
             $table->index('created_at');
             $table->unique(['slug', 'user_id']);
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
         });
 
         Schema::create('canvas_topics', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('slug');
             $table->string('name');
-            $table->uuid('user_id')->index();
+            $table->uuid('user_id')->nullable()->index();
             $table->timestamps();
             $table->softDeletes();
             $table->index('created_at');
             $table->unique(['slug', 'user_id']);
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
         });
 
         Schema::create('canvas_posts_tags', function (Blueprint $table) {
@@ -83,20 +86,11 @@ class CreateCanvasTables extends Migration
         });
 
         Schema::create('canvas_users', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('username')->unique()->nullable();
-            $table->string('password');
-            $table->text('summary')->nullable();
-            $table->string('avatar')->nullable();
-            $table->tinyInteger('dark_mode')->nullable();
-            $table->tinyInteger('digest')->nullable();
-            $table->string('locale')->nullable();
-            $table->tinyInteger('role')->nullable();
-            $table->rememberToken();
+            $table->uuid('user_id')->primary();
+            $table->tinyInteger('role');
+            $table->json('preferences')->nullable();
             $table->timestamps();
-            $table->softDeletes();
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });
     }
 

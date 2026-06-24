@@ -78,7 +78,7 @@ class Tag extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(config('canvas.user_model'));
     }
 
     /**

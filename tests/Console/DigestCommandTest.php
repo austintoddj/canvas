@@ -1,17 +1,27 @@
 <?php
 
+use Canvas\Enums\Role;
 use Canvas\Mail\WeeklyDigest;
+use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
-use Canvas\Models\User;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
+use Canvas\Tests\Models\User;
 use Illuminate\Support\Facades\Mail;
 
 it('sends digest emails to users with mail enabled', function (): void {
     Mail::fake();
 
     $user = User::factory()->create([
-        'digest' => 1,
+    ]);
+
+    CanvasUser::factory()->create([
+        'user_id' => $user->id,
+        'role' => Role::Contributor,
+        'preferences' => [
+            'dark_mode' => false,
+            'digest' => true,
+        ],
     ]);
 
     $posts = Post::factory()->count(2)->create([
@@ -53,7 +63,15 @@ it('does not send digest emails to users with mail disabled', function (): void 
     Mail::fake();
 
     $user = User::factory()->create([
-        'digest' => 0,
+    ]);
+
+    CanvasUser::factory()->create([
+        'user_id' => $user->id,
+        'role' => Role::Contributor,
+        'preferences' => [
+            'dark_mode' => false,
+            'digest' => false,
+        ],
     ]);
 
     $posts = Post::factory()->count(2)->create([

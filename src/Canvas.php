@@ -2,7 +2,7 @@
 
 namespace Canvas;
 
-use Canvas\Models\User;
+use Canvas\Enums\Role;
 use Composer\InstalledVersions;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -47,11 +47,9 @@ class Canvas
      */
     public static function availableRoles(): array
     {
-        return [
-            User::CONTRIBUTOR => 'Contributor',
-            User::EDITOR => 'Editor',
-            User::ADMIN => 'Admin',
-        ];
+        return collect(Role::cases())->mapWithKeys(
+            fn (Role $role): array => [$role->value => $role->label()]
+        )->all();
     }
 
     /**
