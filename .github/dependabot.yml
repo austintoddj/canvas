@@ -1,10 +1,15 @@
 version: 2
 updates:
-  # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 5
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     reviewers:
       - "austintoddj"
     labels:
@@ -13,7 +18,6 @@ updates:
     commit-message:
       prefix: 'chore(deps)'
 
-  # Maintain dependencies for npm
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -26,7 +30,6 @@ updates:
     commit-message:
       prefix: 'chore(deps)'
 
-  # Maintain dependencies for Composer
   - package-ecosystem: "composer"
     directory: "/"
     schedule:
