@@ -23,6 +23,7 @@ class CreateCanvasTables extends Migration
             $table->string('featured_image')->nullable();
             $table->string('featured_image_caption')->nullable();
             $table->uuid('user_id')->nullable()->index();
+            $table->uuid('topic_id')->nullable()->index();
             $table->json('meta')->nullable();
             $table->timestamps();
             $table->softDeletes();
@@ -60,12 +61,6 @@ class CreateCanvasTables extends Migration
             $table->unique(['post_id', 'tag_id']);
         });
 
-        Schema::create('canvas_posts_topics', function (Blueprint $table) {
-            $table->uuid('post_id');
-            $table->uuid('topic_id');
-            $table->unique(['post_id', 'topic_id']);
-        });
-
         Schema::create('canvas_views', function (Blueprint $table) {
             $table->increments('id');
             $table->uuid('post_id')->index();
@@ -88,7 +83,8 @@ class CreateCanvasTables extends Migration
         Schema::create('canvas_users', function (Blueprint $table) {
             $table->uuid('user_id')->primary();
             $table->tinyInteger('role');
-            $table->json('preferences')->nullable();
+            $table->boolean('dark_mode')->default(false);
+            $table->boolean('digest')->default(false);
             $table->timestamps();
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });
@@ -105,7 +101,6 @@ class CreateCanvasTables extends Migration
         Schema::dropIfExists('canvas_tags');
         Schema::dropIfExists('canvas_topics');
         Schema::dropIfExists('canvas_posts_tags');
-        Schema::dropIfExists('canvas_posts_topics');
         Schema::dropIfExists('canvas_views');
         Schema::dropIfExists('canvas_visits');
         Schema::dropIfExists('canvas_users');

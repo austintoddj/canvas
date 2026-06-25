@@ -1,5 +1,6 @@
 <?php
 
+use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Models\View;
 use Canvas\Tests\Models\User;
@@ -214,4 +215,119 @@ it('deletes an existing user', function (): void {
         'id' => $user->id,
         'email' => $user->email,
     ]);
+});
+it('contributors cannot create a new user', function (): void {
+    $this->actingAs($this->contributor, 'canvas')
+        ->postJson('canvas/api/users/'.Uuid::uuid4()->toString(), [
+            'name' => 'New User',
+            'email' => 'new@example.com',
+        ])
+        ->assertForbidden();
+});
+it('editors cannot create a new user', function (): void {
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson('canvas/api/users/'.Uuid::uuid4()->toString(), [
+            'name' => 'New User',
+            'email' => 'new@example.com',
+        ])
+        ->assertForbidden();
+});
+it('contributors cannot update another users profile', function (): void {
+    $this->actingAs($this->contributor, 'canvas')
+        ->postJson("canvas/api/users/{$this->editor->id}", [
+            'name' => 'Hacked Name',
+            'email' => $this->editor->email,
+        ])
+        ->assertForbidden();
+});
+it('editors cannot update another users profile', function (): void {
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("canvas/api/users/{$this->contributor->id}", [
+            'name' => 'Hacked Name',
+            'email' => $this->contributor->email,
+        ])
+        ->assertForbidden();
+});
+it('contributors can update their own profile', function (): void {
+    $this->actingAs($this->contributor, 'canvas')
+        ->postJson("canvas/api/users/{$this->contributor->id}", [
+            'name' => 'Updated Name',
+            'email' => $this->contributor->email,
+        ])
+        ->assertSuccessful()
+        ->assertJsonFragment(['name' => 'Updated Name']);
+});
+it('contributors cannot change their own role', function (): void {
+    $this->actingAs($this->contributor, 'canvas')
+        ->postJson("canvas/api/users/{$this->contributor->id}", [
+            'name' => $this->contributor->name,
+            'email' => $this->contributor->email,
+            'role' => 3,
+        ])
+        ->assertSuccessful();
+
+    $this->contributor->refresh();
+
+    $this->assertFalse($this->contributor->isAdmin);
+});
+it('saves dark mode preference to canvas_users', function (): void {
+    $this->actingAs($this->contributor, 'canvas')
+        ->postJson("canvas/api/users/{$this->contributor->id}", [
+            'name' => $this->contributor->name,
+            'email' => $this->contributor->email,
+            'dark_mode' => true,
+        ])
+        ->assertSuccessful();
+
+    $this->assertDatabaseHas('canvas_users', [
+        'user_id' => $this->contributor->id,
+    ]);
+
+    $canvasUser = CanvasUser::find($this->contributor->id);
+    $this->assertTrue($canvasUser->dark_mode);
+});
+it('saves digest preference to canvas_users', function (): void {
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("canvas/api/users/{$this->editor->id}", [
+            'name' => $this->editor->name,
+            'email' => $this->editor->email,
+            'digest' => false,
+        ])
+        ->assertSuccessful();
+
+    $canvasUser = CanvasUser::find($this->editor->id);
+    $this->assertFalse($canvasUser->digest);
+});
+it('admin can assign a role via the controller', function (): void {
+    $user = User::factory()->create();
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/users/{$user->id}", [
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => 3,
+        ])
+        ->assertSuccessful();
+
+    $this->assertDatabaseHas('canvas_users', [
+        'user_id' => $user->id,
+        'role' => 3,
+    ]);
+
+    $this->assertTrue($user->fresh()->isAdmin);
+});
+it('does not store canvas fields on the host user model', function (): void {
+    $this->actingAs($this->contributor, 'canvas')
+        ->postJson("canvas/api/users/{$this->contributor->id}", [
+            'name' => $this->contributor->name,
+            'email' => $this->contributor->email,
+            'dark_mode' => true,
+            'digest' => false,
+        ])
+        ->assertSuccessful();
+
+    $fresh = $this->contributor->fresh();
+
+    $this->assertArrayNotHasKey('dark_mode', $fresh->getAttributes());
+    $this->assertArrayNotHasKey('digest', $fresh->getAttributes());
 });

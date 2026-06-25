@@ -81,10 +81,8 @@ class InstallCommand extends Command
         CanvasUser::create([
             'user_id' => $user->id,
             'role' => Role::Admin,
-            'preferences' => [
-                'dark_mode' => false,
-                'digest' => false,
-            ],
+            'dark_mode' => false,
+            'digest' => false,
         ]);
     }
 

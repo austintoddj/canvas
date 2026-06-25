@@ -507,9 +507,9 @@ it('syncs a new topic', function (): void {
             'slug' => $data['slug'],
         ]);
 
-    $this->assertCount(1, $post->topic);
-    $this->assertDatabaseHas('canvas_posts_topics', [
-        'post_id' => $post->id,
+    $this->assertInstanceOf(Topic::class, $post->refresh()->topic);
+    $this->assertDatabaseHas('canvas_posts', [
+        'id' => $post->id,
     ]);
 });
 it('syncs an existing topic', function (): void {
@@ -536,9 +536,9 @@ it('syncs an existing topic', function (): void {
             'slug' => $data['slug'],
         ]);
 
-    $this->assertCount(1, $post->topic);
-    $this->assertDatabaseHas('canvas_posts_topics', [
-        'post_id' => $post->id,
+    $this->assertInstanceOf(Topic::class, $post->refresh()->topic);
+    $this->assertDatabaseHas('canvas_posts', [
+        'id' => $post->id,
         'topic_id' => $topic->id,
     ]);
 });
@@ -581,9 +581,11 @@ it('deletes an existing post', function (): void {
     ]);
 });
 it('desyncs related taxonomy', function (): void {
+    $topic = Topic::factory()->create();
     $post = Post::factory()->create([
         'user_id' => $this->admin->id,
         'slug' => 'a-new-post',
+        'topic_id' => $topic->id,
     ]);
 
     $tag = Tag::factory()->create();
@@ -595,15 +597,7 @@ it('desyncs related taxonomy', function (): void {
     ]);
 
     $this->assertCount(1, $post->tags);
-
-    $topic = Topic::factory()->create();
-    $post->topic()->sync([$topic->id]);
-    $this->assertCount(1, $post->topic);
-
-    $this->assertDatabaseHas('canvas_posts_topics', [
-        'post_id' => $post->id,
-        'topic_id' => $topic->id,
-    ]);
+    $this->assertInstanceOf(Topic::class, $post->topic);
 
     $this->actingAs($this->admin, 'canvas')
         ->deleteJson("canvas/api/posts/{$post->id}")
@@ -620,11 +614,5 @@ it('desyncs related taxonomy', function (): void {
         'tag_id' => $tag->id,
     ]);
 
-    $this->assertDatabaseMissing('canvas_posts_topics', [
-        'post_id' => $post->id,
-        'topic_id' => $tag->id,
-    ]);
-
     $this->assertCount(0, $post->refresh()->tags);
-    $this->assertCount(0, $post->refresh()->topic);
 });

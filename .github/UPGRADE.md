@@ -36,7 +36,9 @@
 
 - `canvas_users` now uses `user_id` as its primary key.
 - `canvas_users` no longer stores password, email, remember token, or soft-delete data.
+- `canvas_users.preferences` (JSON column) has been replaced by two boolean columns: `dark_mode` and `digest` (both default `false`).
 - Canvas-authored content now allows `user_id` to be nullable on posts, tags, and topics.
+- `canvas_posts_topics` pivot table has been removed; posts now have a `topic_id` foreign key directly on `canvas_posts`.
 
 ### Configuration changes
 

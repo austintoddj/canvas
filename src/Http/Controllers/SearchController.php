@@ -22,25 +22,18 @@ class SearchController extends Controller
 
         $posts = Post::query()
             ->select('id', 'title')
-            ->when(! $canViewAllPosts, function (Builder $query) use ($user) {
-                return $query->where('user_id', $user->id);
-            }, function (Builder $query) {
-                return $query;
-            })
+            ->when(! $canViewAllPosts, fn (Builder $query) => $query->where('user_id', $user->id))
             ->latest()
-            ->get();
+            ->get()
+            ->map(fn (Post $post) => [
+                'id' => $post->id,
+                'name' => $post->title,
+                'title' => $post->title,
+                'type' => 'Post',
+                'route' => 'edit-post',
+            ]);
 
-        // TODO: Can ->map() drop into the above query?
-
-        $posts->map(function ($post) {
-            $post['name'] = $post->title;
-            $post['type'] = 'Post';
-            $post['route'] = 'edit-post';
-
-            return $post;
-        });
-
-        return response()->json(collect($posts)->toArray(), 200);
+        return response()->json($posts->toArray(), 200);
     }
 
     /**
@@ -51,16 +44,15 @@ class SearchController extends Controller
         $tags = Tag::query()
             ->select('id', 'name')
             ->latest()
-            ->get();
+            ->get()
+            ->map(fn (Tag $tag) => [
+                'id' => $tag->id,
+                'name' => $tag->name,
+                'type' => 'Tag',
+                'route' => 'edit-tag',
+            ]);
 
-        $tags->map(function ($tag) {
-            $tag['type'] = 'Tag';
-            $tag['route'] = 'edit-tag';
-
-            return $tag;
-        });
-
-        return response()->json(collect($tags)->toArray(), 200);
+        return response()->json($tags->toArray(), 200);
     }
 
     /**
@@ -71,16 +63,15 @@ class SearchController extends Controller
         $topics = Topic::query()
             ->select('id', 'name')
             ->latest()
-            ->get();
+            ->get()
+            ->map(fn (Topic $topic) => [
+                'id' => $topic->id,
+                'name' => $topic->name,
+                'type' => 'Topic',
+                'route' => 'edit-topic',
+            ]);
 
-        $topics->map(function ($topic) {
-            $topic['type'] = 'Topic';
-            $topic['route'] = 'edit-topic';
-
-            return $topic;
-        });
-
-        return response()->json(collect($topics)->toArray(), 200);
+        return response()->json($topics->toArray(), 200);
     }
 
     /**
@@ -93,15 +84,14 @@ class SearchController extends Controller
         $users = $userModel::query()
             ->select('id', 'name', 'email')
             ->latest()
-            ->get();
+            ->get()
+            ->map(fn ($user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'type' => 'User',
+                'route' => 'edit-user',
+            ]);
 
-        $users->map(function ($user) {
-            $user['type'] = 'User';
-            $user['route'] = 'edit-user';
-
-            return $user;
-        });
-
-        return response()->json(collect($users)->toArray(), 200);
+        return response()->json($users->toArray(), 200);
     }
 }

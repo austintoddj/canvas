@@ -37,13 +37,11 @@ it('returns existing topic data', function (): void {
 });
 it('lists posts for a topic', function (): void {
     $topic = Topic::factory()->create();
-    $post = Post::factory()->create();
+    $post = Post::factory()->create(['topic_id' => $topic->id]);
 
     View::factory()->create([
         'post_id' => $post->id,
     ]);
-
-    $topic->posts()->sync([$post->id]);
 
     $response = $this->actingAs($this->admin, 'canvas')
         ->getJson("canvas/api/topics/{$topic->id}/posts")
@@ -148,30 +146,20 @@ it('deletes an existing topic', function (): void {
 });
 it('desyncs the post relationship', function (): void {
     $topic = Topic::factory()->create();
-    $post = Post::factory()->create();
+    $post = Post::factory()->create(['topic_id' => $topic->id]);
 
-    $topic->posts()->sync([$post->id]);
-
-    $this->assertDatabaseHas('canvas_posts_topics', [
-        'post_id' => $post->id,
+    $this->assertDatabaseHas('canvas_posts', [
+        'id' => $post->id,
         'topic_id' => $topic->id,
     ]);
 
     $this->assertCount(1, $topic->posts);
 
-    $this->actingAs($this->admin, 'canvas')
-        ->deleteJson("canvas/api/posts/{$post->id}")
-        ->assertSuccessful()
-        ->assertNoContent();
+    $topic->delete();
 
-    $this->assertSoftDeleted('canvas_posts', [
+    $this->assertDatabaseHas('canvas_posts', [
         'id' => $post->id,
-        'slug' => $post->slug,
-    ]);
-
-    $this->assertDatabaseMissing('canvas_posts_topics', [
-        'post_id' => $post->id,
-        'topic_id' => $topic->id,
+        'topic_id' => null,
     ]);
 
     $this->assertCount(0, $topic->refresh()->posts);

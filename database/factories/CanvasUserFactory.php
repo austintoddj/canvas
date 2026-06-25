@@ -17,10 +17,8 @@ class CanvasUserFactory extends Factory
         return [
             'user_id' => fake()->uuid(),
             'role' => fake()->randomElement(Role::cases()),
-            'preferences' => [
-                'dark_mode' => false,
-                'digest' => true,
-            ],
+            'dark_mode' => false,
+            'digest' => true,
         ];
     }
 

@@ -27,10 +27,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'summary' => fake()->sentence(),
             'avatar' => md5(trim(Str::lower($email))),
-            'dark_mode' => false,
-            'digest' => false,
             'locale' => 'en',
-            'role' => null,
             'remember_token' => Str::random(10),
         ];
     }

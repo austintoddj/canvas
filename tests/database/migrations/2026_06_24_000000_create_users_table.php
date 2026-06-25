@@ -18,9 +18,6 @@ return new class extends Migration
             $table->string('username')->unique()->nullable();
             $table->text('summary')->nullable();
             $table->string('avatar')->nullable();
-            $table->boolean('dark_mode')->nullable();
-            $table->boolean('digest')->nullable();
-            $table->tinyInteger('role')->nullable();
             $table->string('locale')->nullable();
             $table->rememberToken();
             $table->timestamps();

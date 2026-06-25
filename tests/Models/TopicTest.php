@@ -4,7 +4,7 @@ use Canvas\Models\Post;
 use Canvas\Models\Topic;
 use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 it('allows topics to share the same slug across different users', function (): void {
     $data = [
@@ -38,12 +38,9 @@ it('allows topics to share the same slug across different users', function (): v
 });
 it('defines the posts relationship', function (): void {
     $topic = Topic::factory()->create();
-    $post = Post::factory()->create();
+    $post = Post::factory()->create(['topic_id' => $topic->id]);
 
-    $post->topic()->sync($topic);
-
-    $this->assertCount(1, $post->topic);
-    $this->assertInstanceOf(BelongsToMany::class, $topic->posts());
+    $this->assertInstanceOf(HasMany::class, $topic->posts());
     $this->assertInstanceOf(Post::class, $topic->posts->first());
 });
 it('defines the user relationship', function (): void {
@@ -54,15 +51,15 @@ it('defines the user relationship', function (): void {
 });
 it('detaches posts on delete', function (): void {
     $topic = Topic::factory()->create();
-    $post = Post::factory()->create();
+    $post = Post::factory()->create(['topic_id' => $topic->id]);
 
-    $topic->posts()->sync([$post->id]);
+    $this->assertInstanceOf(Post::class, $topic->posts->first());
 
     $topic->delete();
 
-    $this->assertEquals(0, $topic->posts->count());
-    $this->assertDatabaseMissing('canvas_posts_topics', [
-        'post_id' => $post->id,
-        'topic_id' => $topic->id,
+    $this->assertEquals(0, $topic->fresh()->posts->count());
+    $this->assertDatabaseHas('canvas_posts', [
+        'id' => $post->id,
+        'topic_id' => null,
     ]);
 });

@@ -103,16 +103,9 @@ class Post extends Model
     /**
      * Get the topic relationship.
      */
-    public function topic(): BelongsToMany
+    public function topic(): BelongsTo
     {
-        // TODO: This should be a belongsTo() relationship?
-
-        return $this->belongsToMany(
-            Topic::class,
-            'canvas_posts_topics',
-            'post_id',
-            'topic_id'
-        );
+        return $this->belongsTo(Topic::class, 'topic_id');
     }
 
     /**
@@ -195,7 +188,6 @@ class Post extends Model
 
         static::deleting(function (self $post) {
             $post->tags()->detach();
-            $post->topic()->detach();
         });
     }
 }

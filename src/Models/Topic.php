@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Topic extends Model
@@ -68,11 +68,9 @@ class Topic extends Model
     /**
      * Get the posts relationship.
      */
-    public function posts(): BelongsToMany
+    public function posts(): HasMany
     {
-        // TODO: This should be a hasMany() relationship?
-
-        return $this->belongsToMany(Post::class, 'canvas_posts_topics', 'topic_id', 'post_id');
+        return $this->hasMany(Post::class, 'topic_id');
     }
 
     /**
@@ -93,7 +91,7 @@ class Topic extends Model
         parent::boot();
 
         static::deleting(function (self $topic) {
-            $topic->posts()->detach();
+            $topic->posts()->update(['topic_id' => null]);
         });
     }
 }

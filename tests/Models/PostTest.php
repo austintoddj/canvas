@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
 it('casts dates to Carbon objects', function (): void {
     $this->assertInstanceOf(Carbon::class, Post::factory()->create()->published_at);
 });
@@ -64,10 +63,10 @@ it('defines the topic relationship', function (): void {
     $post = Post::factory()->create();
     $topic = Topic::factory()->create();
 
-    $post->topic()->sync($topic);
+    $post->update(['topic_id' => $topic->id]);
 
-    $this->assertInstanceOf(BelongsToMany::class, $post->topic());
-    $this->assertInstanceOf(Topic::class, $post->topic->first());
+    $this->assertInstanceOf(BelongsTo::class, $post->topic());
+    $this->assertInstanceOf(Topic::class, $post->topic);
 });
 it('defines the user relationship', function (): void {
     $post = Post::factory()->create();
@@ -116,21 +115,15 @@ it('applies the draft scope', function (): void {
 it('detaches taxonomy on delete', function (): void {
     $tag = Tag::factory()->create();
     $topic = Topic::factory()->create();
-    $post = Post::factory()->create();
+    $post = Post::factory()->create(['topic_id' => $topic->id]);
 
-    $post->topic()->sync([$topic->id]);
     $post->tags()->sync([$tag->id]);
 
     $post->delete();
 
     $this->assertEquals(0, $post->tags->count());
-    $this->assertEquals(0, $post->topic->count());
     $this->assertDatabaseMissing('canvas_posts_tags', [
         'post_id' => $post->id,
         'tag_id' => $tag->id,
-    ]);
-    $this->assertDatabaseMissing('canvas_posts_topics', [
-        'post_id' => $post->id,
-        'topic_id' => $topic->id,
     ]);
 });

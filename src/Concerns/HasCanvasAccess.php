@@ -56,11 +56,11 @@ trait HasCanvasAccess
 
     public function getDarkModeAttribute(): bool
     {
-        return (bool) ($this->canvasUser?->preferences['dark_mode'] ?? false);
+        return (bool) ($this->canvasUser?->dark_mode ?? false);
     }
 
     public function getDigestAttribute(): bool
     {
-        return (bool) ($this->canvasUser?->preferences['digest'] ?? false);
+        return (bool) ($this->canvasUser?->digest ?? false);
     }
 }

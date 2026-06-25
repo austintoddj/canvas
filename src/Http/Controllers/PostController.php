@@ -25,13 +25,10 @@ class PostController extends Controller
         $user = request()->user(config('canvas.guard'));
         $canViewAllPosts = Gate::forUser($user)->allows('viewAll', Post::class);
 
-        $posts = Post::query()
+        $baseQuery = $this->visiblePostsQuery($user, $canViewAllPosts);
+
+        $posts = (clone $baseQuery)
             ->select('id', 'title', 'summary', 'featured_image', 'published_at', 'created_at', 'updated_at')
-            ->when(! $canViewAllPosts || request()->query('scope', 'user') != 'all', function (Builder $query) use ($user) {
-                return $query->where('user_id', $user->id);
-            }, function (Builder $query) {
-                return $query;
-            })
             ->when(request()->query('type', 'published') != 'draft', function (Builder $query) {
                 return $query->published();
             }, function (Builder $query) {
@@ -41,30 +38,10 @@ class PostController extends Controller
             ->withCount('views')
             ->paginate();
 
-        // TODO: The count() queries here are duplicated
-
-        $draftCount = Post::query()
-            ->when(! $canViewAllPosts || request()->query('scope', 'user') != 'all', function (Builder $query) use ($user) {
-                return $query->where('user_id', $user->id);
-            }, function (Builder $query) {
-                return $query;
-            })
-            ->draft()
-            ->count();
-
-        $publishedCount = Post::query()
-            ->when(! $canViewAllPosts || request()->query('scope', 'user') != 'all', function (Builder $query) use ($user) {
-                return $query->where('user_id', $user->id);
-            }, function (Builder $query) {
-                return $query;
-            })
-            ->published()
-            ->count();
-
         return response()->json([
             'posts' => $posts,
-            'draftCount' => $draftCount,
-            'publishedCount' => $publishedCount,
+            'draftCount' => (clone $baseQuery)->draft()->count(),
+            'publishedCount' => (clone $baseQuery)->published()->count(),
         ], 200);
     }
 
@@ -110,10 +87,7 @@ class PostController extends Controller
 
         $post->user_id = $post->user_id ?? $user->id;
 
-        $post->save();
-
         $tags = Tag::query()->get(['id', 'name', 'slug']);
-        $topics = Topic::query()->get(['id', 'name', 'slug']);
 
         $tagsToSync = collect($request->input('tags', []))->map(function ($item) use ($tags, $user) {
             $tag = $tags->firstWhere('slug', $item['slug']);
@@ -130,24 +104,25 @@ class PostController extends Controller
             return (string) $tag->id;
         })->toArray();
 
-        $topicToSync = collect($request->input('topic', []))->map(function ($item) use ($topics, $user) {
-            $topic = $topics->firstWhere('slug', $item['slug']);
+        $topicInput = collect($request->input('topic', []))->first();
 
-            if (! $topic) {
-                $topic = Topic::create([
-                    'id' => $id = Uuid::uuid4()->toString(),
-                    'name' => $item['name'],
-                    'slug' => $item['slug'],
+        if ($topicInput) {
+            $topic = Topic::query()->firstWhere('slug', $topicInput['slug'])
+                ?? Topic::create([
+                    'id' => Uuid::uuid4()->toString(),
+                    'name' => $topicInput['name'],
+                    'slug' => $topicInput['slug'],
                     'user_id' => $user->id,
                 ]);
-            }
 
-            return (string) $topic->id;
-        })->toArray();
+            $post->topic_id = $topic->id;
+        } else {
+            $post->topic_id = null;
+        }
+
+        $post->save();
 
         $post->tags()->sync($tagsToSync);
-
-        $post->topic()->sync($topicToSync);
 
         return response()->json($post->refresh(), 201);
     }
@@ -159,7 +134,7 @@ class PostController extends Controller
     {
         $this->ensurePostIsVisibleToCurrentUser($post);
 
-        $post->loadMissing('tags:name,slug', 'topic:name,slug');
+        $post->loadMissing('tags:name,slug', 'topic:id,name,slug');
 
         return response()->json([
             'post' => $post,
@@ -209,5 +184,13 @@ class PostController extends Controller
         if (Gate::forUser($user)->denies('view', $post)) {
             throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
         }
+    }
+
+    private function visiblePostsQuery(mixed $user, bool $canViewAll): Builder
+    {
+        return Post::query()->when(
+            ! $canViewAll || request()->query('scope', 'user') !== 'all',
+            fn (Builder $query) => $query->where('user_id', $user->id)
+        );
     }
 }

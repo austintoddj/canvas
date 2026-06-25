@@ -44,23 +44,12 @@ trait ResolvesCanvasUsers
     {
         return CanvasUser::query()->updateOrCreate(
             ['user_id' => $user->getKey()],
-            [
-                'role' => $role,
-                'preferences' => $this->preferencesForRole($role),
-            ],
+            ['role' => $role],
         );
     }
 
     protected function removeAccess(Model $user): void
     {
         CanvasUser::query()->where('user_id', $user->getKey())->delete();
-    }
-
-    protected function preferencesForRole(Role $role): array
-    {
-        return [
-            'dark_mode' => false,
-            'digest' => false,
-        ];
     }
 }

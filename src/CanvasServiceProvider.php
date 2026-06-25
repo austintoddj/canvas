@@ -19,6 +19,7 @@ use Canvas\Listeners\CaptureView;
 use Canvas\Listeners\CaptureVisit;
 use Canvas\Models\Post;
 use Canvas\Policies\PostPolicy;
+use Canvas\Policies\UserPolicy;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Validation\ValidatesWhenResolved;
 use Illuminate\Events\Dispatcher;
@@ -119,6 +120,9 @@ class CanvasServiceProvider extends ServiceProvider
     private function registerGates(): void
     {
         Gate::policy(Post::class, PostPolicy::class);
+
+        $userModel = config('canvas.user_model');
+        Gate::policy($userModel, UserPolicy::class);
 
         Gate::define('manage-users', static function ($user): bool {
             return (bool) ($user->isAdmin ?? false);
