@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+
 it('casts dates to Carbon objects', function (): void {
     $this->assertInstanceOf(Carbon::class, Post::factory()->create()->published_at);
 });

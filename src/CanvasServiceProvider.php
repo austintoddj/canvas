@@ -20,6 +20,7 @@ use Canvas\Listeners\CaptureVisit;
 use Canvas\Models\Post;
 use Canvas\Policies\PostPolicy;
 use Canvas\Policies\UserPolicy;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Validation\ValidatesWhenResolved;
 use Illuminate\Events\Dispatcher;
@@ -49,6 +50,7 @@ class CanvasServiceProvider extends ServiceProvider
         $this->registerMigrations();
         $this->registerGates();
         $this->registerEvents();
+        $this->registerScheduler();
     }
 
     private function registerEvents(): void
@@ -64,8 +66,21 @@ class CanvasServiceProvider extends ServiceProvider
         $events = $this->app->make(Dispatcher::class);
 
         foreach ($mappings as $event => $listeners) {
-            $events->listen($event, $listeners);
+            foreach ($listeners as $listener) {
+                $events->listen($event, $listener);
+            }
         }
+    }
+
+    private function registerScheduler(): void
+    {
+        if (! config('canvas.mail.enabled')) {
+            return;
+        }
+
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            $schedule->command('canvas:digest')->weekly();
+        });
     }
 
     /**
@@ -173,6 +188,10 @@ class CanvasServiceProvider extends ServiceProvider
                     'Providers/CanvasServiceProvider.php'
                 ),
             ], 'canvas-provider');
+
+            $this->publishes([
+                __DIR__.'/../resources/views/ui' => resource_path('views/vendor/canvas/ui'),
+            ], 'canvas-ui-views');
         }
     }
 }

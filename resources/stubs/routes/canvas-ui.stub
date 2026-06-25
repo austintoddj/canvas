@@ -1,0 +1,14 @@
+<?php
+
+use App\Http\Controllers\Canvas\CanvasUiController;
+use Canvas\Http\Middleware\Session;
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('canvas-ui')->middleware(['web'])->group(function (): void {
+    Route::get('/', [CanvasUiController::class, 'index'])->name('canvas-ui.index');
+    Route::get('/tags/{slug}', [CanvasUiController::class, 'tag'])->name('canvas-ui.tag');
+    Route::get('/topics/{slug}', [CanvasUiController::class, 'topic'])->name('canvas-ui.topic');
+    Route::get('/{slug}', [CanvasUiController::class, 'show'])
+        ->middleware(Session::class)
+        ->name('canvas-ui.show');
+});

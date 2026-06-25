@@ -27,7 +27,6 @@ class ViewController extends Controller
                 'roles' => Canvas::availableRoles(),
                 'timezone' => config('app.timezone'),
                 'translations' => Canvas::availableTranslations($user->locale),
-                'unsplash' => config('canvas.unsplash.access_key'),
                 'user' => $user,
                 'version' => Canvas::installedVersion(),
             ],

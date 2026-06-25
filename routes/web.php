@@ -5,6 +5,7 @@ use Canvas\Http\Controllers\SearchController;
 use Canvas\Http\Controllers\StatsController;
 use Canvas\Http\Controllers\TagController;
 use Canvas\Http\Controllers\TopicController;
+use Canvas\Http\Controllers\UnsplashController;
 use Canvas\Http\Controllers\UploadsController;
 use Canvas\Http\Controllers\UserController;
 use Canvas\Http\Controllers\ViewController;
@@ -14,6 +15,9 @@ Route::middleware(['auth:'.config('canvas.guard')])->group(function (): void {
     Route::prefix('api')->group(function (): void {
         // Stats routes...
         Route::get('stats', StatsController::class);
+
+        // Unsplash routes...
+        Route::get('unsplash', UnsplashController::class);
 
         // Upload routes...
         Route::prefix('uploads')->controller(UploadsController::class)->group(function (): void {

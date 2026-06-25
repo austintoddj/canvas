@@ -1,148 +1,73 @@
 <?php
 
-namespace {{namespace}}Http\Controllers;
+namespace {{namespace}}Http\Controllers\Canvas;
 
-use {{namespace}}Http\Controllers\Controller;
-use Canvas\Models\User;
 use Canvas\Events\PostViewed;
+use Canvas\Http\Middleware\Session;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\View\View;
+use Illuminate\Routing\Controller;
 
 class CanvasUiController extends Controller
 {
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\View\View
-     */
-    public function index(Request $request)
+    public function index(): View
     {
-        return view('canvas-ui')->with([
-            'config' => [
-                'canvasPath' => config('canvas.path'),
-                'user' => $request->user('canvas'),
-                'timezone' => config('app.timezone'),
-            ],
-        ]);
+        $posts = Post::published()
+            ->with('user', 'topic')
+            ->latest()
+            ->paginate();
+
+        return view('canvas::ui.index', compact('posts'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Pagination\LengthAwarePaginator
-     */
-    public function getPosts(Request $request): LengthAwarePaginator
+    public function show(string $slug): View
     {
-        return Post::latest()->published()->with('user', 'topic')->paginate();
-    }
+        $post = Post::published()
+            ->with('user', 'tags', 'topic')
+            ->firstWhere('slug', $slug);
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param $slug
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function showPost(Request $request, $slug): JsonResponse
-    {
-        $post = Post::with('user', 'tags', 'topic')->firstWhere('slug', $slug);
-
-        if ($post) {
-            event(new PostViewed($post));
-
-            return response()->json($post, 200);
-        } else {
-            return response()->json(null, 404);
+        if (! $post) {
+            abort(404);
         }
+
+        event(new PostViewed($post));
+
+        return view('canvas::ui.show', compact('post'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return string
-     */
-    public function getTags(Request $request): string
-    {
-        return Tag::all()->toJson();
-    }
-
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param $slug
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function showTag(Request $request, $slug): JsonResponse
+    public function tag(string $slug): View
     {
         $tag = Tag::firstWhere('slug', $slug);
 
-        return $tag ? response()->json($tag, 200) : response()->json(null, 404);
+        if (! $tag) {
+            abort(404);
+        }
+
+        $posts = $tag->posts()
+            ->published()
+            ->with('user', 'topic')
+            ->latest()
+            ->paginate();
+
+        return view('canvas::ui.tag', compact('tag', 'posts'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param $slug
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getPostsForTag(Request $request, $slug): JsonResponse
-    {
-        $tag = Tag::firstWhere('slug', $slug);
-
-        return $tag ? response()->json($tag->posts()->with('topic', 'user')->paginate(), 200) : response()->json(null, 200);
-    }
-
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return string
-     */
-    public function getTopics(Request $request): string
-    {
-        return Topic::all()->toJson();
-    }
-
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param $slug
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function showTopic(Request $request, $slug): JsonResponse
+    public function topic(string $slug): View
     {
         $topic = Topic::firstWhere('slug', $slug);
 
-        return $topic ? response()->json($topic, 200) : response()->json(null, 404);
-    }
+        if (! $topic) {
+            abort(404);
+        }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param $slug
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getPostsForTopic(Request $request, $slug): JsonResponse
-    {
-        $topic = Topic::firstWhere('slug', $slug);
+        $posts = $topic->posts()
+            ->published()
+            ->with('user', 'tags')
+            ->latest()
+            ->paginate();
 
-        return $topic ? response()->json($topic->posts()->with('topic', 'user')->paginate(), 200) : response()->json(null, 200);
-    }
-
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function showUser(Request $request, $id): JsonResponse
-    {
-        $user = User::with('posts')->find($id);
-
-        return $user ? response()->json($user, 200) : response()->json(null, 404);
-    }
-
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getPostsForUser(Request $request, $id): JsonResponse
-    {
-        $user = User::find($id);
-
-        return $user ? response()->json($user->posts()->published()->with('user', 'topic')->paginate(), 200) : response()->json(null, 200);
+        return view('canvas::ui.topic', compact('topic', 'posts'));
     }
 }
