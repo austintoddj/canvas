@@ -1,57 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Controllers;
 
-use Canvas\Canvas;
+use Canvas\Http\Requests\DestroyUploadRequest;
+use Canvas\Http\Requests\UploadRequest;
+use Canvas\Support\Paths;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 
 class UploadsController extends Controller
 {
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @return mixed
-     */
-    public function store()
+    public function store(UploadRequest $request): JsonResponse
     {
-        $payload = request()->file();
+        $disk = config('canvas.storage_disk');
 
-        if (! $payload) {
-            return response()->json(null, 400);
-        }
+        $path = $request->file('file')->store(Paths::baseStoragePath(), ['disk' => $disk]);
 
-        // Only grab the first element because single file uploads
-        // are not supported at this time
-        $file = reset($payload);
-
-        $path = $file->store(Canvas::baseStoragePath(), [
-            'disk' => config('canvas.storage_disk'),
-        ]);
-
-        return Storage::disk(config('canvas.storage_disk'))->url($path);
+        return response()->json([
+            'url' => Storage::disk($disk)->url($path),
+            'path' => $path,
+        ], 201);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @return JsonResponse
-     */
-    public function destroy()
+    public function destroy(DestroyUploadRequest $request): Response
     {
-        if (empty(request()->getContent())) {
-            return response()->json(null, 400);
-        }
+        Storage::disk(config('canvas.storage_disk'))->delete($request->validated('path'));
 
-        $file = pathinfo(request()->getContent());
-
-        $storagePath = Canvas::baseStoragePath();
-
-        $path = "{$storagePath}/{$file['basename']}";
-
-        Storage::disk(config('canvas.storage_disk'))->delete($path);
-
-        return response()->json([], 204);
+        return response()->noContent();
     }
 }

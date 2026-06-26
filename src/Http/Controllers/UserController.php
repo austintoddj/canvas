@@ -2,10 +2,10 @@
 
 namespace Canvas\Http\Controllers;
 
-use Canvas\Canvas;
 use Canvas\Enums\Role;
 use Canvas\Http\Requests\UserRequest;
 use Canvas\Models\CanvasUser;
+use Canvas\Support\Localization;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
@@ -74,7 +74,7 @@ class UserController extends Controller
             Gate::forUser($currentUser)->authorize('update', $user);
         }
 
-        if (! Arr::has($data, 'locale') || ! in_array($data['locale'], Canvas::availableLanguageCodes())) {
+        if (! Arr::has($data, 'locale') || ! in_array($data['locale'], Localization::availableLanguageCodes(), true)) {
             $data['locale'] = config('app.fallback_locale');
         }
 

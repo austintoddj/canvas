@@ -2,9 +2,9 @@
 
 namespace Canvas\Listeners;
 
-use Canvas\Canvas;
 use Canvas\Events\PostViewed;
 use Canvas\Models\Post;
+use Canvas\Support\Referer;
 
 class CaptureVisit
 {
@@ -22,7 +22,7 @@ class CaptureVisit
                 'post_id' => $event->post->id,
                 'ip' => $ip,
                 'agent' => request()->header('user_agent'),
-                'referer' => Canvas::parseReferer(request()->header('referer')),
+                'referer' => Referer::host(request()->header('referer')),
             ];
 
             $event->post->visits()->create($data);

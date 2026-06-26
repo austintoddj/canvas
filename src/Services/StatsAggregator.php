@@ -2,10 +2,10 @@
 
 namespace Canvas\Services;
 
-use Canvas\Canvas;
 use Canvas\Models\Post;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
+use Canvas\Support\Referer;
 use Carbon\CarbonInterval;
 use DateInterval;
 use DatePeriod;
@@ -254,10 +254,12 @@ class StatsAggregator
         // Filter the view data to only include referrers
         $collection = new Collection;
         $data->each(function ($item, $key) use ($collection) {
-            if (empty(Canvas::parseReferer($item->referer))) {
+            $host = Referer::host($item->referer);
+
+            if (empty($host)) {
                 $collection->push(trans('canvas::app.other', [], $this->user->locale));
             } else {
-                $collection->push(Canvas::parseReferer($item->referer));
+                $collection->push($host);
             }
         });
 

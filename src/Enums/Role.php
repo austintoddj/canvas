@@ -19,6 +19,13 @@ enum Role: int
         };
     }
 
+    public static function options(): array
+    {
+        return collect(self::cases())->mapWithKeys(
+            static fn (self $role): array => [$role->value => $role->label()]
+        )->all();
+    }
+
     public static function values(): array
     {
         return array_column(self::cases(), 'value');

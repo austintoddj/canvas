@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Canvas\Tests\Models;
 
-use Canvas\Canvas;
 use Canvas\Concerns\HasCanvasAccess;
 use Canvas\Database\Factories\UserFactory;
+use Canvas\Support\Gravatar;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -45,7 +45,7 @@ class User extends Authenticatable
 
     public function getDefaultAvatarAttribute(): string
     {
-        return Canvas::gravatar($this->email ?? '');
+        return Gravatar::url($this->email ?? '');
     }
 
     public function getDefaultLocaleAttribute(): string

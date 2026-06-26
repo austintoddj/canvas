@@ -66,12 +66,7 @@ Route::middleware(['auth:'.config('canvas.guard')])->group(function (): void {
         });
 
         // Search routes...
-        Route::prefix('search')->controller(SearchController::class)->group(function (): void {
-            Route::get('posts', 'posts');
-            Route::get('tags', 'tags')->middleware(['can:manage-taxonomy']);
-            Route::get('topics', 'topics')->middleware(['can:manage-taxonomy']);
-            Route::get('users', 'users')->middleware(['can:manage-users']);
-        });
+        Route::get('search', [SearchController::class, 'index']);
     });
 
     // Catch-all route...

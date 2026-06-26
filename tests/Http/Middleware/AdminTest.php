@@ -7,9 +7,6 @@ dataset('protectedRoutes', [
     ['GET', 'canvas/api/topics/create'],
     ['GET', 'canvas/api/users'],
     ['GET', 'canvas/api/users/create'],
-    ['GET', 'canvas/api/search/tags'],
-    ['GET', 'canvas/api/search/topics'],
-    ['GET', 'canvas/api/search/users'],
 ]);
 
 it('restricts contributor access', function ($method, $endpoint): void {

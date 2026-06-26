@@ -1,10 +1,9 @@
 <?php
 
-use Canvas\Canvas;
 use Canvas\Enums\Role;
 
 it('maps role labels', function (): void {
-    expect(Canvas::availableRoles())->toBe([
+    expect(Role::options())->toBe([
         1 => 'Contributor',
         2 => 'Editor',
         3 => 'Admin',

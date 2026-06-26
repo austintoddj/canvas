@@ -20,7 +20,7 @@
 
             <div class="flex items-center gap-3 text-sm text-gray-500">
                 @if ($post->user)
-                    <img src="{{ \Canvas\Canvas::gravatar($post->user->email, 40) }}"
+                    <img src="{{ \Canvas\Support\Gravatar::url($post->user->email, 40) }}"
                          alt="{{ $post->user->name }}"
                          class="w-8 h-8 rounded-full">
                     <span class="font-medium text-gray-700">{{ $post->user->name }}</span>

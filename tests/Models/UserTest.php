@@ -1,7 +1,7 @@
 <?php
 
-use Canvas\Canvas;
 use Canvas\Models\CanvasUser;
+use Canvas\Support\Gravatar;
 use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
@@ -45,7 +45,7 @@ it('computes the admin attribute', function (): void {
 it('computes the default avatar attribute', function (): void {
     $user = User::factory()->create();
 
-    expect($user->defaultAvatar)->toBe(Canvas::gravatar($user->email));
+    expect($user->defaultAvatar)->toBe(Gravatar::url($user->email));
 });
 
 it('computes the default locale attribute', function (): void {
