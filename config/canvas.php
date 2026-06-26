@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\User;
-
 return [
 
     /*
@@ -40,7 +38,7 @@ return [
     |
     */
 
-    'user_model' => env('CANVAS_USER_MODEL', User::class),
+    'user_model' => env('CANVAS_USER_MODEL', 'App\Models\User'),
 
     /*
     |--------------------------------------------------------------------------
