@@ -4,6 +4,7 @@ namespace Canvas\Listeners;
 
 use Canvas\Events\PostViewed;
 use Canvas\Models\Post;
+use Canvas\Support\BotDetector;
 use Canvas\Support\Referer;
 
 class CaptureVisit
@@ -15,14 +16,18 @@ class CaptureVisit
      */
     public function handle(PostViewed $event): void
     {
-        $ip = request()->getClientIp();
+        if (BotDetector::isBot($event->agent)) {
+            return;
+        }
+
+        $ip = $event->ip;
 
         if ($this->visitIsUnique($event->post, $ip)) {
             $data = [
                 'post_id' => $event->post->id,
                 'ip' => $ip,
-                'agent' => request()->header('user_agent'),
-                'referer' => Referer::host(request()->header('referer')),
+                'agent' => $event->agent,
+                'referer' => Referer::host($event->referer),
             ];
 
             $event->post->visits()->create($data);
@@ -41,7 +46,7 @@ class CaptureVisit
         if (array_key_exists($post->id, $visits)) {
             $visit = $visits[$post->id];
 
-            return $visit['ip'] != $ip;
+            return $visit['ip'] !== $ip;
         } else {
             return true;
         }

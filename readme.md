@@ -247,10 +247,15 @@ $post = Canvas\Models\Post::with('user', 'tags', 'topic')->firstWhere('slug', $s
 ```
 
 > **Important:** In the same method that returns a post, make sure you fire the `PostViewed` event, or else a 
-> view/visit will not be recorded.
+> view/visit will not be recorded. Pass the current request context so that views and visits are accurately captured.
 
 ```php
-event(new Canvas\Events\PostViewed($post));
+event(new Canvas\Events\PostViewed(
+    post: $post,
+    ip: request()->ip(),
+    agent: request()->userAgent(),
+    referer: request()->header('referer'),
+));
 ```
 
 You can find a tag by a given slug:

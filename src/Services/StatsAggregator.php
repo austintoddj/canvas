@@ -5,11 +5,7 @@ namespace Canvas\Services;
 use Canvas\Models\Post;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
-use Canvas\Support\Referer;
-use Carbon\CarbonInterval;
-use DateInterval;
-use DatePeriod;
-use DateTimeInterface;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
@@ -34,21 +30,23 @@ class StatsAggregator
      */
     public function getStatsForPosts(Collection $posts, int $days = 30): array
     {
+        $postIds = $posts->pluck('id');
+        $range = [
+            today()->subDays($days)->startOfDay()->toDateTimeString(),
+            today()->endOfDay()->toDateTimeString(),
+        ];
+
         $views = View::query()
             ->select('created_at')
-            ->whereIn('post_id', $posts->pluck('id'))
-            ->whereBetween('created_at', [
-                today()->subDays($days)->startOfDay()->toDateTimeString(),
-                today()->endOfDay()->toDateTimeString(),
-            ])->get();
+            ->whereIn('post_id', $postIds)
+            ->whereBetween('created_at', $range)
+            ->get();
 
         $visits = Visit::query()
             ->select('created_at')
-            ->whereIn('post_id', $posts->pluck('id'))
-            ->whereBetween('created_at', [
-                today()->subDays($days)->startOfDay()->toDateTimeString(),
-                today()->endOfDay()->toDateTimeString(),
-            ])->get();
+            ->whereIn('post_id', $postIds)
+            ->whereBetween('created_at', $range)
+            ->get();
 
         return [
             'views' => $views->count(),
@@ -90,6 +88,7 @@ class StatsAggregator
             'readTime' => $this->calculateReadTime($post->body),
             'popularReadingTimes' => $this->calculatePopularReadingTimes($post),
             'topReferers' => $this->calculateTopReferers($post),
+            'topBrowsers' => $this->calculateTopBrowsers($post),
             'monthlyViews' => $currentViews->count(),
             'totalViews' => $post->views->count(),
             'monthlyVisits' => $currentVisits->count(),
@@ -103,38 +102,15 @@ class StatsAggregator
     }
 
     /**
-     * Given a collection of Views or Visits, return an array of formatted
-     * date strings and their related counts for a given number of days.
-     *
-     * example: [ Y-m-d => total ]
+     * Given a collection of Views or Visits, return a keyed collection of
+     * date strings to counts for a given number of days: [ Y-m-d => total ]
      */
     protected function calculateTotalForDays(Collection $data, int $days = 30): Collection
     {
-        // Filter the data to only include created_at date strings
-        $filtered = new Collection;
+        $counts = $data->countBy(fn ($item) => $item->created_at->toDateString());
 
-        $data->sortBy('created_at')->each(function ($item) use ($filtered) {
-            $filtered->push($item->created_at->toDateString());
-        });
-
-        // Count the unique values and assign to their respective keys
-        $unique = array_count_values($filtered->toArray());
-
-        // Create a day range to hold the default date values
-        $period = $this->generateDateRange(today()->subDays($days), CarbonInterval::day(), $days);
-
-        // Compare the data and date range arrays, assigning counts where applicable
-        $results = new Collection;
-
-        foreach ($period as $date) {
-            if (array_key_exists($date, $unique)) {
-                $results->put($date, $unique[$date]);
-            } else {
-                $results->put($date, 0);
-            }
-        }
-
-        return $results;
+        return collect(CarbonPeriod::create(today()->subDays($days), today()))
+            ->mapWithKeys(fn ($date) => [$date->format('Y-m-d') => $counts->get($date->format('Y-m-d'), 0)]);
     }
 
     /**
@@ -143,39 +119,19 @@ class StatsAggregator
      */
     protected function compareMonthOverMonth(Collection $current, Collection $previous): array
     {
-        $dataCountThisMonth = $current->count();
-        $dataCountLastMonth = $previous->count();
+        $thisMonth = $current->count();
+        $lastMonth = $previous->count();
 
-        if ($dataCountLastMonth != 0) {
-            $difference = (int) $dataCountThisMonth - (int) $dataCountLastMonth;
-            $growth = ($difference / $dataCountLastMonth) * 100;
+        if ($lastMonth !== 0) {
+            $growth = (($thisMonth - $lastMonth) / $lastMonth) * 100;
         } else {
-            $growth = $dataCountThisMonth * 100;
+            $growth = $thisMonth * 100;
         }
 
         return [
-            'direction' => $dataCountThisMonth > $dataCountLastMonth ? 'up' : 'down',
+            'direction' => $thisMonth > $lastMonth ? 'up' : 'down',
             'percentage' => number_format(abs($growth)),
         ];
-    }
-
-    /**
-     * Generate a date range array of formatted strings.
-     */
-    protected function generateDateRange(
-        DateTimeInterface $start_date,
-        DateInterval $interval,
-        int $recurrences,
-        int $exclusive = 1
-    ): array {
-        $period = new DatePeriod($start_date, $interval, $recurrences, $exclusive);
-        $dates = new Collection;
-
-        foreach ($period as $date) {
-            $dates->push($date->format('Y-m-d'));
-        }
-
-        return $dates->toArray();
     }
 
     /**
@@ -183,15 +139,10 @@ class StatsAggregator
      */
     protected function calculateReadTime(?string $text): string
     {
-        // Only count words in our estimation
-        $words = str_word_count(strip_tags($text));
+        $minutes = (int) ceil(str_word_count(strip_tags((string) $text)) / 250);
 
-        // Divide by the average number of words per minute
-        $minutes = ceil($words / 250);
-
-        // The user is optional since we append this attribute
-        // to every model and we may be creating a new one
-        return sprintf('%d %s %s',
+        return sprintf(
+            '%d %s %s',
             $minutes,
             Str::plural(trans('canvas::app.min', [], optional($this->user)->locale), $minutes),
             trans('canvas::app.read', [], optional($this->user)->locale)
@@ -199,79 +150,81 @@ class StatsAggregator
     }
 
     /**
-     * Get the 10 most popular reading times rounded to the nearest 30 minutes.
+     * Get the top 5 most popular reading times as hour ranges with percentages.
      */
     protected function calculatePopularReadingTimes(Post $post): array
     {
-        // Get the views associated with the post
         $data = $post->views;
+        $total = $data->count();
 
-        // Filter the view data to only include hours:minutes
-        $collection = new Collection;
-        $data->each(function ($item, $key) use ($collection) {
-            $collection->push($item->created_at->minute(0)->format('H:i'));
-        });
-
-        // Count the unique values and assign to their respective keys
-        $filtered = array_count_values($collection->toArray());
-
-        $popularReadingTimes = new Collection;
-        foreach ($filtered as $key => $value) {
-            // Use each given time to create a 60 min range
-            $start = Date::createFromTimeString($key);
-            $end = $start->copy()->addMinutes(60);
-
-            // Find the percentage based on the value
-            $percentage = number_format($value / $data->count() * 100, 2);
-
-            // Get a human-readable hour range and floating percentage
-            $popularReadingTimes->put(
-                sprintf('%s - %s', $start->format('g:i A'), $end->format('g:i A')),
-                $percentage
-            );
+        if ($total === 0) {
+            return [];
         }
 
-        // Cast the collection to an array
-        $array = $popularReadingTimes->toArray();
+        $results = [];
 
-        // Only return the top 5 reading times and percentages
-        $sliced = array_slice($array, 0, 5, true);
+        foreach ($data->countBy(fn ($item) => $item->created_at->minute(0)->format('H:i')) as $time => $count) {
+            $start = Date::createFromTimeString($time);
+            $end = $start->copy()->addMinutes(60);
+            $results[sprintf('%s - %s', $start->format('g:i A'), $end->format('g:i A'))] = number_format($count / $total * 100, 2);
+        }
 
-        // Sort the array in a descending order
-        arsort($sliced);
+        arsort($results);
 
-        return $sliced;
+        return array_slice($results, 0, 5, true);
     }
 
     /**
-     * Get the top referring websites for a post.
+     * Get the top 10 referring websites for a post.
+     *
+     * The referer stored in canvas_views is already a processed hostname
+     * (e.g. "google.com"), so no further URL parsing is needed here.
      */
     protected function calculateTopReferers(Post $post): array
     {
-        // Get the views associated with the post
-        $data = $post->views;
+        $other = trans('canvas::app.other', [], $this->user->locale);
 
-        // Filter the view data to only include referrers
-        $collection = new Collection;
-        $data->each(function ($item, $key) use ($collection) {
-            $host = Referer::host($item->referer);
+        $results = $post->views
+            ->countBy(fn ($item) => $item->referer ?: $other)
+            ->all();
 
-            if (empty($host)) {
-                $collection->push(trans('canvas::app.other', [], $this->user->locale));
-            } else {
-                $collection->push($host);
-            }
-        });
+        arsort($results);
 
-        // Count the unique values and assign to their respective keys
-        $array = array_count_values($collection->toArray());
+        return array_slice($results, 0, 10, true);
+    }
 
-        // Only return the top N referrers with their view count
-        $sliced = array_slice($array, 0, 10, true);
+    /**
+     * Get the top 5 browsers used to view a post, derived from stored user-agent strings.
+     */
+    protected function calculateTopBrowsers(Post $post): array
+    {
+        $results = $post->views
+            ->countBy(fn ($item) => $this->parseBrowser($item->agent))
+            ->all();
 
-        // Sort the array in a descending order
-        arsort($sliced);
+        arsort($results);
 
-        return $sliced;
+        return array_slice($results, 0, 5, true);
+    }
+
+    /**
+     * Map a user-agent string to a friendly browser name.
+     */
+    private function parseBrowser(?string $agent): string
+    {
+        if (! $agent) {
+            return trans('canvas::app.other', [], $this->user->locale);
+        }
+
+        $lower = strtolower($agent);
+
+        return match (true) {
+            str_contains($lower, 'edg') => 'Edge',
+            str_contains($lower, 'chrome') => 'Chrome',
+            str_contains($lower, 'firefox') => 'Firefox',
+            str_contains($lower, 'safari') => 'Safari',
+            str_contains($lower, 'opr') || str_contains($lower, 'opera') => 'Opera',
+            default => trans('canvas::app.other', [], $this->user->locale),
+        };
     }
 }

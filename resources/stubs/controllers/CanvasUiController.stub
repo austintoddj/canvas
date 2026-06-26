@@ -32,7 +32,12 @@ class CanvasUiController extends Controller
             abort(404);
         }
 
-        event(new PostViewed($post));
+        event(new PostViewed(
+            post: $post,
+            ip: request()->ip(),
+            agent: request()->userAgent(),
+            referer: request()->header('referer'),
+        ));
 
         return view('canvas::ui.show', compact('post'));
     }

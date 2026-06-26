@@ -16,23 +16,24 @@ class Session
      */
     public function handle(Request $request, Closure $next)
     {
-        $viewedPosts = collect(session()->get('viewed_posts'));
-        $visitedPosts = collect(session()->get('visited_posts'));
+        if (session()->has('viewed_posts')) {
+            $stale = collect(session()->get('viewed_posts'))
+                ->filter(fn ($timestamp) => $timestamp < now()->subHour()->timestamp)
+                ->keys()
+                ->map(fn ($id) => "viewed_posts.{$id}")
+                ->all();
 
-        if ($viewedPosts->isNotEmpty()) {
-            $viewedPosts->each(function ($timestamp, $id) {
-                if ($timestamp < now()->subSeconds(3600)->timestamp) {
-                    session()->forget("viewed_posts.{$id}");
-                }
-            });
+            session()->forget($stale);
         }
 
-        if ($visitedPosts->isNotEmpty()) {
-            $visitedPosts->each(function ($item, $id) {
-                if (! Date::createFromTimestamp($item['timestamp'])->isToday()) {
-                    session()->forget("visited_posts.{$id}");
-                }
-            });
+        if (session()->has('visited_posts')) {
+            $stale = collect(session()->get('visited_posts'))
+                ->filter(fn ($item) => ! Date::createFromTimestamp($item['timestamp'])->isToday())
+                ->keys()
+                ->map(fn ($id) => "visited_posts.{$id}")
+                ->all();
+
+            session()->forget($stale);
         }
 
         return $next($request);

@@ -25,6 +25,20 @@
 - Removed `Canvas\Http\Middleware\Admin`; Canvas now uses Laravel gate/policy authorization via `can:` middleware.
 - Replaced the package `User` model with `Canvas\Models\CanvasUser` for role metadata.
 - Added configurable `canvas.user_model` and `canvas.guard` settings.
+- **`PostViewed` constructor signature changed.** The event now requires `ip`, `agent`, and `referer` in addition to `post`. If you fire the event manually in a custom controller, update your call:
+
+  ```php
+  // Before (v6)
+  event(new Canvas\Events\PostViewed($post));
+
+  // After (v7)
+  event(new Canvas\Events\PostViewed(
+      post: $post,
+      ip: request()->ip(),
+      agent: request()->userAgent(),
+      referer: request()->header('referer'),
+  ));
+  ```
 
 ### Before upgrading
 

@@ -4,6 +4,7 @@ namespace Canvas\Listeners;
 
 use Canvas\Events\PostViewed;
 use Canvas\Models\Post;
+use Canvas\Support\BotDetector;
 use Canvas\Support\Referer;
 
 class CaptureView
@@ -15,12 +16,16 @@ class CaptureView
      */
     public function handle(PostViewed $event): void
     {
+        if (BotDetector::isBot($event->agent)) {
+            return;
+        }
+
         if (! $this->wasRecentlyViewed($event->post)) {
             $data = [
                 'post_id' => $event->post->id,
-                'ip' => request()->getClientIp(),
-                'agent' => request()->header('user_agent'),
-                'referer' => Referer::host(request()->header('referer')),
+                'ip' => $event->ip,
+                'agent' => $event->agent,
+                'referer' => Referer::host($event->referer),
             ];
 
             $event->post->views()->create($data);
