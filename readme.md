@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://trycanvas.app">
-        <img src=".github/docs/header.png" alt="Homepage for trycanvas.app">
+        <img src=".github/docs/readme.png" alt="Homepage for trycanvas.app">
     </a>
 </p>
 
@@ -123,7 +123,29 @@ Canvas comes with 3 pre-defined roles out-of-the-box:
 - **Editor** (A user who can publish and manage posts including the posts of other users)
 - **Admin** (A user who can do everything and see everything)
 
-When you install a fresh version of Canvas, you'll have a default admin user set up automatically. From there, you can perform any basic CRUD actions on users, as well as assign their various roles.
+After installing Canvas, create or sign in to a user account in your application, then grant yourself admin access via the CLI:
+
+```bash
+php artisan canvas:make-admin your@email.com
+```
+
+## Artisan Commands
+
+Canvas includes several CLI commands for managing users and access:
+
+```bash
+# List all users with Canvas access
+php artisan canvas:list-users
+
+# Grant a user admin access (accepts email or ID)
+php artisan canvas:make-admin your@email.com
+
+# Assign a specific role (contributor, editor, or admin)
+php artisan canvas:assign-role your@email.com editor
+
+# Revoke Canvas access from a user
+php artisan canvas:remove-access your@email.com
+```
 
 ## Canvas UI
 
@@ -169,20 +191,19 @@ that you'd like.
 ]
 ```
 
-## E-mail Notifications
+## Email Notifications
 
 **Want a weekly summary?** Canvas allows users to receive a weekly digest of their authored content. Once your application is [configured for sending mail](https://laravel.com/docs/mail), update `config/canvas.php`:
 
 ```php
 /*
 |--------------------------------------------------------------------------
-| E-Mail Notifications
+| Email Notifications
 |--------------------------------------------------------------------------
 |
-| This option controls e-mail notifications that will be sent via the
+| This option controls email notifications that will be sent via the
 | default application mail driver. A default option is provided to
 | support the notification system as an opt-in feature.
-|
 |
 */
 
@@ -191,15 +212,17 @@ that you'd like.
 ]
 ```
 
-Since this feature runs on [Laravel's Scheduler](https://laravel.com/docs/scheduling), you'll need to add the 
-following cron entry to your server:
+Since this feature runs on [Laravel's Scheduler](https://laravel.com/docs/scheduling), you'll need to add the following cron entry to your server:
 
 ```bash
 * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-If you keep the published `app/Providers/CanvasServiceProvider.php`, the `canvas:digest` schedule is preconfigured.
-If you remove it, register your own schedule entry for `canvas:digest` in your application's scheduler.
+Canvas automatically schedules `canvas:digest` to run weekly when `mail.enabled` is `true`. Optionally, you can publish the `CanvasServiceProvider` stub to customize the schedule day, time, and timezone:
+
+```bash
+php artisan vendor:publish --tag=canvas-provider
+```
 
 ## API
 
