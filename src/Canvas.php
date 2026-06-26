@@ -123,7 +123,7 @@ class Canvas
      */
     public static function enabledDarkMode(?int $enabled): bool
     {
-        return (bool) $enabled ?: false;
+        return (bool)$enabled;
     }
 
     /**
