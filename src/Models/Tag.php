@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Models;
 
 use Canvas\Database\Factories\TagFactory;
@@ -28,13 +30,6 @@ class Tag extends Model
      * @var array
      */
     protected $guarded = [];
-
-    /**
-     * The primary key for the model.
-     *
-     * @var string
-     */
-    protected $primaryKey = 'id';
 
     /**
      * The "type" of the auto-incrementing ID.
@@ -83,13 +78,9 @@ class Tag extends Model
 
     /**
      * The "booting" method of the model.
-     *
-     * @return void
      */
-    protected static function boot()
+    protected static function booted(): void
     {
-        parent::boot();
-
         static::deleting(function (self $tag) {
             $tag->posts()->detach();
         });

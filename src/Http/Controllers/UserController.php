@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Controllers;
 
 use Canvas\Enums\Role;
@@ -50,7 +52,7 @@ class UserController extends Controller
     public function store(UserRequest $request, $id): JsonResponse
     {
         $data = $request->validated();
-        $currentUser = $request->user(config('canvas.guard'));
+        $currentUser = request()->user(config('canvas.guard'));
         $userModel = config('canvas.user_model');
 
         $user = $userModel::query()->find($id);
@@ -58,18 +60,17 @@ class UserController extends Controller
         if (! $user) {
             Gate::forUser($currentUser)->authorize('create', $userModel);
 
-            if ($user = $userModel::onlyTrashed()->firstWhere('email', $data['email'])) {
-                $user->restore();
+            // Restore a previously soft-deleted account with the same email.
+            if ($restored = $userModel::onlyTrashed()->firstWhere('email', $data['email'])) {
+                $restored->restore();
 
                 return response()->json([
-                    'user' => $user->refresh(),
-                    'i18n' => collect(trans('canvas::app', [], $user->locale))->toJson(),
+                    'user' => $restored->refresh(),
+                    'i18n' => collect(trans('canvas::app', [], $restored->locale))->toJson(),
                 ], 201);
-            } else {
-                $user = new $userModel([
-                    'id' => $id,
-                ]);
             }
+
+            $user = new $userModel(['id' => $id]);
         } else {
             Gate::forUser($currentUser)->authorize('update', $user);
         }

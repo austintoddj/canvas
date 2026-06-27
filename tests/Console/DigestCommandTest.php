@@ -40,19 +40,16 @@ it('sends digest emails to users with mail enabled', function (): void {
     $this->artisan('canvas:digest');
 
     Mail::assertSent(WeeklyDigest::class, function ($mail) use ($user) {
-        $this->assertArrayHasKey('posts', $mail->data);
-        $this->assertIsArray($mail->data['posts']);
+        $this->assertIsArray($mail->posts);
+        $this->assertArrayHasKey('views_count', $mail->posts[0]);
+        $this->assertArrayHasKey('visits_count', $mail->posts[0]);
 
-        $this->assertArrayHasKey('views_count', $mail->data['posts'][0]);
-        $this->assertArrayHasKey('visits_count', $mail->data['posts'][0]);
+        $this->assertSame(4, $mail->totals['views']);
+        $this->assertSame(2, $mail->totals['visits']);
 
-        $this->assertArrayHasKey('totals', $mail->data);
-        $this->assertSame(4, $mail->data['totals']['views']);
-        $this->assertSame(2, $mail->data['totals']['visits']);
-
-        $this->assertArrayHasKey('startDate', $mail->data);
-        $this->assertArrayHasKey('endDate', $mail->data);
-        $this->assertArrayHasKey('locale', $mail->data);
+        $this->assertNotEmpty($mail->startDate);
+        $this->assertNotEmpty($mail->endDate);
+        $this->assertNotEmpty($mail->locale);
 
         return $mail->hasTo($user->email);
     });

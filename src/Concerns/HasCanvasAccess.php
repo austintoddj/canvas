@@ -9,6 +9,7 @@ use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -34,33 +35,33 @@ trait HasCanvasAccess
         return $this->hasMany(Topic::class, 'user_id');
     }
 
-    public function getCanvasRoleAttribute(): ?Role
+    protected function canvasRole(): Attribute
     {
-        return $this->canvasUser?->role;
+        return Attribute::get(fn () => $this->canvasUser?->role);
     }
 
-    public function getIsContributorAttribute(): bool
+    protected function isContributor(): Attribute
     {
-        return $this->canvasRole === Role::Contributor;
+        return Attribute::get(fn () => $this->canvasRole === Role::Contributor);
     }
 
-    public function getIsEditorAttribute(): bool
+    protected function isEditor(): Attribute
     {
-        return $this->canvasRole === Role::Editor;
+        return Attribute::get(fn () => $this->canvasRole === Role::Editor);
     }
 
-    public function getIsAdminAttribute(): bool
+    protected function isAdmin(): Attribute
     {
-        return $this->canvasRole === Role::Admin;
+        return Attribute::get(fn () => $this->canvasRole === Role::Admin);
     }
 
-    public function getDarkModeAttribute(): bool
+    protected function darkMode(): Attribute
     {
-        return (bool) ($this->canvasUser?->dark_mode ?? false);
+        return Attribute::get(fn () => (bool) ($this->canvasUser?->dark_mode ?? false));
     }
 
-    public function getDigestAttribute(): bool
+    protected function digest(): Attribute
     {
-        return (bool) ($this->canvasUser?->digest ?? false);
+        return Attribute::get(fn () => (bool) ($this->canvasUser?->digest ?? false));
     }
 }

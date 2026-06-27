@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Listeners;
 
 use Canvas\Events\PostViewed;
@@ -43,13 +45,8 @@ class CaptureVisit
     {
         $visits = session()->get('visited_posts', []);
 
-        if (array_key_exists($post->id, $visits)) {
-            $visit = $visits[$post->id];
-
-            return $visit['ip'] !== $ip;
-        } else {
-            return true;
-        }
+        return ! array_key_exists($post->id, $visits)
+            || $visits[$post->id]['ip'] !== $ip;
     }
 
     /**

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Requests;
 
 use Illuminate\Validation\Rule;
@@ -30,8 +32,8 @@ class PostRequest extends FormRequest
                 'required',
                 'alpha_dash',
                 Rule::unique('canvas_posts')->where(function ($query) use ($user) {
-                    return $query->where('slug', request('slug'))->where('user_id', $user->id);
-                })->ignore(request('id'))->whereNull('deleted_at'),
+                    return $query->where('slug', $this->input('slug'))->where('user_id', $user->id);
+                })->ignore($this->route('id'))->whereNull('deleted_at'),
             ],
             'title' => 'required',
             'summary' => 'nullable|string',

@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Models;
 
 use Canvas\Database\Factories\PostFactory;
+use Canvas\Support\ReadTime;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 
 class Post extends Model
 {
@@ -31,13 +33,6 @@ class Post extends Model
      * @var array
      */
     protected $guarded = [];
-
-    /**
-     * The primary key for the model.
-     *
-     * @var string
-     */
-    protected $primaryKey = 'id';
 
     /**
      * The "type" of the auto-incrementing ID.
@@ -137,20 +132,7 @@ class Post extends Model
      */
     public function getReadTimeAttribute(): string
     {
-        // Only count words in our estimation
-        $words = str_word_count(strip_tags($this->body));
-
-        // Divide by the average number of words per minute
-        $minutes = ceil($words / 250);
-
-        // The user is optional since we append this attribute
-        // to every model and we may be creating a new one
-        return vsprintf('%d %s %s', [
-            $minutes,
-            Str::plural(trans('canvas::app.min', [], optional(request()->user())->locale), $minutes),
-            trans('canvas::app.read', [], optional(request()->user())->locale),
-        ]
-        );
+        return ReadTime::calculate($this->body, request()->user()?->locale);
     }
 
     /**
@@ -174,18 +156,17 @@ class Post extends Model
      */
     public function scopeDraft(Builder $query): Builder
     {
-        return $query->where('published_at', '=', null)->orWhere('published_at', '>', now()->toDateTimeString());
+        return $query->where(fn (Builder $q) => $q
+            ->whereNull('published_at')
+            ->orWhere('published_at', '>', now())
+        );
     }
 
     /**
      * The "booting" method of the model.
-     *
-     * @return void
      */
-    protected static function boot()
+    protected static function booted(): void
     {
-        parent::boot();
-
         static::deleting(function (self $post) {
             $post->tags()->detach();
         });

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Console;
 
 use Canvas\Mail\WeeklyDigest;
@@ -26,51 +28,40 @@ class DigestCommand extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return void
      */
-    public function handle()
+    public function handle(): int
     {
         $startDate = today()->subDays(7)->startOfDay();
         $endDate = today()->endOfDay();
 
         $userModel = config('canvas.user_model');
 
-        $recipients = $userModel::whereIn('id', Post::published()->pluck('user_id')->unique())->get();
+        $recipients = $userModel::with('canvasUser')
+            ->whereHas('canvasUser', fn (Builder $query) => $query->where('digest', true))
+            ->whereIn('id', Post::published()->pluck('user_id')->unique())
+            ->get();
 
         foreach ($recipients as $user) {
-            if (! $user->digest) {
-                continue;
-            }
-
             $posts = Post::where('user_id', $user->id)
                 ->published()
-                ->withCount(['views' => function (Builder $query) use ($startDate, $endDate) {
-                    $query->whereBetween('created_at', [
-                        $startDate,
-                        $endDate,
-                    ]);
-                }])
-                ->withCount(['visits' => function (Builder $query) use ($startDate, $endDate) {
-                    $query->whereBetween('created_at', [
-                        $startDate,
-                        $endDate,
-                    ]);
-                }])
+                ->withCount([
+                    'views' => fn (Builder $query) => $query->whereBetween('created_at', [$startDate, $endDate]),
+                    'visits' => fn (Builder $query) => $query->whereBetween('created_at', [$startDate, $endDate]),
+                ])
                 ->get();
 
-            $data = [
-                'posts' => $posts->toArray(),
-                'totals' => [
+            Mail::to($user->email)->send(new WeeklyDigest(
+                posts: $posts->toArray(),
+                totals: [
                     'views' => $posts->sum('views_count'),
                     'visits' => $posts->sum('visits_count'),
                 ],
-                'startDate' => $startDate->format('M j'),
-                'endDate' => $endDate->format('M j'),
-                'locale' => $user->locale,
-            ];
-
-            Mail::to($user->email)->send(new WeeklyDigest($data));
+                startDate: $startDate->format('M j'),
+                endDate: $endDate->format('M j'),
+                locale: $user->locale,
+            ));
         }
+
+        return self::SUCCESS;
     }
 }

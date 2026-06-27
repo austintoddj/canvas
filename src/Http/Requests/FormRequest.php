@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Requests;
 
 use Illuminate\Auth\Access\AuthorizationException;

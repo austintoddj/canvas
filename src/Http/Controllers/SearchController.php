@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Controllers;
 
 use Canvas\Models\Post;

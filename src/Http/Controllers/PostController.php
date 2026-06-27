@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Controllers;
 
+use Canvas\Analytics\PostInsights;
 use Canvas\Http\Requests\PostRequest;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
-use Canvas\Services\StatsAggregator;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -29,11 +31,11 @@ class PostController extends Controller
 
         $posts = (clone $baseQuery)
             ->select('id', 'title', 'summary', 'featured_image', 'published_at', 'created_at', 'updated_at')
-            ->when(request()->query('type', 'published') != 'draft', function (Builder $query) {
-                return $query->published();
-            }, function (Builder $query) {
-                return $query->draft();
-            })
+            ->when(
+                request()->query('type') === 'draft',
+                fn (Builder $query) => $query->draft(),
+                fn (Builder $query) => $query->published(),
+            )
             ->latest()
             ->withCount('views')
             ->paginate();
@@ -65,13 +67,12 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     *
      * @throws Exception
      */
     public function store(PostRequest $request, $id): JsonResponse
     {
         $data = $request->validated();
-        $user = $request->user(config('canvas.guard'));
+        $user = request()->user(config('canvas.guard'));
 
         $post = Post::query()->with('tags', 'topic')->find($id);
 
@@ -79,50 +80,14 @@ class PostController extends Controller
             throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
         }
 
-        if (! $post) {
-            $post = new Post(['id' => $id]);
-        }
+        $post ??= new Post(['id' => $id]);
 
         $post->fill($data);
-
-        $post->user_id = $post->user_id ?? $user->id;
-
-        $tags = Tag::query()->get(['id', 'name', 'slug']);
-
-        $tagsToSync = collect($request->input('tags', []))->map(function ($item) use ($tags, $user) {
-            $tag = $tags->firstWhere('slug', $item['slug']);
-
-            if (! $tag) {
-                $tag = Tag::create([
-                    'id' => $id = Uuid::uuid4()->toString(),
-                    'name' => $item['name'],
-                    'slug' => $item['slug'],
-                    'user_id' => $user->id,
-                ]);
-            }
-
-            return (string) $tag->id;
-        })->toArray();
-
-        $topicInput = collect($request->input('topic', []))->first();
-
-        if ($topicInput) {
-            $topic = Topic::query()->firstWhere('slug', $topicInput['slug'])
-                ?? Topic::create([
-                    'id' => Uuid::uuid4()->toString(),
-                    'name' => $topicInput['name'],
-                    'slug' => $topicInput['slug'],
-                    'user_id' => $user->id,
-                ]);
-
-            $post->topic_id = $topic->id;
-        } else {
-            $post->topic_id = null;
-        }
-
+        $post->user_id ??= $user->id;
+        $post->topic_id = $this->resolveTopicId($request->input('topic', []), $user);
         $post->save();
 
-        $post->tags()->sync($tagsToSync);
+        $post->tags()->sync($this->resolveTagsForSync($request->input('tags', []), $user));
 
         return response()->json($post->refresh(), 201);
     }
@@ -154,11 +119,9 @@ class PostController extends Controller
             throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
         }
 
-        $stats = new StatsAggregator(request()->user(config('canvas.guard')));
-
-        $results = $stats->getStatsForPost($post);
-
-        return response()->json($results);
+        return response()->json(
+            PostInsights::for($post, request()->user(config('canvas.guard'))?->locale)
+        );
     }
 
     /**
@@ -179,9 +142,7 @@ class PostController extends Controller
 
     private function ensurePostIsVisibleToCurrentUser(Post $post): void
     {
-        $user = request()->user(config('canvas.guard'));
-
-        if (Gate::forUser($user)->denies('view', $post)) {
+        if (Gate::forUser(request()->user(config('canvas.guard')))->denies('view', $post)) {
             throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
         }
     }
@@ -192,5 +153,41 @@ class PostController extends Controller
             ! $canViewAll || request()->query('scope', 'user') !== 'all',
             fn (Builder $query) => $query->where('user_id', $user->id)
         );
+    }
+
+    /**
+     * Find or create tags from the given input and return their IDs for sync.
+     */
+    private function resolveTagsForSync(array $tagInputs, mixed $user): array
+    {
+        $existing = Tag::query()->get(['id', 'name', 'slug']);
+
+        return collect($tagInputs)->map(function (array $item) use ($existing, $user): string {
+            return (string) ($existing->firstWhere('slug', $item['slug']) ?? Tag::create([
+                'id' => Uuid::uuid4()->toString(),
+                'name' => $item['name'],
+                'slug' => $item['slug'],
+                'user_id' => $user->id,
+            ]))->id;
+        })->toArray();
+    }
+
+    /**
+     * Find or create a topic from the given input and return its ID, or null.
+     */
+    private function resolveTopicId(array $topicInput, mixed $user): ?string
+    {
+        $input = collect($topicInput)->first();
+
+        if (! $input) {
+            return null;
+        }
+
+        return (string) (Topic::query()->firstWhere('slug', $input['slug']) ?? Topic::create([
+            'id' => Uuid::uuid4()->toString(),
+            'name' => $input['name'],
+            'slug' => $input['slug'],
+            'user_id' => $user->id,
+        ]))->id;
     }
 }

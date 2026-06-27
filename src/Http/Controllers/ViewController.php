@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Controllers;
 
 use Canvas\Support\FrontendBootData;
@@ -10,10 +12,8 @@ class ViewController extends Controller
 {
     public function __invoke(): View
     {
-        $user = request()->user(config('canvas.guard'));
-
         return view('canvas::layout')->with([
-            'jsVars' => FrontendBootData::forUser($user),
+            'jsVars' => FrontendBootData::forUser(request()->user(config('canvas.guard'))),
         ]);
     }
 }

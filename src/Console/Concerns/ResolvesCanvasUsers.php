@@ -27,12 +27,8 @@ trait ResolvesCanvasUsers
 
     protected function resolveRole(string $value): ?Role
     {
-        return match (Str::lower($value)) {
-            'contributor' => Role::Contributor,
-            'editor' => Role::Editor,
-            'admin' => Role::Admin,
-            default => null,
-        };
+        return collect(Role::cases())
+            ->first(fn (Role $role) => Str::lower($role->name) === Str::lower($value));
     }
 
     protected function currentRole(Model $user): ?Role
