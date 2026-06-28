@@ -18,14 +18,12 @@ class WeeklyDigest extends Mailable
      * Create a new message instance.
      */
     public function __construct(
+        public readonly string $userName,
         public readonly array $posts,
         public readonly array $totals,
         public readonly string $startDate,
         public readonly string $endDate,
-        string $locale,
-    ) {
-        $this->locale = $locale;
-    }
+    ) {}
 
     /**
      * Get the message envelope.
@@ -33,9 +31,8 @@ class WeeklyDigest extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: config('mail.from.address'),
             subject: sprintf('%s: %s - %s',
-                trans('canvas::app.stats_for_your_posts', [], $this->locale),
+                __('canvas::app.stats_for_your_posts'),
                 $this->startDate,
                 $this->endDate,
             ),

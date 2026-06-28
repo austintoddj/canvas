@@ -66,7 +66,6 @@ class UserController extends Controller
 
                 return response()->json([
                     'user' => $restored->refresh(),
-                    'i18n' => collect(trans('canvas::app', [], $restored->locale))->toJson(),
                 ], 201);
             }
 
@@ -94,7 +93,6 @@ class UserController extends Controller
 
         return response()->json([
             'user' => $user->refresh(),
-            'i18n' => collect(trans('canvas::app', [], $user->locale))->toJson(),
         ], 201);
     }
 

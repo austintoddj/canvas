@@ -48,9 +48,11 @@ class DigestCommand extends Command
                     'views' => fn (Builder $query) => $query->whereBetween('created_at', [$startDate, $endDate]),
                     'visits' => fn (Builder $query) => $query->whereBetween('created_at', [$startDate, $endDate]),
                 ])
+                ->orderByDesc('views_count')
                 ->get();
 
-            Mail::to($user->email)->send(new WeeklyDigest(
+            Mail::to($user->email)->locale($user->locale)->send(new WeeklyDigest(
+                userName: $user->name,
                 posts: $posts->toArray(),
                 totals: [
                     'views' => $posts->sum('views_count'),
@@ -58,7 +60,6 @@ class DigestCommand extends Command
                 ],
                 startDate: $startDate->format('M j'),
                 endDate: $endDate->format('M j'),
-                locale: $user->locale,
             ));
         }
 
