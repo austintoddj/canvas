@@ -21,6 +21,7 @@ use Canvas\Models\Post;
 use Canvas\Policies\PostPolicy;
 use Canvas\Policies\UserPolicy;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Validation\ValidatesWhenResolved;
 use Illuminate\Events\Dispatcher;
@@ -39,6 +40,9 @@ class CanvasServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/canvas.php', 'canvas');
     }
 
+    /**
+     * @throws BindingResolutionException
+     */
     public function boot(): void
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'canvas');
@@ -53,6 +57,9 @@ class CanvasServiceProvider extends ServiceProvider
         $this->registerScheduler();
     }
 
+    /**
+     * @throws BindingResolutionException
+     */
     private function registerEvents(): void
     {
         $mappings = [
@@ -172,7 +179,7 @@ class CanvasServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../public/build' => public_path('vendor/canvas'),
+                __DIR__.'/../public/vendor/canvas' => public_path('vendor/canvas'),
             ], 'canvas-assets');
 
             $this->publishes([

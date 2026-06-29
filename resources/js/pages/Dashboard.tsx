@@ -4,7 +4,7 @@ import { Heading } from '@/components/heading';
 export default function Dashboard() {
     return (
         <>
-            <Heading>Home</Heading>
+            <Heading>Dashboard</Heading>
             <Divider className="mt-6" />
         </>
     );

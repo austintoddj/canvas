@@ -3,8 +3,6 @@
 use Canvas\Support\FrontendBootData;
 
 it('returns script variables', function (): void {
-    $this->withoutMix();
-
     config()->set('canvas.unsplash.access_key', 'test-access-key');
 
     $response = $this->actingAs($this->admin, 'canvas')

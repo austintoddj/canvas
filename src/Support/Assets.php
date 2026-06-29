@@ -6,7 +6,6 @@ namespace Canvas\Support;
 
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Facades\File;
-use RuntimeException;
 
 final class Assets
 {
@@ -19,19 +18,18 @@ final class Assets
             return true;
         }
 
-        $path = public_path('vendor/canvas/.vite/manifest.json');
+        $hotFile = public_path('vendor/canvas/canvas.hot');
 
-        $message = sprintf(
-            '%s%s.  %s',
-            trans('canvas::app.assets_are_not_up_to_date'),
-            trans('canvas::app.to_update_run'),
-            'php artisan canvas:publish'
-        );
-
-        if (! File::exists($path)) {
-            throw new RuntimeException($message);
+        if (File::exists($hotFile)) {
+            return true;
         }
 
-        return File::get($path) === File::get(__DIR__.'/../../public/build/.vite/manifest.json');
+        $path = public_path('vendor/canvas/manifest.json');
+
+        if (! File::exists($path)) {
+            return false;
+        }
+
+        return File::get($path) === File::get(__DIR__.'/../../public/vendor/canvas/manifest.json');
     }
 }

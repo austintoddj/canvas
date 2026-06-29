@@ -42,19 +42,6 @@ import {
 } from '@heroicons/react/20/solid';
 import { Outlet, useLocation } from 'react-router-dom';
 
-declare global {
-    interface Window {
-        Canvas: {
-            path: string;
-            user: {
-                name: string;
-                email: string;
-                default_avatar: string;
-            };
-        };
-    }
-}
-
 export default function Layout() {
     const { user } = window.Canvas;
     const { pathname } = useLocation();

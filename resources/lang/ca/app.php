@@ -14,6 +14,6 @@ return [
     'to_update_run' => 'Per actualitzar, To update, executeu:',
     'views' => 'Vistes',
     'visits' => 'Visites',
-    'your_posts_received' => "les vostres entrades han rebut:",
+    'your_posts_received' => 'les vostres entrades han rebut:',
     'your_weekly_writer_summary_for' => "El vostre resum setmanal d'autor per",
 ];

@@ -16,7 +16,31 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-    test:
+    js:
+        name: JS
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Setup Node
+              uses: actions/setup-node@v6
+              with:
+                  node-version: 22
+                  cache: npm
+
+            - name: Install JS dependencies
+              run: npm ci
+
+            - name: Check types
+              run: npm run typecheck
+
+            - name: Run linting
+              run: npm run lint
+
+    php:
+        name: Laravel ${{ matrix.laravel }} on PHP ${{ matrix.php }}
         runs-on: ubuntu-latest
         strategy:
             fail-fast: true
@@ -28,8 +52,6 @@ jobs:
                       laravel: 11
                     - php: 8.2
                       laravel: 13
-
-        name: Laravel ${{ matrix.laravel }} on PHP ${{ matrix.php }}
 
         steps:
             - name: Checkout code
@@ -51,9 +73,8 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-php-${{ matrix.php }}-laravel-${{ matrix.laravel }}-
 
-            - name: Install dependencies
-              run: |
-                  composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^${{ matrix.laravel }}"
+            - name: Install PHP dependencies
+              run: composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^${{ matrix.laravel }}"
 
             - name: Run tests
               run: vendor/bin/pest --parallel --compact

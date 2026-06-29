@@ -28,18 +28,29 @@ If you want to work locally, use a Laravel app with a sibling Canvas checkout:
     php artisan storage:link
     ```
 
-    To avoid re-publishing frontend assets every time you make a change, symlink the package's public directory into your Laravel app instead:
+3. To avoid re-publishing frontend assets every time you make a change, symlink the Canvas build output into your Laravel app instead:
 
     ```bash
-    rm -rf public/vendor/canvas/*
-    cd public/vendor/canvas
-    ln -s ../../../../canvas/public/* .
+    rm -rf public/vendor/canvas
+    ln -s "$(cd .. && pwd)/canvas/public/vendor/canvas" public/vendor/canvas
     ```
 
-3. Adjust `../canvas` if your folder layout is different.
+    This symlinks the full build directory, including `assets`, `manifest.json`, and the `canvas.hot` file written by the Vite dev server.
+
+4. From the Canvas package directory, start the Vite dev server:
+
+    ```bash
+    npm install
+    npm run dev
+    ```
+
+    Canvas uses Laravel's Vite integration with a dedicated build directory (`vendor/canvas`). Running `npm run dev` starts the dev server and writes a `canvas.hot` file — this is what tells Canvas to serve assets from the dev server rather than the production build. For a production-style build, run `npm run build` instead.
+
+5. Adjust `/canvas` if your folder layout is different.
 
 ## Before opening a pull request
 
+- Run `npm run build`
 - Run `composer test`
 - Run `composer test:parallel` when you want to match CI.
 - Run `composer pint` before pushing.

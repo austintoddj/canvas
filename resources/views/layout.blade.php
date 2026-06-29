@@ -8,17 +8,15 @@
 
     <title>{{ config('app.name') }} ― Canvas</title>
 
-    @php
-        $manifest = json_decode(file_get_contents(public_path('vendor/canvas/.vite/manifest.json')), true);
-        $entry = $manifest['resources/js/app.tsx'];
-    @endphp
-
     <link rel="preconnect" href="https://rsms.me/">
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 
-    @foreach($entry['css'] ?? [] as $css)
-        <link rel="stylesheet" href="{{ asset('vendor/canvas/' . $css) }}">
-    @endforeach
+    <script>
+        window.Canvas = @json($jsVars);
+    </script>
+
+    {!! \Canvas\Support\Vite::reactRefresh() !!}
+    {!! \Canvas\Support\Vite::tags() !!}
 </head>
 <body>
 
@@ -30,10 +28,5 @@
 @endif
 
 <div id="canvas"></div>
-
-<script>
-    window.Canvas = @json($jsVars);
-</script>
-<script type="module" src="{{ asset('vendor/canvas/' . $entry['file']) }}"></script>
 </body>
 </html>

@@ -5,6 +5,7 @@ namespace Canvas\Tests;
 use Canvas\CanvasServiceProvider;
 use Canvas\Tests\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 abstract class TestCase extends OrchestraTestCase
@@ -29,6 +30,8 @@ abstract class TestCase extends OrchestraTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->publishPackageAssets();
 
         $this->contributor = User::factory()->contributor()->create();
         $this->editor = User::factory()->editor()->create();
@@ -77,5 +80,27 @@ abstract class TestCase extends OrchestraTestCase
         $this->loadLaravelMigrations();
         $this->loadMigrationsFrom(__DIR__.'/database/migrations');
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+    }
+
+    protected function publishPackageAssets(): void
+    {
+        $source = dirname(__DIR__).'/public/vendor/canvas';
+        $target = public_path('vendor/canvas');
+
+        if (! File::isDirectory($source)) {
+            return;
+        }
+
+        File::ensureDirectoryExists(dirname($target));
+
+        if (File::isDirectory($target)) {
+            File::deleteDirectory($target);
+        }
+
+        File::copyDirectory($source, $target);
+
+        if (File::exists($target.'/canvas.hot')) {
+            File::delete($target.'/canvas.hot');
+        }
     }
 }

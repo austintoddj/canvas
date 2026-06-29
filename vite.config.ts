@@ -1,20 +1,19 @@
 import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-    publicDir: false,
-    plugins: [react(), tailwindcss()],
-    build: {
-        outDir: 'public/build',
-        emptyOutDir: true,
-        manifest: true,
-        rollupOptions: {
-            input: {
-                app: 'resources/js/app.tsx',
-            },
-        },
-    },
+    plugins: [
+        laravel({
+            input: ['resources/js/app.tsx'],
+            buildDirectory: 'vendor/canvas',
+            hotFile: 'public/vendor/canvas/canvas.hot',
+            refresh: ['resources/views/**/*.blade.php', 'resources/js/**'],
+        }),
+        react(),
+        tailwindcss(),
+    ],
     resolve: {
         alias: {
             '@': '/resources/js',

@@ -1,0 +1,33 @@
+{
+  "resources/js/app.tsx": {
+    "file": "assets/app-CNfbzLbL.js",
+    "name": "app",
+    "src": "resources/js/app.tsx",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/pages/Dashboard.tsx",
+      "resources/js/pages/Posts/Index.tsx"
+    ],
+    "css": [
+      "assets/app-J27yF3vz.css"
+    ]
+  },
+  "resources/js/pages/Dashboard.tsx": {
+    "file": "assets/Dashboard-C_1pg5Jr.js",
+    "name": "Dashboard",
+    "src": "resources/js/pages/Dashboard.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.tsx"
+    ]
+  },
+  "resources/js/pages/Posts/Index.tsx": {
+    "file": "assets/Index-DmkZFFjI.js",
+    "name": "Index",
+    "src": "resources/js/pages/Posts/Index.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.tsx"
+    ]
+  }
+}
