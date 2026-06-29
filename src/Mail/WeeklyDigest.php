@@ -23,6 +23,7 @@ class WeeklyDigest extends Mailable
         public readonly array $totals,
         public readonly string $startDate,
         public readonly string $endDate,
+        public readonly string $timezone = 'UTC',
     ) {}
 
     /**

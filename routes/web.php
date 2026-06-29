@@ -11,9 +11,14 @@ use Canvas\Http\Controllers\UploadsController;
 use Canvas\Http\Controllers\UserController;
 use Canvas\Http\Controllers\ViewController;
 use Canvas\Http\Middleware\Authorize;
+use Canvas\Http\Middleware\EagerLoadCanvasUser;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:'.config('canvas.guard'), Authorize::class])->group(function (): void {
+Route::middleware([
+    'auth:'.config('canvas.guard'),
+    EagerLoadCanvasUser::class,
+    Authorize::class,
+])->group(function (): void {
     Route::prefix('api')->group(function (): void {
         // Stats routes...
         Route::get('stats', StatsController::class);

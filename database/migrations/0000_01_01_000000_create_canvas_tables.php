@@ -83,8 +83,16 @@ class CreateCanvasTables extends Migration
         Schema::create('canvas_users', function (Blueprint $table) {
             $table->uuid('user_id')->primary();
             $table->tinyInteger('role');
+            $table->string('username')->nullable()->unique();
+            $table->text('summary')->nullable();
+            $table->string('avatar')->nullable();
+            $table->string('website')->nullable();
+            $table->json('social')->nullable();
+            $table->string('locale')->nullable();
+            $table->string('timezone')->nullable();
             $table->boolean('dark_mode')->default(false);
             $table->boolean('digest')->default(false);
+            $table->json('preferences')->nullable();
             $table->timestamps();
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });

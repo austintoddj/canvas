@@ -15,6 +15,8 @@ class CanvasServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            // The scheduler timezone controls when the command runs. Each recipient's
+            // digest period and stats window use the timezone stored on canvas_users.
             $schedule->command('canvas:digest')
                 ->weekly()
                 ->mondays()

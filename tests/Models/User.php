@@ -47,9 +47,4 @@ class User extends Authenticatable
     {
         return Gravatar::url($this->email ?? '');
     }
-
-    public function getDefaultLocaleAttribute(): string
-    {
-        return config('app.locale');
-    }
 }

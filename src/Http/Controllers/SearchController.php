@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Canvas\Http\Controllers;
 
+use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
+use Canvas\Support\AuthorAvatar;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -100,10 +102,20 @@ class SearchController extends Controller
     private function searchUsers(string $query): array
     {
         $userModel = config('canvas.user_model');
+        $canvasUserIds = CanvasUser::query()->pluck('user_id');
 
         return $userModel::query()
+            ->whereIn('id', $canvasUserIds)
             ->select('id', 'name', 'email')
-            ->when($query !== '', fn (Builder $q) => $q->where('name', 'like', "%{$query}%"))
+            ->with('canvasUser')
+            ->when($query !== '', function (Builder $builder) use ($query): void {
+                $builder->where(function (Builder $nested) use ($query): void {
+                    $nested->where('name', 'like', "%{$query}%")
+                        ->orWhereHas('canvasUser', function (Builder $canvasUser) use ($query): void {
+                            $canvasUser->where('username', 'like', "%{$query}%");
+                        });
+                });
+            })
             ->latest()
             ->limit(self::RESULTS_PER_TYPE)
             ->get()
@@ -111,6 +123,11 @@ class SearchController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'username' => $user->canvasUser?->username,
+                'avatar_url' => AuthorAvatar::url(
+                    $user->canvasUser?->avatar,
+                    (string) $user->email,
+                ),
                 'type' => 'User',
                 'route' => 'edit-user',
             ])

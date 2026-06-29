@@ -34,7 +34,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Canvas resolves the host application's user model through this class.
-    | The package only stores Canvas-specific access data in canvas_users.
+    | Canvas reads identity from the host user model and stores all Canvas
+    | profile, preference, and access data in canvas_users.
     |
     */
 
@@ -52,6 +53,21 @@ return [
     */
 
     'guard' => env('CANVAS_GUARD', 'web'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Locales
+    |--------------------------------------------------------------------------
+    |
+    | Canvas only allows users to select locales that the admin UI can
+    | translate. Locales are discovered from the package language directories
+    | and any published files in lang/vendor/canvas. Set CANVAS_LOCALES to a
+    | comma-separated list to restrict that discovered set — codes without
+    | translation files are ignored automatically.
+    |
+    */
+
+    'locales' => ($locales = env('CANVAS_LOCALES')) ? array_values(array_filter(array_map('trim', explode(',', $locales)))) : [],
 
     /*
     |--------------------------------------------------------------------------

@@ -10,6 +10,7 @@ it('can be instantiated', function (): void {
         totals: ['views' => 0, 'visits' => 0],
         startDate: now()->format('M j'),
         endDate: now()->addWeek()->format('M j'),
+        timezone: 'UTC',
     );
 
     $this->assertInstanceOf(WeeklyDigest::class, $mailable);

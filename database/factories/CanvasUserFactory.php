@@ -7,6 +7,7 @@ namespace Canvas\Database\Factories;
 use Canvas\Enums\Role;
 use Canvas\Models\CanvasUser;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 class CanvasUserFactory extends Factory
 {
@@ -17,8 +18,18 @@ class CanvasUserFactory extends Factory
         return [
             'user_id' => fake()->uuid(),
             'role' => fake()->randomElement(Role::cases()),
+            'username' => Str::slug(fake()->unique()->userName()),
+            'summary' => fake()->sentence(),
+            'avatar' => md5(fake()->unique()->safeEmail()),
+            'website' => fake()->optional()->url(),
+            'social' => [
+                'twitter' => Str::slug(fake()->userName()),
+            ],
+            'locale' => 'en',
+            'timezone' => 'UTC',
             'dark_mode' => false,
             'digest' => true,
+            'preferences' => null,
         ];
     }
 

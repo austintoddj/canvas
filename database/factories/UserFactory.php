@@ -2,7 +2,6 @@
 
 namespace Canvas\Database\Factories;
 
-use Canvas\Enums\Role;
 use Canvas\Models\CanvasUser;
 use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -17,17 +16,11 @@ class UserFactory extends Factory
 
     public function definition(): array
     {
-        $email = fake()->unique()->safeEmail();
-
         return [
             'id' => (string) Str::uuid(),
             'name' => fake()->name(),
-            'email' => $email,
-            'username' => Str::slug(fake()->unique()->userName()),
+            'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
-            'summary' => fake()->sentence(),
-            'avatar' => md5(trim(Str::lower($email))),
-            'locale' => 'en',
             'remember_token' => Str::random(10),
         ];
     }
@@ -35,9 +28,8 @@ class UserFactory extends Factory
     public function contributor(): static
     {
         return $this->afterCreating(function (User $user): void {
-            CanvasUser::factory()->create([
+            CanvasUser::factory()->contributor()->create([
                 'user_id' => $user->id,
-                'role' => Role::Contributor,
             ]);
         });
     }
@@ -45,9 +37,8 @@ class UserFactory extends Factory
     public function editor(): static
     {
         return $this->afterCreating(function (User $user): void {
-            CanvasUser::factory()->create([
+            CanvasUser::factory()->editor()->create([
                 'user_id' => $user->id,
-                'role' => Role::Editor,
             ]);
         });
     }
@@ -55,9 +46,8 @@ class UserFactory extends Factory
     public function admin(): static
     {
         return $this->afterCreating(function (User $user): void {
-            CanvasUser::factory()->create([
+            CanvasUser::factory()->admin()->create([
                 'user_id' => $user->id,
-                'role' => Role::Admin,
             ]);
         });
     }

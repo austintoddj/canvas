@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Canvas\Models;
 
+use Canvas\Data\UserPreferences;
 use Canvas\Database\Factories\CanvasUserFactory;
 use Canvas\Enums\Role;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -27,6 +28,8 @@ class CanvasUser extends Model
         'dark_mode' => 'boolean',
         'digest' => 'boolean',
         'role' => Role::class,
+        'social' => 'array',
+        'preferences' => 'array',
     ];
 
     protected static function newFactory(): Factory
@@ -37,5 +40,21 @@ class CanvasUser extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(config('canvas.user_model'), 'user_id');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function resolvedPreferences(): array
+    {
+        return UserPreferences::resolve($this->preferences);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function socialLinks(): array
+    {
+        return is_array($this->social) ? $this->social : [];
     }
 }

@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace Canvas\Support;
 
 use Canvas\Enums\Role;
+use Canvas\Http\Resources\UserResource;
+use Canvas\Models\CanvasUser;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 final class FrontendBootData
 {
     public static function forUser(Authenticatable $user): array
     {
-        $locale = data_get($user, 'locale') ?? config('app.locale');
+        $user->loadMissing('canvasUser');
+
+        $canvasUser = self::resolveCanvasUser($user);
+        $locale = Localization::resolveLocale($canvasUser?->locale);
 
         return [
             'languageCodes' => Localization::availableLanguageCodes(),
@@ -21,36 +26,21 @@ final class FrontendBootData
             'timezone' => config('app.timezone'),
             'translations' => Localization::availableTranslations($locale),
             'unsplash' => config('canvas.unsplash.access_key'),
-            'user' => self::userData($user, $locale),
+            'user' => UserResource::make($user)->resolve(),
             'version' => Version::installed(),
         ];
     }
 
-    private static function userData(Authenticatable $user, string $locale): array
+    private static function resolveCanvasUser(Authenticatable $user): ?CanvasUser
     {
-        $role = data_get($user, 'canvas_role')
-            ?? data_get($user, 'canvasUser.role')
-            ?? data_get($user, 'role');
-
-        if ($role instanceof Role) {
-            $role = $role->value;
+        if ($user->relationLoaded('canvasUser')) {
+            return $user->getRelation('canvasUser');
         }
 
-        return [
-            'id' => $user->getAuthIdentifier(),
-            'name' => data_get($user, 'name'),
-            'email' => data_get($user, 'email'),
-            'avatar' => data_get($user, 'avatar'),
-            'locale' => $locale,
-            'dark_mode' => (bool) data_get($user, 'dark_mode', false),
-            'digest' => (bool) data_get($user, 'digest', false),
-            'role' => is_numeric($role) ? (int) $role : null,
-            'default_avatar' => data_get(
-                $user,
-                'default_avatar',
-                Gravatar::url((string) data_get($user, 'email', ''))
-            ),
-            'default_locale' => data_get($user, 'default_locale', config('app.locale')),
-        ];
+        if (method_exists($user, 'canvasUser')) {
+            return $user->canvasUser;
+        }
+
+        return null;
     }
 }

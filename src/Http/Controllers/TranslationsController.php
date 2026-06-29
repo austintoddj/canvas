@@ -12,10 +12,6 @@ class TranslationsController extends Controller
 {
     public function __invoke(string $locale): JsonResponse
     {
-        if (! in_array($locale, Localization::availableLanguageCodes(), true)) {
-            $locale = config('app.locale');
-        }
-
-        return response()->json(trans('canvas::app', [], $locale));
+        return response()->json(trans('canvas::app', [], Localization::resolveLocale($locale)));
     }
 }

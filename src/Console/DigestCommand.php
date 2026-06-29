@@ -7,6 +7,8 @@ namespace Canvas\Console;
 use Canvas\Mail\WeeklyDigest;
 use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
+use Canvas\Support\DigestPeriod;
+use Canvas\Support\Localization;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Mail;
@@ -32,9 +34,6 @@ class DigestCommand extends Command
      */
     public function handle(): int
     {
-        $startDate = today()->subDays(7)->startOfDay();
-        $endDate = today()->endOfDay();
-
         $userModel = config('canvas.user_model');
 
         $digestUserIds = CanvasUser::query()
@@ -45,28 +44,40 @@ class DigestCommand extends Command
 
         $recipients = $userModel::query()
             ->whereIn('id', $digestUserIds->intersect($publishedAuthorIds))
+            ->with('canvasUser')
             ->get();
 
         foreach ($recipients as $user) {
+            $period = DigestPeriod::forTimezone($user->canvasUser?->timezone);
+
             $posts = Post::where('user_id', $user->id)
                 ->published()
                 ->withCount([
-                    'views' => fn (Builder $query) => $query->whereBetween('created_at', [$startDate, $endDate]),
-                    'visits' => fn (Builder $query) => $query->whereBetween('created_at', [$startDate, $endDate]),
+                    'views' => fn (Builder $query) => $query->whereBetween('created_at', [
+                        $period->startUtc(),
+                        $period->endUtc(),
+                    ]),
+                    'visits' => fn (Builder $query) => $query->whereBetween('created_at', [
+                        $period->startUtc(),
+                        $period->endUtc(),
+                    ]),
                 ])
                 ->orderByDesc('views_count')
                 ->get();
 
-            Mail::to($user->email)->locale($user->locale)->send(new WeeklyDigest(
-                userName: $user->name,
-                posts: $posts->toArray(),
-                totals: [
-                    'views' => $posts->sum('views_count'),
-                    'visits' => $posts->sum('visits_count'),
-                ],
-                startDate: $startDate->format('M j'),
-                endDate: $endDate->format('M j'),
-            ));
+            Mail::to($user->email)
+                ->locale(Localization::resolveLocale($user->canvasUser?->locale))
+                ->send(new WeeklyDigest(
+                    userName: $user->name,
+                    posts: $posts->toArray(),
+                    totals: [
+                        'views' => $posts->sum('views_count'),
+                        'visits' => $posts->sum('visits_count'),
+                    ],
+                    startDate: $period->formattedStart(),
+                    endDate: $period->formattedEnd(),
+                    timezone: $period->timezone,
+                ));
         }
 
         return self::SUCCESS;

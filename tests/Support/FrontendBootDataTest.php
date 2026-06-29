@@ -26,12 +26,14 @@ it('builds the frontend boot payload', function (): void {
         'id' => $this->admin->getAuthIdentifier(),
         'name' => $this->admin->name,
         'email' => $this->admin->email,
-        'avatar' => $this->admin->avatar,
+    ]);
+
+    expect($bootData['user']['avatar_url'])->toBeString();
+    expect($bootData['user']['canvas'])->toMatchArray([
+        'role' => $this->admin->canvas_role->value,
+        'username' => $this->admin->username,
         'locale' => $this->admin->locale,
         'dark_mode' => $this->admin->dark_mode,
         'digest' => $this->admin->digest,
-        'role' => $this->admin->canvas_role->value,
-        'default_avatar' => $this->admin->default_avatar,
-        'default_locale' => $this->admin->default_locale,
     ]);
 });

@@ -11,7 +11,7 @@ it('appends the default avatar to the model', function (): void {
 });
 
 it('appends the default locale to the model', function (): void {
-    expect(User::factory()->create()->toArray())->toHaveKey('default_locale');
+    expect(User::factory()->contributor()->create()->toArray())->toHaveKey('default_locale');
 });
 
 it('hides the password and remember token', function (): void {
@@ -48,10 +48,21 @@ it('computes the default avatar attribute', function (): void {
     expect($user->defaultAvatar)->toBe(Gravatar::url($user->email));
 });
 
-it('computes the default locale attribute', function (): void {
-    $user = User::factory()->create([
-        'locale' => null,
-    ]);
+it('computes profile attributes from canvas_users', function (): void {
+    $user = User::factory()->contributor()->create();
+
+    expect($user->username)->toBe($user->canvasUser->username);
+    expect($user->summary)->toBe($user->canvasUser->summary);
+    expect($user->avatar)->toBe($user->canvasUser->avatar);
+    expect($user->locale)->toBe($user->canvasUser->locale);
+});
+
+it('computes the default locale attribute from canvas_users', function (): void {
+    $user = User::factory()->contributor()->create();
+
+    CanvasUser::query()->where('user_id', $user->id)->update(['locale' => null]);
+
+    $user->refresh();
 
     expect($user->defaultLocale)->toBe(config('app.locale'));
 });

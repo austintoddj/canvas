@@ -72,7 +72,25 @@ it('includes users with email for an admin', function (): void {
     $users = collect($response->json())->where('type', 'User');
 
     expect($users)->not->toBeEmpty();
-    $users->each(fn ($user) => expect($user)->toHaveKeys(['id', 'name', 'email', 'type', 'route']));
+    $users->each(fn ($user) => expect($user)->toHaveKeys([
+        'id',
+        'name',
+        'email',
+        'username',
+        'avatar_url',
+        'type',
+        'route',
+    ]));
+});
+
+it('filters users by username for an admin', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/search?q='.$this->editor->username)
+        ->assertSuccessful()
+        ->assertJsonFragment([
+            'id' => $this->editor->id,
+            'type' => 'User',
+        ]);
 });
 
 it('excludes users for a contributor', function (): void {

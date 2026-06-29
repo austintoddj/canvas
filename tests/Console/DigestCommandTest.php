@@ -7,6 +7,7 @@ use Canvas\Models\Post;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
 use Canvas\Tests\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 
 it('sends digest emails to users with mail enabled', function (): void {
@@ -20,6 +21,8 @@ it('sends digest emails to users with mail enabled', function (): void {
         'role' => Role::Contributor,
         'dark_mode' => false,
         'digest' => true,
+        'locale' => 'en',
+        'timezone' => 'UTC',
     ]);
 
     $posts = Post::factory()->count(2)->create([
@@ -50,10 +53,12 @@ it('sends digest emails to users with mail enabled', function (): void {
         $this->assertNotEmpty($mail->startDate);
         $this->assertNotEmpty($mail->endDate);
         $this->assertNotEmpty($mail->locale);
+        $this->assertSame('UTC', $mail->timezone);
 
         return $mail->hasTo($user->email);
     });
 });
+
 it('does not send digest emails to users with mail disabled', function (): void {
     Mail::fake();
 
@@ -85,4 +90,44 @@ it('does not send digest emails to users with mail disabled', function (): void 
     $this->artisan('canvas:digest');
 
     Mail::assertNothingSent();
+});
+
+it('uses the recipients timezone for digest periods and stats windows', function (): void {
+    Mail::fake();
+
+    Carbon::setTestNow(Carbon::parse('2026-06-29 18:00:00', 'America/Chicago'));
+
+    $user = User::factory()->create();
+
+    CanvasUser::factory()->create([
+        'user_id' => $user->id,
+        'role' => Role::Contributor,
+        'digest' => true,
+        'locale' => 'en',
+        'timezone' => 'America/Chicago',
+    ]);
+
+    $post = Post::factory()->create([
+        'user_id' => $user->id,
+        'published_at' => now()->subWeek(),
+    ]);
+
+    $post->views()->create([
+        'created_at' => Carbon::parse('2026-06-22 05:30:00', 'UTC'),
+    ]);
+
+    $post->views()->create([
+        'created_at' => Carbon::parse('2026-06-22 04:30:00', 'UTC'),
+    ]);
+
+    $this->artisan('canvas:digest');
+
+    Mail::assertSent(WeeklyDigest::class, function (WeeklyDigest $mail) use ($user) {
+        expect($mail->startDate)->toBe('Jun 22');
+        expect($mail->endDate)->toBe('Jun 29');
+        expect($mail->timezone)->toBe('America/Chicago');
+        expect($mail->totals['views'])->toBe(1);
+
+        return $mail->hasTo($user->email);
+    });
 });

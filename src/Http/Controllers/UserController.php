@@ -4,33 +4,35 @@ declare(strict_types=1);
 
 namespace Canvas\Http\Controllers;
 
-use Canvas\Enums\Role;
+use Canvas\Actions\SyncCanvasUser;
 use Canvas\Http\Requests\UserRequest;
+use Canvas\Http\Resources\CanvasUserResource;
+use Canvas\Http\Resources\UserResource;
 use Canvas\Models\CanvasUser;
-use Canvas\Support\Localization;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Hash;
-use Ramsey\Uuid\Uuid;
 
 class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(): AnonymousResourceCollection
     {
         $userModel = config('canvas.user_model');
+        $canvasUserIds = CanvasUser::query()->pluck('user_id');
 
-        return response()->json(
+        return UserResource::collection(
             $userModel::query()
+                ->whereIn('id', $canvasUserIds)
                 ->select('id', 'name', 'email')
+                ->with('canvasUser')
                 ->latest()
                 ->withCount('posts')
-                ->paginate(), 200
+                ->paginate()
         );
     }
 
@@ -39,71 +41,42 @@ class UserController extends Controller
      */
     public function create(): JsonResponse
     {
-        $userModel = config('canvas.user_model');
-
-        return response()->json($userModel::query()->make([
-            'id' => Uuid::uuid4()->toString(),
-        ]), 200);
+        return response()->json([
+            'canvas' => CanvasUserResource::defaults(),
+        ], 200);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(UserRequest $request, $id): JsonResponse
+    public function store(UserRequest $request, SyncCanvasUser $syncCanvasUser, $id): JsonResponse
     {
-        $data = $request->validated();
         $currentUser = request()->user(config('canvas.guard'));
         $userModel = config('canvas.user_model');
 
         $user = $userModel::query()->find($id);
 
         if (! $user) {
-            Gate::forUser($currentUser)->authorize('create', $userModel);
-
-            // Restore a previously soft-deleted account with the same email.
-            if ($restored = $userModel::onlyTrashed()->firstWhere('email', $data['email'])) {
-                $restored->restore();
-
-                return response()->json([
-                    'user' => $restored->refresh(),
-                ], 201);
-            }
-
-            $user = new $userModel(['id' => $id]);
-        } else {
-            Gate::forUser($currentUser)->authorize('update', $user);
+            abort(404);
         }
 
-        if (! Arr::has($data, 'locale') || ! in_array($data['locale'], Localization::availableLanguageCodes(), true)) {
-            $data['locale'] = config('app.fallback_locale');
-        }
+        Gate::forUser($currentUser)->authorize('update', $user);
 
-        $canvasData = Arr::only($data, ['dark_mode', 'digest', 'role']);
-        $userData = Arr::except($data, ['dark_mode', 'digest', 'role']);
-
-        $user->fill($userData);
-
-        if (Arr::has($userData, 'password')) {
-            $user->password = Hash::make($userData['password']);
-        }
-
-        $user->save();
-
-        $this->syncCanvasUser($user->id, $canvasData, $currentUser->isAdmin ?? false);
+        $created = $syncCanvasUser($user->id, $request->validated(), $currentUser->isAdmin ?? false);
 
         return response()->json([
-            'user' => $user->refresh(),
-        ], 201);
+            'user' => UserResource::make($user->load('canvasUser')->refresh()),
+        ], $created ? 201 : 200);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show($user): JsonResponse
+    public function show($user): UserResource
     {
-        $user->loadCount('posts');
+        $user->load('canvasUser')->loadCount('posts');
 
-        return response()->json($user, 200);
+        return UserResource::make($user);
     }
 
     /**
@@ -125,48 +98,8 @@ class UserController extends Controller
     {
         Gate::forUser(request()->user(config('canvas.guard')))->authorize('delete', $user);
 
-        $user->delete();
+        CanvasUser::query()->where('user_id', $user->getKey())->delete();
 
         return response()->json(null, 204);
-    }
-
-    private function syncCanvasUser(string $userId, array $canvasData, bool $currentUserIsAdmin): void
-    {
-        if (empty($canvasData)) {
-            return;
-        }
-
-        $roleValue = $currentUserIsAdmin && Arr::has($canvasData, 'role') && $canvasData['role'] !== null
-            ? Role::from((int) $canvasData['role'])
-            : null;
-
-        $preferenceData = Arr::only($canvasData, ['dark_mode', 'digest']);
-
-        $canvasUser = CanvasUser::find($userId);
-
-        if (! $canvasUser) {
-            if ($roleValue === null) {
-                return;
-            }
-
-            CanvasUser::create([
-                'user_id' => $userId,
-                'role' => $roleValue,
-                'dark_mode' => (bool) ($preferenceData['dark_mode'] ?? false),
-                'digest' => (bool) ($preferenceData['digest'] ?? false),
-            ]);
-
-            return;
-        }
-
-        $updates = array_map('boolval', $preferenceData);
-
-        if ($roleValue !== null) {
-            $updates['role'] = $roleValue;
-        }
-
-        if (! empty($updates)) {
-            $canvasUser->update($updates);
-        }
     }
 }

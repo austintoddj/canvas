@@ -60,7 +60,7 @@ export default function Layout() {
                         </NavbarItem>
                         <Dropdown>
                             <DropdownButton as={NavbarItem}>
-                                <Avatar src={user.default_avatar} square />
+                                <Avatar src={user.avatar_url} square />
                             </DropdownButton>
                             <DropdownMenu className="min-w-64" anchor="bottom end">
                                 <DropdownItem href="/settings">
@@ -172,7 +172,7 @@ export default function Layout() {
                         <Dropdown>
                             <DropdownButton as={SidebarItem}>
                                 <span className="flex min-w-0 items-center gap-3">
-                                    <Avatar src={user.default_avatar} className="size-10" square alt="" />
+                                    <Avatar src={user.avatar_url} className="size-10" square alt="" />
                                     <span className="min-w-0">
                                         <span className="block truncate text-sm/5 font-medium text-zinc-950 dark:text-white">
                                             {user.name}
