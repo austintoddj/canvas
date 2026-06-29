@@ -8,14 +8,22 @@ use Canvas\Enums\Role;
 use Canvas\Http\Resources\UserResource;
 use Canvas\Models\CanvasUser;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 
 final class FrontendBootData
 {
     public static function forUser(Authenticatable $user): array
     {
-        $user->loadMissing('canvasUser');
+        if (method_exists($user, 'canvasUser')) {
+            $user->loadMissing('canvasUser');
+        }
 
         $canvasUser = self::resolveCanvasUser($user);
+
+        if ($canvasUser !== null && $user instanceof Model) {
+            $user->setRelation('canvasUser', $canvasUser);
+        }
+
         $locale = Localization::resolveLocale($canvasUser?->locale);
 
         return [
@@ -41,6 +49,6 @@ final class FrontendBootData
             return $user->canvasUser;
         }
 
-        return null;
+        return CanvasUser::query()->find($user->getAuthIdentifier());
     }
 }

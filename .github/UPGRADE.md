@@ -3,6 +3,12 @@
 ## Table of Contents
 
 - [Upgrading to 7.0.0 from 6.x](#upgrading-to-700-from-6x)
+    - [Optional: `HasCanvasAccess`](#optional-hascanvasaccess)
+    - [v6 migration scenarios](#v6-migration-scenarios)
+    - [Detect your scenario](#detect-your-scenario)
+    - [`canvas:migrate`](#canvasmigrate)
+    - [Migrate topics from `canvas_posts_topics`](#migrate-topics-from-canvas_posts_topics)
+    - [Post-upgrade verification](#post-upgrade-verification)
 - [Upgrading to 6.0.0 from 5.4](#upgrading-to-600-from-54)
 - [Upgrading to 5.4.0 from 5.3](#upgrading-to-540-from-53)
 - [Upgrading to 5.3.0 from 5.2](#upgrading-to-530-from-52)
@@ -15,14 +21,36 @@
 
 ### Architecture
 
-| Concern | Owner |
-|---------|-------|
-| Authentication (login, password reset, sessions) | Host application |
-| Identity (`id`, `name`, `email`) | Host `users` table (read-only from Canvas) |
-| Canvas access (role), author profile, UI prefs | `canvas_users` table |
-| Posts, tags, topics `user_id` | Host `users.id` (foreign key) |
+| Concern                                          | Owner                                      |
+| ------------------------------------------------ | ------------------------------------------ |
+| Authentication (login, password reset, sessions) | Host application                           |
+| Identity (`id`, `name`, `email`)                 | Host `users` table (read-only from Canvas) |
+| Canvas access (role), author profile, UI prefs   | `canvas_users` table                       |
+| Posts, tags, topics `user_id`                    | Host `users.id` (foreign key)              |
 
-Canvas resolves the host user model via `config('canvas.user_model')` (default `App\Models\User`). Add the optional `Canvas\Concerns\HasCanvasAccess` trait to that model for the `canvasUser` relationship, content relations (`posts`, `tags`, `topics`), and convenience accessors (`username`, `isAdmin`, etc.). Without the trait, Canvas still works — middleware falls back to querying `canvas_users` directly.
+Canvas resolves the host user model via `config('canvas.user_model')` (default `App\Models\User`). It reads `id`, `name`, and `email` from that model and does not write to it. All Canvas access, profile, and preferences live in `canvas_users`. You do not need to change your host `User` model to complete the database upgrade — but see [Optional: `HasCanvasAccess`](#optional-hascanvasaccess) below if you want the usual Laravel integration.
+
+### Optional: `HasCanvasAccess`
+
+Not required for the upgrade itself. Canvas loads profile and access data from `canvas_users` whether or not your host `User` model defines a relationship.
+
+Adding `Canvas\Concerns\HasCanvasAccess` is a nice-to-have that gives your `User` model:
+
+- a `canvasUser` relationship to `canvas_users`
+- `posts`, `tags`, and `topics` relationships for authored content
+- role accessors (`isAdmin`, `isEditor`, `isContributor`) used by Canvas policies and gates
+- profile accessors (`username`, `summary`, `avatar`, `locale`, `darkMode`, `digest`)
+
+```php
+use Canvas\Concerns\HasCanvasAccess;
+
+class User extends Authenticatable
+{
+    use HasCanvasAccess;
+}
+```
+
+If you skip this, `/canvas` still loads and Canvas still checks access against `canvas_users`. Add the trait when you want those relationships and accessors available on your host `User` model — especially for admin user management, which relies on the `isAdmin` accessor.
 
 ### Prerequisites
 
@@ -35,7 +63,7 @@ Before upgrading, confirm:
 
 ### Upgrade checklist
 
-1. Update the package:
+1. Update your `austintoddj/canvas` dependency to `^7.0` in your `composer.json` file. Upgrade the package to the latest version:
 
     ```bash
     composer update austintoddj/canvas
@@ -47,31 +75,18 @@ Before upgrading, confirm:
     php artisan vendor:publish --tag=canvas-config
     ```
 
-3. Add `HasCanvasAccess` to your host user model (recommended):
+3. Upgrade the database — see [v6 migration scenarios](#v6-migration-scenarios).
 
-    ```php
-    use Canvas\Concerns\HasCanvasAccess;
+4. _(Optional)_ Add `HasCanvasAccess` to your host `User` model — see [Optional: `HasCanvasAccess`](#optional-hascanvasaccess).
 
-    class User extends Authenticatable
-    {
-        use HasCanvasAccess;
-    }
-    ```
-
-4. Run migrations:
-
-    ```bash
-    php artisan canvas:migrate
-    ```
-
-5. Migrate v6 user data into the new schema (see [v6 migration scenarios](#v6-migration-scenarios) below). There is no `canvas:migrate-users` command yet — this step is manual.
-
-6. Re-publish assets:
+5. Re-publish assets:
 
     ```bash
     php artisan canvas:publish
     php artisan view:clear
     ```
+
+6. Run [post-upgrade verification](#post-upgrade-verification).
 
 7. Grant Canvas access to your team:
 
@@ -176,21 +191,21 @@ Update any custom frontends or TypeScript types that assumed a flat user object.
 
 Hybrid storage: typed columns for queryable fields; `preferences` JSON for long-tail UI settings.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `user_id` | uuid, PK, FK → `users.id` | Cascade delete with host user |
-| `role` | tinyint | `1` Contributor, `2` Editor, `3` Admin |
-| `username` | string, nullable, unique | Public author handle |
-| `summary` | text, nullable | Author bio |
-| `avatar` | string, nullable | Gravatar hash or full URL |
-| `website` | string, nullable | |
-| `social` | json, nullable | Key/value social links |
-| `locale` | string, nullable | Must be in available locales |
-| `timezone` | string, nullable | IANA timezone; used by `canvas:digest` |
-| `dark_mode` | boolean, default `false` | UI preference |
-| `digest` | boolean, default `false` | Weekly email opt-in |
-| `preferences` | json, nullable | Merged with defaults; `onboarding.complete` today |
-| `created_at` / `updated_at` | timestamps | |
+| Column                      | Type                      | Notes                                             |
+| --------------------------- | ------------------------- | ------------------------------------------------- |
+| `user_id`                   | uuid, PK, FK → `users.id` | Cascade delete with host user                     |
+| `role`                      | tinyint                   | `1` Contributor, `2` Editor, `3` Admin            |
+| `username`                  | string, nullable, unique  | Public author handle                              |
+| `summary`                   | text, nullable            | Author bio                                        |
+| `avatar`                    | string, nullable          | Gravatar hash or full URL                         |
+| `website`                   | string, nullable          |                                                   |
+| `social`                    | json, nullable            | Key/value social links                            |
+| `locale`                    | string, nullable          | Must be in available locales                      |
+| `timezone`                  | string, nullable          | IANA timezone; used by `canvas:digest`            |
+| `dark_mode`                 | boolean, default `false`  | UI preference                                     |
+| `digest`                    | boolean, default `false`  | Weekly email opt-in                               |
+| `preferences`               | json, nullable            | Merged with defaults; `onboarding.complete` today |
+| `created_at` / `updated_at` | timestamps                |                                                   |
 
 ### Configuration
 
@@ -222,60 +237,259 @@ Canvas access is a row in `canvas_users`, not a flag on the host user:
 
 ### v6 migration scenarios
 
-There is no automated `canvas:migrate-users` command. Choose the path that matches your v6 setup.
+Upgrading from v6 requires manual schema and data work. Run the [detection queries](#detect-your-scenario), pick the matching scenario, and verify each step before continuing.
 
-#### Scenario A — v6 Canvas was your only user store
+#### Before you begin
 
-In v6, `canvas_users` held email, password, and profile data. In v7, those accounts must exist in the host `users` table first.
+1. Back up your database.
+2. Export `canvas_*` tables if you want a rollback anchor.
+3. Run the [detection queries](#detect-your-scenario) and note which scenario applies.
 
-1. Export v6 `canvas_users` data (email, name, username, summary, avatar, role, preferences).
-2. Create matching rows in host `users` (preserve or map IDs if possible).
-3. Insert `canvas_users` rows with the new schema, mapping `user_id` to host `users.id`:
+#### Detect your scenario
 
-    ```sql
-    INSERT INTO canvas_users (user_id, role, username, summary, avatar, locale, timezone, dark_mode, digest, preferences, created_at, updated_at)
-    SELECT … FROM your_v6_export;
-    ```
+Run these against your database and keep the output handy.
 
-4. Verify `canvas_posts.user_id`, `canvas_tags.user_id`, and `canvas_topics.user_id` still reference valid host `users.id` values. Re-point any orphaned IDs after host user creation.
+**1. Has the Canvas migration already run?**
 
-#### Scenario B — v6 `canvas_users` alongside an existing Laravel `users` table
+```sql
+SELECT migration, batch FROM migrations
+WHERE migration = '2020_09_21_000000_create_canvas_tables';
+```
 
-If v6 `canvas_users.id` already matched host `users.id`, migration is simpler:
+If this row exists, Laravel will not re-run the migration after `composer update`. Use the `canvas_users` column check below to see whether schema reshape is still needed.
 
-1. Run `canvas:migrate` to reshape `canvas_users`.
-2. Copy profile columns from your v6 export into the new columns (`username`, `summary`, `avatar`, etc.).
-3. Map v6 JSON `preferences` into the hybrid schema: extract `dark_mode` and `digest` into their boolean columns; keep remaining keys in `preferences`.
-4. Drop v6-only columns (`email`, `password`, `remember_token`, `deleted_at`) after data is verified.
+**2. Is `canvas_users` still on the v6 schema?**
 
-#### Scenario C — fresh install on an existing Laravel app
+```sql
+-- v6 has an `email` column; v7 uses `user_id` as the primary key and has no `email` column
+SELECT column_name FROM information_schema.columns
+WHERE table_name = 'canvas_users' AND column_name IN ('email', 'user_id');
+```
 
-No data migration needed. Run `canvas:migrate`, sign in, then `canvas:make-admin`.
+On SQLite, use `PRAGMA table_info(canvas_users);` instead.
 
-### Post-upgrade verification
+**3. Do host users exist and how do they overlap v6 accounts?**
+
+```sql
+-- Adjust table/column names if your host user table differs
+SELECT
+    (SELECT COUNT(*) FROM users) AS host_users,
+    (SELECT COUNT(*) FROM canvas_users WHERE deleted_at IS NULL) AS canvas_users,
+    (SELECT COUNT(*) FROM canvas_users cu
+        INNER JOIN users u ON u.id = cu.id
+        WHERE cu.deleted_at IS NULL) AS matching_ids;
+```
+
+If `canvas_users` has no `deleted_at` column (v6 often does), drop that predicate.
+
+**4. Does the v6 topics pivot still exist?**
+
+```sql
+SELECT COUNT(*) AS pivot_rows FROM canvas_posts_topics;
+```
+
+Skip if the table does not exist.
+
+**5. Do content `user_id` values point at real identities?**
+
+```sql
+SELECT COUNT(*) AS orphaned_posts
+FROM canvas_posts p
+LEFT JOIN users u ON u.id = p.user_id
+WHERE p.user_id IS NOT NULL AND u.id IS NULL;
+```
+
+Repeat for `canvas_tags` and `canvas_topics` if needed.
+
+**How to read the results:**
+
+| Signal                                                                                        | Likely scenario                                                                   |
+| --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| v6 `canvas_users` schema (`email` column present), few or no host `users`, `matching_ids` ≈ 0 | **Scenario A**                                                                    |
+| v6 `canvas_users` schema, host `users` exist, `matching_ids` ≈ `canvas_users`                 | **Scenario B**                                                                    |
+| v6 `canvas_users` schema, host `users` exist, `matching_ids` low but emails overlap           | **Scenario A** — map by email, remap `user_id`                                    |
+| v7 `canvas_users` schema (`user_id` PK, no `email`)                                           | Schema reshape done — run [post-upgrade verification](#post-upgrade-verification) |
+| `pivot_rows` > 0                                                                              | Run the [topics pivot migration](#migrate-topics-from-canvas_posts_topics)        |
+
+#### `canvas:migrate`
+
+v6 and v7 use the same migration file: `2020_09_21_000000_create_canvas_tables`. The file contents changed in v7, but Laravel will not re-run a migration that is already recorded in your `migrations` table. Expect it to show as **Ran** — reshape schema manually per [Scenario A](#scenario-a) or [Scenario B](#scenario-b).
+
+```bash
+php artisan migrate:status | grep canvas
+```
+
+#### Schema changes at a glance
+
+Content tables (`canvas_posts`, `canvas_tags`, `canvas_topics`, `canvas_posts_tags`, `canvas_views`, `canvas_visits`) keep their row data through a normal upgrade. What changes is **structure** and **what `user_id` points at**.
+
+| Table                            | v6                                                         | v7                                                                      |
+| -------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `canvas_users`                   | `id` PK; stores `name`, `email`, `password`, profile       | `user_id` PK → `users.id`; profile/prefs only                           |
+| `canvas_posts`                   | `user_id` required; topics via `canvas_posts_topics` pivot | `user_id` nullable → `users.id`; `topic_id` column (one topic per post) |
+| `canvas_tags` / `canvas_topics`  | `user_id` required                                         | `user_id` nullable → `users.id`                                         |
+| `canvas_posts_topics`            | exists                                                     | **removed** — migrate data to `canvas_posts.topic_id`                   |
+| `canvas_posts_tags`              | unchanged                                                  | unchanged                                                               |
+| `canvas_views` / `canvas_visits` | unchanged                                                  | unchanged                                                               |
+
+**Data to migrate manually** (v6 upgrades only):
+
+1. `canvas_users` — reshape and map profile data to `user_id`
+2. `canvas_posts_topics` — copy one topic per post into `canvas_posts.topic_id` ([steps](#migrate-topics-from-canvas_posts_topics))
+3. `canvas_posts`, `canvas_tags`, `canvas_topics` — re-point `user_id` to host `users.id` when IDs change
+
+#### Scenario A
+
+Canvas was your only user store. In v6, `canvas_users` held email, password, and profile data. In v7, identity lives in host `users` and Canvas profile/access lives in `canvas_users`. Create host `users` rows during this upgrade.
+
+**Goal:** Every active v6 account exists in `users`, has a matching `canvas_users` row keyed by `user_id`, and content `user_id` values reference host `users.id`.
+
+**Step 1 — Export v6 accounts**
+
+Export active v6 users (skip soft-deleted rows). At minimum: `id`, `name`, `email`, `password`, `username`, `summary`, `avatar`, `dark_mode`, `digest`, `locale`, `role`, timestamps.
+
+**Step 2 — Create host `users` rows**
+
+For each v6 account, insert into host `users`. **Preserve v6 `id` values when possible** so `canvas_posts.user_id` does not need remapping:
+
+```sql
+INSERT INTO users (id, name, email, password, created_at, updated_at)
+SELECT id, name, email, password, created_at, updated_at
+FROM canvas_users
+WHERE deleted_at IS NULL;
+```
+
+Adjust columns to match your host user table (`remember_token`, etc.). If a host user already exists for an email but with a different `id`, note the mapping `{v6_id → host_id}` for Step 5.
+
+**Step 3 — Reshape `canvas_users` to v7**
+
+This is the most environment-specific step. Options:
+
+- **Export / reshape / import** — safest for production; build a new `canvas_users` table matching the v7 schema, load transformed data, swap tables.
+- **In-place ALTER** — fine for smaller databases; add `user_id`, copy `id` → `user_id`, add new columns, drop v6-only columns.
+
+Target v7 columns: `user_id` (PK), `role`, `username`, `summary`, `avatar`, `website`, `social`, `locale`, `timezone`, `dark_mode`, `digest`, `preferences`, timestamps. See [`canvas_users` schema](#canvas_users-schema) above.
+
+Example mapping from v6 columns:
+
+| v6 column                                                   | v7 destination                                                                            |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `id`                                                        | `user_id`                                                                                 |
+| `role`                                                      | `role` (default `1` Contributor if null)                                                  |
+| `username`, `summary`, `avatar`, `locale`                   | same name                                                                                 |
+| `dark_mode`, `digest`                                       | cast to boolean columns                                                                   |
+| `email`, `password`, `name`, `remember_token`, `deleted_at` | **drop** — live on host `users` now                                                       |
+| —                                                           | `timezone` → default `config('app.timezone')`                                             |
+| —                                                           | `website`, `social` → `NULL` unless you have them elsewhere                               |
+| —                                                           | `preferences` → `NULL` or `{"onboarding":{"complete":true}}` if users were already active |
+
+**Step 4 — Verify `canvas_users`**
+
+```sql
+SELECT COUNT(*) FROM canvas_users cu
+LEFT JOIN users u ON u.id = cu.user_id
+WHERE u.id IS NULL;
+-- expect 0
+```
+
+**Step 5 — Remap content `user_id` values (if IDs changed)**
+
+If any v6 `id` maps to a different host `users.id`:
+
+```sql
+UPDATE canvas_posts SET user_id = :host_id WHERE user_id = :legacy_id;
+UPDATE canvas_tags   SET user_id = :host_id WHERE user_id = :legacy_id;
+UPDATE canvas_topics SET user_id = :host_id WHERE user_id = :legacy_id;
+```
+
+Re-run the orphaned-post query from [Detect your scenario](#detect-your-scenario).
+
+**Step 6 — Migrate topics** if `canvas_posts_topics` exists (see below).
+
+**Step 7 — Grant access and verify** — `canvas:list-users`, sign in, open `/canvas`.
+
+#### Scenario B
+
+Host `users` already exist and IDs match v6 `canvas_users.id`. Skip host user creation. Focus on reshaping `canvas_users` and updating surrounding schema.
+
+1. Reshape `canvas_users` (same column mapping as Scenario A, Step 3).
+2. Add `topic_id` to `canvas_posts` if missing; [migrate the topics pivot](#migrate-topics-from-canvas_posts_topics).
+3. Add nullable `user_id` foreign keys on posts/tags/topics → `users.id` if not present.
+4. Drop `canvas_posts_topics` and v6-only `canvas_users` columns after data is verified.
+5. Run [post-upgrade verification](#post-upgrade-verification).
+
+#### Migrate topics from `canvas_posts_topics`
+
+v6 allowed multiple topics per post via a pivot. v7 stores **one** `topic_id` per post. If a post had multiple topics, pick one (e.g. the first by `topic_id` or the most recently assigned) before dropping the pivot.
+
+**1. Add `topic_id` if the column does not exist:**
+
+```sql
+ALTER TABLE canvas_posts ADD COLUMN topic_id CHAR(36) NULL;
+CREATE INDEX canvas_posts_topic_id_index ON canvas_posts (topic_id);
+```
+
+Syntax varies by database driver — adjust for MySQL/PostgreSQL/SQLite.
+
+**2. Copy pivot data into `topic_id`:**
+
+```sql
+UPDATE canvas_posts
+SET topic_id = (
+    SELECT topic_id FROM canvas_posts_topics
+    WHERE canvas_posts_topics.post_id = canvas_posts.id
+    LIMIT 1
+);
+```
+
+**3. Verify:**
+
+```sql
+SELECT COUNT(*) FROM canvas_posts p
+INNER JOIN canvas_posts_topics ppt ON ppt.post_id = p.id
+WHERE p.topic_id IS NULL;
+-- investigate any non-zero result before dropping the pivot
+```
+
+**4. Drop the pivot when satisfied:**
+
+```sql
+DROP TABLE canvas_posts_topics;
+```
+
+#### Post-upgrade verification
 
 ```bash
 php artisan canvas:list-users
-php artisan canvas:make-admin your@email.com   # if needed
+php artisan canvas:show-user your@email.com
 ```
 
-1. Sign in via your host app's login flow.
-2. Visit `/canvas` — expect the admin SPA, not 403.
-3. Open browser devtools and confirm boot payload includes `user.avatar_url` and `user.canvas`.
-4. If using weekly digests, confirm `canvas:digest` is scheduled and users with `digest: true` have a valid `timezone`.
-5. If you have a custom frontend, confirm `PostViewed` dispatches include request context.
+```sql
+-- expect 0 for both
+SELECT COUNT(*) FROM canvas_users cu
+LEFT JOIN users u ON u.id = cu.user_id WHERE u.id IS NULL;
+
+SELECT COUNT(*) FROM canvas_posts p
+LEFT JOIN users u ON u.id = p.user_id
+WHERE p.user_id IS NOT NULL AND u.id IS NULL;
+```
+
+1. Sign in via your host app and visit `/canvas` (not 403).
+2. Confirm the boot payload includes `user.avatar_url` and `user.canvas`.
+3. Open an existing post — author, topic, and tags should be intact.
+4. If using digests, confirm `canvas:digest` is scheduled and opted-in users have a valid `timezone`.
 
 ### Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---------|--------------|-----|
-| 403 on `/canvas` after login | No `canvas_users` row for the authenticated user | `canvas:make-admin` or `canvas:assign-role` |
-| 403 with valid session | Wrong guard | Set `CANVAS_GUARD` to your app's guard |
-| `User` has no `canvasUser` relation | Trait not added | Add `HasCanvasAccess` to host user model |
-| Locale validation fails on save | Locale not translated | Publish lang files or restrict `CANVAS_LOCALES` to available codes |
-| FK error on `canvas_users.user_id` | Host user does not exist | Create the host user first, then grant Canvas access |
-| Posts show wrong author | `user_id` still points at old v6 IDs | Re-map `canvas_posts.user_id` to host `users.id` |
-| Flat user object in custom code | API shape changed | Read `avatar_url` and nested `canvas` from `UserResource` |
+| Symptom                            | Likely cause                                     | Fix                                                                |
+| ---------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
+| 403 on `/canvas` after login       | No `canvas_users` row for the authenticated user | `canvas:make-admin` or `canvas:assign-role`                        |
+| 403 with valid session             | Wrong guard                                      | Set `CANVAS_GUARD` to your app's guard                             |
+| 403 on admin user routes           | `isAdmin` accessor missing on host `User`        | Add `HasCanvasAccess` to host user model                           |
+| Locale validation fails on save    | Locale not translated                            | Publish lang files or restrict `CANVAS_LOCALES` to available codes |
+| FK error on `canvas_users.user_id` | Host user does not exist                         | Create the host user first, then grant Canvas access               |
+| Posts show wrong author            | `user_id` still points at old v6 IDs             | Re-map `canvas_posts.user_id` to host `users.id`                   |
+| Flat user object in custom code    | API shape changed                                | Read `avatar_url` and nested `canvas` from `UserResource`          |
 
 ### Weekly digest
 
