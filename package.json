@@ -54,6 +54,6 @@
         "eslint-plugin-vue": "^7.3.0",
         "postcss": "^8.1",
         "prettier": "^3.0.3",
-        "webpack-bundle-analyzer": "^4.3.0"
+        "webpack-bundle-analyzer": "^5.3.0"
     }
 }
