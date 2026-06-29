@@ -10,9 +10,10 @@ use Canvas\Http\Controllers\UnsplashController;
 use Canvas\Http\Controllers\UploadsController;
 use Canvas\Http\Controllers\UserController;
 use Canvas\Http\Controllers\ViewController;
+use Canvas\Http\Middleware\Authorize;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:'.config('canvas.guard')])->group(function (): void {
+Route::middleware(['auth:'.config('canvas.guard'), Authorize::class])->group(function (): void {
     Route::prefix('api')->group(function (): void {
         // Stats routes...
         Route::get('stats', StatsController::class);

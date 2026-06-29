@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Canvas\Console;
 
 use Canvas\Mail\WeeklyDigest;
+use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
@@ -36,9 +37,14 @@ class DigestCommand extends Command
 
         $userModel = config('canvas.user_model');
 
-        $recipients = $userModel::with('canvasUser')
-            ->whereHas('canvasUser', fn (Builder $query) => $query->where('digest', true))
-            ->whereIn('id', Post::published()->pluck('user_id')->unique())
+        $digestUserIds = CanvasUser::query()
+            ->where('digest', true)
+            ->pluck('user_id');
+
+        $publishedAuthorIds = Post::published()->pluck('user_id')->unique();
+
+        $recipients = $userModel::query()
+            ->whereIn('id', $digestUserIds->intersect($publishedAuthorIds))
             ->get();
 
         foreach ($recipients as $user) {
