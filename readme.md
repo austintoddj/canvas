@@ -246,7 +246,7 @@ To return a single post, you'll likely want to find it by a given slug, as well 
 $post = Canvas\Models\Post::with('user', 'tags', 'topic')->firstWhere('slug', $slug);
 ```
 
-> **Important:** In the same method that returns a post, make sure you fire the `PostViewed` event, or else a 
+> **Important:** In the same method that returns a post, make sure you fire the `PostViewed` event, or else a
 > view/visit will not be recorded. Pass the current request context so that views and visits are accurately captured.
 
 ```php
@@ -287,6 +287,7 @@ $user->posts()->published()->with('topic')
 ## Updates
 
 Canvas follows [Semantic Versioning](https://semver.org) and increments versions as `MAJOR.MINOR.PATCH` numbers.
+
 - Major versions **will** contain breaking changes, so follow the [upgrade guide](.github/UPGRADE.md) for a
   step-by-step breakdown
 - Minor and patch versions should **never** contain breaking changes, so you can safely update the package by following the steps below:
@@ -346,4 +347,3 @@ If you're running into problems, feel free to [open a new issue](https://github.
 ## License
 
 Canvas is open-sourced software licensed under the [MIT license](license).
-

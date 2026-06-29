@@ -1,59 +1,59 @@
 name: tests
 
 on:
-  pull_request:
-  push:
-    branches:
-      - master
-      - develop
-  workflow_dispatch:
+    pull_request:
+    push:
+        branches:
+            - master
+            - develop
+    workflow_dispatch:
 
 permissions:
-  contents: read
+    contents: read
 
 concurrency:
-  group: tests-${{ github.ref }}
-  cancel-in-progress: true
+    group: tests-${{ github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        php: [ 8.2, 8.3, 8.4, 8.5 ]
-        laravel: [ 11, 12, 13 ]
-        exclude:
-          - php: 8.5
-            laravel: 11
-          - php: 8.2
-            laravel: 13
+    test:
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: true
+            matrix:
+                php: [8.2, 8.3, 8.4, 8.5]
+                laravel: [11, 12, 13]
+                exclude:
+                    - php: 8.5
+                      laravel: 11
+                    - php: 8.2
+                      laravel: 13
 
-    name: Laravel ${{ matrix.laravel }} on PHP ${{ matrix.php }}
+        name: Laravel ${{ matrix.laravel }} on PHP ${{ matrix.php }}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip
-          tools: composer:v2
-          coverage: none
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: ${{ matrix.php }}
+                  extensions: dom, curl, libxml, mbstring, zip
+                  tools: composer:v2
+                  coverage: none
 
-      - name: Cache Composer dependencies
-        uses: actions/cache@v5
-        with:
-          path: vendor
-          key: ${{ runner.os }}-php-${{ matrix.php }}-laravel-${{ matrix.laravel }}-${{ hashFiles('composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-php-${{ matrix.php }}-laravel-${{ matrix.laravel }}-
+            - name: Cache Composer dependencies
+              uses: actions/cache@v5
+              with:
+                  path: vendor
+                  key: ${{ runner.os }}-php-${{ matrix.php }}-laravel-${{ matrix.laravel }}-${{ hashFiles('composer.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-php-${{ matrix.php }}-laravel-${{ matrix.laravel }}-
 
-      - name: Install dependencies
-        run: |
-          composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^${{ matrix.laravel }}"
+            - name: Install dependencies
+              run: |
+                  composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^${{ matrix.laravel }}"
 
-      - name: Run tests
-        run: vendor/bin/pest --parallel --compact
+            - name: Run tests
+              run: vendor/bin/pest --parallel --compact

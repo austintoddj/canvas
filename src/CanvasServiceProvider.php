@@ -172,7 +172,7 @@ class CanvasServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../public' => public_path('vendor/canvas'),
+                __DIR__.'/../public/build' => public_path('vendor/canvas'),
             ], 'canvas-assets');
 
             $this->publishes([

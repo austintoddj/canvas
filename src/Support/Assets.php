@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace Canvas\Support;
 
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
 
 final class Assets
 {
+    /**
+     * @throws FileNotFoundException
+     */
     public static function isUpToDate(): bool
     {
         if (app()->runningUnitTests()) {
             return true;
         }
 
-        $path = public_path('vendor/canvas/mix-manifest.json');
+        $path = public_path('vendor/canvas/.vite/manifest.json');
 
         $message = sprintf(
             '%s%s.  %s',
@@ -28,6 +32,6 @@ final class Assets
             throw new RuntimeException($message);
         }
 
-        return File::get($path) === File::get(__DIR__.'/../../public/mix-manifest.json');
+        return File::get($path) === File::get(__DIR__.'/../../public/build/.vite/manifest.json');
     }
 }

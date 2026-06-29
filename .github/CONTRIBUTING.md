@@ -16,17 +16,17 @@ If you want to work locally, use a Laravel app with a sibling Canvas checkout:
 
 1. From the root of your Laravel app, add the local Canvas checkout as a Composer path repository:
 
-   ```bash
-   composer config repositories.canvas '{"type": "path", "url": "../canvas"}' --file composer.json
-   ```
+    ```bash
+    composer config repositories.canvas '{"type": "path", "url": "../canvas"}' --file composer.json
+    ```
 
 2. Require Canvas and finish the install:
 
-   ```bash
-   composer require austintoddj/canvas @dev
-   php artisan canvas:install
-   php artisan storage:link
-   ```
+    ```bash
+    composer require austintoddj/canvas @dev
+    php artisan canvas:install
+    php artisan storage:link
+    ```
 
 3. Adjust `../canvas` if your folder layout is different.
 

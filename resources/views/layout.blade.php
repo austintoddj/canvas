@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="text-zinc-950 antialiased lg:bg-zinc-100 dark:bg-zinc-900 dark:text-white dark:lg:bg-zinc-950">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,22 +8,19 @@
 
     <title>{{ config('app.name') }} ― Canvas</title>
 
-    <link rel="stylesheet" type="text/css" href="{{ mix('css/app.css', 'vendor/canvas') }}">
-    <link rel="dns-prefetch" href="//fonts.gstatic.com">
-    <link rel="stylesheet" href="//fonts.googleapis.com/css2?family=Karla&family=Merriweather:wght@400;700&display=swap">
+    @php
+        $manifest = json_decode(file_get_contents(public_path('vendor/canvas/.vite/manifest.json')), true);
+        $entry = $manifest['resources/js/app.tsx'];
+    @endphp
 
-    @if($jsVars['user']['dark_mode'])
-        <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.8.0/build/styles/sunburst.min.css">
-    @else
-        <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.8.0/build/styles/github.min.css">
-    @endif
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 
-    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.8.0/build/highlight.min.js"></script>
+    @foreach($entry['css'] ?? [] as $css)
+        <link rel="stylesheet" href="{{ asset('vendor/canvas/' . $css) }}">
+    @endforeach
 </head>
-<body class="mb-5"
-    @if($jsVars['user']['dark_mode']) data-theme="dark" @endif
-    @if(\Canvas\Support\Localization::isRightToLeftLanguage($jsVars['user']['locale'])) data-lang="rtl" @endif
->
+<body>
 
 @if(!\Canvas\Support\Assets::isUpToDate())
     <div class="alert alert-danger border-0 text-center rounded-0 mb-0">
@@ -32,14 +29,11 @@
     </div>
 @endif
 
-<div id="canvas">
-    <router-view></router-view>
-</div>
+<div id="canvas"></div>
 
 <script>
     window.Canvas = @json($jsVars);
 </script>
-
-<script type="text/javascript" src="{{ mix('js/app.js', 'vendor/canvas') }}"></script>
+<script type="module" src="{{ asset('vendor/canvas/' . $entry['file']) }}"></script>
 </body>
 </html>
