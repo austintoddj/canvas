@@ -20,10 +20,12 @@
 
             <div class="flex items-center gap-3 text-sm text-gray-500">
                 @if ($post->user)
-                    <img src="{{ \Canvas\Support\Gravatar::url($post->user->email, 40) }}"
-                         alt="{{ $post->user->name }}"
-                         class="w-8 h-8 rounded-full">
-                    <span class="font-medium text-gray-700">{{ $post->user->name }}</span>
+                    @include('canvas::ui.partials.author', [
+                        'user' => $post->user,
+                        'size' => 40,
+                        'imageClass' => 'w-8 h-8',
+                        'linkClass' => 'font-medium text-gray-700',
+                    ])
                     <span>&middot;</span>
                 @endif
                 <time datetime="{{ $post->published_at->toDateString() }}">
@@ -47,7 +49,7 @@
             </figure>
         @endif
 
-        <div class="prose-content prose prose-lg max-w-none text-gray-800 leading-relaxed">
+        <div class="prose prose-lg max-w-none font-serif text-gray-800 prose-headings:font-sans prose-a:text-indigo-600 hover:prose-a:text-indigo-800">
             {!! $post->body !!}
         </div>
 

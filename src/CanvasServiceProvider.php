@@ -12,6 +12,7 @@ use Canvas\Console\MakeAdminCommand;
 use Canvas\Console\MigrateCommand;
 use Canvas\Console\PublishCommand;
 use Canvas\Console\RemoveAccessCommand;
+use Canvas\Console\ShowUserCommand;
 use Canvas\Console\UiCommand;
 use Canvas\Events\PostViewed;
 use Canvas\Http\Requests\FormRequest;
@@ -130,6 +131,7 @@ class CanvasServiceProvider extends ServiceProvider
             MakeAdminCommand::class,
             PublishCommand::class,
             RemoveAccessCommand::class,
+            ShowUserCommand::class,
             UiCommand::class,
         ]);
     }

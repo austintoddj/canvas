@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Canvas\Console;
 
 use Canvas\Models\CanvasUser;
+use Canvas\Support\Localization;
 use Illuminate\Console\Command;
 
 class ListUsersCommand extends Command
@@ -22,12 +23,15 @@ class ListUsersCommand extends Command
             ->map(fn ($canvasUser): array => [
                 $canvasUser->user?->name,
                 $canvasUser->user?->email,
+                $canvasUser->username,
                 $canvasUser->role->label(),
+                Localization::resolveLocale($canvasUser->locale),
+                $canvasUser->timezone ?? (string) config('app.timezone'),
             ])
             ->values()
             ->all();
 
-        $this->table(['Name', 'Email', 'Role'], $rows);
+        $this->table(['Name', 'Email', 'Username', 'Role', 'Locale', 'Timezone'], $rows);
 
         return self::SUCCESS;
     }

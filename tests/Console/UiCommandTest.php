@@ -14,13 +14,17 @@ it('exits successfully and outputs the install message', function (): void {
         ->assertExitCode(0);
 });
 
-it('publishes all five reader view files', function (): void {
+it('publishes all reader view files', function (): void {
     $this->artisan('canvas:ui');
 
     $base = resource_path('views/vendor/canvas/ui');
 
-    foreach (['layout', 'index', 'show', 'tag', 'topic'] as $view) {
+    foreach (['layout', 'index', 'show', 'tag', 'topic', 'tags', 'topics', 'author'] as $view) {
         $this->assertFileExists("{$base}/{$view}.blade.php", "Missing view: {$view}.blade.php");
+    }
+
+    foreach (['author', 'pagination', 'post-list-item', 'social-links'] as $partial) {
+        $this->assertFileExists("{$base}/partials/{$partial}.blade.php", "Missing partial: {$partial}.blade.php");
     }
 });
 
@@ -37,12 +41,12 @@ it('scaffolds the controller with the correct namespace', function (): void {
     $this->assertStringNotContainsString('{{namespace}}', file_get_contents($path));
 });
 
-it('scaffolds a controller with all four reader methods', function (): void {
+it('scaffolds a controller with all reader methods', function (): void {
     $this->artisan('canvas:ui');
 
     $contents = file_get_contents(app_path('Http/Controllers/Canvas/CanvasUiController.php'));
 
-    foreach (['index', 'show', 'tag', 'topic'] as $method) {
+    foreach (['index', 'show', 'author', 'tags', 'tag', 'topics', 'topic'] as $method) {
         $this->assertStringContainsString(
             "public function {$method}",
             $contents,
@@ -69,12 +73,20 @@ it('creates the route stub with the canvas-ui prefix', function (): void {
     $this->assertStringContainsString("prefix('canvas-ui')", $contents);
 });
 
-it('creates the route stub with all four named routes', function (): void {
+it('creates the route stub with all named routes', function (): void {
     $this->artisan('canvas:ui');
 
     $contents = file_get_contents(base_path('routes/canvas-ui.php'));
 
-    foreach (['canvas-ui.index', 'canvas-ui.show', 'canvas-ui.tag', 'canvas-ui.topic'] as $name) {
+    foreach ([
+        'canvas-ui.index',
+        'canvas-ui.show',
+        'canvas-ui.author',
+        'canvas-ui.tags',
+        'canvas-ui.tag',
+        'canvas-ui.topics',
+        'canvas-ui.topic',
+    ] as $name) {
         $this->assertStringContainsString($name, $contents, "Missing named route: {$name}");
     }
 });

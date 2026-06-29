@@ -4,6 +4,7 @@ namespace {{namespace}}Http\Controllers\Canvas;
 
 use Canvas\Events\PostViewed;
 use Canvas\Http\Middleware\Session;
+use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
@@ -15,7 +16,7 @@ class CanvasUiController extends Controller
     public function index(): View
     {
         $posts = Post::published()
-            ->with('user', 'topic')
+            ->with('user.canvasUser', 'topic')
             ->latest()
             ->paginate();
 
@@ -25,7 +26,7 @@ class CanvasUiController extends Controller
     public function show(string $slug): View
     {
         $post = Post::published()
-            ->with('user', 'tags', 'topic')
+            ->with('user.canvasUser', 'tags', 'topic')
             ->firstWhere('slug', $slug);
 
         if (! $post) {
@@ -42,6 +43,45 @@ class CanvasUiController extends Controller
         return view('canvas::ui.show', compact('post'));
     }
 
+    public function author(string $username): View
+    {
+        $canvasUser = CanvasUser::query()
+            ->where('username', $username)
+            ->first();
+
+        if ($canvasUser === null) {
+            abort(404);
+        }
+
+        $userModel = config('canvas.user_model');
+
+        $user = $userModel::query()
+            ->with('canvasUser')
+            ->find($canvasUser->user_id);
+
+        if ($user === null) {
+            abort(404);
+        }
+
+        $posts = $user->posts()
+            ->published()
+            ->with('topic')
+            ->latest()
+            ->paginate();
+
+        return view('canvas::ui.author', compact('user', 'posts'));
+    }
+
+    public function tags(): View
+    {
+        $tags = Tag::query()
+            ->withCount(['posts' => fn ($query) => $query->published()])
+            ->orderBy('name')
+            ->paginate();
+
+        return view('canvas::ui.tags', compact('tags'));
+    }
+
     public function tag(string $slug): View
     {
         $tag = Tag::firstWhere('slug', $slug);
@@ -52,11 +92,21 @@ class CanvasUiController extends Controller
 
         $posts = $tag->posts()
             ->published()
-            ->with('user', 'topic')
+            ->with('user.canvasUser', 'topic')
             ->latest()
             ->paginate();
 
         return view('canvas::ui.tag', compact('tag', 'posts'));
+    }
+
+    public function topics(): View
+    {
+        $topics = Topic::query()
+            ->withCount(['posts' => fn ($query) => $query->published()])
+            ->orderBy('name')
+            ->paginate();
+
+        return view('canvas::ui.topics', compact('topics'));
     }
 
     public function topic(string $slug): View
@@ -69,7 +119,7 @@ class CanvasUiController extends Controller
 
         $posts = $topic->posts()
             ->published()
-            ->with('user', 'tags')
+            ->with('user.canvasUser', 'tags')
             ->latest()
             ->paginate();
 

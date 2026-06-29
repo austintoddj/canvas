@@ -40,12 +40,7 @@
                 @endif
 
                 @if ($post->user)
-                    <div class="flex items-center gap-2 text-sm text-gray-500">
-                        <img src="{{ \Canvas\Support\Gravatar::url($post->user->email, 32) }}"
-                             alt="{{ $post->user->name }}"
-                             class="w-6 h-6 rounded-full">
-                        <span>{{ $post->user->name }}</span>
-                    </div>
+                    @include('canvas::ui.partials.author', ['user' => $post->user])
                 @endif
             </article>
         @empty
@@ -54,6 +49,6 @@
     </div>
 
     <div class="mt-10">
-        {{ $posts->links() }}
+        {{ $posts->links('canvas::ui.partials.pagination') }}
     </div>
 @endsection
