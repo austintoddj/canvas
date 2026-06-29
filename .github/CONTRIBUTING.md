@@ -28,6 +28,14 @@ If you want to work locally, use a Laravel app with a sibling Canvas checkout:
     php artisan storage:link
     ```
 
+    To avoid re-publishing frontend assets every time you make a change, symlink the package's public directory into your Laravel app instead:
+
+    ```bash
+    rm -rf public/vendor/canvas/*
+    cd public/vendor/canvas
+    ln -s ../../../../canvas/public/* .
+    ```
+
 3. Adjust `../canvas` if your folder layout is different.
 
 ## Before opening a pull request
