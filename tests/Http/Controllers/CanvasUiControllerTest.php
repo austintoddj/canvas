@@ -13,9 +13,26 @@ beforeEach(function (): void {
     static $controllerLoaded = false;
 
     if (! $controllerLoaded) {
-        $this->artisan('canvas:ui', ['--force' => true]);
-        require_once app_path('Http/Controllers/Canvas/CanvasUiController.php');
-        $controllerLoaded = true;
+        $controllerPath = app_path('Http/Controllers/Canvas/CanvasUiController.php');
+        $lock = fopen(sys_get_temp_dir().'/canvas-test-ui.lock', 'c');
+
+        if ($lock !== false) {
+            flock($lock, LOCK_EX);
+        }
+
+        try {
+            if (! is_file($controllerPath)) {
+                $this->artisan('canvas:ui', ['--force' => true]);
+            }
+
+            require_once $controllerPath;
+            $controllerLoaded = true;
+        } finally {
+            if ($lock !== false) {
+                flock($lock, LOCK_UN);
+                fclose($lock);
+            }
+        }
     }
 
     Route::prefix('canvas-ui')->middleware(['web'])->group(function (): void {
@@ -183,7 +200,25 @@ it('returns 404 for an unknown author username', function (): void {
     $this->get('canvas-ui/@no-such-author')->assertNotFound();
 });
 
-it('renders author avatars from canvas_users instead of host email gravatar', function (): void {
+it('renders author avatars on the index from canvas_users instead of host email gravatar', function (): void {
+    $avatarHash = 'custom-avatar-hash';
+    $this->admin->canvasUser->update(['avatar' => $avatarHash]);
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $emailGravatar = md5(strtolower(trim($this->admin->email)));
+
+    $response = $this->get('canvas-ui')->assertSuccessful();
+
+    expect($response->getContent())
+        ->toContain($avatarHash)
+        ->not->toContain($emailGravatar);
+});
+
+it('renders author avatars on the post page from canvas_users instead of host email gravatar', function (): void {
     $avatarHash = 'custom-avatar-hash';
     $this->admin->canvasUser->update(['avatar' => $avatarHash]);
 
@@ -194,14 +229,9 @@ it('renders author avatars from canvas_users instead of host email gravatar', fu
 
     $emailGravatar = md5(strtolower(trim($this->admin->email)));
 
-    $indexResponse = $this->get('canvas-ui')->assertSuccessful();
-    $showResponse = $this->get("canvas-ui/{$post->slug}")->assertSuccessful();
+    $response = $this->get("canvas-ui/{$post->slug}")->assertSuccessful();
 
-    expect($indexResponse->getContent())
-        ->toContain($avatarHash)
-        ->not->toContain($emailGravatar);
-
-    expect($showResponse->getContent())
+    expect($response->getContent())
         ->toContain($avatarHash)
         ->not->toContain($emailGravatar);
 });

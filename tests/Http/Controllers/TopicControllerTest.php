@@ -120,19 +120,17 @@ it('invalid slugs are validated', function (): void {
             'name' => 'A new topic',
             'slug' => 'a new.slug',
         ])
-        ->assertStatus(422)
-        ->assertJsonStructure([
-            'errors' => [
-                'slug',
-            ],
-        ]);
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['slug']);
 });
-it('deletes an existing topic', function (): void {
-    $topic = Topic::factory()->create();
-
+it('returns not found when deleting unknown topics', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->deleteJson('canvas/api/topics/not-a-topic')
         ->assertNotFound();
+});
+
+it('deletes an existing topic', function (): void {
+    $topic = Topic::factory()->create();
 
     $this->actingAs($this->admin, 'canvas')
         ->deleteJson("canvas/api/topics/{$topic->id}")

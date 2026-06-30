@@ -18,6 +18,8 @@ function useBareUserModel(): void
 it('lists users from canvas_users when the host model lacks HasCanvasAccess', function (): void {
     useBareUserModel();
 
+    $this->seedDefaultCanvasUsers();
+
     $bareAdmin = BareUser::query()->find($this->admin->id);
 
     $this->actingAs($bareAdmin, 'canvas')

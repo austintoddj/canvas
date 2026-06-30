@@ -6,21 +6,37 @@ use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+it('allows a user to save a topic slug', function (): void {
+    $data = [
+        'name' => 'A new topic',
+        'slug' => 'a-new-topic',
+    ];
+
+    $topic = Topic::factory()->create([
+        'user_id' => $this->admin->id,
+    ]);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("/canvas/api/topics/{$topic->id}", $data)
+        ->assertSuccessful();
+
+    $this->assertDatabaseHas('canvas_topics', [
+        'id' => $response->original['id'],
+        'slug' => $response->original['slug'],
+        'user_id' => $response->original['user_id'],
+    ]);
+});
+
 it('allows topics to share the same slug across different users', function (): void {
     $data = [
         'name' => 'A new topic',
         'slug' => 'a-new-topic',
     ];
 
-    $primaryTopic = Topic::factory()->create([
+    Topic::factory()->create([
         'user_id' => $this->admin->id,
-    ]);
-    $response = $this->actingAs($this->admin, 'canvas')->postJson("/canvas/api/topics/{$primaryTopic->id}", $data);
-
-    $this->assertDatabaseHas('canvas_topics', [
-        'id' => $response->original['id'],
-        'slug' => $response->original['slug'],
-        'user_id' => $response->original['user_id'],
+        'name' => $data['name'],
+        'slug' => $data['slug'],
     ]);
 
     $secondaryAdmin = User::factory()->admin()->create();
@@ -28,7 +44,9 @@ it('allows topics to share the same slug across different users', function (): v
         'user_id' => $secondaryAdmin->id,
     ]);
 
-    $response = $this->actingAs($secondaryAdmin, 'canvas')->postJson("/canvas/api/topics/{$secondaryTopic->id}", $data);
+    $response = $this->actingAs($secondaryAdmin, 'canvas')
+        ->postJson("/canvas/api/topics/{$secondaryTopic->id}", $data)
+        ->assertSuccessful();
 
     $this->assertDatabaseHas('canvas_topics', [
         'id' => $response->original['id'],

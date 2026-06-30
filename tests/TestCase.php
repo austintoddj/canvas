@@ -8,24 +8,48 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
+/**
+ * @property-read User $contributor
+ * @property-read User $editor
+ * @property-read User $admin
+ */
 abstract class TestCase extends OrchestraTestCase
 {
     use RefreshDatabase;
 
-    /**
-     * A test user with the role of Contributor.
-     */
-    protected User $contributor;
+    /** @var array<string, User> */
+    private array $lazyCanvasUsers = [];
 
-    /**
-     * A test user with the role of Editor.
-     */
-    protected User $editor;
+    public function __get(string $name): mixed
+    {
+        if (! in_array($name, ['contributor', 'editor', 'admin'], true)) {
+            throw new \RuntimeException("Undefined property [{$name}]");
+        }
 
-    /**
-     * A test user with the role of Admin.
-     */
-    protected User $admin;
+        return $this->lazyCanvasUsers[$name] ??= User::factory()->{$name}()->create();
+    }
+
+    protected function seedDefaultCanvasUsers(): void
+    {
+        $this->contributor;
+        $this->editor;
+        $this->admin;
+    }
+
+    protected function actingAsContributor(): static
+    {
+        return $this->actingAs($this->contributor, 'canvas');
+    }
+
+    protected function actingAsEditor(): static
+    {
+        return $this->actingAs($this->editor, 'canvas');
+    }
+
+    protected function actingAsAdmin(): static
+    {
+        return $this->actingAs($this->admin, 'canvas');
+    }
 
     protected function setUp(): void
     {
@@ -34,10 +58,6 @@ abstract class TestCase extends OrchestraTestCase
         parent::setUp();
 
         $this->publishPackageAssets();
-
-        $this->contributor = User::factory()->contributor()->create();
-        $this->editor = User::factory()->editor()->create();
-        $this->admin = User::factory()->admin()->create();
     }
 
     protected function getPackageProviders($app): array
@@ -99,8 +119,21 @@ abstract class TestCase extends OrchestraTestCase
             mkdir($targetDirectory, 0777, true);
         }
 
-        if (! is_file($target)) {
-            copy($source, $target);
+        $lock = fopen(sys_get_temp_dir().'/canvas-test-config.lock', 'c');
+
+        if ($lock === false) {
+            return;
+        }
+
+        flock($lock, LOCK_EX);
+
+        try {
+            if (! is_file($target)) {
+                copy($source, $target);
+            }
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
         }
     }
 

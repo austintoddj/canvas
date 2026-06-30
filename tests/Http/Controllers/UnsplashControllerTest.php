@@ -38,3 +38,42 @@ it('requires authentication to search unsplash', function (): void {
     $this->getJson('canvas/api/unsplash?query=mountains')
         ->assertUnauthorized();
 });
+
+it('forwards not found responses from the unsplash api', function (): void {
+    config(['canvas.unsplash.access_key' => 'test-access-key']);
+
+    Http::fake([
+        'api.unsplash.com/*' => Http::response(['errors' => ['Not Found']], 404),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/unsplash?query=mountains')
+        ->assertStatus(404)
+        ->assertJsonPath('errors.0', 'Not Found');
+});
+
+it('forwards server error responses from the unsplash api', function (): void {
+    config(['canvas.unsplash.access_key' => 'test-access-key']);
+
+    Http::fake([
+        'api.unsplash.com/*' => Http::response(['error' => 'Service unavailable'], 503),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/unsplash?query=mountains')
+        ->assertStatus(503)
+        ->assertJsonPath('error', 'Service unavailable');
+});
+
+it('forwards rate limit responses from the unsplash api', function (): void {
+    config(['canvas.unsplash.access_key' => 'test-access-key']);
+
+    Http::fake([
+        'api.unsplash.com/*' => Http::response(['error' => 'Rate Limit Exceeded'], 429),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/unsplash?query=mountains')
+        ->assertStatus(429)
+        ->assertJsonPath('error', 'Rate Limit Exceeded');
+});

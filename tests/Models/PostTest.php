@@ -23,27 +23,47 @@ it('computes the published attribute', function (): void {
         'published_at' => now()->subDay(),
     ])->published);
 });
-it('allows posts to share the same slug across different users', function (): void {
+it('allows a user to save a post slug', function (): void {
     $data = [
         'slug' => 'a-new-post',
         'title' => 'A new post',
     ];
 
-    $primaryPost = Post::factory()->create([
+    $post = Post::factory()->create([
         'user_id' => $this->admin->id,
     ]);
-    $response = $this->actingAs($this->admin, 'canvas')->postJson("/canvas/api/posts/{$primaryPost->id}", $data);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("/canvas/api/posts/{$post->id}", $data)
+        ->assertSuccessful();
 
     $this->assertDatabaseHas('canvas_posts', [
         'id' => $response->original['id'],
         'slug' => $response->original['slug'],
         'user_id' => $response->original['user_id'],
     ]);
+});
+
+// Regression: GH-647 — slug uniqueness is scoped per user, not globally
+it('allows posts to share the same slug across different users', function (): void {
+    $data = [
+        'slug' => 'a-new-post',
+        'title' => 'A new post',
+    ];
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => $data['slug'],
+        'title' => $data['title'],
+    ]);
 
     $secondaryPost = Post::factory()->create([
         'user_id' => $this->editor->id,
     ]);
-    $response = $this->actingAs($this->editor, 'canvas')->postJson("/canvas/api/posts/{$secondaryPost->id}", $data);
+
+    $response = $this->actingAs($this->editor, 'canvas')
+        ->postJson("/canvas/api/posts/{$secondaryPost->id}", $data)
+        ->assertSuccessful();
 
     $this->assertDatabaseHas('canvas_posts', [
         'id' => $response->original['id'],

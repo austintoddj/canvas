@@ -45,6 +45,7 @@ it('does nothing for user models without a canvas user relationship', function (
 });
 
 it('issues a single canvas user query for the canvas shell', function (): void {
+    $contributor = $this->contributor;
     $queries = 0;
 
     DB::listen(function ($query) use (&$queries): void {
@@ -53,7 +54,7 @@ it('issues a single canvas user query for the canvas shell', function (): void {
         }
     });
 
-    $this->actingAs($this->contributor, 'canvas')
+    $this->actingAs($contributor, 'canvas')
         ->get(config('canvas.path'))
         ->assertSuccessful();
 

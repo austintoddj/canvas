@@ -14,7 +14,7 @@ Canvas is a Laravel package that adds a full blog/publishing system to an existi
 
 ### Laravel Modernization Standards
 
-- Target modern Laravel practices (use attributes over service providers where possible, readonly classes/properties, typed properties, enums, match expressions, etc.).
+- Target modern Laravel practices for Laravel 11, 12, and 13 (use attributes over service providers where possible, readonly classes/properties, typed properties, enums, match expressions, etc.).
 - Prefer Laravel's built-in features over custom implementations.
 - Use `laravel/pint` for formatting. Run it on changed files.
 - Follow PSR-12 + Laravel Pint rules strictly.
@@ -27,6 +27,7 @@ Canvas is a Laravel package that adds a full blog/publishing system to an existi
 
 - Use Pest for tests. Prefer function-style tests, `dataset()`s, and shared setup in `tests/Pest.php`.
 - Keep `tests/TestCase.php` focused on Testbench/package environment setup only.
+- Architecture tests live in `tests/ArchitectureTest.php` — update them when structural rules change.
 - Run the relevant Pest file first while iterating, then run the full parallel suite before finishing.
 
 ### Documentation Files
@@ -53,6 +54,8 @@ Canvas is a Laravel package that adds a full blog/publishing system to an existi
 ## Development Commands
 
 - `composer install`
+- `composer lint` (PHPStan via Larastan)
 - `composer test` (Pest)
 - `composer test:parallel`
-- `composer pint` or `vendor/bin/pint`
+- `composer pint` or `vendor/bin/pint` (auto-fix formatting)
+- `composer pint:test` (check formatting without fixing)

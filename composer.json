@@ -47,6 +47,7 @@
         "mockery/mockery": "^1.6",
         "orchestra/testbench": "^9.15|^10.8|^11.0",
         "pestphp/pest": "^3.8|^4.0",
+        "pestphp/pest-plugin-arch": "^3.8|^4.0",
         "pestphp/pest-plugin-laravel": "^3.2|^4.0"
     },
     "autoload": {

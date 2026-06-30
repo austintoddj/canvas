@@ -122,19 +122,17 @@ it('invalid slugs are validated', function (): void {
             'name' => 'A new tag',
             'slug' => 'a new.slug',
         ])
-        ->assertStatus(422)
-        ->assertJsonStructure([
-            'errors' => [
-                'slug',
-            ],
-        ]);
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['slug']);
 });
-it('deletes an existing tag', function (): void {
-    $tag = Tag::factory()->create();
-
+it('returns not found when deleting unknown tags', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->deleteJson('canvas/api/tags/not-a-tag')
         ->assertNotFound();
+});
+
+it('deletes an existing tag', function (): void {
+    $tag = Tag::factory()->create();
 
     $this->actingAs($this->admin, 'canvas')
         ->deleteJson("canvas/api/tags/{$tag->id}")
