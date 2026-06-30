@@ -29,6 +29,8 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function setUp(): void
     {
+        $this->ensurePublishedConfigExists();
+
         parent::setUp();
 
         $this->publishPackageAssets();
@@ -82,6 +84,26 @@ abstract class TestCase extends OrchestraTestCase
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
+    protected function ensurePublishedConfigExists(): void
+    {
+        $source = dirname(__DIR__).'/config/canvas.php';
+        $target = dirname(__DIR__).'/vendor/orchestra/testbench-core/laravel/config/canvas.php';
+
+        if (! is_file($source)) {
+            return;
+        }
+
+        $targetDirectory = dirname($target);
+
+        if (! is_dir($targetDirectory)) {
+            mkdir($targetDirectory, 0777, true);
+        }
+
+        if (! is_file($target)) {
+            copy($source, $target);
+        }
+    }
+
     protected function publishPackageAssets(): void
     {
         $source = dirname(__DIR__).'/public/vendor/canvas';
@@ -93,14 +115,29 @@ abstract class TestCase extends OrchestraTestCase
 
         File::ensureDirectoryExists(dirname($target));
 
-        if (File::isDirectory($target)) {
-            File::deleteDirectory($target);
+        $lock = fopen(sys_get_temp_dir().'/canvas-test-assets.lock', 'c');
+
+        if ($lock === false) {
+            return;
         }
 
-        File::copyDirectory($source, $target);
+        flock($lock, LOCK_EX);
 
-        if (File::exists($target.'/canvas.hot')) {
-            File::delete($target.'/canvas.hot');
+        try {
+            if (! File::exists($target.'/manifest.json')) {
+                if (File::isDirectory($target)) {
+                    File::deleteDirectory($target);
+                }
+
+                File::copyDirectory($source, $target);
+            }
+
+            if (File::exists($target.'/canvas.hot')) {
+                File::delete($target.'/canvas.hot');
+            }
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
         }
     }
 }

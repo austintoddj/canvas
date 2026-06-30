@@ -1,5 +1,6 @@
 <?php
 
+use Canvas\Http\Controllers\MediaController;
 use Canvas\Http\Controllers\PostController;
 use Canvas\Http\Controllers\SearchController;
 use Canvas\Http\Controllers\StatsController;
@@ -7,7 +8,6 @@ use Canvas\Http\Controllers\TagController;
 use Canvas\Http\Controllers\TopicController;
 use Canvas\Http\Controllers\TranslationsController;
 use Canvas\Http\Controllers\UnsplashController;
-use Canvas\Http\Controllers\UploadsController;
 use Canvas\Http\Controllers\UserController;
 use Canvas\Http\Controllers\ViewController;
 use Canvas\Http\Middleware\Authorize;
@@ -29,10 +29,14 @@ Route::middleware([
         // Unsplash routes...
         Route::get('unsplash', UnsplashController::class);
 
-        // Upload routes...
-        Route::prefix('uploads')->controller(UploadsController::class)->group(function (): void {
-            Route::post('/', 'store');
-            Route::delete('/', 'destroy');
+        // Media routes...
+        Route::prefix('media')->controller(MediaController::class)->group(function (): void {
+            Route::get('/', 'index');
+            Route::get('create', 'create');
+            Route::get('{media}', 'show');
+            Route::post('{id}', 'store');
+            Route::put('{media}', 'update');
+            Route::delete('{media}', 'destroy');
         });
 
         // Post routes...

@@ -19,9 +19,13 @@ use Canvas\Http\Requests\FormRequest;
 use Canvas\Listeners\CaptureView;
 use Canvas\Listeners\CaptureVisit;
 use Canvas\Models\CanvasUser;
+use Canvas\Models\Media;
 use Canvas\Models\Post;
+use Canvas\Policies\MediaPolicy;
 use Canvas\Policies\PostPolicy;
 use Canvas\Policies\UserPolicy;
+use Canvas\Support\MediaService;
+use Canvas\Support\MediaStorage;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
@@ -41,6 +45,9 @@ class CanvasServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/canvas.php', 'canvas');
+
+        $this->app->singleton(MediaStorage::class, static fn (): MediaStorage => MediaStorage::make());
+        $this->app->singleton(MediaService::class);
     }
 
     /**
@@ -147,6 +154,7 @@ class CanvasServiceProvider extends ServiceProvider
 
     private function registerGates(): void
     {
+        Gate::policy(Media::class, MediaPolicy::class);
         Gate::policy(Post::class, PostPolicy::class);
 
         $userModel = config('canvas.user_model');

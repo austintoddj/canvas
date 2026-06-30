@@ -1,5 +1,6 @@
 <?php
 
+use Canvas\Models\Media;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
@@ -10,8 +11,10 @@ use Ramsey\Uuid\Uuid;
 dataset('protectedRoutes', [
     ['GET', 'canvas'],
     ['GET', 'canvas/api'],
-    ['POST', 'canvas/api/uploads'],
-    ['DELETE', 'canvas/api/uploads'],
+    ['GET', 'canvas/api/media'],
+    ['GET', 'canvas/api/media/create'],
+    ['POST', 'canvas/api/media/{id}'],
+    ['DELETE', 'canvas/api/media/{media}'],
     ['GET', 'canvas/api/posts'],
     ['GET', 'canvas/api/posts/create'],
     ['GET', 'canvas/api/posts/{post}'],
@@ -49,6 +52,7 @@ beforeEach(function (): void {
 it('redirects unauthenticated users to login', function ($method, $endpoint): void {
     $endpoint = strtr($endpoint, [
         '{id}' => Uuid::uuid4()->toString(),
+        '{media}' => Media::factory()->create()->id,
         '{post}' => Post::factory()->create()->id,
         '{tag}' => Tag::factory()->create()->id,
         '{topic}' => Topic::factory()->create()->id,

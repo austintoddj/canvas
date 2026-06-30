@@ -1,12 +1,6 @@
 <?php
 
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
-
-afterEach(function (): void {
-    File::delete(config_path('canvas.php'));
-    File::delete(app_path('Providers/CanvasServiceProvider.php'));
-});
 
 it('exits successfully and outputs the install messages', function (): void {
     $this->artisan('canvas:install')
@@ -42,4 +36,5 @@ it('creates all canvas database tables', function (string $table): void {
     'canvas_views',
     'canvas_visits',
     'canvas_users',
+    'canvas_media',
 ]);

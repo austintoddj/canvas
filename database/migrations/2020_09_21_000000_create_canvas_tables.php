@@ -96,6 +96,25 @@ class CreateCanvasTables extends Migration
             $table->timestamps();
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });
+
+        Schema::create('canvas_media', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('path');
+            $table->string('filename');
+            $table->string('original_name')->nullable();
+            $table->string('mime_type');
+            $table->unsignedBigInteger('size');
+            $table->unsignedInteger('width')->nullable();
+            $table->unsignedInteger('height')->nullable();
+            $table->string('alt')->nullable();
+            $table->string('caption')->nullable();
+            $table->uuid('user_id')->nullable()->index();
+            $table->timestamps();
+            $table->softDeletes();
+            $table->index('created_at');
+            $table->index('mime_type');
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
+        });
     }
 
     /**
@@ -105,12 +124,13 @@ class CreateCanvasTables extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('canvas_posts');
-        Schema::dropIfExists('canvas_tags');
-        Schema::dropIfExists('canvas_topics');
         Schema::dropIfExists('canvas_posts_tags');
         Schema::dropIfExists('canvas_views');
         Schema::dropIfExists('canvas_visits');
+        Schema::dropIfExists('canvas_media');
+        Schema::dropIfExists('canvas_posts');
+        Schema::dropIfExists('canvas_tags');
+        Schema::dropIfExists('canvas_topics');
         Schema::dropIfExists('canvas_users');
     }
 }

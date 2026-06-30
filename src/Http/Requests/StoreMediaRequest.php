@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Canvas\Http\Requests;
 
-class UploadRequest extends FormRequest
+class StoreMediaRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -20,6 +20,9 @@ class UploadRequest extends FormRequest
                 'mimes:jpg,jpeg,gif,png,webp',
                 'max:'.((int) config('canvas.upload_filesize') / 1024),
             ],
+            'alt' => ['nullable', 'string', 'max:255'],
+            'caption' => ['nullable', 'string', 'max:255'],
+            'original_name' => ['nullable', 'string', 'max:255'],
         ];
     }
 }
