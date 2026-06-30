@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Canvas\Policies;
 
+use Canvas\Models\CanvasUser;
+
 class UserPolicy
 {
     public function create(object $user): bool
     {
-        return $user->isAdmin ?? false;
+        return CanvasUser::isAdmin($user);
     }
 
     public function update(object $user, object $targetUser): bool
     {
-        if ($user->isAdmin ?? false) {
+        if (CanvasUser::isAdmin($user)) {
             return true;
         }
 
@@ -26,6 +28,6 @@ class UserPolicy
             return false;
         }
 
-        return $user->isAdmin ?? false;
+        return CanvasUser::isAdmin($user);
     }
 }

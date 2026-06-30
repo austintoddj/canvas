@@ -6,11 +6,29 @@ namespace Canvas\Http\Resources;
 
 use Canvas\Models\CanvasUser;
 use Canvas\Support\AuthorAvatar;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
 {
+    public static function hostUserFromCanvasUser(CanvasUser $canvasUser): Model
+    {
+        $hostUser = $canvasUser->user;
+
+        if ($hostUser === null) {
+            abort(404);
+        }
+
+        $hostUser->setRelation('canvasUser', $canvasUser);
+
+        if (isset($canvasUser->posts_count)) {
+            $hostUser->setAttribute('posts_count', $canvasUser->posts_count);
+        }
+
+        return $hostUser;
+    }
+
     /**
      * @return array<string, mixed>
      */

@@ -14,10 +14,6 @@ final class FrontendBootData
 {
     public static function forUser(Authenticatable $user): array
     {
-        if (method_exists($user, 'canvasUser')) {
-            $user->loadMissing('canvasUser');
-        }
-
         $canvasUser = self::resolveCanvasUser($user);
 
         if ($canvasUser !== null && $user instanceof Model) {
@@ -41,12 +37,10 @@ final class FrontendBootData
 
     private static function resolveCanvasUser(Authenticatable $user): ?CanvasUser
     {
-        if ($user->relationLoaded('canvasUser')) {
-            return $user->getRelation('canvasUser');
-        }
+        if ($user instanceof Model && $user->relationLoaded('canvasUser')) {
+            $canvasUser = $user->getRelation('canvasUser');
 
-        if (method_exists($user, 'canvasUser')) {
-            return $user->canvasUser;
+            return $canvasUser instanceof CanvasUser ? $canvasUser : null;
         }
 
         return CanvasUser::query()->find($user->getAuthIdentifier());

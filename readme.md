@@ -54,7 +54,6 @@ Canvas follows [Semantic Versioning](https://semver.org). Major releases may inc
 
 ```bash
 composer update
-php artisan canvas:migrate
 php artisan canvas:publish
 ```
 

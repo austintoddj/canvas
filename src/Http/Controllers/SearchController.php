@@ -101,32 +101,27 @@ class SearchController extends Controller
 
     private function searchUsers(string $query): array
     {
-        $userModel = config('canvas.user_model');
-        $canvasUserIds = CanvasUser::query()->pluck('user_id');
-
-        return $userModel::query()
-            ->whereIn('id', $canvasUserIds)
-            ->select('id', 'name', 'email')
-            ->with('canvasUser')
+        return CanvasUser::query()
+            ->with(['user' => fn ($query) => $query->select('id', 'name', 'email')])
             ->when($query !== '', function (Builder $builder) use ($query): void {
                 $builder->where(function (Builder $nested) use ($query): void {
-                    $nested->where('name', 'like', "%{$query}%")
-                        ->orWhereHas('canvasUser', function (Builder $canvasUser) use ($query): void {
-                            $canvasUser->where('username', 'like', "%{$query}%");
+                    $nested->where('username', 'like', "%{$query}%")
+                        ->orWhereHas('user', function (Builder $user) use ($query): void {
+                            $user->where('name', 'like', "%{$query}%");
                         });
                 });
             })
-            ->latest()
+            ->latest('user_id')
             ->limit(self::RESULTS_PER_TYPE)
             ->get()
-            ->map(fn ($user) => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'username' => $user->canvasUser?->username,
+            ->map(fn (CanvasUser $canvasUser) => [
+                'id' => $canvasUser->user_id,
+                'name' => data_get($canvasUser->user, 'name'),
+                'email' => data_get($canvasUser->user, 'email'),
+                'username' => $canvasUser->username,
                 'avatar_url' => AuthorAvatar::url(
-                    $user->canvasUser?->avatar,
-                    (string) $user->email,
+                    $canvasUser->avatar,
+                    (string) data_get($canvasUser->user, 'email', ''),
                 ),
                 'type' => 'User',
                 'route' => 'edit-user',

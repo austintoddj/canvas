@@ -14,6 +14,22 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * Optional host-app integration for Canvas.
+ *
+ * Canvas stores access, roles, and author profile data in `canvas_users`. The
+ * package reads that table directly — routes, gates, policies, and API resources
+ * do not require this trait.
+ *
+ * Add it to your host `User` model when you want familiar Laravel ergonomics in
+ * your own application code: a `canvasUser` relationship, content ownership
+ * relations (`posts`, `tags`, `topics`), and accessors that delegate to the
+ * linked `canvas_users` row (`isAdmin`, `username`, `locale`, etc.).
+ *
+ * Granting access still happens outside this trait — via `canvas:make-admin`,
+ * `canvas:assign-role`, or the Canvas admin API — which create the `canvas_users`
+ * row this trait reads from.
+ */
 trait HasCanvasAccess
 {
     public function canvasUser(): HasOne

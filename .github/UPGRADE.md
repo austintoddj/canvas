@@ -28,17 +28,17 @@
 | Canvas access (role), author profile, UI prefs   | `canvas_users` table                       |
 | Posts, tags, topics `user_id`                    | Host `users.id` (foreign key)              |
 
-Canvas resolves the host user model via `config('canvas.user_model')` (default `App\Models\User`). It reads `id`, `name`, and `email` from that model and does not write to it. All Canvas access, profile, and preferences live in `canvas_users`. You do not need to change your host `User` model to complete the database upgrade — but see [Optional: `HasCanvasAccess`](#optional-hascanvasaccess) below if you want the usual Laravel integration.
+Canvas resolves the host user model via `config('canvas.user_model')` (default `App\Models\User`). It reads `id`, `name`, and `email` from that model for display and does not write to it. All Canvas access, profile, and preferences live in `canvas_users`. You do not need to change your host `User` model for v7 — see [Optional: `HasCanvasAccess`](#optional-hascanvasaccess) below if you want Laravel-style relationships and accessors on your host model.
 
 ### Optional: `HasCanvasAccess`
 
-Not required for the upgrade itself. Canvas loads profile and access data from `canvas_users` whether or not your host `User` model defines a relationship.
+Not required for v7 — fresh installs or upgrades. Canvas loads profile, roles, and access from `canvas_users` whether or not your host `User` model defines a relationship. Package routes, gates, and policies resolve roles from `canvas_users` directly.
 
-Adding `Canvas\Concerns\HasCanvasAccess` is a nice-to-have that gives your `User` model:
+Adding `Canvas\Concerns\HasCanvasAccess` is optional host-app sugar that gives your `User` model:
 
 - a `canvasUser` relationship to `canvas_users`
 - `posts`, `tags`, and `topics` relationships for authored content
-- role accessors (`isAdmin`, `isEditor`, `isContributor`) used by Canvas policies and gates
+- role accessors (`isAdmin`, `isEditor`, `isContributor`) for convenience in your own app code
 - profile accessors (`username`, `summary`, `avatar`, `locale`, `darkMode`, `digest`)
 
 ```php
@@ -50,7 +50,7 @@ class User extends Authenticatable
 }
 ```
 
-If you skip this, `/canvas` still loads and Canvas still checks access against `canvas_users`. Add the trait when you want those relationships and accessors available on your host `User` model — especially for admin user management, which relies on the `isAdmin` accessor.
+If you skip this, `/canvas` still loads, admin routes still work, and Canvas still checks access against `canvas_users`. Add the trait when you want those relationships and accessors on your host `User` model — for example, `$user->posts` or `$user->isAdmin` in your own controllers or Blade views.
 
 ### Prerequisites
 
@@ -120,7 +120,7 @@ All `{user}` arguments accept an email address or host user ID.
 
 #### Models
 
-- **Removed** `Canvas\Models\User`. Use your host user model with the `canvasUser` relationship.
+- **Removed** `Canvas\Models\User`. Use your host user model for identity; optionally add `HasCanvasAccess` for a `canvasUser` relationship.
 - **Added** `Canvas\Models\CanvasUser` for the `canvas_users` table (role, profile, preferences).
 - `Post`, `Tag`, and `Topic` `user()` relationships resolve to the host user model.
 
@@ -231,7 +231,7 @@ Canvas access is a row in `canvas_users`, not a flag on the host user:
 
 - **Grant** — `canvas:make-admin` / `canvas:assign-role`, or `POST /api/users/{id}` with a `role` (admin-only for role changes).
 - **Revoke** — `canvas:remove-access` or `DELETE /api/users/{user}` (admin-only; cannot delete yourself).
-- **Authorize** — every Canvas route requires an authenticated user with a `canvas_users` row.
+- **Authorize** — every Canvas route requires an authenticated user with a `canvas_users` row. Contributor, Editor, and Admin roles all pass; role only affects permissions inside Canvas.
 
 `canvas:remove-access` and `UserController@destroy` only delete `canvas_users`. Host `users` rows and authored content are preserved; posts retain their `user_id`.
 
@@ -485,7 +485,7 @@ WHERE p.user_id IS NOT NULL AND u.id IS NULL;
 | ---------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
 | 403 on `/canvas` after login       | No `canvas_users` row for the authenticated user | `canvas:make-admin` or `canvas:assign-role`                        |
 | 403 with valid session             | Wrong guard                                      | Set `CANVAS_GUARD` to your app's guard                             |
-| 403 on admin user routes           | `isAdmin` accessor missing on host `User`        | Add `HasCanvasAccess` to host user model                           |
+| 403 on admin user routes           | Authenticated user is not an Admin in `canvas_users` | `canvas:make-admin` or assign role `3` via `canvas:assign-role` |
 | Locale validation fails on save    | Locale not translated                            | Publish lang files or restrict `CANVAS_LOCALES` to available codes |
 | FK error on `canvas_users.user_id` | Host user does not exist                         | Create the host user first, then grant Canvas access               |
 | Posts show wrong author            | `user_id` still points at old v6 IDs             | Re-map `canvas_posts.user_id` to host `users.id`                   |

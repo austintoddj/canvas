@@ -18,6 +18,7 @@ use Canvas\Events\PostViewed;
 use Canvas\Http\Requests\FormRequest;
 use Canvas\Listeners\CaptureView;
 use Canvas\Listeners\CaptureVisit;
+use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Policies\PostPolicy;
 use Canvas\Policies\UserPolicy;
@@ -152,11 +153,11 @@ class CanvasServiceProvider extends ServiceProvider
         Gate::policy($userModel, UserPolicy::class);
 
         Gate::define('manage-users', static function ($user): bool {
-            return (bool) ($user->isAdmin ?? false);
+            return CanvasUser::isAdmin($user);
         });
 
         Gate::define('manage-taxonomy', static function ($user): bool {
-            return (bool) ($user->isAdmin ?? false);
+            return CanvasUser::isAdmin($user);
         });
     }
 

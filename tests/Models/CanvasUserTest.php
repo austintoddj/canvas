@@ -3,6 +3,7 @@
 use Canvas\Data\UserPreferences;
 use Canvas\Enums\Role;
 use Canvas\Models\CanvasUser;
+use Canvas\Models\Post;
 use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -90,4 +91,28 @@ it('belongs to the host user model', function (): void {
 
     expect($canvasUser->user())->toBeInstanceOf(BelongsTo::class);
     expect($canvasUser->user)->toBeInstanceOf(User::class);
+});
+
+it('counts authored posts through user_id', function (): void {
+    $user = User::factory()->create();
+    $canvasUser = CanvasUser::factory()->create([
+        'user_id' => $user->id,
+    ]);
+
+    Post::factory()->count(2)->create(['user_id' => $user->id]);
+
+    $counted = CanvasUser::query()
+        ->withPostsCount()
+        ->find($canvasUser->user_id);
+
+    expect($counted->posts_count)->toBe(2);
+});
+
+it('resolves roles from canvas_users without trait accessors', function (): void {
+    $admin = User::factory()->admin()->create();
+    $contributor = User::factory()->contributor()->create();
+
+    expect(CanvasUser::isAdmin($admin))->toBeTrue();
+    expect(CanvasUser::isContributor($contributor))->toBeTrue();
+    expect(CanvasUser::roleFor($contributor))->toBe(Role::Contributor);
 });

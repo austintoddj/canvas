@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Canvas\Policies;
 
+use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 
 class PostPolicy
 {
     public function viewAll(object $user): bool
     {
-        return ! ($user->isContributor ?? false);
+        return ! CanvasUser::isContributor($user);
     }
 
     public function view(object $user, Post $post): bool

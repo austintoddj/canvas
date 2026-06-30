@@ -9,6 +9,7 @@ use Canvas\Http\Requests\UserRequest;
 use Canvas\Http\Resources\CanvasUserResource;
 use Canvas\Http\Resources\UserResource;
 use Canvas\Models\CanvasUser;
+use Canvas\Models\Post;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -23,17 +24,21 @@ class UserController extends Controller
     public function index(): AnonymousResourceCollection
     {
         $userModel = config('canvas.user_model');
-        $canvasUserIds = CanvasUser::query()->pluck('user_id');
+        $hostTable = (new $userModel)->getTable();
 
-        return UserResource::collection(
-            $userModel::query()
-                ->whereIn('id', $canvasUserIds)
-                ->select('id', 'name', 'email')
-                ->with('canvasUser')
-                ->latest()
-                ->withCount('posts')
-                ->paginate()
+        $canvasUsers = CanvasUser::query()
+            ->with(['user' => fn ($query) => $query->select('id', 'name', 'email')])
+            ->join($hostTable, 'canvas_users.user_id', '=', "{$hostTable}.id")
+            ->orderByDesc("{$hostTable}.created_at")
+            ->select('canvas_users.*')
+            ->withPostsCount()
+            ->paginate();
+
+        $canvasUsers->through(
+            fn (CanvasUser $canvasUser): mixed => UserResource::hostUserFromCanvasUser($canvasUser),
         );
+
+        return UserResource::collection($canvasUsers);
     }
 
     /**
@@ -62,10 +67,13 @@ class UserController extends Controller
 
         Gate::forUser($currentUser)->authorize('update', $user);
 
-        $created = $syncCanvasUser($user->id, $request->validated(), $currentUser->isAdmin ?? false);
+        $created = $syncCanvasUser($user->id, $request->validated(), CanvasUser::isAdmin($currentUser));
+
+        $canvasUser = CanvasUser::query()->findOrFail($user->getKey());
+        $user->setRelation('canvasUser', $canvasUser);
 
         return response()->json([
-            'user' => UserResource::make($user->load('canvasUser')->refresh()),
+            'user' => UserResource::make($user),
         ], $created ? 201 : 200);
     }
 
@@ -74,9 +82,12 @@ class UserController extends Controller
      */
     public function show($user): UserResource
     {
-        $user->load('canvasUser')->loadCount('posts');
+        $canvasUser = CanvasUser::query()
+            ->with(['user' => fn ($query) => $query->select('id', 'name', 'email')])
+            ->withPostsCount()
+            ->findOrFail($user->getKey());
 
-        return UserResource::make($user);
+        return UserResource::make(UserResource::hostUserFromCanvasUser($canvasUser));
     }
 
     /**
@@ -84,7 +95,13 @@ class UserController extends Controller
      */
     public function posts($user): JsonResponse
     {
-        return response()->json($user->posts()->withCount('views')->paginate(), 200);
+        return response()->json(
+            Post::query()
+                ->where('user_id', $user->getKey())
+                ->withCount('views')
+                ->paginate(),
+            200,
+        );
     }
 
     /**
