@@ -481,15 +481,15 @@ WHERE p.user_id IS NOT NULL AND u.id IS NULL;
 
 ### Troubleshooting
 
-| Symptom                            | Likely cause                                     | Fix                                                                |
-| ---------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
-| 403 on `/canvas` after login       | No `canvas_users` row for the authenticated user | `canvas:make-admin` or `canvas:assign-role`                        |
-| 403 with valid session             | Wrong guard                                      | Set `CANVAS_GUARD` to your app's guard                             |
-| 403 on admin user routes           | Authenticated user is not an Admin in `canvas_users` | `canvas:make-admin` or assign role `3` via `canvas:assign-role` |
-| Locale validation fails on save    | Locale not translated                            | Publish lang files or restrict `CANVAS_LOCALES` to available codes |
-| FK error on `canvas_users.user_id` | Host user does not exist                         | Create the host user first, then grant Canvas access               |
-| Posts show wrong author            | `user_id` still points at old v6 IDs             | Re-map `canvas_posts.user_id` to host `users.id`                   |
-| Flat user object in custom code    | API shape changed                                | Read `avatar_url` and nested `canvas` from `UserResource`          |
+| Symptom                            | Likely cause                                         | Fix                                                                |
+| ---------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------ |
+| 403 on `/canvas` after login       | No `canvas_users` row for the authenticated user     | `canvas:make-admin` or `canvas:assign-role`                        |
+| 403 with valid session             | Wrong guard                                          | Set `CANVAS_GUARD` to your app's guard                             |
+| 403 on admin user routes           | Authenticated user is not an Admin in `canvas_users` | `canvas:make-admin` or assign role `3` via `canvas:assign-role`    |
+| Locale validation fails on save    | Locale not translated                                | Publish lang files or restrict `CANVAS_LOCALES` to available codes |
+| FK error on `canvas_users.user_id` | Host user does not exist                             | Create the host user first, then grant Canvas access               |
+| Posts show wrong author            | `user_id` still points at old v6 IDs                 | Re-map `canvas_posts.user_id` to host `users.id`                   |
+| Flat user object in custom code    | API shape changed                                    | Read `avatar_url` and nested `canvas` from `UserResource`          |
 
 ### Weekly digest
 

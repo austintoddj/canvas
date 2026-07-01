@@ -83,11 +83,11 @@ it('rejects invalid websites timezones locales roles and social payloads', funct
     );
 });
 
-it('rejects non-boolean preference flags', function (): void {
+it('rejects invalid theme values', function (): void {
     assertFormRequestInvalid(
         UserRequest::class,
         [
-            'dark_mode' => 'yes',
+            'theme' => 'invalid',
             'digest' => 'yes',
             'preferences' => [
                 'onboarding' => [
@@ -96,7 +96,7 @@ it('rejects non-boolean preference flags', function (): void {
             ],
         ],
         $this->contributor,
-        ['dark_mode', 'digest', 'preferences.onboarding.complete'],
+        ['theme', 'digest', 'preferences.onboarding.complete'],
         ['id' => $this->contributor->id],
         "canvas/api/users/{$this->contributor->id}",
     );
@@ -114,7 +114,7 @@ it('accepts a valid canvas profile payload', function (): void {
             ],
             'locale' => 'en',
             'timezone' => 'America/Chicago',
-            'dark_mode' => true,
+            'theme' => 'dark',
             'digest' => false,
             'preferences' => [
                 'onboarding' => [

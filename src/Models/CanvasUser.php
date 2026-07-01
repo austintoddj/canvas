@@ -27,7 +27,6 @@ class CanvasUser extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'dark_mode' => 'boolean',
         'digest' => 'boolean',
         'role' => Role::class,
         'social' => 'array',

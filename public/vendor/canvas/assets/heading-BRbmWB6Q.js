@@ -1,0 +1,1 @@
+import{O as e,o as t}from"./app-Dx9Xmm-J.js";var n=e();function r({className:e,level:r=1,...i}){return(0,n.jsx)(`h${r}`,{...i,className:t(e,`text-2xl/8 font-semibold text-zinc-950 sm:text-xl/8 dark:text-white`)})}export{r as t};

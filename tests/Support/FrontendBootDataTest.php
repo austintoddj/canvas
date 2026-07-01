@@ -36,7 +36,7 @@ it('builds the frontend boot payload', function (): void {
         'role' => $this->admin->canvas_role->value,
         'username' => $this->admin->username,
         'locale' => $this->admin->locale,
-        'dark_mode' => $this->admin->dark_mode,
+        'theme' => $this->admin->theme,
         'digest' => $this->admin->digest,
     ]);
 });

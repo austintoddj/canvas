@@ -7,7 +7,9 @@
         "preview": "vite preview",
         "lint": "eslint .",
         "format": "prettier --write .",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest"
     },
     "dependencies": {
         "@headlessui/react": "^2.2.10",
@@ -28,10 +30,13 @@
         "eslint": "^10.6.0",
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-react-refresh": "^0.5.3",
+        "happy-dom": "^20.8.3",
+        "jsdom": "^29.1.1",
         "laravel-vite-plugin": "^3.1.0",
         "prettier": "^3.9.1",
         "tailwindcss": "^4.3.1",
         "typescript": "^6.0.3",
-        "typescript-eslint": "^8.62.0"
+        "typescript-eslint": "^8.62.0",
+        "vitest": "^4.0.18"
     }
 }

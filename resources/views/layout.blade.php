@@ -13,6 +13,12 @@
 
     <script>
         window.Canvas = @json($jsVars);
+        // Apply saved theme before first render to avoid flash
+        (function () {
+            var t = localStorage.getItem('canvas-theme');
+            var dark = t === 'dark' || (t !== 'light' && (t === 'system' || !t) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (dark) document.documentElement.classList.add('dark');
+        })();
     </script>
 
     {!! \Canvas\Support\Vite::reactRefresh() !!}

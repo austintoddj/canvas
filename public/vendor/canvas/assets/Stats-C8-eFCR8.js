@@ -1,0 +1,1 @@
+import{O as e}from"./app-Dx9Xmm-J.js";import{t}from"./PlaceholderPage-Q6wsXxnv.js";var n=e();function r(){return(0,n.jsx)(t,{title:`Post stats`,description:`Coming in Step 5.`})}export{r as default};

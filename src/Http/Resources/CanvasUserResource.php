@@ -40,7 +40,7 @@ class CanvasUserResource extends JsonResource
             'social' => [],
             'locale' => config('app.fallback_locale'),
             'timezone' => config('app.timezone'),
-            'dark_mode' => false,
+            'theme' => 'system',
             'digest' => false,
             'preferences' => UserPreferences::defaults(),
         ];
@@ -73,7 +73,7 @@ class CanvasUserResource extends JsonResource
             'social' => $canvasUser->socialLinks(),
             'locale' => Localization::resolveLocale($canvasUser->locale),
             'timezone' => $canvasUser->timezone ?? config('app.timezone'),
-            'dark_mode' => (bool) $canvasUser->dark_mode,
+            'theme' => $canvasUser->theme ?? 'system',
             'digest' => (bool) $canvasUser->digest,
             'preferences' => $canvasUser->resolvedPreferences(),
         ];

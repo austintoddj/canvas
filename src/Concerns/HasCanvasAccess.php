@@ -92,9 +92,9 @@ trait HasCanvasAccess
         return Attribute::get(fn () => Localization::resolveLocale($this->canvasUser?->locale));
     }
 
-    protected function darkMode(): Attribute
+    protected function theme(): Attribute
     {
-        return Attribute::get(fn () => (bool) ($this->canvasUser?->dark_mode ?? false));
+        return Attribute::get(fn () => $this->canvasUser?->theme ?? 'system');
     }
 
     protected function digest(): Attribute

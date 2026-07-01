@@ -29,7 +29,7 @@ final class CanvasUserAttributes
      * @var list<string>
      */
     public const UI = [
-        'dark_mode',
+        'theme',
     ];
 
     /**

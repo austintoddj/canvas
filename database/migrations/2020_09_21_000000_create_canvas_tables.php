@@ -90,7 +90,7 @@ class CreateCanvasTables extends Migration
             $table->json('social')->nullable();
             $table->string('locale')->nullable();
             $table->string('timezone')->nullable();
-            $table->boolean('dark_mode')->default(false);
+            $table->string('theme')->nullable();
             $table->boolean('digest')->default(false);
             $table->json('preferences')->nullable();
             $table->timestamps();

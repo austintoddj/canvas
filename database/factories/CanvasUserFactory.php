@@ -27,7 +27,7 @@ class CanvasUserFactory extends Factory
             ],
             'locale' => 'en',
             'timezone' => 'UTC',
-            'dark_mode' => false,
+            'theme' => null,
             'digest' => true,
             'preferences' => null,
         ];

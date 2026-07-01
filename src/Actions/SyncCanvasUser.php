@@ -25,7 +25,7 @@ final readonly class SyncCanvasUser
 
         $attributes = Arr::only($data, CanvasUserAttributes::columns());
 
-        foreach ([...CanvasUserAttributes::UI, ...CanvasUserAttributes::NOTIFICATIONS] as $booleanColumn) {
+        foreach ([...CanvasUserAttributes::NOTIFICATIONS] as $booleanColumn) {
             if (Arr::has($attributes, $booleanColumn)) {
                 $attributes[$booleanColumn] = (bool) $attributes[$booleanColumn];
             }
@@ -50,7 +50,7 @@ final readonly class SyncCanvasUser
             CanvasUser::create([
                 'user_id' => $userId,
                 'role' => $roleValue,
-                'dark_mode' => (bool) ($attributes['dark_mode'] ?? false),
+                'theme' => $attributes['theme'] ?? null,
                 'digest' => (bool) ($attributes['digest'] ?? false),
                 'locale' => $attributes['locale'] ?? config('app.fallback_locale'),
                 'timezone' => $attributes['timezone'] ?? config('app.timezone'),

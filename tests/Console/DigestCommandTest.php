@@ -19,7 +19,7 @@ it('sends digest emails to users with mail enabled', function (): void {
     CanvasUser::factory()->create([
         'user_id' => $user->id,
         'role' => Role::Contributor,
-        'dark_mode' => false,
+        'theme' => null,
         'digest' => true,
         'locale' => 'en',
         'timezone' => 'UTC',
@@ -68,7 +68,7 @@ it('does not send digest emails to users with mail disabled', function (): void 
     CanvasUser::factory()->create([
         'user_id' => $user->id,
         'role' => Role::Contributor,
-        'dark_mode' => false,
+        'theme' => null,
         'digest' => false,
     ]);
 

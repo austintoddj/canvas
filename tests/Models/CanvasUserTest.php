@@ -7,17 +7,17 @@ use Canvas\Models\Post;
 use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-it('casts the role and boolean preference columns', function (): void {
+it('stores the role and theme preference columns', function (): void {
     $user = User::factory()->create();
     $canvasUser = CanvasUser::factory()->create([
         'user_id' => $user->id,
         'role' => Role::Admin,
-        'dark_mode' => true,
+        'theme' => 'dark',
         'digest' => false,
     ]);
 
     expect($canvasUser->role)->toBe(Role::Admin);
-    expect($canvasUser->dark_mode)->toBeTrue();
+    expect($canvasUser->theme)->toBe('dark');
     expect($canvasUser->digest)->toBeFalse();
 });
 

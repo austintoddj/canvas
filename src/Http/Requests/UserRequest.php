@@ -60,7 +60,7 @@ class UserRequest extends FormRequest
                 Rule::in(Localization::availableLanguageCodes()),
             ],
             'timezone' => 'nullable|timezone:all',
-            'dark_mode' => 'nullable|bool',
+            'theme' => 'nullable|in:system,light,dark',
             'digest' => 'nullable|bool',
             'preferences' => 'nullable|array',
             'preferences.onboarding' => 'nullable|array',

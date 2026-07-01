@@ -32,7 +32,7 @@ it('transforms a host user with nested canvas data', function (): void {
         'summary' => 'Bio',
         'website' => 'https://example.com',
         'social' => ['twitter' => 'writer'],
-        'dark_mode' => false,
+        'theme' => 'system',
         'digest' => true,
     ]);
 });
@@ -51,7 +51,7 @@ it('exposes canvas defaults for create forms', function (): void {
         'username' => null,
         'locale' => config('app.fallback_locale'),
         'timezone' => config('app.timezone'),
-        'dark_mode' => false,
+        'theme' => 'system',
         'digest' => false,
         'preferences' => [
             'onboarding' => [

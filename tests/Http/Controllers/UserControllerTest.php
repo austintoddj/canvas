@@ -52,7 +52,7 @@ describe('when listing users', function (): void {
         expect($response->json('canvas'))->toMatchArray([
             'locale' => config('app.fallback_locale'),
             'timezone' => config('app.timezone'),
-            'dark_mode' => false,
+            'theme' => 'system',
             'digest' => false,
             'preferences' => [
                 'onboarding' => [
@@ -270,16 +270,16 @@ describe('when enforcing role authorization', function (): void {
 });
 
 describe('when saving preferences', function (): void {
-    it('saves dark mode preference to canvas_users', function (): void {
+    it('saves theme preference to canvas_users', function (): void {
         $this->actingAs($this->contributor, 'canvas')
             ->postJson("canvas/api/users/{$this->contributor->id}", [
-                'dark_mode' => true,
+                'theme' => 'dark',
             ])
             ->assertSuccessful();
 
         $this->assertDatabaseHas('canvas_users', [
             'user_id' => $this->contributor->id,
-            'dark_mode' => true,
+            'theme' => 'dark',
         ]);
     });
 
@@ -391,7 +391,7 @@ describe('when isolating host user data', function (): void {
     it('does not store canvas fields on the host user model', function (): void {
         $this->actingAs($this->contributor, 'canvas')
             ->postJson("canvas/api/users/{$this->contributor->id}", [
-                'dark_mode' => true,
+                'theme' => 'light',
                 'digest' => false,
                 'summary' => 'Bio',
                 'username' => 'writer',
@@ -401,7 +401,7 @@ describe('when isolating host user data', function (): void {
 
         $fresh = $this->contributor->fresh();
 
-        $this->assertArrayNotHasKey('dark_mode', $fresh->getAttributes());
+        $this->assertArrayNotHasKey('theme', $fresh->getAttributes());
         $this->assertArrayNotHasKey('digest', $fresh->getAttributes());
         $this->assertArrayNotHasKey('summary', $fresh->getAttributes());
         $this->assertArrayNotHasKey('username', $fresh->getAttributes());
