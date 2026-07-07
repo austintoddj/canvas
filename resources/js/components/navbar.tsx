@@ -45,7 +45,7 @@ export const NavbarItem = forwardRef(function NavbarItem(
 ) {
     const classes = clsx(
         // Base
-        'relative flex min-w-0 items-center gap-3 rounded-lg p-2 text-left text-base/6 font-medium text-zinc-950 sm:text-sm/5',
+        'relative flex min-w-0 cursor-pointer items-center gap-3 rounded-lg p-2 text-left text-base/6 font-medium text-zinc-950 sm:text-sm/5 data-disabled:cursor-not-allowed',
         // Leading icon/icon-only
         '*:data-[slot=icon]:size-6 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:fill-zinc-500 sm:*:data-[slot=icon]:size-5',
         // Trailing icon (down chevron or similar)
@@ -82,7 +82,7 @@ export const NavbarItem = forwardRef(function NavbarItem(
             ) : (
                 <Headless.Button
                     {...props}
-                    className={clsx('cursor-default', classes)}
+                    className={classes}
                     data-current={current ? 'true' : undefined}
                     ref={ref}
                 >

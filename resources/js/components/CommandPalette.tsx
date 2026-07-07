@@ -157,7 +157,7 @@ function ResultItem({ result }: { result: SearchResult }) {
             value={result}
             className={({ focus }) =>
                 clsx(
-                    'flex cursor-default select-none items-center gap-3 px-4 py-2.5',
+                    'flex cursor-pointer select-none items-center gap-3 px-4 py-2.5 data-disabled:cursor-not-allowed',
                     focus
                         ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white'
                         : 'text-zinc-700 dark:text-zinc-300'

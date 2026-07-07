@@ -67,7 +67,7 @@ class UserController extends Controller
 
         Gate::forUser($currentUser)->authorize('update', $user);
 
-        $created = $syncCanvasUser($user->id, $request->validated(), CanvasUser::isAdmin($currentUser));
+        $created = $syncCanvasUser((string) $user->getKey(), $request->validated(), CanvasUser::isAdmin($currentUser));
 
         $canvasUser = CanvasUser::query()->findOrFail($user->getKey());
         $user->setRelation('canvasUser', $canvasUser);

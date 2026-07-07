@@ -1,1 +1,0 @@
-import{O as e}from"./app-Dx9Xmm-J.js";import{t}from"./PlaceholderPage-Q6wsXxnv.js";var n=e();function r(){return(0,n.jsx)(t,{title:`Media library`,description:`Coming in Step 6.`})}export{r as default};

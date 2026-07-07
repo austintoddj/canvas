@@ -6,7 +6,7 @@ This document is the implementation blueprint for the React admin SPA shipped in
 
 **Scope:** Admin dashboard SPA only. Does not cover the optional reader frontend (`resources/views/ui/**`) or host-app authentication.
 
-**v7 posture:** Ship a complete admin experience — post settings, SEO, media library, analytics, and admin workflows. The **rich-text body editor is explicitly deferred**; use a UI placeholder until an editor is chosen.
+**v7 posture:** Ship a complete admin experience — post settings, SEO, media library, analytics, and admin workflows. The **rich-text body editor implementation is deferred** to Step E; use `BodyEditorPlaceholder` until then. **Editor choice: TipTap** (see [Body editor](#body-editor-deferred)).
 
 **How to use this plan:** Work chat-by-chat through the [Implementation tracker](#implementation-tracker) below. When an item ships, change `- [ ]` to `- [x]` in this file. The **next unchecked item** is what to tackle next.
 
@@ -50,35 +50,46 @@ This document is the implementation blueprint for the React admin SPA shipped in
 
 ### Step 4 — Post SEO panel
 
-- [ ] 4.1 — `lib/seo.ts` resolution helpers (see [Post SEO specification](#post-seo-specification))
-- [ ] 4.2 — `PostSeoPanel` — SEO title, meta description, canonical URL
-- [ ] 4.3 — `SeoPreview` — live SERP + social card previews
-- [ ] 4.4 — `FeaturedImagePicker` — media library modal; optional Unsplash tab
-- [ ] 4.5 — Wire `meta: { title, description, canonical_link }` on save
-- [ ] 4.6 — Unit tests for `lib/seo.ts`
+- [x] 4.1 — `lib/seo.ts` resolution helpers (see [Post SEO specification](#post-seo-specification))
+- [x] 4.2 — `PostSeoPanel` — SEO title, meta description, canonical URL
+- [x] 4.3 — `SeoPreview` — live SERP + social card previews
+- [x] 4.4 — `FeaturedImagePicker` — media library modal; optional Unsplash tab
+- [x] 4.5 — Wire `meta: { title, description, canonical_link }` on save
+- [x] 4.6 — Unit tests for `lib/seo.ts`
 
 **Step 4 done when:** SEO fields persist; previews update live; featured image drives social preview.
 
 ### Step 5 — Posts list and stats
 
-- [ ] 5.1 — `/posts` — published/draft tabs, pagination, scope toggle (Editor+)
-- [ ] 5.2 — Row actions: Edit, Stats (published only), Delete
-- [ ] 5.3 — `/posts/:id/stats` — charts from `PostInsights`
-- [ ] 5.4 — Sidebar recent posts from `GET /api/posts` (limit 5)
+- [x] 5.1 — `/posts` — published/draft tabs, pagination, scope toggle (Editor+)
+- [x] 5.2 — Row actions: Edit, Stats (published only), Delete
+- [x] 5.3 — `/posts/:id/stats` — charts from `PostInsights`
+- [x] 5.4 — Sidebar recent posts from `GET /api/posts` (limit 5)
 
 **Step 5 done when:** Full post lifecycle works for Contributor and Editor roles.
+
+### Shell polish (shipped alongside Steps 1–5)
+
+UX infrastructure completed in parallel with the post workflow — not a numbered step, but required for a cohesive admin shell.
+
+- [x] **Dark mode** — `useTheme` hook (`system` / `light` / `dark`); `applyTheme()` toggles `.dark` on `<html>`; persisted to `localStorage` (`canvas-theme`) and `POST /api/users/{id}` with `{ theme }`. Boot script in `layout.blade.php` applies theme before first paint to avoid flash.
+- [x] **Tailwind v4 dark variant** — `@custom-variant dark (&:where(.dark, .dark *));` in `app.css`. Tailwind v4 defaults to OS `prefers-color-scheme`; class-based toggling requires this override.
+- [x] **User dropdown** — Muted zinc hover/focus (not Catalyst blue); theme icon toggle in menu; profile row links to `/settings` (Canvas profile, not host app settings); external links with trailing icons (`hostHomeUrl()` for Home Page, Changelog, Help, Docs). Helpers: `dropdownProfileItemClass`, `dropdownInsetItemClass` in `dropdown.tsx`.
+- [x] **Cursor affordance** — Base-layer pointer styles in `app.css` for links, buttons, labels, and disabled states.
+- [x] **Backend fix** — `UserController`: cast `(string) $user->getKey()` for `SyncCanvasUser` on theme save (was passing `int`).
 
 ### Step 6 — Media library
 
 - [ ] 6.1 — `/media` — grid, search, mime filter, scope toggle, upload
 - [ ] 6.2 — `/media/:id` — metadata edit, delete
-- [ ] 6.3 — `MediaPicker` modal (reused by featured-image picker)
+- [x] 6.3 — `MediaPicker` modal — **shipped in Step 4** (`components/media/MediaPicker.tsx` + `MediaPickerPanel`; used by `FeaturedImagePicker`). Step 6 may extract shared grid/upload UI from the picker, but the modal itself is done.
 
-**Step 6 done when:** Upload and browse work independently of the body editor.
+**Step 6 done when:** Full `/media` and `/media/:id` pages work; picker modal already reusable.
 
 ### Step 7 — Settings and user admin
 
-- [ ] 7.1 — `/settings` — profile form; apply `dark_mode` to document
+- [x] 7.0 — Theme preference — layout dropdown + `useTheme` (see [Shell polish](#shell-polish-shipped-alongside-steps-15)); satisfies the old “apply dark mode” requirement
+- [ ] 7.1 — `/settings` — profile form (name, bio, avatar, digest, etc.)
 - [ ] 7.2 — `/settings/users` — list, grant, revoke, role edit (admin only)
 - [ ] 7.3 — Mark `preferences.onboarding.complete` after first meaningful action
 
@@ -93,8 +104,8 @@ This document is the implementation blueprint for the React admin SPA shipped in
 
 ### Step 9 — Dashboard and search
 
-- [ ] 9.1 — `/` dashboard — stats cards + 30-day charts
-- [ ] 9.2 — Command palette (`⌘K`) — `GET /api/search`
+- [ ] 9.1 — `/` dashboard — stats cards + 30-day charts (reuse `StatCard`, `DailyBarChart` from posts stats)
+- [ ] 9.2 — Command palette (`⌘K`) — `GET /api/search` — **partially shipped**: `CommandPalette` wired in `Layout`; may need role gating and polish
 - [ ] 9.3 — Optional `/search` full-page reuse
 
 **Step 9 done when:** Dashboard and search work for all roles with gate-appropriate results.
@@ -106,30 +117,54 @@ This document is the implementation blueprint for the React admin SPA shipped in
 
 **Step 10 done when:** CI green; built assets load in a host app.
 
-### Step E — Body editor (deferred — do not start until editor is chosen)
+### Step E — Body editor (deferred — TipTap; do not start until Steps 1–10 ship)
 
-- [ ] E.1 — Choose editor (Novel, Tiptap, Lexical, etc.) and document `body` format contract (HTML vs JSON)
-- [ ] E.2 — Replace `BodyEditorPlaceholder` with real editor component
-- [ ] E.3 — Wire inline image upload to `uploadMedia()` helper
-- [ ] E.4 — Serialize editor content into `body` on autosave
-- [ ] E.5 — Hydrate editor from `body` on load
-- [ ] E.6 — Update reader (separate effort) if format contract changes
+- [x] E.1 — **Editor: TipTap.** `body` stays **HTML** (matches `PostRequest` string + reader `{!! $post->body !!}`). Expect substantial TipTap customization (extensions, toolbar, media, paste rules) — treat as its own sub-effort inside Step E.
+- [ ] E.2 — Add TipTap dependencies; scaffold `components/editor/` (e.g. `PostBodyEditor.tsx`)
+- [ ] E.3 — Replace `BodyEditorPlaceholder` with TipTap editor shell
+- [ ] E.4 — Wire inline image upload to `uploadMedia()` helper
+- [ ] E.5 — Serialize editor HTML into `body` on autosave
+- [ ] E.6 — Hydrate editor from existing `body` HTML on load
+- [ ] E.7 — Reader verification (separate effort) — confirm stored HTML still renders correctly
 
-**Step E done when:** Authors can write and format post body content in the chosen editor.
+**Step E done when:** Authors can write and format post body content in TipTap; `body` round-trips as HTML.
 
 ---
 
 ## What to do next
 
-**Right now:** Start at the first unchecked item in the tracker — **4.1** (`lib/seo.ts`).
+**Right now:** Start at the first unchecked item in the tracker — **6.1** (`/media` grid page). Pages `Media/Index.tsx` and `Media/Show.tsx` are still `PlaceholderPage` stubs; reuse patterns from `MediaPickerPanel` (grid, search, scope, upload).
 
-Work Steps 1–10 in order. Skip **Step E** entirely until you have picked an editor. Each numbered step maps to one PR (or a short stack).
+Work Steps 1–10 in order. **Step E (TipTap)** waits until Steps 1–10 ship — do not install TipTap packages or build the editor during Steps 4–10. Each numbered step maps to one PR (or a short stack).
+
+### Handoff notes (for next chat)
+
+| Topic | Detail |
+| ----- | ------ |
+| **Steps complete** | 1–5 + shell polish + E.1 + 6.3 + 7.0 |
+| **Profile route** | `/settings` → `Settings/Profile.tsx` (stub). User dropdown profile row already links here. |
+| **Home Page link** | `hostHomeUrl()` in `lib/urls.ts` — host app origin, not Canvas basename |
+| **MediaPicker** | `components/media/MediaPicker.tsx` — grid, search, scope toggle, inline upload; wire into featured image via `FeaturedImagePicker` |
+| **Tests** | 11 Vitest files (~88 tests): `api`, `permissions`, `i18n`, `seo`, `analytics`, `posts-list`, `posts-form`, `media-upload`, `useTheme`, `urls`, `canvas-context`. No full React page integration tests yet. |
+| **Quality gates** | `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` all green |
+| **Command palette** | `CommandPalette` wired in `Layout` (⌘K) with `GET /api/search` — polish/permissions may belong in Step 9 |
+| **i18n** | `lib/i18n.ts` exists; boot `translations` not yet consumed broadly in UI |
 
 ---
 
 ## Body editor (deferred)
 
-The post body rich-text editor is **not in scope** for Steps 1–10. Do not install Novel, Tiptap, or any other editor package yet.
+The post body rich-text editor is **not in scope** for Steps 1–10. **TipTap** is the chosen editor for Step E; do not install `@tiptap/*` packages until Step E starts.
+
+### Editor decision: TipTap
+
+| Decision        | Choice   | Rationale                                                                 |
+| --------------- | -------- | ------------------------------------------------------------------------- |
+| Editor library  | TipTap   | Headless, extension-based; fits heavy customization needs for v7        |
+| `body` format   | HTML     | Already stored as nullable string; reader outputs unescaped HTML today    |
+| Integration     | Step E   | Metadata, SEO, media, and publishing ship first without editor deps      |
+
+**Customization scope (Step E):** Toolbar, block/inline extensions, link handling, image nodes (library + upload), paste/sanitize rules, and distraction-free writing UX. Details belong in Step E implementation — not in Steps 4–10.
 
 ### Placeholder component
 
@@ -157,7 +192,7 @@ Create `components/posts/BodyEditorPlaceholder.tsx`:
 - Backend stores `body` as a nullable string (`PostRequest`: `'body' => 'nullable|string'`).
 - Reader renders `{!! $post->body !!}` — HTML is the practical format today.
 - Until Step E: load `body` from API into component state; send it back on save without an editing surface.
-- When an editor is chosen, document whether `body` stays HTML or moves to another format; update Step E checklist and reader accordingly.
+- Step E (TipTap): edit HTML in the editor; persist serialized HTML in `body`. No JSON/ProseMirror-doc storage in v7 unless requirements change.
 
 ### Post editor layout (current target)
 
@@ -253,23 +288,30 @@ Reader should emit `<title>`, description meta, canonical, Open Graph, Twitter C
 
 ## Current state and gaps
 
-| Area               | Status                               |
-| ------------------ | ------------------------------------ |
-| **Routing**        | Only `/` and `/posts` registered     |
-| **Pages**          | Dashboard and Posts index are stubs  |
-| **Editor**         | None — placeholder only until Step E |
-| **SEO UI**         | None — backend `meta` JSON unused    |
-| **API client**     | None                                 |
-| **Frontend tests** | None                                 |
-| **i18n**           | Boot `translations` not consumed     |
+| Area               | Status                                                                 |
+| ------------------ | ---------------------------------------------------------------------- |
+| **Routing**        | All routes registered in `router.tsx`; lazy-loaded via `Page.tsx`      |
+| **Pages shipped**  | Posts list, editor, stats — full workflows                             |
+| **Pages stub**     | Dashboard, media, tags, topics, settings — `PlaceholderPage`           |
+| **Editor**         | TipTap chosen (E.1); `BodyEditorPlaceholder` until Step E              |
+| **SEO UI**         | `PostSeoPanel`, `SeoPreview`, `FeaturedImagePicker` in editor sidebar  |
+| **Media**          | `uploadMedia()` helper + `MediaPicker` modal; `/media` pages TODO (Step 6) |
+| **API client**     | `lib/api.ts` + domain modules (`posts`, `media`, `users`, `stats`, …)  |
+| **Frontend tests** | Vitest — 11 test files covering lib/helpers (~88 tests)                |
+| **Theme**          | `useTheme` + class-based dark mode working end-to-end                  |
+| **i18n**           | `lib/i18n.ts` ready; boot `translations` not wired broadly in UI yet   |
+| **Command palette**| Wired in layout (⌘K); calls `GET /api/search` — Step 9 polish TBD      |
 
 ### Layout links without backend
 
-| Link                                | Disposition         |
-| ----------------------------------- | ------------------- |
-| Inbox, Support, Changelog, Feedback | Defer / hide        |
-| Privacy policy, Logout              | Host handoff        |
-| Recent Posts sidebar                | Replace in Step 5.4 |
+| Link                                | Disposition                                      |
+| ----------------------------------- | ------------------------------------------------ |
+| Inbox, Support, Feedback            | Defer / hide                                     |
+| Changelog, Help, Docs                 | External GitHub links (trailing icons in dropdown) |
+| Home Page                           | `hostHomeUrl()` — host app origin                |
+| Privacy policy, Logout              | Host handoff                                     |
+| Profile                             | `/settings` (Canvas profile — Step 7.1)          |
+| Recent Posts sidebar                | Live from `useRecentPosts` (Step 5.4)            |
 
 ---
 
@@ -325,7 +367,7 @@ Base: `{window.Canvas.path}/api`. All routes require auth + `canvas_users` row.
 | ------------------------------------------ | ------------------------------------------- |
 | `title`, `slug`                            | Required                                    |
 | `summary`                                  | Deck + SEO fallback                         |
-| `body`                                     | String — pass-through until Step E          |
+| `body`                                     | HTML string — pass-through until Step E (TipTap) |
 | `published_at`                             | `null` = draft                              |
 | `featured_image`, `featured_image_caption` | Hero / social                               |
 | `meta`                                     | `{ title?, description?, canonical_link? }` |
@@ -358,27 +400,44 @@ Base: `{window.Canvas.path}/api`. All routes require auth + `canvas_users` row.
 resources/js/
 ├── lib/
 │   ├── api.ts
-│   ├── api/              # posts, media, users, …
+│   ├── api/                    # posts, media, users, stats, search, tags, topics, unsplash
 │   ├── seo.ts
+│   ├── analytics.ts
+│   ├── posts/
+│   │   ├── form.ts
+│   │   └── list.ts
+│   ├── urls.ts                 # hostOrigin(), hostHomeUrl()
 │   ├── permissions.ts
 │   └── i18n.ts
 ├── components/
 │   ├── posts/
-│   │   ├── BodyEditorPlaceholder.tsx   # ← placeholder until Step E
+│   │   ├── BodyEditorPlaceholder.tsx   # placeholder until Step E (TipTap)
 │   │   ├── PostEditorLayout.tsx
 │   │   ├── PostSidebar.tsx
 │   │   ├── PostSeoPanel.tsx
 │   │   ├── SeoPreview.tsx
 │   │   ├── FeaturedImagePicker.tsx
 │   │   └── PublishPanel.tsx
-│   ├── media/MediaPicker.tsx
-│   └── search/CommandPalette.tsx
-├── hooks/usePostAutosave.ts
-├── pages/…
-└── __tests__/…
+│   ├── media/MediaPicker.tsx           # MediaPicker + MediaPickerPanel (Step 4/6.3)
+│   ├── analytics/
+│   │   ├── DailyBarChart.tsx
+│   │   └── StatCard.tsx
+│   └── CommandPalette.tsx              # ⌘K search (wired in Layout)
+├── hooks/
+│   ├── usePostAutosave.ts
+│   ├── useTheme.ts
+│   ├── useRecentPosts.ts
+│   ├── useCanvas.ts
+│   └── usePermissions.ts
+├── contexts/CanvasContext.tsx
+├── pages/
+│   ├── Posts/Index.tsx, Editor.tsx, Stats.tsx   # shipped
+│   ├── Media/Index.tsx, Show.tsx                # stubs → Step 6
+│   └── …                                        # dashboard, tags, topics, settings stubs
+└── __tests__/                                   # api, seo, analytics, posts-list, useTheme, urls, …
 ```
 
-No `components/editor/` directory until Step E.
+`components/editor/` (TipTap) does not exist until Step E. `resources/css/app.css` holds the Tailwind v4 dark variant and base cursor styles.
 
 ---
 
@@ -395,16 +454,18 @@ No `components/editor/` directory until Step E.
 
 | Role        | Path               | Expected                                                  |
 | ----------- | ------------------ | --------------------------------------------------------- |
-| Contributor | `/posts`           | Create draft; metadata saves                              |
-| Contributor | `/posts/:id`       | SEO panel + featured image work; body placeholder visible |
-| Editor      | `/posts?scope=all` | All authors' posts                                        |
-| Admin       | `/settings/users`  | Grant/revoke access                                       |
+| Contributor | `/posts`           | Tabs, pagination, create/edit/delete; metadata saves      |
+| Contributor | `/posts/:id`       | SEO panel + featured image + autosave; body placeholder   |
+| Contributor | `/posts/:id/stats` | Charts (published posts only)                             |
+| Editor      | `/posts?scope=all` | All authors' posts + media scope                          |
+| Any         | User dropdown      | Theme toggle persists; profile links to `/settings`       |
+| Admin       | `/settings/users`  | Grant/revoke access (Step 7 — still stub)                 |
 
 ---
 
 ## Non-goals
 
-- Rich-text body editor (Step E — deferred)
+- Rich-text body editor implementation (Step E — TipTap, deferred until Steps 1–10)
 - Reader frontend SEO rendering
 - Tag/topic taxonomy SEO
 - Host-app auth (login/logout)
@@ -415,12 +476,21 @@ No `components/editor/` directory until Step E.
 
 ## Reference files
 
-| Concern           | Source                                                       |
-| ----------------- | ------------------------------------------------------------ |
-| API routes        | `routes/web.php`                                             |
-| Post validation   | `src/Http/Requests/PostRequest.php`                          |
-| Post `meta` shape | `database/factories/PostFactory.php`                         |
-| Boot payload      | `src/Support/FrontendBootData.php`                           |
-| Roles / gates     | `src/Enums/Role.php`, `src/CanvasServiceProvider.php`        |
-| v7 upgrade        | `.github/UPGRADE.md`                                         |
-| Current SPA       | `resources/js/router.tsx`, `resources/js/layouts/Layout.tsx` |
+| Concern              | Source                                                       |
+| -------------------- | ------------------------------------------------------------ |
+| API routes           | `routes/web.php`                                             |
+| Post validation      | `src/Http/Requests/PostRequest.php`                          |
+| Post `meta` shape    | `database/factories/PostFactory.php`                         |
+| Boot payload         | `src/Support/FrontendBootData.php`                           |
+| Theme boot script    | `resources/views/layout.blade.php`                           |
+| Dark mode / cursor   | `resources/css/app.css`                                      |
+| Theme hook           | `resources/js/hooks/useTheme.ts`                             |
+| User theme save      | `src/Http/Controllers/UserController.php`                    |
+| SEO helpers          | `resources/js/lib/seo.ts`                                    |
+| Posts list helpers   | `resources/js/lib/posts/list.ts`                             |
+| Analytics helpers    | `resources/js/lib/analytics.ts`                              |
+| Media picker         | `resources/js/components/media/MediaPicker.tsx`              |
+| Host URL helpers     | `resources/js/lib/urls.ts`                                   |
+| Roles / gates        | `src/Enums/Role.php`, `src/CanvasServiceProvider.php`        |
+| v7 upgrade           | `.github/UPGRADE.md`                                         |
+| Current SPA          | `resources/js/router.tsx`, `resources/js/layouts/Layout.tsx` |

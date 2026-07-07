@@ -17,7 +17,7 @@
         (function () {
             var t = localStorage.getItem('canvas-theme');
             var dark = t === 'dark' || (t !== 'light' && (t === 'system' || !t) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            if (dark) document.documentElement.classList.add('dark');
+            document.documentElement.classList.toggle('dark', dark);
         })();
     </script>
 

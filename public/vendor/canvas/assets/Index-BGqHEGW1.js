@@ -1,1 +1,0 @@
-import{O as e}from"./app-Dx9Xmm-J.js";var t=e();function n(){return(0,t.jsxs)(`div`,{className:`p-8`,children:[(0,t.jsx)(`h1`,{className:`text-2xl font-semibold`,children:`Posts`}),(0,t.jsx)(`p`,{className:`mt-2 text-gray-600`,children:`Manage your posts here.`})]})}export{n as default};

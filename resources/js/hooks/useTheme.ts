@@ -59,6 +59,7 @@ export function useTheme(): { mode: ThemeMode; setMode: (mode: ThemeMode) => voi
         (next: ThemeMode) => {
             setModeState(next);
             localStorage.setItem(STORAGE_KEY, next);
+            applyTheme(next);
             api.post(`/users/${user.id}`, { theme: next }).catch(() => {});
         },
         [user.id]

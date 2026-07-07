@@ -65,6 +65,7 @@ export function TableRow({
                 {...props}
                 className={clsx(
                     className,
+                    href && 'cursor-pointer',
                     href &&
                         'has-[[data-row-link][data-focus]]:outline-2 has-[[data-row-link][data-focus]]:-outline-offset-2 has-[[data-row-link][data-focus]]:outline-blue-500 dark:focus-within:bg-white/2.5',
                     striped && 'even:bg-zinc-950/2.5 dark:even:bg-white/2.5',

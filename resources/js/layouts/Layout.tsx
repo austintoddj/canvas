@@ -4,10 +4,12 @@ import {
     Dropdown,
     DropdownButton,
     DropdownDivider,
-    DropdownHeader,
     DropdownItem,
     DropdownLabel,
     DropdownMenu,
+    DropdownTrailingIcon,
+    dropdownInsetItemClass,
+    dropdownProfileItemClass,
 } from '@/components/dropdown';
 import { Navbar, NavbarItem, NavbarSection, NavbarSpacer } from '@/components/navbar';
 import {
@@ -26,13 +28,21 @@ import { useCanvas } from '@/hooks/useCanvas';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
 import { type ThemeMode, useTheme } from '@/hooks/useTheme';
+import { hostHomeUrl } from '@/lib/urls';
 import {
+    ArrowTopRightOnSquareIcon,
+    BookOpenIcon,
     Cog6ToothIcon,
+    ComputerDesktopIcon,
     DocumentTextIcon,
     HomeIcon,
+    LifebuoyIcon,
     MagnifyingGlassIcon,
+    MoonIcon,
     PhotoIcon,
     RectangleStackIcon,
+    RocketLaunchIcon,
+    SunIcon,
     TagIcon,
     UsersIcon,
 } from '@heroicons/react/20/solid';
@@ -41,29 +51,36 @@ import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 
 function ThemeToggle({ mode, setMode }: { mode: ThemeMode; setMode: (m: ThemeMode) => void }) {
-    const options: { value: ThemeMode; label: string }[] = [
-        { value: 'system', label: 'System' },
-        { value: 'light', label: 'Light' },
-        { value: 'dark', label: 'Dark' },
+    const options: { value: ThemeMode; label: string; Icon: typeof SunIcon }[] = [
+        { value: 'system', label: 'System theme', Icon: ComputerDesktopIcon },
+        { value: 'light', label: 'Light theme', Icon: SunIcon },
+        { value: 'dark', label: 'Dark theme', Icon: MoonIcon },
     ];
 
     return (
         <div className="col-span-full flex items-center justify-between px-3.5 py-2 sm:px-3 sm:py-1.5">
             <span className="text-base/6 text-zinc-950 sm:text-sm/6 dark:text-white">Theme</span>
-            <div className="flex rounded-md ring-1 ring-zinc-950/10 dark:ring-white/10 overflow-hidden text-xs">
-                {options.map(({ value, label }) => (
+            <div
+                className="flex rounded-lg bg-zinc-950/5 p-0.5 dark:bg-white/10"
+                role="group"
+                aria-label="Theme"
+            >
+                {options.map(({ value, label, Icon }) => (
                     <button
                         key={value}
                         type="button"
+                        aria-label={label}
+                        aria-pressed={mode === value}
+                        title={label}
                         onClick={() => setMode(value)}
                         className={clsx(
-                            'px-2.5 py-1 transition-colors focus:outline-none',
+                            'rounded-md p-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950/20 dark:focus-visible:ring-white/25',
                             mode === value
-                                ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900'
-                                : 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200'
+                                ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-900 dark:text-white'
+                                : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'
                         )}
                     >
-                        {label}
+                        <Icon className="size-4" aria-hidden="true" />
                     </button>
                 ))}
             </div>
@@ -76,43 +93,65 @@ function UserDropdownContent({ mode, setMode }: { mode: ThemeMode; setMode: (m: 
 
     return (
         <>
-            <DropdownHeader>
-                <a href="/settings" className="flex min-w-0 items-center gap-3 group">
-                    <Avatar src={user.avatar_url} className="size-8 shrink-0" square alt="" />
-                    <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm/5 font-medium text-zinc-950 group-hover:text-zinc-700 dark:text-white dark:group-hover:text-zinc-300">
-                            {user.name}
-                        </span>
-                        <span className="block truncate text-xs/5 text-zinc-500 dark:text-zinc-400">{user.email}</span>
+            <DropdownItem href="/settings" className={dropdownProfileItemClass}>
+                <Avatar src={user.avatar_url} className="size-8 shrink-0" square alt="" />
+                <div className="min-w-0 flex-1 text-left">
+                    <span className="block truncate text-sm/5 font-medium text-zinc-950 dark:text-white">
+                        {user.name}
                     </span>
-                    <Cog6ToothIcon className="size-4 shrink-0 text-zinc-400 dark:text-zinc-500" />
-                </a>
-            </DropdownHeader>
+                    <span className="block truncate text-xs/5 text-zinc-500 dark:text-zinc-400">{user.email}</span>
+                </div>
+                <Cog6ToothIcon className="size-4 shrink-0 text-zinc-400 dark:text-zinc-500" />
+            </DropdownItem>
 
             <DropdownDivider />
 
             {/* Theme toggle — plain div so it doesn't close the menu */}
             <ThemeToggle mode={mode} setMode={setMode} />
 
-            <DropdownItem href="/" target="_blank" rel="noopener noreferrer">
-                <DropdownLabel>Home Page</DropdownLabel>
+            <DropdownItem
+                href={hostHomeUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={dropdownInsetItemClass}
+            >
+                <DropdownLabel inset>Home Page</DropdownLabel>
+                <DropdownTrailingIcon inset>
+                    <ArrowTopRightOnSquareIcon />
+                </DropdownTrailingIcon>
             </DropdownItem>
             <DropdownItem
                 href="https://github.com/austintoddj/canvas/releases/latest"
                 target="_blank"
                 rel="noopener noreferrer"
+                className={dropdownInsetItemClass}
             >
-                <DropdownLabel>Changelog</DropdownLabel>
+                <DropdownLabel inset>Changelog</DropdownLabel>
+                <DropdownTrailingIcon inset>
+                    <RocketLaunchIcon />
+                </DropdownTrailingIcon>
             </DropdownItem>
             <DropdownItem
                 href="https://github.com/austintoddj/canvas/discussions"
                 target="_blank"
                 rel="noopener noreferrer"
+                className={dropdownInsetItemClass}
             >
-                <DropdownLabel>Help</DropdownLabel>
+                <DropdownLabel inset>Help</DropdownLabel>
+                <DropdownTrailingIcon inset>
+                    <LifebuoyIcon />
+                </DropdownTrailingIcon>
             </DropdownItem>
-            <DropdownItem href="https://github.com/austintoddj/canvas" target="_blank" rel="noopener noreferrer">
-                <DropdownLabel>Docs</DropdownLabel>
+            <DropdownItem
+                href="https://github.com/austintoddj/canvas"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={dropdownInsetItemClass}
+            >
+                <DropdownLabel inset>Docs</DropdownLabel>
+                <DropdownTrailingIcon inset>
+                    <BookOpenIcon />
+                </DropdownTrailingIcon>
             </DropdownItem>
 
             <DropdownDivider />

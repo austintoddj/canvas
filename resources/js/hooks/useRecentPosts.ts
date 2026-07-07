@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import { api } from '@/lib/api';
-import type { PostListItem, PostsIndexResponse } from '@/types/api';
+import { postsApi } from '@/lib/api/posts';
+import type { PostListItem } from '@/types/api';
 
 export function useRecentPosts(limit = 5): { posts: PostListItem[]; loading: boolean } {
     const [posts, setPosts] = useState<PostListItem[]>([]);
@@ -10,7 +10,8 @@ export function useRecentPosts(limit = 5): { posts: PostListItem[]; loading: boo
     useEffect(() => {
         const controller = new AbortController();
 
-        api.get<PostsIndexResponse>('/posts', controller.signal)
+        postsApi
+            .index(undefined, controller.signal)
             .then((response) => {
                 setPosts(response.posts.data.slice(0, limit));
             })

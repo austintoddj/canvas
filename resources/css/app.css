@@ -1,6 +1,25 @@
 @import 'tailwindcss';
 
+/* Class-based dark mode — toggled via applyTheme() on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
     --font-sans: Inter, sans-serif;
     --font-sans--font-feature-settings: 'cv11';
+}
+
+/* Pointer on clickables (Vercel-style affordance); component classes can still override when needed. */
+@layer base {
+    a[href],
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']),
+    label[for],
+    summary {
+        cursor: pointer;
+    }
+
+    button:disabled,
+    [aria-disabled='true'] {
+        cursor: not-allowed;
+    }
 }

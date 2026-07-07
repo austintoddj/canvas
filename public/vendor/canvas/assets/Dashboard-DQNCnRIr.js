@@ -1,0 +1,1 @@
+import{n as e}from"./clsx-8OFgDltU.js";import{t}from"./divider-CBcjYbzi.js";import{t as n}from"./heading-BlXSLnzy.js";var r=e();function i(){return(0,r.jsxs)(r.Fragment,{children:[(0,r.jsx)(n,{children:`Dashboard`}),(0,r.jsx)(t,{className:`mt-6`})]})}export{i as default};

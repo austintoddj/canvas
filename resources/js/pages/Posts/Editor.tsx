@@ -2,9 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useBlocker, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import BodyEditorPlaceholder from '@/components/posts/BodyEditorPlaceholder';
+import FeaturedImagePicker from '@/components/posts/FeaturedImagePicker';
 import PostEditorLayout from '@/components/posts/PostEditorLayout';
+import PostSeoPanel from '@/components/posts/PostSeoPanel';
 import PostSidebar from '@/components/posts/PostSidebar';
 import PublishPanel from '@/components/posts/PublishPanel';
+import { Divider } from '@/components/divider';
+import { Heading } from '@/components/heading';
 import { Text } from '@/components/text';
 import { usePostAutosave } from '@/hooks/usePostAutosave';
 import { postsApi } from '@/lib/api/posts';
@@ -174,6 +178,46 @@ export default function PostsEditor() {
                         onChange={handleFormChange}
                         onSlugManualEdit={() => setSlugManuallyEdited(true)}
                     />
+
+                    <Divider soft />
+
+                    <div>
+                        <Heading level={3} className="text-base/7">
+                            Featured image
+                        </Heading>
+                        <Text className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                            Hero image for the post and social previews
+                        </Text>
+                        <div className="mt-4">
+                            <FeaturedImagePicker
+                                form={form}
+                                disabled={!autosaveEnabled}
+                                onChange={handleFormChange}
+                            />
+                        </div>
+                    </div>
+
+                    <Divider soft />
+
+                    <div>
+                        <Heading level={3} className="text-base/7">
+                            SEO
+                        </Heading>
+                        <Text className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                            Search and social metadata overrides
+                        </Text>
+                        <div className="mt-4">
+                            <PostSeoPanel
+                                form={form}
+                                fieldErrors={fieldErrors}
+                                disabled={!autosaveEnabled}
+                                onChange={handleFormChange}
+                            />
+                        </div>
+                    </div>
+
+                    <Divider soft />
+
                     <PublishPanel
                         form={form}
                         saveStatus={saveStatus}
