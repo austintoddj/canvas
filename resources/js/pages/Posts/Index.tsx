@@ -206,11 +206,15 @@ export default function PostsIndex() {
             </div>
 
             <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex rounded-lg border border-zinc-950/10 p-0.5 dark:border-white/10">
+                <div className="flex gap-0.5 rounded-lg bg-zinc-950/5 p-0.5 dark:bg-white/5">
                     <Button
                         type="button"
                         plain
-                        className={filters.tab === 'published' ? 'bg-zinc-950/5 dark:bg-white/10' : ''}
+                        className={
+                            filters.tab === 'published'
+                                ? 'bg-white shadow-sm dark:bg-zinc-700 data-hover:bg-white dark:data-hover:bg-zinc-700'
+                                : ''
+                        }
                         onClick={() => setFilters({ tab: 'published' }, true)}
                     >
                         Published
@@ -223,7 +227,11 @@ export default function PostsIndex() {
                     <Button
                         type="button"
                         plain
-                        className={filters.tab === 'draft' ? 'bg-zinc-950/5 dark:bg-white/10' : ''}
+                        className={
+                            filters.tab === 'draft'
+                                ? 'bg-white shadow-sm dark:bg-zinc-700 data-hover:bg-white dark:data-hover:bg-zinc-700'
+                                : ''
+                        }
                         onClick={() => setFilters({ tab: 'draft' }, true)}
                     >
                         Drafts
@@ -236,11 +244,15 @@ export default function PostsIndex() {
                 </div>
 
                 {canViewAllPosts ? (
-                    <div className="flex rounded-lg border border-zinc-950/10 p-0.5 dark:border-white/10">
+                    <div className="flex gap-0.5 rounded-lg bg-zinc-950/5 p-0.5 dark:bg-white/5">
                         <Button
                             type="button"
                             plain
-                            className={filters.scope === 'user' ? 'bg-zinc-950/5 dark:bg-white/10' : ''}
+                            className={
+                                filters.scope === 'user'
+                                    ? 'bg-white shadow-sm dark:bg-zinc-700 data-hover:bg-white dark:data-hover:bg-zinc-700'
+                                    : ''
+                            }
                             onClick={() => setFilters({ scope: 'user' }, true)}
                         >
                             Mine
@@ -248,7 +260,11 @@ export default function PostsIndex() {
                         <Button
                             type="button"
                             plain
-                            className={filters.scope === 'all' ? 'bg-zinc-950/5 dark:bg-white/10' : ''}
+                            className={
+                                filters.scope === 'all'
+                                    ? 'bg-white shadow-sm dark:bg-zinc-700 data-hover:bg-white dark:data-hover:bg-zinc-700'
+                                    : ''
+                            }
                             onClick={() => setFilters({ scope: 'all' }, true)}
                         >
                             All authors

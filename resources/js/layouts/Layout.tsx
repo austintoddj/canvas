@@ -101,7 +101,9 @@ function UserDropdownContent({ mode, setMode }: { mode: ThemeMode; setMode: (m: 
                     </span>
                     <span className="block truncate text-xs/5 text-zinc-500 dark:text-zinc-400">{user.email}</span>
                 </div>
-                <Cog6ToothIcon className="size-4 shrink-0 text-zinc-400 dark:text-zinc-500" />
+                <DropdownTrailingIcon>
+                    <Cog6ToothIcon />
+                </DropdownTrailingIcon>
             </DropdownItem>
 
             <DropdownDivider />
