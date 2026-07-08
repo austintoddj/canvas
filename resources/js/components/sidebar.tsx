@@ -95,6 +95,8 @@ export const SidebarItem = forwardRef(function SidebarItem(
         '*:data-[slot=icon]:size-6 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:fill-zinc-500 sm:*:data-[slot=icon]:size-5',
         // Trailing icon (down chevron or similar)
         '*:last:data-[slot=icon]:ml-auto *:last:data-[slot=icon]:size-5 sm:*:last:data-[slot=icon]:size-4',
+        // Trailing keyboard shortcut
+        '*:data-[slot=shortcut]:ml-auto',
         // Avatar
         '*:data-[slot=avatar]:-m-0.5 *:data-[slot=avatar]:size-7 sm:*:data-[slot=avatar]:size-6',
         // Hover
@@ -129,12 +131,7 @@ export const SidebarItem = forwardRef(function SidebarItem(
                     <TouchTarget>{children}</TouchTarget>
                 </Headless.CloseButton>
             ) : (
-                <Headless.Button
-                    {...props}
-                    className={classes}
-                    data-current={current ? 'true' : undefined}
-                    ref={ref}
-                >
+                <Headless.Button {...props} className={classes} data-current={current ? 'true' : undefined} ref={ref}>
                     <TouchTarget>{children}</TouchTarget>
                 </Headless.Button>
             )}
@@ -144,4 +141,17 @@ export const SidebarItem = forwardRef(function SidebarItem(
 
 export function SidebarLabel({ className, ...props }: React.ComponentPropsWithoutRef<'span'>) {
     return <span {...props} className={clsx(className, 'truncate')} />;
+}
+
+export function SidebarShortcut({ className, ...props }: React.ComponentPropsWithoutRef<'span'>) {
+    return (
+        <span
+            data-slot="shortcut"
+            {...props}
+            className={clsx(
+                className,
+                'ml-auto hidden gap-0.5 text-[0.625rem]/4 font-medium text-zinc-400 sm:inline-flex dark:text-zinc-500'
+            )}
+        />
+    );
 }

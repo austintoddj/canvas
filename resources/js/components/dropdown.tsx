@@ -171,11 +171,7 @@ export function DropdownTrailingIcon({
     return (
         <span
             data-slot="trailing-icon"
-            className={clsx(
-                'flex items-center',
-                inset ? 'col-start-2 justify-self-end' : undefined,
-                className
-            )}
+            className={clsx('flex items-center', inset ? 'col-start-2 justify-self-end' : undefined, className)}
         >
             {children}
         </span>

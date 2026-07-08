@@ -80,12 +80,7 @@ export const NavbarItem = forwardRef(function NavbarItem(
                     <TouchTarget>{children}</TouchTarget>
                 </Link>
             ) : (
-                <Headless.Button
-                    {...props}
-                    className={classes}
-                    data-current={current ? 'true' : undefined}
-                    ref={ref}
-                >
+                <Headless.Button {...props} className={classes} data-current={current ? 'true' : undefined} ref={ref}>
                     <TouchTarget>{children}</TouchTarget>
                 </Headless.Button>
             )}

@@ -139,16 +139,16 @@ Work Steps 1–10 in order. **Step E (TipTap)** waits until Steps 1–10 ship �
 
 ### Handoff notes (for next chat)
 
-| Topic | Detail |
-| ----- | ------ |
-| **Steps complete** | 1–5 + shell polish + E.1 + 6.3 + 7.0 |
-| **Profile route** | `/settings` → `Settings/Profile.tsx` (stub). User dropdown profile row already links here. |
-| **Home Page link** | `hostHomeUrl()` in `lib/urls.ts` — host app origin, not Canvas basename |
-| **MediaPicker** | `components/media/MediaPicker.tsx` — grid, search, scope toggle, inline upload; wire into featured image via `FeaturedImagePicker` |
-| **Tests** | 11 Vitest files (~88 tests): `api`, `permissions`, `i18n`, `seo`, `analytics`, `posts-list`, `posts-form`, `media-upload`, `useTheme`, `urls`, `canvas-context`. No full React page integration tests yet. |
-| **Quality gates** | `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` all green |
-| **Command palette** | `CommandPalette` wired in `Layout` (⌘K) with `GET /api/search` — polish/permissions may belong in Step 9 |
-| **i18n** | `lib/i18n.ts` exists; boot `translations` not yet consumed broadly in UI |
+| Topic               | Detail                                                                                                                                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Steps complete**  | 1–5 + shell polish + E.1 + 6.3 + 7.0                                                                                                                                                                       |
+| **Profile route**   | `/settings` → `Settings/Profile.tsx` (stub). User dropdown profile row already links here.                                                                                                                 |
+| **Home Page link**  | `hostHomeUrl()` in `lib/urls.ts` — host app origin, not Canvas basename                                                                                                                                    |
+| **MediaPicker**     | `components/media/MediaPicker.tsx` — grid, search, scope toggle, inline upload; wire into featured image via `FeaturedImagePicker`                                                                         |
+| **Tests**           | 11 Vitest files (~88 tests): `api`, `permissions`, `i18n`, `seo`, `analytics`, `posts-list`, `posts-form`, `media-upload`, `useTheme`, `urls`, `canvas-context`. No full React page integration tests yet. |
+| **Quality gates**   | `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` all green                                                                                                                                 |
+| **Command palette** | `CommandPalette` wired in `Layout` (⌘K) with `GET /api/search` — polish/permissions may belong in Step 9                                                                                                   |
+| **i18n**            | `lib/i18n.ts` exists; boot `translations` not yet consumed broadly in UI                                                                                                                                   |
 
 ---
 
@@ -158,11 +158,11 @@ The post body rich-text editor is **not in scope** for Steps 1–10. **TipTap** 
 
 ### Editor decision: TipTap
 
-| Decision        | Choice   | Rationale                                                                 |
-| --------------- | -------- | ------------------------------------------------------------------------- |
-| Editor library  | TipTap   | Headless, extension-based; fits heavy customization needs for v7        |
-| `body` format   | HTML     | Already stored as nullable string; reader outputs unescaped HTML today    |
-| Integration     | Step E   | Metadata, SEO, media, and publishing ship first without editor deps      |
+| Decision       | Choice | Rationale                                                              |
+| -------------- | ------ | ---------------------------------------------------------------------- |
+| Editor library | TipTap | Headless, extension-based; fits heavy customization needs for v7       |
+| `body` format  | HTML   | Already stored as nullable string; reader outputs unescaped HTML today |
+| Integration    | Step E | Metadata, SEO, media, and publishing ship first without editor deps    |
 
 **Customization scope (Step E):** Toolbar, block/inline extensions, link handling, image nodes (library + upload), paste/sanitize rules, and distraction-free writing UX. Details belong in Step E implementation — not in Steps 4–10.
 
@@ -288,30 +288,30 @@ Reader should emit `<title>`, description meta, canonical, Open Graph, Twitter C
 
 ## Current state and gaps
 
-| Area               | Status                                                                 |
-| ------------------ | ---------------------------------------------------------------------- |
-| **Routing**        | All routes registered in `router.tsx`; lazy-loaded via `Page.tsx`      |
-| **Pages shipped**  | Posts list, editor, stats — full workflows                             |
-| **Pages stub**     | Dashboard, media, tags, topics, settings — `PlaceholderPage`           |
-| **Editor**         | TipTap chosen (E.1); `BodyEditorPlaceholder` until Step E              |
-| **SEO UI**         | `PostSeoPanel`, `SeoPreview`, `FeaturedImagePicker` in editor sidebar  |
-| **Media**          | `uploadMedia()` helper + `MediaPicker` modal; `/media` pages TODO (Step 6) |
-| **API client**     | `lib/api.ts` + domain modules (`posts`, `media`, `users`, `stats`, …)  |
-| **Frontend tests** | Vitest — 11 test files covering lib/helpers (~88 tests)                |
-| **Theme**          | `useTheme` + class-based dark mode working end-to-end                  |
-| **i18n**           | `lib/i18n.ts` ready; boot `translations` not wired broadly in UI yet   |
-| **Command palette**| Wired in layout (⌘K); calls `GET /api/search` — Step 9 polish TBD      |
+| Area                | Status                                                                     |
+| ------------------- | -------------------------------------------------------------------------- |
+| **Routing**         | All routes registered in `router.tsx`; lazy-loaded via `Page.tsx`          |
+| **Pages shipped**   | Posts list, editor, stats — full workflows                                 |
+| **Pages stub**      | Dashboard, media, tags, topics, settings — `PlaceholderPage`               |
+| **Editor**          | TipTap chosen (E.1); `BodyEditorPlaceholder` until Step E                  |
+| **SEO UI**          | `PostSeoPanel`, `SeoPreview`, `FeaturedImagePicker` in editor sidebar      |
+| **Media**           | `uploadMedia()` helper + `MediaPicker` modal; `/media` pages TODO (Step 6) |
+| **API client**      | `lib/api.ts` + domain modules (`posts`, `media`, `users`, `stats`, …)      |
+| **Frontend tests**  | Vitest — 11 test files covering lib/helpers (~88 tests)                    |
+| **Theme**           | `useTheme` + class-based dark mode working end-to-end                      |
+| **i18n**            | `lib/i18n.ts` ready; boot `translations` not wired broadly in UI yet       |
+| **Command palette** | Wired in layout (⌘K); calls `GET /api/search` — Step 9 polish TBD          |
 
 ### Layout links without backend
 
-| Link                                | Disposition                                      |
-| ----------------------------------- | ------------------------------------------------ |
-| Inbox, Support, Feedback            | Defer / hide                                     |
-| Changelog, Help, Docs                 | External GitHub links (trailing icons in dropdown) |
-| Home Page                           | `hostHomeUrl()` — host app origin                |
-| Privacy policy, Logout              | Host handoff                                     |
-| Profile                             | `/settings` (Canvas profile — Step 7.1)          |
-| Recent Posts sidebar                | Live from `useRecentPosts` (Step 5.4)            |
+| Link                     | Disposition                                        |
+| ------------------------ | -------------------------------------------------- |
+| Inbox, Support, Feedback | Defer / hide                                       |
+| Changelog, Help, Docs    | External GitHub links (trailing icons in dropdown) |
+| Home Page                | `hostHomeUrl()` — host app origin                  |
+| Privacy policy, Logout   | Host handoff                                       |
+| Profile                  | `/settings` (Canvas profile — Step 7.1)            |
+| Recent Posts sidebar     | Live from `useRecentPosts` (Step 5.4)              |
 
 ---
 
@@ -363,15 +363,15 @@ Base: `{window.Canvas.path}/api`. All routes require auth + `canvas_users` row.
 
 ### Posts store payload (key fields)
 
-| Field                                      | Notes                                       |
-| ------------------------------------------ | ------------------------------------------- |
-| `title`, `slug`                            | Required                                    |
-| `summary`                                  | Deck + SEO fallback                         |
+| Field                                      | Notes                                            |
+| ------------------------------------------ | ------------------------------------------------ |
+| `title`, `slug`                            | Required                                         |
+| `summary`                                  | Deck + SEO fallback                              |
 | `body`                                     | HTML string — pass-through until Step E (TipTap) |
-| `published_at`                             | `null` = draft                              |
-| `featured_image`, `featured_image_caption` | Hero / social                               |
-| `meta`                                     | `{ title?, description?, canonical_link? }` |
-| `tags`, `topic`                            | `[{ name, slug }]`                          |
+| `published_at`                             | `null` = draft                                   |
+| `featured_image`, `featured_image_caption` | Hero / social                                    |
+| `meta`                                     | `{ title?, description?, canonical_link? }`      |
+| `tags`, `topic`                            | `[{ name, slug }]`                               |
 
 ---
 
@@ -452,14 +452,14 @@ resources/js/
 
 ### Smoke matrix (Steps 1–10, no editor)
 
-| Role        | Path               | Expected                                                  |
-| ----------- | ------------------ | --------------------------------------------------------- |
-| Contributor | `/posts`           | Tabs, pagination, create/edit/delete; metadata saves      |
-| Contributor | `/posts/:id`       | SEO panel + featured image + autosave; body placeholder   |
-| Contributor | `/posts/:id/stats` | Charts (published posts only)                             |
-| Editor      | `/posts?scope=all` | All authors' posts + media scope                          |
-| Any         | User dropdown      | Theme toggle persists; profile links to `/settings`       |
-| Admin       | `/settings/users`  | Grant/revoke access (Step 7 — still stub)                 |
+| Role        | Path               | Expected                                                |
+| ----------- | ------------------ | ------------------------------------------------------- |
+| Contributor | `/posts`           | Tabs, pagination, create/edit/delete; metadata saves    |
+| Contributor | `/posts/:id`       | SEO panel + featured image + autosave; body placeholder |
+| Contributor | `/posts/:id/stats` | Charts (published posts only)                           |
+| Editor      | `/posts?scope=all` | All authors' posts + media scope                        |
+| Any         | User dropdown      | Theme toggle persists; profile links to `/settings`     |
+| Admin       | `/settings/users`  | Grant/revoke access (Step 7 — still stub)               |
 
 ---
 
@@ -476,21 +476,21 @@ resources/js/
 
 ## Reference files
 
-| Concern              | Source                                                       |
-| -------------------- | ------------------------------------------------------------ |
-| API routes           | `routes/web.php`                                             |
-| Post validation      | `src/Http/Requests/PostRequest.php`                          |
-| Post `meta` shape    | `database/factories/PostFactory.php`                         |
-| Boot payload         | `src/Support/FrontendBootData.php`                           |
-| Theme boot script    | `resources/views/layout.blade.php`                           |
-| Dark mode / cursor   | `resources/css/app.css`                                      |
-| Theme hook           | `resources/js/hooks/useTheme.ts`                             |
-| User theme save      | `src/Http/Controllers/UserController.php`                    |
-| SEO helpers          | `resources/js/lib/seo.ts`                                    |
-| Posts list helpers   | `resources/js/lib/posts/list.ts`                             |
-| Analytics helpers    | `resources/js/lib/analytics.ts`                              |
-| Media picker         | `resources/js/components/media/MediaPicker.tsx`              |
-| Host URL helpers     | `resources/js/lib/urls.ts`                                   |
-| Roles / gates        | `src/Enums/Role.php`, `src/CanvasServiceProvider.php`        |
-| v7 upgrade           | `.github/UPGRADE.md`                                         |
-| Current SPA          | `resources/js/router.tsx`, `resources/js/layouts/Layout.tsx` |
+| Concern            | Source                                                       |
+| ------------------ | ------------------------------------------------------------ |
+| API routes         | `routes/web.php`                                             |
+| Post validation    | `src/Http/Requests/PostRequest.php`                          |
+| Post `meta` shape  | `database/factories/PostFactory.php`                         |
+| Boot payload       | `src/Support/FrontendBootData.php`                           |
+| Theme boot script  | `resources/views/layout.blade.php`                           |
+| Dark mode / cursor | `resources/css/app.css`                                      |
+| Theme hook         | `resources/js/hooks/useTheme.ts`                             |
+| User theme save    | `src/Http/Controllers/UserController.php`                    |
+| SEO helpers        | `resources/js/lib/seo.ts`                                    |
+| Posts list helpers | `resources/js/lib/posts/list.ts`                             |
+| Analytics helpers  | `resources/js/lib/analytics.ts`                              |
+| Media picker       | `resources/js/components/media/MediaPicker.tsx`              |
+| Host URL helpers   | `resources/js/lib/urls.ts`                                   |
+| Roles / gates      | `src/Enums/Role.php`, `src/CanvasServiceProvider.php`        |
+| v7 upgrade         | `.github/UPGRADE.md`                                         |
+| Current SPA        | `resources/js/router.tsx`, `resources/js/layouts/Layout.tsx` |

@@ -189,11 +189,7 @@ export default function PostsEditor() {
                             Hero image for the post and social previews
                         </Text>
                         <div className="mt-4">
-                            <FeaturedImagePicker
-                                form={form}
-                                disabled={!autosaveEnabled}
-                                onChange={handleFormChange}
-                            />
+                            <FeaturedImagePicker form={form} disabled={!autosaveEnabled} onChange={handleFormChange} />
                         </div>
                     </div>
 

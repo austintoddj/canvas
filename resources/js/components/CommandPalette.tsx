@@ -2,10 +2,18 @@ import * as Headless from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import { DocumentTextIcon, RectangleStackIcon, TagIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { Kbd, KbdGroup } from '@/components/kbd';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
+import {
+    entityTypeToApiParam,
+    parseSearchQuery,
+    searchFilterHints,
+    type SearchEntityType,
+} from '@/lib/command-palette';
 import { api } from '@/lib/api';
 import { type SearchResult, searchResultLabel, searchResultPath } from '@/types/api';
 
@@ -21,25 +29,60 @@ const TYPE_ICONS: Record<SearchResult['type'], React.ElementType> = {
     User: UserCircleIcon,
 };
 
+const GROUP_LABELS: Record<SearchEntityType, string> = {
+    Post: 'Posts',
+    Tag: 'Tags',
+    Topic: 'Topics',
+    User: 'Users',
+};
+
 export function CommandPalette({ open, onClose }: Props) {
     const navigate = useNavigate();
+    const permissions = usePermissions();
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<SearchResult[]>([]);
     const { posts: recentPosts } = useRecentPosts(8);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Debounced search — only fires for non-empty queries; derived render handles empty state
+    const parsed = useMemo(() => parseSearchQuery(query), [query]);
+    const filterHints = useMemo(
+        () =>
+            searchFilterHints({
+                canManageTaxonomy: permissions.canManageTaxonomy,
+                canManageUsers: permissions.canManageUsers,
+            }),
+        [permissions.canManageTaxonomy, permissions.canManageUsers]
+    );
+
     useEffect(() => {
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
         }
 
-        if (query.trim() === '') {
+        if (parsed.mode === 'help') {
+            return;
+        }
+
+        const showRecentPosts = parsed.entityType === null && parsed.term === '';
+
+        if (showRecentPosts) {
             return;
         }
 
         debounceRef.current = setTimeout(() => {
-            api.get<SearchResult[]>(`/search?q=${encodeURIComponent(query.trim())}`)
+            const params = new URLSearchParams();
+
+            if (parsed.term !== '') {
+                params.set('q', parsed.term);
+            }
+
+            if (parsed.entityType !== null) {
+                params.set('type', entityTypeToApiParam(parsed.entityType));
+            }
+
+            const queryString = params.toString();
+
+            api.get<SearchResult[]>(`/search${queryString === '' ? '' : `?${queryString}`}`)
                 .then(setResults)
                 .catch(() => setResults([]));
         }, 250);
@@ -49,7 +92,7 @@ export function CommandPalette({ open, onClose }: Props) {
                 clearTimeout(debounceRef.current);
             }
         };
-    }, [query]);
+    }, [parsed]);
 
     function handleSelect(result: SearchResult | null) {
         if (!result) return;
@@ -57,7 +100,6 @@ export function CommandPalette({ open, onClose }: Props) {
         onClose();
     }
 
-    const isEmpty = query.trim() === '';
     const recentPostResults: SearchResult[] = recentPosts.map((p) => ({
         id: p.id,
         title: p.title,
@@ -65,7 +107,8 @@ export function CommandPalette({ open, onClose }: Props) {
         route: 'edit-post',
     }));
 
-    const displayResults = isEmpty ? recentPostResults : results;
+    const showRecentPosts = parsed.mode === 'search' && parsed.entityType === null && parsed.term === '';
+    const displayResults = showRecentPosts ? recentPostResults : results;
 
     const grouped = displayResults.reduce<Record<string, SearchResult[]>>((acc, result) => {
         const group = acc[result.type] ?? [];
@@ -75,6 +118,8 @@ export function CommandPalette({ open, onClose }: Props) {
     }, {});
 
     const hasResults = displayResults.length > 0;
+    const emptyStateLabel =
+        parsed.mode === 'search' && parsed.entityType !== null ? GROUP_LABELS[parsed.entityType] : 'results';
 
     return (
         <Headless.Dialog open={open} onClose={onClose} className="relative z-50">
@@ -100,25 +145,27 @@ export function CommandPalette({ open, onClose }: Props) {
                             <Headless.ComboboxInput
                                 autoFocus
                                 className="h-12 w-full border-0 bg-transparent pl-3 pr-4 text-zinc-900 placeholder:text-zinc-400 focus:outline-none sm:text-sm dark:text-white dark:placeholder:text-zinc-500"
-                                placeholder="Search…"
+                                placeholder="Search posts, tags, topics, and users…"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Escape' && onClose()}
                             />
                         </div>
 
-                        {hasResults && (
+                        {parsed.mode === 'help' && <HelpPanel filterHints={filterHints} />}
+
+                        {parsed.mode === 'search' && hasResults && (
                             <Headless.ComboboxOptions static className="max-h-80 scroll-py-2 overflow-y-auto py-2">
-                                {isEmpty && (
+                                {showRecentPosts && (
                                     <p className="px-4 pb-1 pt-0.5 text-xs font-semibold text-zinc-400 uppercase tracking-wide dark:text-zinc-500">
                                         Recent Posts
                                     </p>
                                 )}
-                                {!isEmpty &&
+                                {!showRecentPosts &&
                                     Object.entries(grouped).map(([type, items]) => (
                                         <li key={type}>
                                             <p className="px-4 pb-1 pt-2 text-xs font-semibold text-zinc-400 uppercase tracking-wide dark:text-zinc-500">
-                                                {type}s
+                                                {GROUP_LABELS[type as SearchEntityType] ?? `${type}s`}
                                             </p>
                                             <ul>
                                                 {items.map((item) => (
@@ -127,21 +174,37 @@ export function CommandPalette({ open, onClose }: Props) {
                                             </ul>
                                         </li>
                                     ))}
-                                {isEmpty &&
+                                {showRecentPosts &&
                                     recentPostResults.map((item) => (
                                         <ResultItem key={`${item.type}-${item.id}`} result={item} />
                                     ))}
                             </Headless.ComboboxOptions>
                         )}
 
-                        {!hasResults && query.trim() !== '' && (
+                        {parsed.mode === 'search' && !hasResults && parsed.term !== '' && (
                             <div className="px-6 py-14 text-center text-sm sm:px-14">
                                 <p className="font-semibold text-zinc-900 dark:text-white">No results found</p>
                                 <p className="mt-2 text-zinc-500 dark:text-zinc-400">
-                                    Nothing matched &ldquo;{query}&rdquo;. Try a different search term.
+                                    Nothing matched &ldquo;{parsed.term}&rdquo;. Try a different search term.
                                 </p>
                             </div>
                         )}
+
+                        {parsed.mode === 'search' &&
+                            !hasResults &&
+                            parsed.term === '' &&
+                            parsed.entityType !== null && (
+                                <div className="px-6 py-14 text-center text-sm sm:px-14">
+                                    <p className="font-semibold text-zinc-900 dark:text-white">
+                                        No {emptyStateLabel.toLowerCase()} yet
+                                    </p>
+                                    <p className="mt-2 text-zinc-500 dark:text-zinc-400">
+                                        Create some {emptyStateLabel.toLowerCase()} to see them here.
+                                    </p>
+                                </div>
+                            )}
+
+                        <CommandPaletteFooter filterHints={filterHints} />
                     </Headless.Combobox>
                 </Headless.DialogPanel>
             </div>
@@ -166,7 +229,71 @@ function ResultItem({ result }: { result: SearchResult }) {
         >
             <Icon className="size-5 shrink-0 text-zinc-400" />
             <span className="flex-1 truncate text-sm">{searchResultLabel(result)}</span>
-            {'type' in result && <span className="text-xs text-zinc-400 dark:text-zinc-500">{result.type}</span>}
+            <span className="text-xs text-zinc-400 dark:text-zinc-500">{result.type}</span>
         </Headless.ComboboxOption>
+    );
+}
+
+type FilterHint = ReturnType<typeof searchFilterHints>[number];
+
+function HelpPanel({ filterHints }: { filterHints: FilterHint[] }) {
+    return (
+        <div className="border-b border-zinc-200 px-4 py-5 text-sm dark:border-zinc-700">
+            <p className="font-medium text-zinc-900 dark:text-white">Search tips</p>
+            <ul className="mt-3 space-y-2 text-zinc-600 dark:text-zinc-300">
+                <li>
+                    Type to search across posts
+                    {filterHints.length > 0
+                        ? `, ${filterHints.map((hint) => hint.label.toLowerCase()).join(', ')}`
+                        : ''}
+                    .
+                </li>
+                {filterHints.map((hint) => (
+                    <li key={hint.entityType} className="flex items-center gap-2">
+                        <span>
+                            Start with <Kbd>{hint.prefix}</Kbd> to search {hint.label.toLowerCase()} only.
+                        </span>
+                    </li>
+                ))}
+                <li className="flex items-center gap-2">
+                    Press <Kbd>?</Kbd> anytime to show this help.
+                </li>
+            </ul>
+        </div>
+    );
+}
+
+function CommandPaletteFooter({ filterHints }: { filterHints: FilterHint[] }) {
+    return (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-zinc-200 bg-zinc-50 px-4 py-2.5 text-xs text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400">
+            {filterHints.length > 0 && (
+                <span className="flex flex-wrap items-center gap-2">
+                    {filterHints.map((hint) => (
+                        <span key={hint.entityType} className="inline-flex items-center gap-1">
+                            <Kbd>{hint.prefix}</Kbd>
+                            {hint.label}
+                        </span>
+                    ))}
+                </span>
+            )}
+            <span className="inline-flex items-center gap-1">
+                <Kbd>?</Kbd>
+                Help
+            </span>
+            <span className="ml-auto inline-flex items-center gap-3">
+                <span className="inline-flex items-center gap-1">
+                    <KbdGroup keys={['↑', '↓']} />
+                    Navigate
+                </span>
+                <span className="inline-flex items-center gap-1">
+                    <Kbd>↵</Kbd>
+                    Select
+                </span>
+                <span className="inline-flex items-center gap-1">
+                    <Kbd>esc</Kbd>
+                    Close
+                </span>
+            </span>
+        </div>
     );
 }

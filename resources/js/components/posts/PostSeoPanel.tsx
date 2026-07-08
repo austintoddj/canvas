@@ -98,9 +98,7 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
                     value={canonicalLink}
                     disabled={disabled}
                     placeholder="https://example.com/posts/your-slug"
-                    invalid={
-                        canonicalInvalid || fieldError(fieldErrors, 'meta.canonical_link') !== undefined
-                    }
+                    invalid={canonicalInvalid || fieldError(fieldErrors, 'meta.canonical_link') !== undefined}
                     onChange={(event) => updateMetaField('canonical_link', event.target.value)}
                 />
                 {canonicalInvalid ? <ErrorMessage>Enter a valid http or https URL.</ErrorMessage> : null}

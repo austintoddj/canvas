@@ -16,8 +16,8 @@
       "_text-BYXWZ0lz.js"
     ]
   },
-  "_badge-DmjK8fpN.js": {
-    "file": "assets/badge-DmjK8fpN.js",
+  "_badge-leJ1pl0K.js": {
+    "file": "assets/badge-leJ1pl0K.js",
     "name": "badge",
     "imports": [
       "_clsx-8OFgDltU.js",
@@ -59,7 +59,7 @@
     ]
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-CTnnLyQK.js",
+    "file": "assets/app-IOWcJuCA.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -83,7 +83,7 @@
       "resources/js/pages/Settings/Users/Show.tsx"
     ],
     "css": [
-      "assets/app-9H8lQheK.css"
+      "assets/app-D_6I01Z7.css"
     ]
   },
   "resources/js/pages/Dashboard.tsx": {
@@ -118,7 +118,7 @@
     ]
   },
   "resources/js/pages/Posts/Editor.tsx": {
-    "file": "assets/Editor-DLaIID69.js",
+    "file": "assets/Editor-ecznlZb3.js",
     "name": "Editor",
     "src": "resources/js/pages/Posts/Editor.tsx",
     "isDynamicEntry": true,
@@ -130,11 +130,11 @@
       "_divider-CBcjYbzi.js",
       "_heading-BlXSLnzy.js",
       "_text-BYXWZ0lz.js",
-      "_badge-DmjK8fpN.js"
+      "_badge-leJ1pl0K.js"
     ]
   },
   "resources/js/pages/Posts/Index.tsx": {
-    "file": "assets/Index-g-CsXI46.js",
+    "file": "assets/Index-C9VixUw3.js",
     "name": "Index",
     "src": "resources/js/pages/Posts/Index.tsx",
     "isDynamicEntry": true,
@@ -144,11 +144,11 @@
       "resources/js/app.tsx",
       "_heading-BlXSLnzy.js",
       "_text-BYXWZ0lz.js",
-      "_badge-DmjK8fpN.js"
+      "_badge-leJ1pl0K.js"
     ]
   },
   "resources/js/pages/Posts/Stats.tsx": {
-    "file": "assets/Stats-pBMNOV4G.js",
+    "file": "assets/Stats-BYMePsPI.js",
     "name": "Stats",
     "src": "resources/js/pages/Posts/Stats.tsx",
     "isDynamicEntry": true,

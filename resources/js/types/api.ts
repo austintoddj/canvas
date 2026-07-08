@@ -236,6 +236,7 @@ export type SearchResult = PostSearchResult | TagSearchResult | TopicSearchResul
 
 export type SearchParams = {
     q?: string;
+    type?: 'post' | 'tag' | 'topic' | 'user';
 };
 
 export type Tag = {

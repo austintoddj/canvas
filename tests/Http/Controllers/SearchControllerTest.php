@@ -139,3 +139,17 @@ it('returns all results when query is empty', function (): void {
     expect(collect($response->json())->where('type', 'Post'))->toHaveCount(3);
     expect(collect($response->json())->where('type', 'Tag'))->toHaveCount(2);
 });
+
+it('filters results by type', function (): void {
+    Post::factory()->count(3)->create(['user_id' => $this->admin->id]);
+    Tag::factory()->count(2)->create();
+    Topic::factory()->count(4)->create();
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/search?type=tag')
+        ->assertSuccessful();
+
+    expect(collect($response->json())->where('type', 'Tag'))->toHaveCount(2);
+    expect(collect($response->json())->where('type', 'Post'))->toBeEmpty();
+    expect(collect($response->json())->where('type', 'Topic'))->toBeEmpty();
+});

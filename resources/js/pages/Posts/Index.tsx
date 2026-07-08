@@ -36,11 +36,7 @@ import {
 } from '@/lib/posts/list';
 import type { Paginated, PostListItem, PostsIndexResponse } from '@/types/api';
 
-function updateFilters(
-    current: URLSearchParams,
-    patch: Partial<PostsListFilters>,
-    resetPage = false
-): URLSearchParams {
+function updateFilters(current: URLSearchParams, patch: Partial<PostsListFilters>, resetPage = false): URLSearchParams {
     const next = new URLSearchParams(current);
 
     if (patch.tab !== undefined) {

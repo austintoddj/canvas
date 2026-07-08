@@ -12,6 +12,7 @@ import {
     dropdownProfileItemClass,
 } from '@/components/dropdown';
 import { Navbar, NavbarItem, NavbarSection, NavbarSpacer } from '@/components/navbar';
+import { KbdGroup } from '@/components/kbd';
 import {
     Sidebar,
     SidebarBody,
@@ -21,6 +22,7 @@ import {
     SidebarItem,
     SidebarLabel,
     SidebarSection,
+    SidebarShortcut,
     SidebarSpacer,
 } from '@/components/sidebar';
 import { SidebarLayout } from '@/components/sidebar-layout';
@@ -28,6 +30,7 @@ import { useCanvas } from '@/hooks/useCanvas';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
 import { type ThemeMode, useTheme } from '@/hooks/useTheme';
+import { searchShortcutKeys } from '@/lib/platform';
 import { hostHomeUrl } from '@/lib/urls';
 import {
     ArrowTopRightOnSquareIcon,
@@ -60,11 +63,7 @@ function ThemeToggle({ mode, setMode }: { mode: ThemeMode; setMode: (m: ThemeMod
     return (
         <div className="col-span-full flex items-center justify-between px-3.5 py-2 sm:px-3 sm:py-1.5">
             <span className="text-base/6 text-zinc-950 sm:text-sm/6 dark:text-white">Theme</span>
-            <div
-                className="flex rounded-lg bg-zinc-950/5 p-0.5 dark:bg-white/10"
-                role="group"
-                aria-label="Theme"
-            >
+            <div className="flex rounded-lg bg-zinc-950/5 p-0.5 dark:bg-white/10" role="group" aria-label="Theme">
                 {options.map(({ value, label, Icon }) => (
                     <button
                         key={value}
@@ -227,6 +226,9 @@ export default function Layout() {
                                 <SidebarItem onClick={openPalette}>
                                     <MagnifyingGlassIcon />
                                     <SidebarLabel>Search</SidebarLabel>
+                                    <SidebarShortcut>
+                                        <KbdGroup keys={searchShortcutKeys()} />
+                                    </SidebarShortcut>
                                 </SidebarItem>
                             </SidebarSection>
                         </SidebarHeader>
@@ -266,10 +268,6 @@ export default function Layout() {
                                         <SidebarLabel>Users</SidebarLabel>
                                     </SidebarItem>
                                 ) : null}
-                                <SidebarItem href="/settings" current={pathname === '/settings'}>
-                                    <Cog6ToothIcon />
-                                    <SidebarLabel>Settings</SidebarLabel>
-                                </SidebarItem>
                             </SidebarSection>
 
                             {recentPosts.length > 0 && (

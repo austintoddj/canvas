@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-    isPostPublished,
-    parsePostsListFilters,
-    postsIndexPath,
-    postsIndexQueryParams,
-} from '@/lib/posts/list';
+import { isPostPublished, parsePostsListFilters, postsIndexPath, postsIndexQueryParams } from '@/lib/posts/list';
 
 describe('isPostPublished', () => {
     it('detects published posts from published_at', () => {
@@ -38,9 +33,7 @@ describe('parsePostsListFilters', () => {
 describe('postsIndexPath', () => {
     it('builds SPA paths for list filters', () => {
         expect(postsIndexPath({ tab: 'published', scope: 'user', page: 1 })).toBe('/posts');
-        expect(postsIndexPath({ tab: 'draft', scope: 'all', page: 2 })).toBe(
-            '/posts?type=draft&scope=all&page=2'
-        );
+        expect(postsIndexPath({ tab: 'draft', scope: 'all', page: 2 })).toBe('/posts?type=draft&scope=all&page=2');
     });
 });
 

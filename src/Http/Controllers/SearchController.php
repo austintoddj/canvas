@@ -28,17 +28,25 @@ class SearchController extends Controller
     {
         $user = $request->user(config('canvas.guard'));
         $query = $request->string('q')->trim()->toString();
+        $type = $request->string('type')->trim()->lower()->toString();
 
         $results = collect();
 
-        $results->push(...$this->searchPosts($user, $query));
-
-        if (Gate::forUser($user)->allows('manage-taxonomy')) {
-            $results->push(...$this->searchTags($query));
-            $results->push(...$this->searchTopics($query));
+        if ($type === '' || $type === 'post') {
+            $results->push(...$this->searchPosts($user, $query));
         }
 
-        if (Gate::forUser($user)->allows('manage-users')) {
+        if (Gate::forUser($user)->allows('manage-taxonomy')) {
+            if ($type === '' || $type === 'tag') {
+                $results->push(...$this->searchTags($query));
+            }
+
+            if ($type === '' || $type === 'topic') {
+                $results->push(...$this->searchTopics($query));
+            }
+        }
+
+        if (Gate::forUser($user)->allows('manage-users') && ($type === '' || $type === 'user')) {
             $results->push(...$this->searchUsers($query));
         }
 

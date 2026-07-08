@@ -113,16 +113,8 @@ export default function PostsStats() {
             </div>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <StatCard
-                    label="Views this month"
-                    value={stats.monthlyViews}
-                    change={stats.monthOverMonthViews}
-                />
-                <StatCard
-                    label="Visits this month"
-                    value={stats.monthlyVisits}
-                    change={stats.monthOverMonthVisits}
-                />
+                <StatCard label="Views this month" value={stats.monthlyViews} change={stats.monthOverMonthViews} />
+                <StatCard label="Visits this month" value={stats.monthlyVisits} change={stats.monthOverMonthVisits} />
                 <StatCard label="All-time views" value={stats.totalViews} />
             </div>
 
