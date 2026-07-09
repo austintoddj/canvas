@@ -7,7 +7,7 @@
         "preview": "vite preview",
         "lint": "eslint .",
         "format": "prettier --write .",
-        "typecheck": "tsc --noEmit",
+        "typecheck": "node node_modules/typescript-7/bin/tsc --noEmit",
         "test": "vitest run",
         "test:watch": "vitest"
     },
@@ -35,7 +35,8 @@
         "laravel-vite-plugin": "^3.1.0",
         "prettier": "^3.9.1",
         "tailwindcss": "^4.3.1",
-        "typescript": "^6.0.3",
+        "typescript": "npm:@typescript/typescript6@^6.0.0",
+        "typescript-7": "npm:typescript@^7",
         "typescript-eslint": "^8.62.0",
         "vitest": "^4.0.18"
     }

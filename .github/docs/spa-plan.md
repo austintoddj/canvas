@@ -112,7 +112,7 @@ UX infrastructure completed in parallel with the post workflow — not a numbere
 
 ### Step 10 — CI and publish
 
-- [ ] 10.1 — Add `npm test`, `npm run typecheck`, `npm run build` to GitHub Actions
+- [x] 10.1 — Add `npm test` to GitHub Actions JS job (`typecheck` + `lint` already run on Node 22)
 - [ ] 10.2 — `npm run build` + `php artisan canvas:publish`; smoke-test `/canvas`
 
 **Step 10 done when:** CI green; built assets load in a host app.
@@ -145,8 +145,9 @@ Work Steps 1–10 in order. **Step E (TipTap)** waits until Steps 1–10 ship �
 | **Profile route**   | `/settings` → `Settings/Profile.tsx` (stub). User dropdown profile row already links here.                                                                                                                 |
 | **Home Page link**  | `hostHomeUrl()` in `lib/urls.ts` — host app origin, not Canvas basename                                                                                                                                    |
 | **MediaPicker**     | `components/media/MediaPicker.tsx` — grid, search, scope toggle, inline upload; wire into featured image via `FeaturedImagePicker`                                                                         |
-| **Tests**           | 11 Vitest files (~88 tests): `api`, `permissions`, `i18n`, `seo`, `analytics`, `posts-list`, `posts-form`, `media-upload`, `useTheme`, `urls`, `canvas-context`. No full React page integration tests yet. |
+| **Tests**           | 13 Vitest files (98 tests): `api`, `permissions`, `i18n`, `seo`, `analytics`, `posts-list`, `posts-form`, `media-upload`, `useTheme`, `urls`, `canvas-context`, `command-palette`, `platform`. No full React page integration tests yet. |
 | **Quality gates**   | `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` all green                                                                                                                                 |
+| **TypeScript**      | Type-checking on **TypeScript 7** (`typescript-7`); ESLint uses **TypeScript 6** via `@typescript/typescript6` alias until `typescript-eslint` supports TS7's programmatic API (see [Frontend toolchain](#frontend-toolchain)) |
 | **Command palette** | `CommandPalette` wired in `Layout` (⌘K) with `GET /api/search` — polish/permissions may belong in Step 9                                                                                                   |
 | **i18n**            | `lib/i18n.ts` exists; boot `translations` not yet consumed broadly in UI                                                                                                                                   |
 
@@ -297,7 +298,8 @@ Reader should emit `<title>`, description meta, canonical, Open Graph, Twitter C
 | **SEO UI**          | `PostSeoPanel`, `SeoPreview`, `FeaturedImagePicker` in editor sidebar      |
 | **Media**           | `uploadMedia()` helper + `MediaPicker` modal; `/media` pages TODO (Step 6) |
 | **API client**      | `lib/api.ts` + domain modules (`posts`, `media`, `users`, `stats`, …)      |
-| **Frontend tests**  | Vitest — 11 test files covering lib/helpers (~88 tests)                    |
+| **Frontend tests**  | Vitest — 13 test files covering lib/helpers (98 tests)                     |
+| **TypeScript**      | `tsc` on TypeScript 7; ESLint parser on TypeScript 6 (side-by-side install) |
 | **Theme**           | `useTheme` + class-based dark mode working end-to-end                      |
 | **i18n**            | `lib/i18n.ts` ready; boot `translations` not wired broadly in UI yet       |
 | **Command palette** | Wired in layout (⌘K); calls `GET /api/search` — Step 9 polish TBD          |
@@ -441,14 +443,40 @@ resources/js/
 
 ---
 
+## Frontend toolchain
+
+The SPA uses a **side-by-side TypeScript 6/7 install** — the official pattern for migrating while ecosystem tools still depend on TypeScript 6's programmatic compiler API.
+
+| Package | npm alias | Used by | Notes |
+| ------- | --------- | ------- | ----- |
+| `typescript-7` | `npm:typescript@^7` | `npm run typecheck` | Native Go `tsc` (currently 7.0.x); ~10× faster than TS6 |
+| `typescript` | `npm:@typescript/typescript6@^6.0.0` | `typescript-eslint` | Peer dep `>=4.8.4 <6.1.0`; provides `tsc6` only |
+
+**Why two versions?** TypeScript 7.0 ships the `tsc` CLI but not the programmatic API that `typescript-eslint` imports. Until TS 7.1+ and a matching `typescript-eslint` release, linting must keep a TS6 install aliased as `typescript`. Vite and Vitest transpile via esbuild — they do not use either `tsc`.
+
+### Scripts (`package.json`)
+
+| Script | Command | Compiler / runtime |
+| ------ | ------- | ------------------ |
+| `typecheck` | `node node_modules/typescript-7/bin/tsc --noEmit` | TypeScript 7 |
+| `lint` | `eslint .` | `typescript-eslint` on TS6 API |
+| `build` | `vite build` | esbuild (emit) |
+| `test` | `vitest run` | esbuild (transform) |
+
+`tsconfig.json` targets `resources/js/**/*` with `strict`, `moduleResolution: bundler`, and explicit `types: ["vite/client"]`. CI (`.github/workflows/tests.yml`) has three jobs: **JS** (`typecheck`, `lint`, `npm test`), **PHP (style)** (`composer pint:test` once on PHP 8.4 / Laravel 12), and **PHP matrix** (Pest across PHP 8.2–8.5 × Laravel 11–13, gated on style). `npm run build` stays a local/pre-PR step — built assets in `public/vendor/canvas` are committed to the package and published via `canvas:publish`, not produced by CI.
+
+When `typescript-eslint` supports TypeScript 7's API, drop the `@typescript/typescript6` alias and point `typescript` at `^7` directly; update the `typecheck` script to `tsc --noEmit`.
+
+---
+
 ## Verification strategy
 
-| Command             | When                   |
-| ------------------- | ---------------------- |
-| `npm run typecheck` | Every PR               |
-| `npm run lint`      | Every PR               |
-| `npm test`          | Every PR (from Step 1) |
-| `npm run build`     | Every PR               |
+| Command             | When                   | Under the hood |
+| ------------------- | ---------------------- | -------------- |
+| `npm run typecheck` | Every PR               | TypeScript 7 `tsc --noEmit` |
+| `npm run lint`      | Every PR               | ESLint + `typescript-eslint` (TS6 API) |
+| `npm test`          | Every PR (from Step 1) | Vitest |
+| `npm run build`     | Before PR / release    | Vite production build; commit output to `public/vendor/canvas` (not a CI gate) |
 
 ### Smoke matrix (Steps 1–10, no editor)
 
@@ -493,4 +521,5 @@ resources/js/
 | Host URL helpers   | `resources/js/lib/urls.ts`                                   |
 | Roles / gates      | `src/Enums/Role.php`, `src/CanvasServiceProvider.php`        |
 | v7 upgrade         | `.github/UPGRADE.md`                                         |
+| TypeScript config  | `tsconfig.json`, `package.json` (`typescript`, `typescript-7`) |
 | Current SPA        | `resources/js/router.tsx`, `resources/js/layouts/Layout.tsx` |

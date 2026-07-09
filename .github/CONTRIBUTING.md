@@ -50,9 +50,9 @@ If you want to work locally, use a Laravel app with a sibling Canvas checkout:
 
 ## Before opening a pull request
 
-- Run `npm run build`
-- Run `composer test`
-- Run `composer test:parallel` when you want to match CI.
-- Run `composer pint` before pushing.
+- Run `npm run typecheck`, `npm run lint`, and `npm test` (CI runs these automatically)
+- Run `npm run build` and commit updated assets in `public/vendor/canvas`
+- Run `composer pint` (or `composer pint:test` to check without fixing — CI runs the check once)
+- Run `composer test:ci` to match the PHP compatibility matrix locally
 
 Once you've made your changes, create a pull request from your fork to the `develop` branch of the project repository.

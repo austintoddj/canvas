@@ -1,0 +1,1 @@
+import{n as e}from"./clsx-8OFgDltU.js";import{t}from"./PlaceholderPage-CqbXwJyP.js";var n=e();function r(){return(0,n.jsx)(t,{title:`Media detail`,description:`Coming in Step 6.`})}export{r as default};

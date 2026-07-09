@@ -39,8 +39,42 @@ jobs:
             - name: Run linting
               run: npm run lint
 
+            - name: Run tests
+              run: npm test
+
+    php-quality:
+        name: PHP (style)
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: dom, curl, libxml, mbstring, zip
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Cache Composer dependencies
+              uses: actions/cache@v5
+              with:
+                  path: vendor
+                  key: ${{ runner.os }}-php-quality-8.4-laravel-12-${{ hashFiles('composer.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-php-quality-8.4-laravel-12-
+
+            - name: Install PHP dependencies
+              run: composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^12"
+
+            - name: Check code style
+              run: composer pint:test
+
     php:
         name: Laravel ${{ matrix.laravel }} on PHP ${{ matrix.php }}
+        needs: php-quality
         runs-on: ubuntu-latest
         strategy:
             fail-fast: true
@@ -77,4 +111,4 @@ jobs:
               run: composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^${{ matrix.laravel }}"
 
             - name: Run tests
-              run: vendor/bin/pest --parallel --compact
+              run: composer test:ci
