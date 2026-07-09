@@ -10,7 +10,7 @@ This document is the implementation blueprint for the React admin SPA shipped in
 
 **How to use this plan:** Work chat-by-chat through the [Implementation tracker](#implementation-tracker) below. When an item ships, change `- [ ]` to `- [x]` in this file. The **next unchecked item** is what to tackle next.
 
-**Always under [`Agents.md`](../../Agents.md):** Every SPA step is implemented with those standards — clear naming, zero-noise commenting philosophy (no narrative comments), strong types, Vitest for real behavior, lint/typecheck green. Plans order *what* to do; `Agents.md` governs *how*. If a durable frontend coding rule emerges while executing this plan, update `Agents.md` in the same pass (do not leave vision only in chat or tracker prose).
+**Always under [`Agents.md`](../../Agents.md):** Every SPA step is implemented with those standards — clear naming, zero-noise commenting philosophy (no narrative comments), strong types, Vitest for real behavior, lint/typecheck green. Plans order _what_ to do; `Agents.md` governs _how_. If a durable frontend coding rule emerges while executing this plan, update `Agents.md` in the same pass (do not leave vision only in chat or tracker prose).
 
 ---
 
@@ -82,8 +82,8 @@ UX infrastructure completed in parallel with the post workflow — not a numbere
 
 ### Step 6 — Media library
 
-- [ ] 6.1 — `/media` — grid, search, mime filter, scope toggle, upload
-- [ ] 6.2 — `/media/:id` — metadata edit, delete
+- [x] 6.1 — `/media` — grid, search, mime filter, scope toggle, upload, page-level drag overlay (motion), multi-select bulk delete
+- [x] 6.2 — Media detail — slide-over drawer from the right (`MediaDetailDrawer`); `/media/:id` deep-links to `/media?detail=`
 - [x] 6.3 — `MediaPicker` modal — **shipped in Step 4** (`components/media/MediaPicker.tsx` + `MediaPickerPanel`; used by `FeaturedImagePicker`). Step 6 may extract shared grid/upload UI from the picker, but the modal itself is done.
 
 **Step 6 done when:** Full `/media` and `/media/:id` pages work; picker modal already reusable.
@@ -141,18 +141,18 @@ Work Steps 1–10 in order. **Step E (TipTap)** waits until Steps 1–10 ship �
 
 ### Handoff notes (for next chat)
 
-| Topic               | Detail                                                                                                                                                                                                     |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Steps complete**  | 1–5 + shell polish + E.1 + 6.3 + 7.0                                                                                                                                                                       |
-| **Profile route**   | `/settings` → `Settings/Profile.tsx` (stub). User dropdown profile row already links here.                                                                                                                 |
-| **Home Page link**  | `hostHomeUrl()` in `lib/urls.ts` — host app origin, not Canvas basename                                                                                                                                    |
-| **MediaPicker**     | `components/media/MediaPicker.tsx` — grid, search, scope toggle, inline upload; wire into featured image via `FeaturedImagePicker`                                                                         |
+| Topic               | Detail                                                                                                                                                                                                                                   |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Steps complete**  | 1–5 + shell polish + E.1 + 6.3 + 7.0                                                                                                                                                                                                     |
+| **Profile route**   | `/settings` → `Settings/Profile.tsx` (stub). User dropdown profile row already links here.                                                                                                                                               |
+| **Home Page link**  | `hostHomeUrl()` in `lib/urls.ts` — host app origin, not Canvas basename                                                                                                                                                                  |
+| **MediaPicker**     | `components/media/MediaPicker.tsx` — grid, search, scope toggle, inline upload; wire into featured image via `FeaturedImagePicker`                                                                                                       |
 | **Tests**           | 13 Vitest files (98 tests): `api`, `permissions`, `i18n`, `seo`, `analytics`, `posts-list`, `posts-form`, `media-upload`, `useTheme`, `urls`, `canvas-context`, `command-palette`, `platform`. No full React page integration tests yet. |
-| **Quality gates**   | `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` all green                                                                                                                                 |
-| **Standards**       | [`Agents.md`](../../Agents.md) — commenting philosophy, naming over narrative comments, tests; update it when durable rules change                                                                          |
-| **TypeScript**      | Type-checking on **TypeScript 7** (`typescript-7`); ESLint uses **TypeScript 6** via `@typescript/typescript6` alias until `typescript-eslint` supports TS7's programmatic API (see [Frontend toolchain](#frontend-toolchain)) |
-| **Command palette** | `CommandPalette` wired in `Layout` (⌘K) with `GET /api/search` — polish/permissions may belong in Step 9                                                                                                   |
-| **i18n**            | `lib/i18n.ts` exists; boot `translations` not yet consumed broadly in UI                                                                                                                                   |
+| **Quality gates**   | `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` all green                                                                                                                                                               |
+| **Standards**       | [`Agents.md`](../../Agents.md) — commenting philosophy, naming over narrative comments, tests; update it when durable rules change                                                                                                       |
+| **TypeScript**      | Type-checking on **TypeScript 7** (`typescript-7`); ESLint uses **TypeScript 6** via `@typescript/typescript6` alias until `typescript-eslint` supports TS7's programmatic API (see [Frontend toolchain](#frontend-toolchain))           |
+| **Command palette** | `CommandPalette` wired in `Layout` (⌘K) with `GET /api/search` — polish/permissions may belong in Step 9                                                                                                                                 |
+| **i18n**            | `lib/i18n.ts` exists; boot `translations` not yet consumed broadly in UI                                                                                                                                                                 |
 
 ---
 
@@ -292,20 +292,20 @@ Reader should emit `<title>`, description meta, canonical, Open Graph, Twitter C
 
 ## Current state and gaps
 
-| Area                | Status                                                                     |
-| ------------------- | -------------------------------------------------------------------------- |
-| **Routing**         | All routes registered in `router.tsx`; lazy-loaded via `Page.tsx`          |
-| **Pages shipped**   | Posts list, editor, stats — full workflows                                 |
-| **Pages stub**      | Dashboard, media, tags, topics, settings — `PlaceholderPage`               |
-| **Editor**          | TipTap chosen (E.1); `BodyEditorPlaceholder` until Step E                  |
-| **SEO UI**          | `PostSeoPanel`, `SeoPreview`, `FeaturedImagePicker` in editor sidebar      |
-| **Media**           | `uploadMedia()` helper + `MediaPicker` modal; `/media` pages TODO (Step 6) |
-| **API client**      | `lib/api.ts` + domain modules (`posts`, `media`, `users`, `stats`, …)      |
-| **Frontend tests**  | Vitest — 13 test files covering lib/helpers (98 tests)                     |
+| Area                | Status                                                                      |
+| ------------------- | --------------------------------------------------------------------------- |
+| **Routing**         | All routes registered in `router.tsx`; lazy-loaded via `Page.tsx`           |
+| **Pages shipped**   | Posts list, editor, stats — full workflows                                  |
+| **Pages stub**      | Dashboard, media, tags, topics, settings — `PlaceholderPage`                |
+| **Editor**          | TipTap chosen (E.1); `BodyEditorPlaceholder` until Step E                   |
+| **SEO UI**          | `PostSeoPanel`, `SeoPreview`, `FeaturedImagePicker` in editor sidebar       |
+| **Media**           | `uploadMedia()` helper + `MediaPicker` modal; `/media` pages TODO (Step 6)  |
+| **API client**      | `lib/api.ts` + domain modules (`posts`, `media`, `users`, `stats`, …)       |
+| **Frontend tests**  | Vitest — 13 test files covering lib/helpers (98 tests)                      |
 | **TypeScript**      | `tsc` on TypeScript 7; ESLint parser on TypeScript 6 (side-by-side install) |
-| **Theme**           | `useTheme` + class-based dark mode working end-to-end                      |
-| **i18n**            | `lib/i18n.ts` ready; boot `translations` not wired broadly in UI yet       |
-| **Command palette** | Wired in layout (⌘K); calls `GET /api/search` — Step 9 polish TBD          |
+| **Theme**           | `useTheme` + class-based dark mode working end-to-end                       |
+| **i18n**            | `lib/i18n.ts` ready; boot `translations` not wired broadly in UI yet        |
+| **Command palette** | Wired in layout (⌘K); calls `GET /api/search` — Step 9 polish TBD           |
 
 ### Layout links without backend
 
@@ -450,21 +450,21 @@ resources/js/
 
 The SPA uses a **side-by-side TypeScript 6/7 install** — the official pattern for migrating while ecosystem tools still depend on TypeScript 6's programmatic compiler API.
 
-| Package | npm alias | Used by | Notes |
-| ------- | --------- | ------- | ----- |
-| `typescript-7` | `npm:typescript@^7` | `npm run typecheck` | Native Go `tsc` (currently 7.0.x); ~10× faster than TS6 |
-| `typescript` | `npm:@typescript/typescript6@^6.0.0` | `typescript-eslint` | Peer dep `>=4.8.4 <6.1.0`; provides `tsc6` only |
+| Package        | npm alias                            | Used by             | Notes                                                   |
+| -------------- | ------------------------------------ | ------------------- | ------------------------------------------------------- |
+| `typescript-7` | `npm:typescript@^7`                  | `npm run typecheck` | Native Go `tsc` (currently 7.0.x); ~10× faster than TS6 |
+| `typescript`   | `npm:@typescript/typescript6@^6.0.0` | `typescript-eslint` | Peer dep `>=4.8.4 <6.1.0`; provides `tsc6` only         |
 
 **Why two versions?** TypeScript 7.0 ships the `tsc` CLI but not the programmatic API that `typescript-eslint` imports. Until TS 7.1+ and a matching `typescript-eslint` release, linting must keep a TS6 install aliased as `typescript`. Vite and Vitest transpile via esbuild — they do not use either `tsc`.
 
 ### Scripts (`package.json`)
 
-| Script | Command | Compiler / runtime |
-| ------ | ------- | ------------------ |
-| `typecheck` | `node node_modules/typescript-7/bin/tsc --noEmit` | TypeScript 7 |
-| `lint` | `eslint .` | `typescript-eslint` on TS6 API |
-| `build` | `vite build` | esbuild (emit) |
-| `test` | `vitest run` | esbuild (transform) |
+| Script      | Command                                           | Compiler / runtime             |
+| ----------- | ------------------------------------------------- | ------------------------------ |
+| `typecheck` | `node node_modules/typescript-7/bin/tsc --noEmit` | TypeScript 7                   |
+| `lint`      | `eslint .`                                        | `typescript-eslint` on TS6 API |
+| `build`     | `vite build`                                      | esbuild (emit)                 |
+| `test`      | `vitest run`                                      | esbuild (transform)            |
 
 `tsconfig.json` targets `resources/js/**/*` with `strict`, `moduleResolution: bundler`, and explicit `types: ["vite/client"]`. CI (`.github/workflows/tests.yml`) has three jobs: **JS** (`typecheck`, `lint`, `npm test`), **PHP (style)** (`composer pint:test` once on PHP 8.4 / Laravel 12), and **PHP matrix** (Pest across PHP 8.2–8.5 × Laravel 11–13, gated on style). `npm run build` stays a local/pre-PR step — built assets in `public/vendor/canvas` are committed to the package and published via `canvas:publish`, not produced by CI.
 
@@ -474,13 +474,13 @@ When `typescript-eslint` supports TypeScript 7's API, drop the `@typescript/type
 
 ## Verification strategy
 
-| Command             | When                   | Under the hood |
-| ------------------- | ---------------------- | -------------- |
-| `npm run typecheck` | Every PR / after SPA steps | TypeScript 7 `tsc --noEmit` |
-| `npm run lint`      | Every PR / after SPA steps | ESLint + `typescript-eslint` (TS6 API) |
-| `npm test`          | Every PR / after SPA steps | Vitest |
-| `npm run build`     | Before PR / release    | Vite production build; commit output to `public/vendor/canvas` (not a CI gate) |
-| Follow [`Agents.md`](../../Agents.md) | Always | Naming over narrative comments; durable standards live in Agents.md |
+| Command                               | When                       | Under the hood                                                                 |
+| ------------------------------------- | -------------------------- | ------------------------------------------------------------------------------ |
+| `npm run typecheck`                   | Every PR / after SPA steps | TypeScript 7 `tsc --noEmit`                                                    |
+| `npm run lint`                        | Every PR / after SPA steps | ESLint + `typescript-eslint` (TS6 API)                                         |
+| `npm test`                            | Every PR / after SPA steps | Vitest                                                                         |
+| `npm run build`                       | Before PR / release        | Vite production build; commit output to `public/vendor/canvas` (not a CI gate) |
+| Follow [`Agents.md`](../../Agents.md) | Always                     | Naming over narrative comments; durable standards live in Agents.md            |
 
 ### Smoke matrix (Steps 1–10, no editor)
 
@@ -508,24 +508,24 @@ When `typescript-eslint` supports TypeScript 7's API, drop the `@typescript/type
 
 ## Reference files
 
-| Concern            | Source                                                       |
-| ------------------ | ------------------------------------------------------------ |
-| API routes         | `routes/web.php`                                             |
-| Post validation    | `src/Http/Requests/PostRequest.php`                          |
-| Post `meta` shape  | `database/factories/PostFactory.php`                         |
-| Boot payload       | `src/Support/FrontendBootData.php`                           |
-| Theme boot script  | `resources/views/layout.blade.php`                           |
-| Dark mode / cursor | `resources/css/app.css`                                      |
-| Theme hook         | `resources/js/hooks/useTheme.ts`                             |
-| User theme save    | `src/Http/Controllers/UserController.php`                    |
-| SEO helpers        | `resources/js/lib/seo.ts`                                    |
-| Posts list helpers | `resources/js/lib/posts/list.ts`                             |
-| Analytics helpers  | `resources/js/lib/analytics.ts`                              |
-| Media picker       | `resources/js/components/media/MediaPicker.tsx`              |
-| Host URL helpers   | `resources/js/lib/urls.ts`                                   |
-| Roles / gates      | `src/Enums/Role.php`, `src/CanvasServiceProvider.php`        |
-| v7 upgrade         | `.github/UPGRADE.md`                                         |
+| Concern            | Source                                                         |
+| ------------------ | -------------------------------------------------------------- |
+| API routes         | `routes/web.php`                                               |
+| Post validation    | `src/Http/Requests/PostRequest.php`                            |
+| Post `meta` shape  | `database/factories/PostFactory.php`                           |
+| Boot payload       | `src/Support/FrontendBootData.php`                             |
+| Theme boot script  | `resources/views/layout.blade.php`                             |
+| Dark mode / cursor | `resources/css/app.css`                                        |
+| Theme hook         | `resources/js/hooks/useTheme.ts`                               |
+| User theme save    | `src/Http/Controllers/UserController.php`                      |
+| SEO helpers        | `resources/js/lib/seo.ts`                                      |
+| Posts list helpers | `resources/js/lib/posts/list.ts`                               |
+| Analytics helpers  | `resources/js/lib/analytics.ts`                                |
+| Media picker       | `resources/js/components/media/MediaPicker.tsx`                |
+| Host URL helpers   | `resources/js/lib/urls.ts`                                     |
+| Roles / gates      | `src/Enums/Role.php`, `src/CanvasServiceProvider.php`          |
+| v7 upgrade         | `.github/UPGRADE.md`                                           |
 | TypeScript config  | `tsconfig.json`, `package.json` (`typescript`, `typescript-7`) |
-| Coding standards   | [`Agents.md`](../../Agents.md) — binding on all plan work |
-| Host / upgrade     | [UPGRADE.md](../UPGRADE.md) |
-| Current SPA        | `resources/js/router.tsx`, `resources/js/layouts/Layout.tsx` |
+| Coding standards   | [`Agents.md`](../../Agents.md) — binding on all plan work      |
+| Host / upgrade     | [UPGRADE.md](../UPGRADE.md)                                    |
+| Current SPA        | `resources/js/router.tsx`, `resources/js/layouts/Layout.tsx`   |

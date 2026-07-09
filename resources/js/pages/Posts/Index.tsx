@@ -35,6 +35,7 @@ import {
     postsIndexQueryParams,
     type PostsListFilters,
 } from '@/lib/posts/list';
+import { toast } from '@/lib/toast';
 import type { Paginated, PostListItem, PostsIndexResponse } from '@/types/api';
 
 function updateFilters(current: URLSearchParams, patch: Partial<PostsListFilters>, resetPage = false): URLSearchParams {
@@ -179,7 +180,7 @@ export default function PostsIndex() {
 
             await reloadPosts();
         } catch {
-            window.alert('Unable to delete this post.');
+            toast.error('Unable to delete this post.');
         } finally {
             setDeletingId(null);
         }
@@ -203,11 +204,7 @@ export default function PostsIndex() {
             </div>
 
             <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-                <PillNav
-                    value={filters.tab}
-                    onChange={(tab) => setFilters({ tab }, true)}
-                    aria-label="Post status"
-                >
+                <PillNav value={filters.tab} onChange={(tab) => setFilters({ tab }, true)} aria-label="Post status">
                     <PillNavItem value="published">
                         Published
                         {response ? <Badge color="zinc">{response.publishedCount}</Badge> : null}

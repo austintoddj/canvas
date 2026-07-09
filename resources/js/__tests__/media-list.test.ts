@@ -4,58 +4,107 @@ import {
     formatMediaBytes,
     formatMediaDimensions,
     isAllowedMediaFile,
+    MEDIA_EMPTY_STATE,
+    MEDIA_FILTERED_EMPTY_MESSAGE,
+    MEDIA_SEARCH_DEBOUNCE_MS,
     mediaDisplayName,
     mediaFilesFromList,
     mediaIndexPath,
     mediaIndexQueryParams,
+    mediaListHasActiveFilters,
     mediaMimeLabel,
+    nextCommittedMediaSearch,
     parseMediaListFilters,
 } from '@/lib/media/list';
 
 describe('parseMediaListFilters', () => {
-    it('reads scope, search, mime, and page from search params', () => {
-        const params = new URLSearchParams('scope=all&search=hero&mime=image/png&page=2');
+    it('reads scope, search, mime, sort, and page from search params', () => {
+        const params = new URLSearchParams('scope=all&search=hero&mime=image/png&sort=oldest&page=2');
 
         expect(parseMediaListFilters(params)).toEqual({
             scope: 'all',
             search: 'hero',
             mime: 'image/png',
+            sort: 'oldest',
             page: 2,
         });
     });
 
-    it('defaults to mine, empty search, all types, page 1', () => {
+    it('defaults to mine, empty search, all types, newest, page 1', () => {
         expect(parseMediaListFilters(new URLSearchParams())).toEqual({
             scope: 'user',
             search: '',
             mime: '',
+            sort: 'newest',
             page: 1,
         });
     });
 
-    it('ignores unsupported mime values', () => {
+    it('ignores unsupported mime and sort values', () => {
         expect(parseMediaListFilters(new URLSearchParams('mime=application/pdf')).mime).toBe('');
+        expect(parseMediaListFilters(new URLSearchParams('sort=popular')).sort).toBe('newest');
     });
 });
 
 describe('mediaIndexPath', () => {
     it('builds SPA paths for list filters', () => {
-        expect(mediaIndexPath({ scope: 'user', search: '', mime: '', page: 1 })).toBe('/media');
-        expect(mediaIndexPath({ scope: 'all', search: 'cover', mime: 'image/jpeg', page: 3 })).toBe(
-            '/media?scope=all&search=cover&mime=image%2Fjpeg&page=3'
+        expect(mediaIndexPath({ scope: 'user', search: '', mime: '', sort: 'newest', page: 1 })).toBe('/media');
+        expect(mediaIndexPath({ scope: 'all', search: 'cover', mime: 'image/jpeg', sort: 'oldest', page: 3 })).toBe(
+            '/media?scope=all&search=cover&mime=image%2Fjpeg&sort=oldest&page=3'
         );
     });
 });
 
 describe('mediaIndexQueryParams', () => {
-    it('maps UI filters to API query params', () => {
-        expect(mediaIndexQueryParams({ scope: 'user', search: '', mime: '', page: 1 })).toEqual({});
-        expect(mediaIndexQueryParams({ scope: 'all', search: '  logo  ', mime: 'image/webp', page: 2 })).toEqual({
+    it('maps UI filters to API query params, omitting newest sort default', () => {
+        expect(mediaIndexQueryParams({ scope: 'user', search: '', mime: '', sort: 'newest', page: 1 })).toEqual({});
+        expect(
+            mediaIndexQueryParams({
+                scope: 'all',
+                search: '  logo  ',
+                mime: 'image/webp',
+                sort: 'oldest',
+                page: 2,
+            })
+        ).toEqual({
             scope: 'all',
             search: 'logo',
             mime: 'image/webp',
+            sort: 'oldest',
             page: 2,
         });
+    });
+});
+
+describe('mediaListHasActiveFilters', () => {
+    it('treats search and mime as filters but not sort', () => {
+        expect(mediaListHasActiveFilters({ search: '', mime: '' })).toBe(false);
+        expect(mediaListHasActiveFilters({ search: 'hero', mime: '' })).toBe(true);
+        expect(mediaListHasActiveFilters({ search: '', mime: 'image/png' })).toBe(true);
+    });
+});
+
+describe('instant search helpers', () => {
+    it('uses a finite debounce delay for draft → URL commit', () => {
+        expect(MEDIA_SEARCH_DEBOUNCE_MS).toBeGreaterThan(0);
+        expect(MEDIA_SEARCH_DEBOUNCE_MS).toBeLessThan(2000);
+    });
+
+    it('commits changed drafts and clears search when draft is empty', () => {
+        expect(nextCommittedMediaSearch('  hero  ', 'hero')).toBeNull();
+        expect(nextCommittedMediaSearch('logo', 'hero')).toBe('logo');
+        expect(nextCommittedMediaSearch('  ', 'hero')).toBe('');
+        expect(nextCommittedMediaSearch('', '')).toBeNull();
+    });
+});
+
+describe('empty state copy', () => {
+    it('provides unfiltered empty headline, blurb, and upload CTA distinct from filtered empty', () => {
+        expect(MEDIA_EMPTY_STATE.headline.length).toBeGreaterThan(0);
+        expect(MEDIA_EMPTY_STATE.blurb.length).toBeGreaterThan(20);
+        expect(MEDIA_EMPTY_STATE.cta.toLowerCase()).toContain('upload');
+        expect(MEDIA_FILTERED_EMPTY_MESSAGE.toLowerCase()).toContain('match');
+        expect(MEDIA_EMPTY_STATE.headline).not.toBe(MEDIA_FILTERED_EMPTY_MESSAGE);
     });
 });
 

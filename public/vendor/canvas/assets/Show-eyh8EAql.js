@@ -1,1 +1,0 @@
-import{n as e}from"./clsx-8OFgDltU.js";import{t}from"./PlaceholderPage-CPOmISfo.js";var n=e();function r(){return(0,n.jsx)(t,{title:`User detail`,description:`Coming in Step 7.`})}export{r as default};

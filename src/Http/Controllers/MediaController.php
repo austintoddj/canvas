@@ -28,6 +28,8 @@ class MediaController extends Controller
         $user = request()->user(config('canvas.guard'));
         $canViewAll = Gate::forUser($user)->allows('viewAll', Media::class);
 
+        $sortOldest = request()->query('sort') === 'oldest';
+
         $media = $this->visibleMediaQuery($user, $canViewAll)
             ->when(
                 request()->filled('search'),
@@ -37,7 +39,11 @@ class MediaController extends Controller
                 request()->filled('mime'),
                 fn (Builder $query) => $query->ofMimeType((string) request()->query('mime')),
             )
-            ->latest()
+            ->when(
+                $sortOldest,
+                fn (Builder $query) => $query->oldest(),
+                fn (Builder $query) => $query->latest(),
+            )
             ->paginate();
 
         return response()->json($media, 200);

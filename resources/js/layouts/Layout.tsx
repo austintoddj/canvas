@@ -26,6 +26,7 @@ import {
     SidebarSpacer,
 } from '@/components/sidebar';
 import { SidebarLayout } from '@/components/sidebar-layout';
+import { Toaster } from '@/components/Toaster';
 import { useCanvas } from '@/hooks/useCanvas';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
@@ -191,6 +192,7 @@ export default function Layout() {
     return (
         <>
             <CommandPalette key={String(paletteOpen)} open={paletteOpen} onClose={closePalette} />
+            <Toaster />
 
             <SidebarLayout
                 navbar={
@@ -214,7 +216,7 @@ export default function Layout() {
                 sidebar={
                     <Sidebar>
                         <SidebarHeader>
-                            <SidebarItem className="lg:mb-2.5">
+                            <SidebarItem href="/" className="lg:mb-2.5">
                                 <Avatar
                                     initials="C"
                                     className="bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"

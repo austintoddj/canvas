@@ -71,6 +71,31 @@ it('filters media by mime type', function (): void {
         ->and($response->getOriginalContent()->first()->mime_type)->toBe('image/jpeg');
 });
 
+it('sorts media newest first by default and oldest when requested', function (): void {
+    $older = Media::factory()->create([
+        'user_id' => $this->admin->id,
+        'created_at' => now()->subDay(),
+    ]);
+    $newer = Media::factory()->create([
+        'user_id' => $this->admin->id,
+        'created_at' => now(),
+    ]);
+
+    $default = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/media')
+        ->assertSuccessful()
+        ->getOriginalContent();
+
+    expect($default->pluck('id')->all())->toBe([$newer->id, $older->id]);
+
+    $oldest = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/media?sort=oldest')
+        ->assertSuccessful()
+        ->getOriginalContent();
+
+    expect($oldest->pluck('id')->all())->toBe([$older->id, $newer->id]);
+});
+
 it('returns data for creating media', function (): void {
     $response = $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/media/create')

@@ -8,16 +8,16 @@ Canvas is a Laravel package that adds a full blog/publishing system to an existi
 
 This file is the **durable coding standard** for Canvas. Implementation plans are tactical and must not drift from it.
 
-| Document | Role |
-| -------- | ---- |
-| **`Agents.md` (this file)** | Always-on rules for how we write, test, and ship code |
-| [`.github/UPGRADE.md`](.github/UPGRADE.md) | Host contract, v6→v7 upgrade, support notes for installers |
-| [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) | Contributor setup, support window, FormRequest major checklist |
-| [`.github/docs/spa-plan.md`](.github/docs/spa-plan.md) | Admin SPA tracker (frontend) |
+| Document                                               | Role                                                           |
+| ------------------------------------------------------ | -------------------------------------------------------------- |
+| **`Agents.md` (this file)**                            | Always-on rules for how we write, test, and ship code          |
+| [`.github/UPGRADE.md`](.github/UPGRADE.md)             | Host contract, v6→v7 upgrade, support notes for installers     |
+| [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md)   | Contributor setup, support window, FormRequest major checklist |
+| [`.github/docs/spa-plan.md`](.github/docs/spa-plan.md) | Admin SPA tracker (frontend)                                   |
 
 **Rules for agents and humans working plans:**
 
-1. **Every** tracker item is implemented under these standards — not just “what the tracker says,” but *how* it is written.
+1. **Every** tracker item is implemented under these standards — not just “what the tracker says,” but _how_ it is written.
 2. When product/architecture decisions land, implement them in code **and** keep this file (or UPGRADE) updated if the decision is durable.
 3. Prefer this file for permanent style/quality philosophy; UPGRADE for host integration; SPA plan for ordered frontend work.
 4. If a plan step would violate this file, fix the approach (or update this file first) — do not ship exceptions quietly.
@@ -47,10 +47,10 @@ Follow this **strictly** for PHP and TypeScript/React (and any other code we shi
 
 - **Default to writing zero comments.** Excellent code should not need them.
 - **Only** add a comment when it explains something the code cannot say by itself. That usually means:
-  - Non-obvious design decisions or trade-offs
-  - Important business/domain rules that are not encoded in the code
-  - Performance considerations or subtle gotchas
-  - Complex logic that would be hard to follow even with good naming
+    - Non-obvious design decisions or trade-offs
+    - Important business/domain rules that are not encoded in the code
+    - Performance considerations or subtle gotchas
+    - Complex logic that would be hard to follow even with good naming
 - **Never** write comments that narrate what the code does (e.g. `// Get the user`, `// Loop through results`, `// Check if exists`). If you feel the urge, the naming is still weak — improve the names instead.
 - Prefer small, well-named methods and strong typing over comments.
 - Use PHPDoc (or TSDoc) on public APIs **when it adds real value** (generics, non-obvious contracts, host-facing seams). Avoid noise inline comments.

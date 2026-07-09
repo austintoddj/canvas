@@ -48,6 +48,13 @@ const styles = {
         // Icon
         '[--btn-icon:var(--color-zinc-500)] data-active:[--btn-icon:var(--color-zinc-700)] data-hover:[--btn-icon:var(--color-zinc-700)] dark:data-active:[--btn-icon:var(--color-zinc-400)] dark:data-hover:[--btn-icon:var(--color-zinc-400)]',
     ],
+    outlineColors: {
+        red: [
+            'border-red-500/50 text-red-700 data-active:bg-red-500/10 data-hover:bg-red-500/10',
+            'dark:border-red-500/40 dark:text-red-400 dark:[--btn-bg:transparent] dark:data-active:bg-red-500/10 dark:data-hover:bg-red-500/10',
+            '[--btn-icon:var(--color-red-500)] data-active:[--btn-icon:var(--color-red-600)] data-hover:[--btn-icon:var(--color-red-600)] dark:[--btn-icon:var(--color-red-400)] dark:data-active:[--btn-icon:var(--color-red-300)] dark:data-hover:[--btn-icon:var(--color-red-300)]',
+        ],
+    },
     plain: [
         // Base
         'border-transparent text-zinc-950 data-active:bg-zinc-950/5 data-hover:bg-zinc-950/5',
@@ -158,24 +165,46 @@ const styles = {
     },
 };
 
+type OutlineColor = keyof typeof styles.outlineColors;
+
 type ButtonProps = (
     | { color?: keyof typeof styles.colors; outline?: never; plain?: never }
-    | { color?: never; outline: true; plain?: never }
+    | { color?: OutlineColor; outline: true; plain?: never }
     | { color?: never; outline?: never; plain: true }
 ) & { className?: string; children: React.ReactNode } & (
         | ({ href?: never } & Omit<Headless.ButtonProps, 'as' | 'className'>)
         | ({ href: string } & Omit<React.ComponentPropsWithoutRef<typeof Link>, 'className'>)
     );
 
+function buttonVariantClasses({
+    color,
+    outline,
+    plain,
+}: {
+    color?: string;
+    outline?: boolean;
+    plain?: boolean;
+}): string {
+    if (outline) {
+        if (color !== undefined && color in styles.outlineColors) {
+            return clsx(styles.outlineColors[color as OutlineColor]);
+        }
+
+        return clsx(styles.outline);
+    }
+
+    if (plain) {
+        return clsx(styles.plain);
+    }
+
+    return clsx(styles.solid, styles.colors[(color as keyof typeof styles.colors | undefined) ?? 'dark/zinc']);
+}
+
 export const Button = forwardRef(function Button(
     { color, outline, plain, className, children, ...props }: ButtonProps,
     ref: React.ForwardedRef<HTMLElement>
 ) {
-    const classes = clsx(
-        className,
-        styles.base,
-        outline ? styles.outline : plain ? styles.plain : clsx(styles.solid, styles.colors[color ?? 'dark/zinc'])
-    );
+    const classes = clsx(styles.base, buttonVariantClasses({ color, outline, plain }), className);
 
     return typeof props.href === 'string' ? (
         <Link {...props} className={classes} ref={ref as React.ForwardedRef<HTMLAnchorElement>}>

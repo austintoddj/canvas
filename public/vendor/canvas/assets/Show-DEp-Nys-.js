@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CZcjcDnw.js";import{n as t,u as n}from"./chunk-KS7C4IRE-DZD8Tt8X.js";var r=e();function i(){let{id:e}=n();return e===void 0||e===``?(0,r.jsx)(t,{to:`/media`,replace:!0}):(0,r.jsx)(t,{to:`/media?detail=${encodeURIComponent(e)}`,replace:!0})}export{i as default};

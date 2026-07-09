@@ -6,11 +6,11 @@ These scripts are **optional helpers** for operators upgrading from Canvas 6.x. 
 
 `php artisan canvas:upgrade-report` prints read-only detection and orphan counts against your current database.
 
-| Pack | Purpose |
-| ---- | ------- |
-| `mysql/` | MySQL / MariaDB |
-| `pgsql/` | PostgreSQL |
-| `sqlite/` | SQLite |
+| Pack      | Purpose         |
+| --------- | --------------- |
+| `mysql/`  | MySQL / MariaDB |
+| `pgsql/`  | PostgreSQL      |
+| `sqlite/` | SQLite          |
 
 Common flow:
 

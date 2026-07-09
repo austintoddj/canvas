@@ -36,15 +36,15 @@ Canvas resolves the host user model via `config('canvas.user_model')` (default `
 
 Technical home for installers and upgraders (**not** the public `readme.md`).
 
-| Requirement | Detail |
-| ----------- | ------ |
-| **Auth** | Working authentication for `config('canvas.guard')` (single guard; point `CANVAS_GUARD` at `web`, `staff`, etc.) |
-| **User model** | `config('canvas.user_model')` Eloquent authenticatable |
-| **Identity keys** | Stock Laravel **bigint** unsigned primary key on the host user model |
-| **Identity attributes** | Readable **`name`** and **`email`** (display, digest, Gravatar) |
-| **Access** | A `canvas_users` row grants Canvas access (CLI or admin API). Canvas does not create host accounts |
-| **Trait** | `HasCanvasAccess` is **optional** host sugar — not required for routes, gates, policies, digest, or admin API |
-| **Digest** | Core package feature; works with a bare host `User` (no trait / host relations) |
+| Requirement             | Detail                                                                                                           |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Auth**                | Working authentication for `config('canvas.guard')` (single guard; point `CANVAS_GUARD` at `web`, `staff`, etc.) |
+| **User model**          | `config('canvas.user_model')` Eloquent authenticatable                                                           |
+| **Identity keys**       | Stock Laravel **bigint** unsigned primary key on the host user model                                             |
+| **Identity attributes** | Readable **`name`** and **`email`** (display, digest, Gravatar)                                                  |
+| **Access**              | A `canvas_users` row grants Canvas access (CLI or admin API). Canvas does not create host accounts               |
+| **Trait**               | `HasCanvasAccess` is **optional** host sugar — not required for routes, gates, policies, digest, or admin API    |
+| **Digest**              | Core package feature; works with a bare host `User` (no trait / host relations)                                  |
 
 **Canvas does not require:** owning login/password reset, writing host user rows, multi-guard simultaneous sessions, or config for every custom user schema.
 
@@ -234,21 +234,21 @@ Canvas targets current Laravel major + previous (PHP floor matching the oldest s
 
 Hybrid storage: typed columns for queryable fields; `preferences` JSON for long-tail UI settings.
 
-| Column                      | Type                      | Notes                                             |
-| --------------------------- | ------------------------- | ------------------------------------------------- |
-| `user_id`                   | unsignedBigInteger, PK, FK → `users.id` | Same type as stock Laravel `users.id`; cascade delete |
-| `role`                      | tinyint                   | `1` Contributor, `2` Editor, `3` Admin            |
-| `username`                  | string, nullable, unique  | Public author handle                              |
-| `summary`                   | text, nullable            | Author bio                                        |
-| `avatar`                    | string, nullable          | Gravatar hash or full URL                         |
-| `website`                   | string, nullable          |                                                   |
-| `social`                    | json, nullable            | Key/value social links                            |
-| `locale`                    | string, nullable          | Must be in available locales                      |
-| `timezone`                  | string, nullable          | IANA timezone; used by `canvas:digest`            |
-| `theme`                     | string, nullable          | UI preference: `system`, `light`, or `dark` (API defaults to `system` when null) |
-| `digest`                    | boolean, default `false`  | Weekly email opt-in                               |
-| `preferences`               | json, nullable            | Merged with defaults; `onboarding.complete` today |
-| `created_at` / `updated_at` | timestamps                |                                                   |
+| Column                      | Type                                    | Notes                                                                            |
+| --------------------------- | --------------------------------------- | -------------------------------------------------------------------------------- |
+| `user_id`                   | unsignedBigInteger, PK, FK → `users.id` | Same type as stock Laravel `users.id`; cascade delete                            |
+| `role`                      | tinyint                                 | `1` Contributor, `2` Editor, `3` Admin                                           |
+| `username`                  | string, nullable, unique                | Public author handle                                                             |
+| `summary`                   | text, nullable                          | Author bio                                                                       |
+| `avatar`                    | string, nullable                        | Gravatar hash or full URL                                                        |
+| `website`                   | string, nullable                        |                                                                                  |
+| `social`                    | json, nullable                          | Key/value social links                                                           |
+| `locale`                    | string, nullable                        | Must be in available locales                                                     |
+| `timezone`                  | string, nullable                        | IANA timezone; used by `canvas:digest`                                           |
+| `theme`                     | string, nullable                        | UI preference: `system`, `light`, or `dark` (API defaults to `system` when null) |
+| `digest`                    | boolean, default `false`                | Weekly email opt-in                                                              |
+| `preferences`               | json, nullable                          | Merged with defaults; `onboarding.complete` today                                |
+| `created_at` / `updated_at` | timestamps                              |                                                                                  |
 
 ### Configuration
 
@@ -346,21 +346,21 @@ Repeat for `canvas_tags` and `canvas_topics` if needed.
 
 **How to read the results:**
 
-| Signal                                                                                        | Likely scenario                                                                   |
-| --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| v6 `canvas_users` schema (`email` column present), few or no host `users`, `matching_ids` ≈ 0 | **Scenario A**                                                                    |
-| v6 `canvas_users` schema, host `users` exist, IDs already align (rare; usually only if host used Canvas UUIDs) | **Scenario B** with identity remap still recommended if types differ |
-| v6 `canvas_users` schema, host `users` exist, emails overlap                                  | **Scenario B** — map by email, remap `user_id` to host bigint                     |
-| v7 `canvas_users` schema (`user_id` PK bigint, no `email`)                                    | Schema reshape done — run [post-upgrade verification](#post-upgrade-verification) |
-| `pivot_rows` > 0                                                                              | Run the [topics pivot migration](#migrate-topics-from-canvas_posts_topics)        |
+| Signal                                                                                                         | Likely scenario                                                                   |
+| -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| v6 `canvas_users` schema (`email` column present), few or no host `users`, `matching_ids` ≈ 0                  | **Scenario A**                                                                    |
+| v6 `canvas_users` schema, host `users` exist, IDs already align (rare; usually only if host used Canvas UUIDs) | **Scenario B** with identity remap still recommended if types differ              |
+| v6 `canvas_users` schema, host `users` exist, emails overlap                                                   | **Scenario B** — map by email, remap `user_id` to host bigint                     |
+| v7 `canvas_users` schema (`user_id` PK bigint, no `email`)                                                     | Schema reshape done — run [post-upgrade verification](#post-upgrade-verification) |
+| `pivot_rows` > 0                                                                                               | Run the [topics pivot migration](#migrate-topics-from-canvas_posts_topics)        |
 
 #### `canvas:migrate` vs data reshape
 
-| Command | Does | Does **not** |
-| ------- | ---- | ------------ |
-| `php artisan canvas:migrate` | Runs package **schema** migrations from the Canvas path | Reshape v6 rows, map user IDs, migrate topics pivot, or rewrite UUID→bigint data |
-| `php artisan canvas:upgrade-report` | Read-only schema/orphan report | Mutate data |
-| Manual SQL / packs under `resources/upgrade/` | Operator-driven data work | — |
+| Command                                       | Does                                                    | Does **not**                                                                     |
+| --------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `php artisan canvas:migrate`                  | Runs package **schema** migrations from the Canvas path | Reshape v6 rows, map user IDs, migrate topics pivot, or rewrite UUID→bigint data |
+| `php artisan canvas:upgrade-report`           | Read-only schema/orphan report                          | Mutate data                                                                      |
+| Manual SQL / packs under `resources/upgrade/` | Operator-driven data work                               | —                                                                                |
 
 v6 and v7 use the **same migration filename**: `2020_09_21_000000_create_canvas_tables`. The file body changed in v7, but Laravel will not re-run a migration already recorded in your `migrations` table. Expect it to show as **Ran** — reshape data/schema in place per [Scenario A](#scenario-a) or [Scenario B](#scenario-b).
 
@@ -394,15 +394,15 @@ php artisan canvas:upgrade-report
 
 Content tables (`canvas_posts`, `canvas_tags`, `canvas_topics`, `canvas_posts_tags`, `canvas_views`, `canvas_visits`) keep their row data through a normal upgrade. What changes is **structure** and **what `user_id` points at**.
 
-| Table                            | v6                                                         | v7                                                                                          |
-| -------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `canvas_users`                   | `id` PK (often UUID); stores `name`, `email`, `password`, profile | `user_id` PK **bigint** → `users.id`; profile/prefs only                             |
-| `canvas_posts`                   | `user_id` required; topics via `canvas_posts_topics` pivot | `user_id` nullable **bigint** → `users.id`; `topic_id` column (one topic per post)          |
-| `canvas_tags` / `canvas_topics`  | `user_id` required                                         | `user_id` nullable **bigint** → `users.id`                                                  |
-| `canvas_media`                   | (if present)                                               | `user_id` nullable **bigint** → `users.id`                                                  |
-| `canvas_posts_topics`            | exists                                                     | **removed** — migrate data to `canvas_posts.topic_id`                                       |
-| `canvas_posts_tags`              | unchanged                                                  | unchanged                                                                                   |
-| `canvas_views` / `canvas_visits` | unchanged                                                  | unchanged                                                                                   |
+| Table                            | v6                                                                | v7                                                                                 |
+| -------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `canvas_users`                   | `id` PK (often UUID); stores `name`, `email`, `password`, profile | `user_id` PK **bigint** → `users.id`; profile/prefs only                           |
+| `canvas_posts`                   | `user_id` required; topics via `canvas_posts_topics` pivot        | `user_id` nullable **bigint** → `users.id`; `topic_id` column (one topic per post) |
+| `canvas_tags` / `canvas_topics`  | `user_id` required                                                | `user_id` nullable **bigint** → `users.id`                                         |
+| `canvas_media`                   | (if present)                                                      | `user_id` nullable **bigint** → `users.id`                                         |
+| `canvas_posts_topics`            | exists                                                            | **removed** — migrate data to `canvas_posts.topic_id`                              |
+| `canvas_posts_tags`              | unchanged                                                         | unchanged                                                                          |
+| `canvas_views` / `canvas_visits` | unchanged                                                         | unchanged                                                                          |
 
 **Data to migrate manually** (v6 upgrades only):
 

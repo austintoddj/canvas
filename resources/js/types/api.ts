@@ -153,6 +153,8 @@ export type MediaIndexParams = {
     scope?: 'user' | 'all';
     search?: string;
     mime?: string;
+    /** Default is newest (created_at desc). Only send when oldest. */
+    sort?: 'newest' | 'oldest';
     page?: number;
 };
 

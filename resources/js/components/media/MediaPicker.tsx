@@ -26,6 +26,7 @@ async function fetchMediaPage(query: MediaQuery, signal?: AbortSignal): Promise<
             scope: query.scope,
             search: query.search,
             mime: '',
+            sort: 'newest',
             page: query.page,
         }),
         signal

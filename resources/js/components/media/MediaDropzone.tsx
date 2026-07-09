@@ -6,6 +6,7 @@ import { useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
 
 import { Text } from '@/components/text';
 import { ALLOWED_MEDIA_MIME_TYPES, getMaxUploadBytes } from '@/lib/api/media';
+import { applyDragDepth, isFileDragTypes } from '@/lib/media/drag';
 import { formatMediaBytes, mediaFilesFromList } from '@/lib/media/list';
 
 const ACCEPT = ALLOWED_MEDIA_MIME_TYPES.join(',');
@@ -17,6 +18,11 @@ type MediaDropzoneProps = {
     multiple?: boolean;
     /** Larger empty-state treatment. */
     spacious?: boolean;
+    /**
+     * When true, this zone does not own drag-active styling (parent page
+     * provides a full-surface overlay). Click-to-browse still works.
+     */
+    suppressDragHighlight?: boolean;
     className?: string;
     label?: string;
     hint?: string;
@@ -28,6 +34,7 @@ export function MediaDropzone({
     disabled = false,
     multiple = true,
     spacious = false,
+    suppressDragHighlight = false,
     className,
     label = 'Drop images here, or click to browse',
     hint,
@@ -37,8 +44,8 @@ export function MediaDropzone({
     const [dragging, setDragging] = useState(false);
 
     const isDisabled = disabled || uploading;
-    const resolvedHint =
-        hint ?? `JPG, PNG, GIF, or WebP · up to ${formatMediaBytes(getMaxUploadBytes())}`;
+    const showDragging = dragging && !suppressDragHighlight;
+    const resolvedHint = hint ?? `JPG, PNG, GIF, or WebP · up to ${formatMediaBytes(getMaxUploadBytes())}`;
 
     function openPicker() {
         if (isDisabled) {
@@ -57,6 +64,10 @@ export function MediaDropzone({
     }
 
     function handleDragEnter(event: DragEvent<HTMLDivElement>) {
+        if (suppressDragHighlight) {
+            return;
+        }
+
         event.preventDefault();
         event.stopPropagation();
 
@@ -64,25 +75,32 @@ export function MediaDropzone({
             return;
         }
 
-        dragDepth.current += 1;
+        const next = applyDragDepth(dragDepth.current, 'enter');
+        dragDepth.current = next.depth;
 
-        if (event.dataTransfer.types.includes('Files')) {
-            setDragging(true);
+        if (isFileDragTypes(event.dataTransfer.types)) {
+            setDragging(next.active);
         }
     }
 
     function handleDragLeave(event: DragEvent<HTMLDivElement>) {
+        if (suppressDragHighlight) {
+            return;
+        }
+
         event.preventDefault();
         event.stopPropagation();
 
-        dragDepth.current = Math.max(0, dragDepth.current - 1);
-
-        if (dragDepth.current === 0) {
-            setDragging(false);
-        }
+        const next = applyDragDepth(dragDepth.current, 'leave');
+        dragDepth.current = next.depth;
+        setDragging(next.active);
     }
 
     function handleDragOver(event: DragEvent<HTMLDivElement>) {
+        if (suppressDragHighlight) {
+            return;
+        }
+
         event.preventDefault();
         event.stopPropagation();
 
@@ -92,10 +110,15 @@ export function MediaDropzone({
     }
 
     function handleDrop(event: DragEvent<HTMLDivElement>) {
+        if (suppressDragHighlight) {
+            return;
+        }
+
         event.preventDefault();
         event.stopPropagation();
-        dragDepth.current = 0;
-        setDragging(false);
+        const next = applyDragDepth(dragDepth.current, 'reset');
+        dragDepth.current = next.depth;
+        setDragging(next.active);
 
         if (isDisabled) {
             return;
@@ -125,11 +148,11 @@ export function MediaDropzone({
             onDrop={handleDrop}
             className={clsx(
                 className,
-                'relative flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-6 text-center transition',
-                spacious ? 'min-h-48 py-12' : 'min-h-28 py-8',
-                isDisabled ? 'cursor-not-allowed opacity-60' : 'hover:border-zinc-950/20 dark:hover:border-white/20',
-                dragging
-                    ? 'border-zinc-950 bg-zinc-950/5 dark:border-white dark:bg-white/10'
+                'relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-6 text-center transition duration-200',
+                spacious ? 'min-h-56 py-14' : 'min-h-28 py-8',
+                isDisabled ? 'cursor-not-allowed opacity-60' : 'hover:border-zinc-950/25 dark:hover:border-white/25',
+                showDragging
+                    ? 'border-zinc-950 bg-zinc-950/[0.04] dark:border-white dark:bg-white/10'
                     : 'border-zinc-950/10 bg-zinc-950/[0.02] dark:border-white/10 dark:bg-white/[0.02]',
                 'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
             )}
@@ -149,8 +172,8 @@ export function MediaDropzone({
 
             <span
                 className={clsx(
-                    'flex size-10 items-center justify-center rounded-full',
-                    dragging
+                    'flex size-11 items-center justify-center rounded-full transition duration-200',
+                    showDragging
                         ? 'bg-zinc-950 text-white dark:bg-white dark:text-zinc-950'
                         : 'bg-zinc-950/5 text-zinc-500 dark:bg-white/10 dark:text-zinc-400'
                 )}
@@ -163,7 +186,7 @@ export function MediaDropzone({
             </span>
 
             <Text className="mt-3 text-sm font-medium text-zinc-950 dark:text-white">
-                {uploading ? 'Uploading…' : dragging ? 'Drop to upload' : label}
+                {uploading ? 'Uploading…' : showDragging ? 'Drop to upload' : label}
             </Text>
             <Text className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{resolvedHint}</Text>
         </div>

@@ -79,7 +79,6 @@
         "test:ci": "vendor/bin/pest --parallel --compact",
         "test:coverage": "php -d memory_limit=1G -d xdebug.mode=coverage vendor/bin/pest --coverage --min=0",
         "test:coverage:html": "php -d memory_limit=1G -d xdebug.mode=coverage vendor/bin/pest --coverage-html=build/coverage --coverage-clover=build/coverage/clover.xml",
-
         "pint": "pint",
         "pint:test": "pint --test",
         "pint:fix": "pint"
