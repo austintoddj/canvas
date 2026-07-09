@@ -93,6 +93,12 @@ When touching existing code: do not leave behind narrative comments; clean them 
 - **Optional gifts:** `HasCanvasAccess` (host sugar) and `canvas:ui` (sample reader). Core paths (API, gates, digest, policies) must work with a bare host `User`.
 - **Dependencies:** prefer Illuminate primitives (`Str::uuid()`, etc.); no transitive-only critical packages.
 - Prefer class-based factories and `Model::factory()` over legacy `factory()` helpers.
+
+### Artisan command naming
+
+- All commands live under the `canvas:` namespace and follow Laravel core conventions.
+- **Nouns for resource inspection**, mirroring `db:table {table?}`: e.g. `canvas:users {user?}` lists all users bare, shows one with an argument. Do not add `list-*`/`show-*` command pairs.
+- **Verbs for actions with side effects**: `canvas:make-admin`, `canvas:assign-role`, `canvas:remove-access`, `canvas:install`, `canvas:migrate`, `canvas:publish`.
 - Keep package-specific request base classes in `src/Http/Requests/` when they are needed to avoid framework coupling.
 - Prefer the smallest practical set of `illuminate/*` packages.
 - Respect the existing structure (`src/`, `config/`, `resources/`, etc.) unless intentionally refactoring.

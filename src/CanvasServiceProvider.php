@@ -7,14 +7,13 @@ namespace Canvas;
 use Canvas\Console\AssignRoleCommand;
 use Canvas\Console\DigestCommand;
 use Canvas\Console\InstallCommand;
-use Canvas\Console\ListUsersCommand;
 use Canvas\Console\MakeAdminCommand;
 use Canvas\Console\MigrateCommand;
 use Canvas\Console\PublishCommand;
 use Canvas\Console\RemoveAccessCommand;
-use Canvas\Console\ShowUserCommand;
 use Canvas\Console\UiCommand;
 use Canvas\Console\UpgradeReportCommand;
+use Canvas\Console\UsersCommand;
 use Canvas\Events\PostViewed;
 use Canvas\Http\Requests\FormRequest;
 use Canvas\Listeners\CaptureView;
@@ -132,14 +131,13 @@ class CanvasServiceProvider extends ServiceProvider
             AssignRoleCommand::class,
             DigestCommand::class,
             InstallCommand::class,
-            ListUsersCommand::class,
             MigrateCommand::class,
             MakeAdminCommand::class,
             PublishCommand::class,
             RemoveAccessCommand::class,
-            ShowUserCommand::class,
             UiCommand::class,
             UpgradeReportCommand::class,
+            UsersCommand::class,
         ]);
     }
 

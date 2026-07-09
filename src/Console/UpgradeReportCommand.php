@@ -57,7 +57,7 @@ class UpgradeReportCommand extends Command
         $this->line('- Schema only (fresh): php artisan canvas:migrate');
         $this->line('- v6 data reshape SQL packs: resources/upgrade/ (published with the package source)');
         $this->line('- Playbooks: UPGRADE.md → Scenario A / Scenario B / topics pivot');
-        $this->line('- Smoke: php artisan canvas:list-users && open /canvas while signed in');
+        $this->line('- Smoke: php artisan canvas:users && open /canvas while signed in');
         $this->line('- Digest: opted-in users need a valid IANA timezone on canvas_users.timezone');
 
         return self::SUCCESS;

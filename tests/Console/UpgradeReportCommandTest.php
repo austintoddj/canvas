@@ -13,7 +13,7 @@ it('prints a read-only upgrade report for a healthy v7 schema', function (): voi
         ->expectsOutputToContain('Canvas upgrade report')
         ->expectsOutputToContain('v7-style canvas_users')
         ->expectsOutputToContain('Orphan / pivot counts')
-        ->expectsOutputToContain('canvas:list-users');
+        ->expectsOutputToContain('canvas:users');
 });
 
 it('reports zero content orphans when foreign keys are healthy', function (): void {

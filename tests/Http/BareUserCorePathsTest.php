@@ -147,11 +147,11 @@ it('runs access console commands against bare host identity', function (): void 
         'role' => Role::Editor->value,
     ]);
 
-    $this->artisan('canvas:show-user', ['user' => (string) $host->id])
+    $this->artisan('canvas:users', ['user' => (string) $host->id])
         ->assertSuccessful()
         ->expectsOutputToContain('cli-bare@example.com');
 
-    $this->artisan('canvas:list-users')
+    $this->artisan('canvas:users')
         ->assertSuccessful()
         ->expectsOutputToContain('CLI Bare User');
 

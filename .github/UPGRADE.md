@@ -115,7 +115,7 @@ Before upgrading, confirm:
     ```bash
     php artisan canvas:make-admin your@email.com
     php artisan canvas:assign-role editor@example.com editor
-    php artisan canvas:list-users
+    php artisan canvas:users
     ```
 
 8. Smoke-test `/canvas` while signed in as a user with a `canvas_users` row.
@@ -135,8 +135,8 @@ Before upgrading, confirm:
     - `canvas:make-admin {user}` — grant or promote to Admin
     - `canvas:assign-role {user} {role}` — assign Contributor, Editor, or Admin
     - `canvas:remove-access {user}` — delete the `canvas_users` row (host user is untouched)
-    - `canvas:list-users` — list users with Canvas access
-    - `canvas:show-user {user}` — dump the full Canvas profile as JSON
+    - `canvas:users` — list users with Canvas access
+    - `canvas:users {user}` — dump the full Canvas profile as JSON
 
 All `{user}` arguments accept an email address or host user ID.
 
@@ -484,7 +484,7 @@ Ensure column types are bigint before or as you rewrite. Re-run the orphaned-pos
 
 **Step 6 — Migrate topics** if `canvas_posts_topics` exists (see below).
 
-**Step 7 — Grant access and verify** — `canvas:list-users`, sign in, open `/canvas`.
+**Step 7 — Grant access and verify** — `canvas:users`, sign in, open `/canvas`.
 
 #### Scenario B
 
@@ -544,8 +544,8 @@ Run this checklist after schema/data work. Prefer the Artisan report first:
 
 ```bash
 php artisan canvas:upgrade-report
-php artisan canvas:list-users
-php artisan canvas:show-user your@email.com
+php artisan canvas:users
+php artisan canvas:users your@email.com
 ```
 
 **Orphan counts** (expect `0`; also printed by `canvas:upgrade-report`):
