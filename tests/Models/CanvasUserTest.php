@@ -5,7 +5,9 @@ use Canvas\Enums\Role;
 use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Tests\Models\User;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 it('stores the role and theme preference columns', function (): void {
     $user = User::factory()->create();
@@ -115,4 +117,105 @@ it('resolves roles from canvas_users without trait accessors', function (): void
     expect(CanvasUser::isAdmin($admin))->toBeTrue();
     expect(CanvasUser::isContributor($contributor))->toBeTrue();
     expect(CanvasUser::roleFor($contributor))->toBe(Role::Contributor);
+});
+
+it('resolves roles from an eager-loaded canvasUser relation without querying', function (): void {
+    $user = User::factory()->editor()->create();
+    $user->load('canvasUser');
+
+    $queries = 0;
+    DB::listen(function () use (&$queries): void {
+        $queries++;
+    });
+
+    expect(CanvasUser::roleFor($user))->toBe(Role::Editor)
+        ->and(CanvasUser::isAdmin($user))->toBeFalse()
+        ->and(CanvasUser::isContributor($user))->toBeFalse();
+
+    expect($queries)->toBe(0);
+});
+
+it('returns null from a loaded canvasUser relation set to null without querying', function (): void {
+    $user = User::factory()->create();
+    $user->setRelation('canvasUser', null);
+
+    $queries = 0;
+    DB::listen(function () use (&$queries): void {
+        $queries++;
+    });
+
+    expect(CanvasUser::roleFor($user))->toBeNull()
+        ->and(CanvasUser::isAdmin($user))->toBeFalse();
+
+    expect($queries)->toBe(0);
+});
+
+it('resolves roles for bare hosts from a package-set canvasUser relation', function (): void {
+    useBareUserModel();
+
+    $host = User::factory()->create();
+    $canvasUser = CanvasUser::factory()->admin()->create([
+        'user_id' => $host->id,
+    ]);
+
+    $bare = bareUser($host->id);
+    $bare->setRelation('canvasUser', $canvasUser);
+
+    $queries = 0;
+    DB::listen(function () use (&$queries): void {
+        $queries++;
+    });
+
+    expect(CanvasUser::isAdmin($bare))->toBeTrue()
+        ->and(CanvasUser::roleFor($bare))->toBe(Role::Admin);
+
+    expect($queries)->toBe(0);
+});
+
+it('resolves roles from authenticatable identifiers that are not eloquent models', function (): void {
+    $user = User::factory()->admin()->create();
+
+    $authenticatable = new class($user->id) implements Authenticatable
+    {
+        public function __construct(private readonly int|string $id) {}
+
+        public function getAuthIdentifierName(): string
+        {
+            return 'id';
+        }
+
+        public function getAuthIdentifier(): mixed
+        {
+            return $this->id;
+        }
+
+        public function getAuthPasswordName(): string
+        {
+            return 'password';
+        }
+
+        public function getAuthPassword(): string
+        {
+            return '';
+        }
+
+        public function getRememberToken(): ?string
+        {
+            return null;
+        }
+
+        public function setRememberToken($value): void {}
+
+        public function getRememberTokenName(): string
+        {
+            return 'remember_token';
+        }
+    };
+
+    expect(CanvasUser::roleFor($authenticatable))->toBe(Role::Admin)
+        ->and(CanvasUser::isAdmin($authenticatable))->toBeTrue();
+});
+
+it('returns null when role resolution cannot identify a user', function (): void {
+    expect(CanvasUser::roleFor((object) ['name' => 'anonymous']))->toBeNull();
 });

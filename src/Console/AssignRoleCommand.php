@@ -29,15 +29,17 @@ class AssignRoleCommand extends Command
         $previousRole = $this->currentRole($user);
         $this->assignRole($user, $role);
 
+        $email = (string) data_get($user, 'email', '');
+
         if ($previousRole) {
             $this->info(sprintf(
                 'Updated %s from %s to %s.',
-                $user->email,
+                $email,
                 $previousRole->label(),
                 $role->label(),
             ));
         } else {
-            $this->info(sprintf('Assigned %s to %s.', $role->label(), $user->email));
+            $this->info(sprintf('Assigned %s to %s.', $role->label(), $email));
         }
 
         return self::SUCCESS;

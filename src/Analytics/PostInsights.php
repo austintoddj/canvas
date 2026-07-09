@@ -5,14 +5,27 @@ declare(strict_types=1);
 namespace Canvas\Analytics;
 
 use Canvas\Models\Post;
+use Canvas\Models\View;
+use Canvas\Models\Visit;
 use Canvas\Support\ReadTime;
+use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 use JsonSerializable;
 
 final readonly class PostInsights implements JsonSerializable
 {
+    /**
+     * @param  array<string, string>  $popularReadingTimes
+     * @param  array<string, int>  $topReferers
+     * @param  array<string, int>  $topBrowsers
+     * @param  array{direction: string, percentage: string}  $monthOverMonthViews
+     * @param  array{direction: string, percentage: string}  $monthOverMonthVisits
+     * @param  array{views: string, visits: string}  $graph
+     */
     private function __construct(
         public Post $post,
         public string $readTime,
@@ -31,14 +44,16 @@ final readonly class PostInsights implements JsonSerializable
     {
         $current = Period::currentMonth();
         $previous = Period::previousMonth();
+        $graphPeriod = Period::days(30);
 
-        $currentViews = $post->views()
-            ->whereBetween('created_at', [$current->start, $current->end])
-            ->get(['created_at', 'referer', 'agent']);
+        $currentViewsQuery = $post->views()
+            ->whereBetween('created_at', [$current->start, $current->end]);
 
-        $currentVisits = $post->visits()
-            ->whereBetween('created_at', [$current->start, $current->end])
-            ->get(['created_at']);
+        $currentVisitsQuery = $post->visits()
+            ->whereBetween('created_at', [$current->start, $current->end]);
+
+        $monthlyViews = (clone $currentViewsQuery)->count();
+        $monthlyVisits = (clone $currentVisitsQuery)->count();
 
         $previousViewsCount = $post->views()
             ->whereBetween('created_at', [$previous->start, $previous->end])
@@ -48,24 +63,45 @@ final readonly class PostInsights implements JsonSerializable
             ->whereBetween('created_at', [$previous->start, $previous->end])
             ->count();
 
+        $graphViewsQuery = $post->views()
+            ->whereBetween('created_at', [$graphPeriod->start, $graphPeriod->end]);
+
+        $graphVisitsQuery = $post->visits()
+            ->whereBetween('created_at', [$graphPeriod->start, $graphPeriod->end]);
+
         return new self(
             post: $post,
             readTime: ReadTime::calculate($post->body, $locale),
-            popularReadingTimes: self::popularReadingTimes($currentViews),
-            topReferers: self::topReferers($currentViews, $locale),
-            topBrowsers: self::topBrowsers($currentViews, $locale),
-            monthlyViews: $currentViews->count(),
+            popularReadingTimes: self::popularReadingTimes(clone $currentViewsQuery),
+            topReferers: self::topReferers(clone $currentViewsQuery, $locale),
+            topBrowsers: self::topBrowsers(clone $currentViewsQuery, $locale),
+            monthlyViews: $monthlyViews,
             totalViews: $post->views()->count(),
-            monthlyVisits: $currentVisits->count(),
-            monthOverMonthViews: self::monthOverMonth($currentViews->count(), $previousViewsCount),
-            monthOverMonthVisits: self::monthOverMonth($currentVisits->count(), $previousVisitsCount),
+            monthlyVisits: $monthlyVisits,
+            monthOverMonthViews: self::monthOverMonth($monthlyViews, $previousViewsCount),
+            monthOverMonthVisits: self::monthOverMonth($monthlyVisits, $previousVisitsCount),
             graph: [
-                'views' => self::dailyCounts($currentViews, 30)->toJson(),
-                'visits' => self::dailyCounts($currentVisits, 30)->toJson(),
+                'views' => self::dailySeries(self::dailyAggregates(clone $graphViewsQuery), 30)->toJson(),
+                'visits' => self::dailySeries(self::dailyAggregates(clone $graphVisitsQuery), 30)->toJson(),
             ],
         );
     }
 
+    /**
+     * @return array{
+     *     post: Post,
+     *     readTime: string,
+     *     popularReadingTimes: array<string, string>,
+     *     topReferers: array<string, int>,
+     *     topBrowsers: array<string, int>,
+     *     monthlyViews: int,
+     *     totalViews: int,
+     *     monthlyVisits: int,
+     *     monthOverMonthViews: array{direction: string, percentage: string},
+     *     monthOverMonthVisits: array{direction: string, percentage: string},
+     *     graph: array{views: string, visits: string}
+     * }
+     */
     public function jsonSerialize(): array
     {
         return [
@@ -83,14 +119,46 @@ final readonly class PostInsights implements JsonSerializable
         ];
     }
 
-    private static function dailyCounts(Collection $data, int $days): Collection
+    /**
+     * @param  Builder<View>|Builder<Visit>|HasMany<View, Post>|HasMany<Visit, Post>  $query
+     * @return Collection<string, int>
+     */
+    private static function dailyAggregates(Builder|HasMany $query): Collection
     {
-        $counts = $data->countBy(fn ($item) => $item->created_at->toDateString());
+        $day = QueryDate::dayExpression();
 
-        return collect(CarbonPeriod::create(today()->subDays($days), today()))
-            ->mapWithKeys(fn ($date) => [$date->format('Y-m-d') => $counts->get($date->format('Y-m-d'), 0)]);
+        /** @var Collection<string, int> $counts */
+        $counts = $query
+            ->toBase()
+            ->selectRaw("{$day} as day, COUNT(*) as aggregate")
+            ->groupByRaw($day)
+            ->pluck('aggregate', 'day')
+            ->map(fn (mixed $count): int => (int) $count);
+
+        return $counts;
     }
 
+    /**
+     * @param  Collection<string, int>  $counts
+     * @return Collection<string, int>
+     */
+    private static function dailySeries(Collection $counts, int $days): Collection
+    {
+        /** @var Collection<string, int> $result */
+        $result = new Collection;
+
+        foreach (CarbonPeriod::create(today()->subDays($days), today()) as $date) {
+            /** @var CarbonInterface $date */
+            $key = $date->format('Y-m-d');
+            $result[$key] = $counts->get($key, 0);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array{direction: string, percentage: string}
+     */
     private static function monthOverMonth(int $thisMonth, int $lastMonth): array
     {
         $growth = $lastMonth !== 0
@@ -103,9 +171,22 @@ final readonly class PostInsights implements JsonSerializable
         ];
     }
 
-    private static function popularReadingTimes(Collection $views): array
+    /**
+     * @param  Builder<View>|HasMany<View, Post>  $views
+     * @return array<string, string>
+     */
+    private static function popularReadingTimes(Builder|HasMany $views): array
     {
-        $total = $views->count();
+        $hour = QueryDate::hourExpression();
+
+        $rows = $views
+            ->toBase()
+            ->selectRaw("{$hour} as hour, COUNT(*) as aggregate")
+            ->groupByRaw($hour)
+            ->orderByDesc('aggregate')
+            ->get();
+
+        $total = (int) $rows->sum('aggregate');
 
         if ($total === 0) {
             return [];
@@ -113,34 +194,55 @@ final readonly class PostInsights implements JsonSerializable
 
         $results = [];
 
-        foreach ($views->countBy(fn ($item) => $item->created_at->minute(0)->format('H:i')) as $time => $count) {
-            $start = Date::createFromTimeString($time);
+        foreach ($rows->take(5) as $row) {
+            $start = Date::createFromTimeString((string) $row->hour);
             $end = $start->copy()->addMinutes(60);
-            $results[sprintf('%s - %s', $start->format('g:i A'), $end->format('g:i A'))] = number_format($count / $total * 100, 2);
+            $label = sprintf('%s - %s', $start->format('g:i A'), $end->format('g:i A'));
+            $results[$label] = number_format(((int) $row->aggregate) / $total * 100, 2);
         }
 
-        arsort($results);
-
-        return array_slice($results, 0, 5, true);
+        return $results;
     }
 
-    private static function topReferers(Collection $views, ?string $locale): array
+    /**
+     * @param  Builder<View>|HasMany<View, Post>  $views
+     * @return array<string, int>
+     */
+    private static function topReferers(Builder|HasMany $views, ?string $locale): array
     {
         $other = trans('canvas::app.other', [], $locale);
 
-        $results = $views
-            ->countBy(fn ($item) => $item->referer ?: $other)
-            ->all();
+        $rows = $views
+            ->toBase()
+            ->selectRaw('referer, COUNT(*) as aggregate')
+            ->groupBy('referer')
+            ->orderByDesc('aggregate')
+            ->limit(10)
+            ->get();
+
+        $results = [];
+
+        foreach ($rows as $row) {
+            $key = filled($row->referer) ? (string) $row->referer : $other;
+            $results[$key] = ($results[$key] ?? 0) + (int) $row->aggregate;
+        }
 
         arsort($results);
 
         return array_slice($results, 0, 10, true);
     }
 
-    private static function topBrowsers(Collection $views, ?string $locale): array
+    /**
+     * @param  Builder<View>|HasMany<View, Post>  $views
+     * @return array<string, int>
+     */
+    private static function topBrowsers(Builder|HasMany $views, ?string $locale): array
     {
-        $results = $views
-            ->countBy(fn ($item) => self::parseBrowser($item->agent, $locale))
+        $agents = $views->pluck('agent');
+
+        /** @var array<string, int> $results */
+        $results = $agents
+            ->countBy(fn (?string $agent): string => self::parseBrowser($agent, $locale))
             ->all();
 
         arsort($results);

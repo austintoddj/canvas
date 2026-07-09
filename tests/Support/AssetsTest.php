@@ -26,3 +26,27 @@ it('reports assets as not up to date when manifest is missing', function (): voi
 
     app()->offsetSet('env', 'testing');
 });
+
+it('compares published and package manifests when not running unit tests', function (): void {
+    app()->offsetSet('env', 'production');
+
+    $hotFile = public_path('vendor/canvas/canvas.hot');
+    $published = public_path('vendor/canvas/manifest.json');
+    $package = base_path('vendor/austintoddj/canvas/public/vendor/canvas/manifest.json');
+
+    // Package path used by Assets is relative to src/Support → package public.
+    $packageManifest = dirname(__DIR__, 2).'/public/vendor/canvas/manifest.json';
+
+    File::ensureDirectoryExists(dirname($published));
+    File::delete($hotFile);
+    File::put($published, File::get($packageManifest));
+
+    expect(Assets::isUpToDate())->toBeTrue();
+
+    File::put($published, '{"stale":true}');
+
+    expect(Assets::isUpToDate())->toBeFalse();
+
+    File::put($published, File::get($packageManifest));
+    app()->offsetSet('env', 'testing');
+});

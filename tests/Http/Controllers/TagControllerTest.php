@@ -4,7 +4,7 @@ use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\View;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 
 it('lists all tags', function (): void {
     Tag::factory()->count(2)->create();
@@ -62,14 +62,14 @@ it('returns not found for unknown tags', function (): void {
 });
 it('stores a new tag', function (): void {
     $data = [
-        'id' => Uuid::uuid4()->toString(),
+        'id' => (string) Str::uuid(),
         'name' => 'A new tag',
         'slug' => 'a-new-tag',
     ];
 
     $response = $this->actingAs($this->admin, 'canvas')
         ->postJson("canvas/api/tags/{$data['id']}", $data)
-        ->assertSuccessful();
+        ->assertCreated();
 
     $this->assertInstanceOf(Tag::class, $response->getOriginalContent()->first());
 
@@ -77,7 +77,7 @@ it('stores a new tag', function (): void {
 });
 it('restores deleted tags when refreshed', function (): void {
     $deletedTag = Tag::factory()->create([
-        'id' => Uuid::uuid4()->toString(),
+        'id' => (string) Str::uuid(),
         'name' => 'A deleted tag',
         'slug' => 'a-deleted-tag',
         'user_id' => $this->editor->id,
@@ -85,14 +85,14 @@ it('restores deleted tags when refreshed', function (): void {
     ]);
 
     $data = [
-        'id' => Uuid::uuid4()->toString(),
+        'id' => (string) Str::uuid(),
         'name' => $deletedTag->name,
         'slug' => $deletedTag->slug,
     ];
 
     $response = $this->actingAs($this->admin, 'canvas')
         ->postJson("canvas/api/tags/{$data['id']}", $data)
-        ->assertSuccessful();
+        ->assertCreated();
 
     $this->assertInstanceOf(Tag::class, $response->getOriginalContent()->first());
 
@@ -108,11 +108,27 @@ it('updates an existing tag', function (): void {
 
     $response = $this->actingAs($this->admin, 'canvas')
         ->postJson("canvas/api/tags/{$tag->id}", $data)
-        ->assertSuccessful();
+        ->assertOk();
 
     $this->assertInstanceOf(Tag::class, $response->getOriginalContent()->first());
 
     $this->assertSame($data['slug'], $response->getOriginalContent()->slug);
+});
+
+// Invariant: live slug collisions reject create; soft-deleted slug restore remains allowed
+it('rejects creating a tag when a live slug already exists for the user', function (): void {
+    Tag::factory()->create([
+        'slug' => 'taken-slug',
+        'user_id' => $this->admin->id,
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/tags/'.(string) Str::uuid(), [
+            'name' => 'Collision',
+            'slug' => 'taken-slug',
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['slug']);
 });
 it('invalid slugs are validated', function (): void {
     $tag = Tag::factory()->create();

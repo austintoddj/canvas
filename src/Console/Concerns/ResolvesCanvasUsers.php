@@ -16,12 +16,13 @@ trait ResolvesCanvasUsers
         return config('canvas.user_model');
     }
 
-    protected function resolveUser(string $value): Model
+    protected function resolveUser(int|string $value): Model
     {
         $userModel = $this->userModel();
+        $identifier = (string) $value;
 
-        return filter_var($value, FILTER_VALIDATE_EMAIL)
-            ? $userModel::query()->where('email', $value)->firstOrFail()
+        return filter_var($identifier, FILTER_VALIDATE_EMAIL)
+            ? $userModel::query()->where('email', $identifier)->firstOrFail()
             : $userModel::query()->findOrFail($value);
     }
 

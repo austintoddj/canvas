@@ -1,6 +1,6 @@
 @if ($user)
     @php
-        $canvasUser = $user->relationLoaded('canvasUser') ? $user->canvasUser : null;
+        $canvasUser = $user->relationLoaded('canvasUser') ? $user->getRelation('canvasUser') : null;
         $avatarUrl = \Canvas\Support\AuthorAvatar::url($canvasUser?->avatar, $user->email ?? '', $size ?? 32);
     @endphp
     <div @class(['flex items-center gap-2 text-sm text-gray-500', $wrapperClass ?? null])>

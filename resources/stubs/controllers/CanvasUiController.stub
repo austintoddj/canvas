@@ -3,22 +3,26 @@
 namespace {{namespace}}Http\Controllers\Canvas;
 
 use Canvas\Events\PostViewed;
-use Canvas\Http\Middleware\Session;
 use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
+use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Collection;
 
 class CanvasUiController extends Controller
 {
     public function index(): View
     {
         $posts = Post::published()
-            ->with('user.canvasUser', 'topic')
+            ->with(['user', 'topic'])
             ->latest()
             ->paginate();
+
+        $this->attachCanvasUsersToPosts($posts);
 
         return view('canvas::ui.index', compact('posts'));
     }
@@ -26,12 +30,14 @@ class CanvasUiController extends Controller
     public function show(string $slug): View
     {
         $post = Post::published()
-            ->with('user.canvasUser', 'tags', 'topic')
+            ->with(['user', 'tags', 'topic'])
             ->firstWhere('slug', $slug);
 
         if (! $post) {
             abort(404);
         }
+
+        $this->attachCanvasUsersToPosts(collect([$post]));
 
         event(new PostViewed(
             post: $post,
@@ -53,17 +59,19 @@ class CanvasUiController extends Controller
             abort(404);
         }
 
+        /** @var class-string<Model> $userModel */
         $userModel = config('canvas.user_model');
 
-        $user = $userModel::query()
-            ->with('canvasUser')
-            ->find($canvasUser->user_id);
+        $user = $userModel::query()->find($canvasUser->user_id);
 
         if ($user === null) {
             abort(404);
         }
 
-        $posts = $user->posts()
+        $user->setRelation('canvasUser', $canvasUser);
+
+        $posts = Post::query()
+            ->where('user_id', $canvasUser->user_id)
             ->published()
             ->with('topic')
             ->latest()
@@ -92,9 +100,11 @@ class CanvasUiController extends Controller
 
         $posts = $tag->posts()
             ->published()
-            ->with('user.canvasUser', 'topic')
+            ->with(['user', 'topic'])
             ->latest()
             ->paginate();
+
+        $this->attachCanvasUsersToPosts($posts);
 
         return view('canvas::ui.tag', compact('tag', 'posts'));
     }
@@ -119,10 +129,49 @@ class CanvasUiController extends Controller
 
         $posts = $topic->posts()
             ->published()
-            ->with('user.canvasUser', 'tags')
+            ->with(['user', 'tags'])
             ->latest()
             ->paginate();
 
+        $this->attachCanvasUsersToPosts($posts);
+
         return view('canvas::ui.topic', compact('topic', 'posts'));
+    }
+
+    private function attachCanvasUsersToPosts(Paginator|Collection $posts): void
+    {
+        /** @var Collection<int, Post> $items */
+        $items = $posts instanceof Paginator
+            ? collect($posts->items())
+            : collect($posts);
+
+        $userIds = $items
+            ->pluck('user_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($userIds->isEmpty()) {
+            return;
+        }
+
+        $canvasUsers = CanvasUser::query()
+            ->whereIn('user_id', $userIds)
+            ->get()
+            ->keyBy('user_id');
+
+        $items->each(function (Post $post) use ($canvasUsers): void {
+            $user = $post->user;
+
+            if ($user === null) {
+                return;
+            }
+
+            $canvasUser = $canvasUsers->get($post->user_id);
+
+            if ($canvasUser !== null) {
+                $user->setRelation('canvasUser', $canvasUser);
+            }
+        });
     }
 }

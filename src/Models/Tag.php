@@ -5,63 +5,45 @@ declare(strict_types=1);
 namespace Canvas\Models;
 
 use Canvas\Database\Factories\TagFactory;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @use HasFactory<TagFactory>
+ */
 class Tag extends Model
 {
+    /** @use HasFactory<TagFactory> */
     use HasFactory;
+
     use SoftDeletes;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'canvas_tags';
 
-    /**
-     * The attributes that aren't mass assignable.
-     *
-     * @var array
-     */
+    /** @var list<string> */
     protected $guarded = [];
 
-    /**
-     * The "type" of the auto-incrementing ID.
-     *
-     * @var string
-     */
     protected $keyType = 'string';
 
-    /**
-     * Indicates if the IDs are auto-incrementing.
-     *
-     * @var bool
-     */
     public $incrementing = false;
 
-    /**
-     * The number of models to return for pagination.
-     *
-     * @var int
-     */
     protected $perPage = 10;
 
-    /**
-     * Create a new factory instance for the model.
-     */
-    protected static function newFactory(): Factory
+    /** @var array<string, string> */
+    protected $casts = [
+        'user_id' => 'integer',
+    ];
+
+    protected static function newFactory(): TagFactory
     {
         return TagFactory::new();
     }
 
     /**
-     * Get the posts relationship.
+     * @return BelongsToMany<Post, $this>
      */
     public function posts(): BelongsToMany
     {
@@ -69,19 +51,19 @@ class Tag extends Model
     }
 
     /**
-     * Get the user relationship.
+     * @return BelongsTo<Model, $this>
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(config('canvas.user_model'));
+        /** @var class-string<Model> $userModel */
+        $userModel = config('canvas.user_model');
+
+        return $this->belongsTo($userModel);
     }
 
-    /**
-     * The "booting" method of the model.
-     */
     protected static function booted(): void
     {
-        static::deleting(function (self $tag) {
+        static::deleting(function (self $tag): void {
             $tag->posts()->detach();
         });
     }

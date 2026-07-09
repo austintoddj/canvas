@@ -8,32 +8,21 @@ use Illuminate\Console\Command;
 
 class MigrateCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'canvas:migrate { --force : Force the operation to run when in production }';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Run Canvas migrations';
+    protected $description = 'Run Canvas schema migrations only (does not reshape v6 data)';
 
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle()
+    public function handle(): int
     {
         $this->callSilent('migrate', [
             '--path' => 'vendor/austintoddj/canvas/database/migrations',
-            '--force' => $this->option('force') ?? true,
+            '--force' => (bool) $this->option('force'),
         ]);
 
-        $this->info('Migration complete.');
+        $this->info('Canvas schema migration complete.');
+        $this->line('This command only runs package migrations. It does not convert v6 data.');
+        $this->line('Upgrading from v6? See UPGRADE.md scenarios, then run: php artisan canvas:upgrade-report');
+
+        return self::SUCCESS;
     }
 }

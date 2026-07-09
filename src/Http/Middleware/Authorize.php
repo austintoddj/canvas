@@ -19,8 +19,16 @@ class Authorize
             abort(403);
         }
 
+        if ($user->relationLoaded('canvasUser')) {
+            if ($user->getRelation('canvasUser') === null) {
+                abort(403);
+            }
+
+            return $next($request);
+        }
+
         if (method_exists($user, 'canvasUser')) {
-            if ($user->canvasUser === null) {
+            if (data_get($user, 'canvasUser') === null) {
                 abort(403);
             }
 

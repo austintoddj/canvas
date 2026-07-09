@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Model;
 
 final class FrontendBootData
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function forUser(Authenticatable $user): array
     {
         $canvasUser = self::resolveCanvasUser($user);

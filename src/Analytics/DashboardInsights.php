@@ -6,44 +6,64 @@ namespace Canvas\Analytics;
 
 use Canvas\Models\View;
 use Canvas\Models\Visit;
+use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use JsonSerializable;
 
 final readonly class DashboardInsights implements JsonSerializable
 {
+    /**
+     * @param  array{views: string, visits: string}  $graph
+     */
     private function __construct(
         public int $views,
         public int $visits,
         public array $graph,
     ) {}
 
+    /**
+     * @param  Collection<int|string, mixed>  $postIds
+     */
     public static function for(Collection $postIds, int $days = 30): self
     {
+        if ($postIds->isEmpty()) {
+            $emptyGraph = self::dailySeries(collect(), $days)->toJson();
+
+            return new self(
+                views: 0,
+                visits: 0,
+                graph: [
+                    'views' => $emptyGraph,
+                    'visits' => $emptyGraph,
+                ],
+            );
+        }
+
         $period = Period::days($days);
 
-        $views = View::query()
-            ->select('created_at')
+        $viewsQuery = View::query()
             ->whereIn('post_id', $postIds)
-            ->whereBetween('created_at', [$period->start, $period->end])
-            ->get();
+            ->whereBetween('created_at', [$period->start, $period->end]);
 
-        $visits = Visit::query()
-            ->select('created_at')
+        $visitsQuery = Visit::query()
             ->whereIn('post_id', $postIds)
-            ->whereBetween('created_at', [$period->start, $period->end])
-            ->get();
+            ->whereBetween('created_at', [$period->start, $period->end]);
 
         return new self(
-            views: $views->count(),
-            visits: $visits->count(),
+            views: (clone $viewsQuery)->count(),
+            visits: (clone $visitsQuery)->count(),
             graph: [
-                'views' => self::dailyCounts($views, $days)->toJson(),
-                'visits' => self::dailyCounts($visits, $days)->toJson(),
+                'views' => self::dailySeries(self::dailyAggregates($viewsQuery), $days)->toJson(),
+                'visits' => self::dailySeries(self::dailyAggregates($visitsQuery), $days)->toJson(),
             ],
         );
     }
 
+    /**
+     * @return array{views: int, visits: int, graph: array{views: string, visits: string}}
+     */
     public function jsonSerialize(): array
     {
         return [
@@ -53,11 +73,40 @@ final readonly class DashboardInsights implements JsonSerializable
         ];
     }
 
-    private static function dailyCounts(Collection $data, int $days): Collection
+    /**
+     * @param  Builder<*>  $query
+     * @return Collection<string, int>
+     */
+    private static function dailyAggregates(Builder $query): Collection
     {
-        $counts = $data->countBy(fn ($item) => $item->created_at->toDateString());
+        $day = QueryDate::dayExpression();
 
-        return collect(CarbonPeriod::create(today()->subDays($days), today()))
-            ->mapWithKeys(fn ($date) => [$date->format('Y-m-d') => $counts->get($date->format('Y-m-d'), 0)]);
+        /** @var Collection<string, int> $counts */
+        $counts = (clone $query)
+            ->toBase()
+            ->selectRaw("{$day} as day, COUNT(*) as aggregate")
+            ->groupByRaw($day)
+            ->pluck('aggregate', 'day')
+            ->map(fn (mixed $count): int => (int) $count);
+
+        return $counts;
+    }
+
+    /**
+     * @param  Collection<string, int>  $counts
+     * @return Collection<string, int>
+     */
+    private static function dailySeries(Collection $counts, int $days): Collection
+    {
+        /** @var Collection<string, int> $result */
+        $result = new Collection;
+
+        foreach (CarbonPeriod::create(today()->subDays($days), today()) as $date) {
+            /** @var CarbonInterface $date */
+            $key = $date->format('Y-m-d');
+            $result[$key] = $counts->get($key, 0);
+        }
+
+        return $result;
     }
 }

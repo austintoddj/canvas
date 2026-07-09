@@ -1,7 +1,7 @@
 @extends('canvas::ui.layout')
 
 @php
-    $canvasUser = $user->canvasUser;
+    $canvasUser = $user->relationLoaded('canvasUser') ? $user->getRelation('canvasUser') : null;
     $avatarUrl = \Canvas\Support\AuthorAvatar::url($canvasUser?->avatar, $user->email ?? '', 96);
 @endphp
 

@@ -5,7 +5,6 @@ use Canvas\Models\Post;
 use Canvas\Models\View;
 use Canvas\Tests\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Ramsey\Uuid\Uuid;
 
 describe('when listing users', function (): void {
     it('lists users with canvas access', function (): void {
@@ -122,7 +121,7 @@ describe('when granting and updating access', function (): void {
 
     it('returns not found when storing profile for a missing host user', function (): void {
         $this->actingAs($this->admin, 'canvas')
-            ->postJson('canvas/api/users/'.Uuid::uuid4()->toString(), [
+            ->postJson('canvas/api/users/999999999', [
                 'role' => 1,
             ])
             ->assertNotFound();

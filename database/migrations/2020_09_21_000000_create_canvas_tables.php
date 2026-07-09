@@ -4,14 +4,13 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateCanvasTables extends Migration
+/**
+ * Baseline Canvas schema. Filename is frozen for upgrade history — do not rename.
+ * Prefer anonymous classes + typed up()/down() for any *new* migrations.
+ */
+return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
-    public function up()
+    public function up(): void
     {
         Schema::create('canvas_posts', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -19,10 +18,10 @@ class CreateCanvasTables extends Migration
             $table->string('title');
             $table->text('summary')->nullable();
             $table->text('body')->nullable();
-            $table->dateTime('published_at')->nullable();
+            $table->dateTime('published_at')->nullable()->index();
             $table->string('featured_image')->nullable();
             $table->string('featured_image_caption')->nullable();
-            $table->uuid('user_id')->nullable()->index();
+            $table->foreignId('user_id')->nullable()->index();
             $table->uuid('topic_id')->nullable()->index();
             $table->json('meta')->nullable();
             $table->timestamps();
@@ -35,7 +34,7 @@ class CreateCanvasTables extends Migration
             $table->uuid('id')->primary();
             $table->string('slug');
             $table->string('name');
-            $table->uuid('user_id')->nullable()->index();
+            $table->foreignId('user_id')->nullable()->index();
             $table->timestamps();
             $table->softDeletes();
             $table->index('created_at');
@@ -47,7 +46,7 @@ class CreateCanvasTables extends Migration
             $table->uuid('id')->primary();
             $table->string('slug');
             $table->string('name');
-            $table->uuid('user_id')->nullable()->index();
+            $table->foreignId('user_id')->nullable()->index();
             $table->timestamps();
             $table->softDeletes();
             $table->index('created_at');
@@ -81,7 +80,7 @@ class CreateCanvasTables extends Migration
         });
 
         Schema::create('canvas_users', function (Blueprint $table) {
-            $table->uuid('user_id')->primary();
+            $table->foreignId('user_id')->primary();
             $table->tinyInteger('role');
             $table->string('username')->nullable()->unique();
             $table->text('summary')->nullable();
@@ -108,7 +107,7 @@ class CreateCanvasTables extends Migration
             $table->unsignedInteger('height')->nullable();
             $table->string('alt')->nullable();
             $table->string('caption')->nullable();
-            $table->uuid('user_id')->nullable()->index();
+            $table->foreignId('user_id')->nullable()->index();
             $table->timestamps();
             $table->softDeletes();
             $table->index('created_at');
@@ -117,12 +116,7 @@ class CreateCanvasTables extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('canvas_posts_tags');
         Schema::dropIfExists('canvas_views');
@@ -133,4 +127,4 @@ class CreateCanvasTables extends Migration
         Schema::dropIfExists('canvas_topics');
         Schema::dropIfExists('canvas_users');
     }
-}
+};

@@ -79,3 +79,35 @@ it('warns when the configured disk does not exist', function (): void {
     expect($warnings)->not->toBeEmpty()
         ->and($warnings[0])->toContain('missing-disk');
 });
+
+it('does not treat non-local drivers as private local disks', function (): void {
+    expect(MediaStorageDiagnostics::diskIsPrivateLocal([
+        'driver' => 's3',
+        'bucket' => 'canvas',
+    ]))->toBeFalse();
+});
+
+it('does not treat local disks with a public url as private', function (): void {
+    expect(MediaStorageDiagnostics::diskIsPrivateLocal([
+        'driver' => 'local',
+        'root' => storage_path('app/custom'),
+        'url' => 'http://localhost/media',
+    ]))->toBeFalse();
+});
+
+it('detects custom disks whose url path expects a storage symlink', function (): void {
+    expect(MediaStorageDiagnostics::diskExpectsStorageLink('custom', [
+        'driver' => 'local',
+        'url' => 'http://localhost/storage/canvas',
+    ]))->toBeTrue();
+
+    expect(MediaStorageDiagnostics::diskExpectsStorageLink('custom', [
+        'driver' => 'local',
+        'url' => 'http://cdn.example.com/media',
+    ]))->toBeFalse();
+
+    expect(MediaStorageDiagnostics::diskExpectsStorageLink('custom', [
+        'driver' => 'local',
+        'url' => '',
+    ]))->toBeFalse();
+});

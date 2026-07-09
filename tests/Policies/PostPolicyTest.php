@@ -3,6 +3,7 @@
 use Canvas\Models\Post;
 use Canvas\Policies\PostPolicy;
 use Canvas\Tests\Models\BareUser;
+use Illuminate\Support\Facades\DB;
 
 beforeEach(function (): void {
     $this->policy = new PostPolicy;
@@ -85,4 +86,18 @@ it('resolves roles from canvas_users for host models without HasCanvasAccess', f
         ->and($this->policy->view($bareContributor, $ownPost))->toBeTrue()
         ->and($this->policy->view($bareContributor, $otherPost))->toBeFalse()
         ->and($this->policy->view($bareEditor, $otherPost))->toBeTrue();
+});
+
+it('uses an eager-loaded canvasUser relation for viewAll checks', function (): void {
+    $contributor = $this->contributor;
+    $contributor->load('canvasUser');
+
+    $queries = 0;
+    DB::listen(function () use (&$queries): void {
+        $queries++;
+    });
+
+    expect($this->policy->viewAll($contributor))->toBeFalse();
+
+    expect($queries)->toBe(0);
 });

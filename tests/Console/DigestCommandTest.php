@@ -6,6 +6,7 @@ use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
+use Canvas\Tests\Models\BareUser;
 use Canvas\Tests\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -129,5 +130,50 @@ it('uses the recipients timezone for digest periods and stats windows', function
         expect($mail->totals['views'])->toBe(1);
 
         return $mail->hasTo($user->email);
+    });
+});
+
+// Invariant: digest is a core package path and must not require HasCanvasAccess / canvasUser on the host model
+it('sends digest emails for bare host users without canvas relations', function (): void {
+    Mail::fake();
+
+    config()->set('canvas.user_model', BareUser::class);
+
+    $host = User::factory()->create([
+        'name' => 'Bare Digest Author',
+        'email' => 'bare-digest@example.com',
+    ]);
+
+    CanvasUser::factory()->create([
+        'user_id' => $host->id,
+        'role' => Role::Contributor,
+        'digest' => true,
+        'locale' => 'en',
+        'timezone' => 'UTC',
+    ]);
+
+    $posts = Post::factory()->count(2)->create([
+        'user_id' => $host->id,
+        'published_at' => now()->subWeek(),
+    ]);
+
+    foreach ($posts as $post) {
+        $post->views()->createMany(
+            View::factory()->count(2)->make()->toArray()
+        );
+
+        $post->visits()->createMany(
+            Visit::factory()->count(1)->make()->toArray()
+        );
+    }
+
+    $this->artisan('canvas:digest')->assertSuccessful();
+
+    Mail::assertSent(WeeklyDigest::class, function (WeeklyDigest $mail) use ($host): bool {
+        expect($mail->userName)->toBe('Bare Digest Author');
+        expect($mail->totals['views'])->toBe(4);
+        expect($mail->totals['visits'])->toBe(2);
+
+        return $mail->hasTo($host->email);
     });
 });

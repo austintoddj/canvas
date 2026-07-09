@@ -10,6 +10,8 @@ This document is the implementation blueprint for the React admin SPA shipped in
 
 **How to use this plan:** Work chat-by-chat through the [Implementation tracker](#implementation-tracker) below. When an item ships, change `- [ ]` to `- [x]` in this file. The **next unchecked item** is what to tackle next.
 
+**Always under [`Agents.md`](../../Agents.md):** Every SPA step is implemented with those standards — clear naming, zero-noise commenting philosophy (no narrative comments), strong types, Vitest for real behavior, lint/typecheck green. Plans order *what* to do; `Agents.md` governs *how*. If a durable frontend coding rule emerges while executing this plan, update `Agents.md` in the same pass (do not leave vision only in chat or tracker prose).
+
 ---
 
 ## Implementation tracker
@@ -147,6 +149,7 @@ Work Steps 1–10 in order. **Step E (TipTap)** waits until Steps 1–10 ship �
 | **MediaPicker**     | `components/media/MediaPicker.tsx` — grid, search, scope toggle, inline upload; wire into featured image via `FeaturedImagePicker`                                                                         |
 | **Tests**           | 13 Vitest files (98 tests): `api`, `permissions`, `i18n`, `seo`, `analytics`, `posts-list`, `posts-form`, `media-upload`, `useTheme`, `urls`, `canvas-context`, `command-palette`, `platform`. No full React page integration tests yet. |
 | **Quality gates**   | `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` all green                                                                                                                                 |
+| **Standards**       | [`Agents.md`](../../Agents.md) — commenting philosophy, naming over narrative comments, tests; update it when durable rules change                                                                          |
 | **TypeScript**      | Type-checking on **TypeScript 7** (`typescript-7`); ESLint uses **TypeScript 6** via `@typescript/typescript6` alias until `typescript-eslint` supports TS7's programmatic API (see [Frontend toolchain](#frontend-toolchain)) |
 | **Command palette** | `CommandPalette` wired in `Layout` (⌘K) with `GET /api/search` — polish/permissions may belong in Step 9                                                                                                   |
 | **i18n**            | `lib/i18n.ts` exists; boot `translations` not yet consumed broadly in UI                                                                                                                                   |
@@ -473,10 +476,11 @@ When `typescript-eslint` supports TypeScript 7's API, drop the `@typescript/type
 
 | Command             | When                   | Under the hood |
 | ------------------- | ---------------------- | -------------- |
-| `npm run typecheck` | Every PR               | TypeScript 7 `tsc --noEmit` |
-| `npm run lint`      | Every PR               | ESLint + `typescript-eslint` (TS6 API) |
-| `npm test`          | Every PR (from Step 1) | Vitest |
+| `npm run typecheck` | Every PR / after SPA steps | TypeScript 7 `tsc --noEmit` |
+| `npm run lint`      | Every PR / after SPA steps | ESLint + `typescript-eslint` (TS6 API) |
+| `npm test`          | Every PR / after SPA steps | Vitest |
 | `npm run build`     | Before PR / release    | Vite production build; commit output to `public/vendor/canvas` (not a CI gate) |
+| Follow [`Agents.md`](../../Agents.md) | Always | Naming over narrative comments; durable standards live in Agents.md |
 
 ### Smoke matrix (Steps 1–10, no editor)
 
@@ -522,4 +526,6 @@ When `typescript-eslint` supports TypeScript 7's API, drop the `@typescript/type
 | Roles / gates      | `src/Enums/Role.php`, `src/CanvasServiceProvider.php`        |
 | v7 upgrade         | `.github/UPGRADE.md`                                         |
 | TypeScript config  | `tsconfig.json`, `package.json` (`typescript`, `typescript-7`) |
+| Coding standards   | [`Agents.md`](../../Agents.md) — binding on all plan work |
+| Host / upgrade     | [UPGRADE.md](../UPGRADE.md) |
 | Current SPA        | `resources/js/router.tsx`, `resources/js/layouts/Layout.tsx` |

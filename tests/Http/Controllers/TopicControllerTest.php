@@ -4,7 +4,7 @@ use Canvas\Models\Post;
 use Canvas\Models\Topic;
 use Canvas\Models\View;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 
 it('lists all topics', function (): void {
     Topic::factory()->count(2)->create();
@@ -60,14 +60,14 @@ it('returns not found for unknown topics', function (): void {
 });
 it('stores a new topic', function (): void {
     $data = [
-        'id' => Uuid::uuid4()->toString(),
+        'id' => (string) Str::uuid(),
         'name' => 'A new topic',
         'slug' => 'a-new-topic',
     ];
 
     $response = $this->actingAs($this->admin, 'canvas')
         ->postJson("canvas/api/topics/{$data['id']}", $data)
-        ->assertSuccessful();
+        ->assertCreated();
 
     $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
 
@@ -75,7 +75,7 @@ it('stores a new topic', function (): void {
 });
 it('restores deleted topics when refreshed', function (): void {
     $deletedTopic = Topic::factory()->create([
-        'id' => Uuid::uuid4()->toString(),
+        'id' => (string) Str::uuid(),
         'name' => 'A deleted topic',
         'slug' => 'a-deleted-topic',
         'user_id' => $this->editor->id,
@@ -83,14 +83,14 @@ it('restores deleted topics when refreshed', function (): void {
     ]);
 
     $data = [
-        'id' => Uuid::uuid4()->toString(),
+        'id' => (string) Str::uuid(),
         'name' => $deletedTopic->name,
         'slug' => $deletedTopic->slug,
     ];
 
     $response = $this->actingAs($this->admin, 'canvas')
         ->postJson("canvas/api/topics/{$data['id']}", $data)
-        ->assertSuccessful();
+        ->assertCreated();
 
     $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
 
@@ -106,7 +106,7 @@ it('updates an existing topic', function (): void {
 
     $response = $this->actingAs($this->admin, 'canvas')
         ->postJson("canvas/api/topics/{$topic->id}", $data)
-        ->assertSuccessful();
+        ->assertOk();
 
     $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
 

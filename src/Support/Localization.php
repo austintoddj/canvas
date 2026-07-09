@@ -6,6 +6,9 @@ namespace Canvas\Support;
 
 final class Localization
 {
+    /**
+     * @return list<string>
+     */
     public static function availableLanguageCodes(): array
     {
         $discovered = self::discoveredLanguageCodes();
@@ -15,6 +18,7 @@ final class Localization
             return $discovered;
         }
 
+        /** @var list<string> $filtered */
         $filtered = array_values(array_intersect($discovered, $configured));
 
         return $filtered !== [] ? $filtered : $discovered;

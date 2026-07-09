@@ -3,6 +3,7 @@
 use Canvas\Models\CanvasUser;
 use Canvas\Support\Gravatar;
 use Canvas\Tests\Models\User;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
@@ -28,6 +29,14 @@ it('defines the canvas user relationship', function (): void {
 
     expect($user->canvasUser())->toBeInstanceOf(HasOne::class);
     expect($user->canvasUser)->toBeInstanceOf(CanvasUser::class);
+});
+
+it('defines content ownership relationships from HasCanvasAccess', function (): void {
+    $user = User::factory()->contributor()->create();
+
+    expect($user->posts())->toBeInstanceOf(HasMany::class)
+        ->and($user->tags())->toBeInstanceOf(HasMany::class)
+        ->and($user->topics())->toBeInstanceOf(HasMany::class);
 });
 
 it('computes the contributor attribute', function (): void {

@@ -10,3 +10,13 @@ parameters:
     tmpDir: build/phpstan
 
     reportUnmatchedIgnoredErrors: false
+
+    # Package migrations live next to the package, not the host app's database_path().
+    databaseMigrationsPath:
+        - database/migrations
+
+    ignoreErrors:
+        # Optional host-app gift; required by consumers outside this package's src/ tree.
+        -
+            identifier: trait.unused
+            path: src/Concerns/HasCanvasAccess.php

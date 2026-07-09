@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidatesWhenResolvedTrait;
+use Illuminate\Validation\Validator;
 use ReflectionClass;
 
 /**
@@ -47,11 +48,11 @@ abstract class FormRequest extends Request implements ValidatesWhenResolved
 
     protected bool $stopOnFirstFailure = false;
 
-    protected ?ValidatorContract $validator = null;
+    protected ?Validator $validator = null;
 
     protected static bool $globalFailOnUnknownFields = false;
 
-    protected function getValidatorInstance(): ValidatorContract
+    protected function getValidatorInstance(): Validator
     {
         if ($this->validator) {
             return $this->validator;
@@ -62,6 +63,7 @@ abstract class FormRequest extends Request implements ValidatesWhenResolved
         $factory = $this->container->make(ValidationFactory::class);
 
         if (method_exists($this, 'validator')) {
+            /** @var Validator $validator */
             $validator = $this->container->call([$this, 'validator'], ['factory' => $factory]);
         } else {
             $validator = $this->createDefaultValidator($factory);
@@ -117,7 +119,7 @@ abstract class FormRequest extends Request implements ValidatesWhenResolved
         }
     }
 
-    protected function createDefaultValidator(ValidationFactory $factory): ValidatorContract
+    protected function createDefaultValidator(ValidationFactory $factory): Validator
     {
         $rules = $this->validationRules();
 
@@ -126,7 +128,13 @@ abstract class FormRequest extends Request implements ValidatesWhenResolved
             $rules,
             $this->messages(),
             $this->attributes(),
-        )->stopOnFirstFailure($this->stopOnFirstFailure);
+        );
+
+        if (! $validator instanceof Validator) {
+            throw new \RuntimeException('Expected Illuminate\\Validation\\Validator instance.');
+        }
+
+        $validator->stopOnFirstFailure($this->stopOnFirstFailure);
 
         if ($this->isPrecognitive()) {
             $validator->setRules(
@@ -137,11 +145,17 @@ abstract class FormRequest extends Request implements ValidatesWhenResolved
         return $validator;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function validationData(): array
     {
         return $this->all();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function validationRules(): array
     {
         return method_exists($this, 'rules') ? $this->container->call([$this, 'rules']) : [];
@@ -174,9 +188,14 @@ abstract class FormRequest extends Request implements ValidatesWhenResolved
         }
     }
 
+    /**
+     * @param  list<string|int>  $allowedKeys
+     */
     protected function isKnownField(string $inputKey, array $allowedKeys): bool
     {
         foreach ($allowedKeys as $ruleKey) {
+            $ruleKey = (string) $ruleKey;
+
             if ($ruleKey === $inputKey) {
                 return true;
             }
@@ -198,16 +217,25 @@ abstract class FormRequest extends Request implements ValidatesWhenResolved
         return false;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function attributes(): array
     {
         return [];
     }
 
+    /**
+     * @param  list<string>|null  $keys
+     */
     public function safe(?array $keys = null): mixed
     {
         return is_array($keys)
@@ -215,7 +243,7 @@ abstract class FormRequest extends Request implements ValidatesWhenResolved
             : $this->validator->safe();
     }
 
-    public function validated($key = null, $default = null): mixed
+    public function validated(mixed $key = null, mixed $default = null): mixed
     {
         return data_get($this->validator->validated(), $key, $default);
     }
@@ -233,6 +261,10 @@ abstract class FormRequest extends Request implements ValidatesWhenResolved
 
     protected function failedValidation(ValidatorContract $validator): void
     {
+        if (! $validator instanceof Validator) {
+            throw new \RuntimeException('Expected Illuminate\\Validation\\Validator instance.');
+        }
+
         $exception = $validator->getException();
 
         throw (new $exception($validator))
@@ -264,6 +296,7 @@ abstract class FormRequest extends Request implements ValidatesWhenResolved
 
     public function setValidator(ValidatorContract $validator): static
     {
+        /** @var Validator $validator */
         $this->validator = $validator;
 
         return $this;

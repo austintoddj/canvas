@@ -9,7 +9,7 @@ use Canvas\Models\Tag;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 
 class TagController extends Controller
 {
@@ -33,37 +33,38 @@ class TagController extends Controller
     public function create(): JsonResponse
     {
         return response()->json(Tag::query()->make([
-            'id' => Uuid::uuid4()->toString(),
+            'id' => (string) Str::uuid(),
         ]), 200);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(TagRequest $request, $id): JsonResponse
+    public function store(TagRequest $request, string $id): JsonResponse
     {
         $data = $request->validated();
         $user = $request->user(config('canvas.guard'));
 
         $tag = Tag::query()->find($id);
+        $created = $tag === null;
 
         if (! $tag) {
             if ($tag = Tag::onlyTrashed()->firstWhere('slug', $data['slug'])) {
                 $tag->restore();
+                $tag->fill($data);
+                $tag->save();
 
                 return response()->json($tag->refresh(), 201);
-            } else {
-                $tag = new Tag(['id' => $id]);
             }
+
+            $tag = new Tag(['id' => $id]);
         }
 
         $tag->fill($data);
-
         $tag->user_id = $tag->user_id ?? $user->id;
-
         $tag->save();
 
-        return response()->json($tag->refresh(), 201);
+        return response()->json($tag->refresh(), $created ? 201 : 200);
     }
 
     /**

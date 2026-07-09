@@ -18,7 +18,7 @@ class PostFactory extends Factory
             'slug' => fake()->slug(),
             'title' => Str::headline(fake()->words(3, true)),
             'summary' => fake()->sentence(),
-            'body' => fake()->realText(),
+            'body' => fake()->paragraphs(3, true),
             'published_at' => now()->subDay(),
             'featured_image' => fake()->imageUrl(),
             'featured_image_caption' => fake()->sentence(),

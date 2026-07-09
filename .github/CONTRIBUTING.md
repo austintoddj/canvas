@@ -6,9 +6,11 @@ If you're fixing docs, translations, bugs, or features, please open a pull reque
 
 ## Before you start
 
-- Use PHP 8.2+ and a supported Laravel version.
-- Read `readme.md` for the package install and configuration basics.
-- If you're updating translations, add or adjust the matching files under `resources/lang`.
+- Use PHP 8.2+ and a Laravel major supported by the package (see `composer.json` and CI).
+- Read `readme.md` for install basics and `Agents.md` for coding standards.
+- Host contracts and upgrade details live in `UPGRADE.md`.
+- Search for existing patterns before adding a new layer or abstraction.
+- Translations go under `resources/lang`.
 
 ## Local Laravel app
 
@@ -50,9 +52,10 @@ If you want to work locally, use a Laravel app with a sibling Canvas checkout:
 
 ## Before opening a pull request
 
-- Run `npm run typecheck`, `npm run lint`, and `npm test` (CI runs these automatically)
+- Run `npm run typecheck`, `npm run lint`, and `npm test`
 - Run `npm run build` and commit updated assets in `public/vendor/canvas`
-- Run `composer pint` (or `composer pint:test` to check without fixing — CI runs the check once)
-- Run `composer test:ci` to match the PHP compatibility matrix locally
+- Run `composer pint` (or `composer pint:test` to check without fixing)
+- Run `composer lint` (PHPStan)
+- Run `composer test:ci` to match the PHP matrix locally
 
 Once you've made your changes, create a pull request from your fork to the `develop` branch of the project repository.

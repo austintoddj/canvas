@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class MediaController extends Controller
@@ -46,7 +46,7 @@ class MediaController extends Controller
     public function create(): JsonResponse
     {
         return response()->json(Media::query()->make([
-            'id' => Uuid::uuid4()->toString(),
+            'id' => (string) Str::uuid(),
         ]), 200);
     }
 
@@ -91,11 +91,14 @@ class MediaController extends Controller
         }
     }
 
+    /**
+     * @return Builder<Media>
+     */
     private function visibleMediaQuery(mixed $user, bool $canViewAll): Builder
     {
         return Media::query()->when(
             ! $canViewAll || request()->query('scope', 'user') !== 'all',
-            fn (Builder $query) => $query->where('user_id', $user->id),
+            fn (Builder $query) => $query->where('user_id', data_get($user, 'id')),
         );
     }
 }

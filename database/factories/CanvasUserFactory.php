@@ -6,6 +6,7 @@ namespace Canvas\Database\Factories;
 
 use Canvas\Enums\Role;
 use Canvas\Models\CanvasUser;
+use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -16,7 +17,7 @@ class CanvasUserFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => fake()->uuid(),
+            'user_id' => User::factory(),
             'role' => fake()->randomElement(Role::cases()),
             'username' => Str::slug(fake()->unique()->userName()),
             'summary' => fake()->sentence(),

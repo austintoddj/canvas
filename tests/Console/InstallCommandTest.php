@@ -1,33 +1,42 @@
 <?php
 
+use Canvas\Tests\TestCase;
 use Illuminate\Support\Facades\Schema;
 
 it('exits successfully and outputs the install messages', function (): void {
-    $this->artisan('canvas:install')
-        ->assertExitCode(0)
-        ->expectsOutput('Installation complete.')
-        ->expectsOutputToContain('canvas:make-admin');
+    TestCase::withSharedTestbenchLock(function (): void {
+        $this->artisan('canvas:install')
+            ->assertExitCode(0)
+            ->expectsOutput('Installation complete.')
+            ->expectsOutputToContain('canvas:make-admin');
+    });
 });
 
 it('publishes the config file', function (): void {
-    $this->artisan('canvas:install');
+    TestCase::withSharedTestbenchLock(function (): void {
+        $this->artisan('canvas:install');
 
-    $this->assertFileExists(config_path('canvas.php'));
+        $this->assertFileExists(config_path('canvas.php'));
+    });
 });
 
 it('publishes the service provider stub with the digest schedule', function (): void {
-    $this->artisan('canvas:install');
+    TestCase::withSharedTestbenchLock(function (): void {
+        $this->artisan('canvas:install');
 
-    $path = app_path('Providers/CanvasServiceProvider.php');
+        $path = app_path('Providers/CanvasServiceProvider.php');
 
-    $this->assertFileExists($path);
-    $this->assertStringContainsString('canvas:digest', file_get_contents($path));
+        $this->assertFileExists($path);
+        $this->assertStringContainsString('canvas:digest', file_get_contents($path));
+    });
 });
 
 it('creates all canvas database tables', function (string $table): void {
-    $this->artisan('canvas:install');
+    TestCase::withSharedTestbenchLock(function () use ($table): void {
+        $this->artisan('canvas:install');
 
-    expect(Schema::hasTable($table))->toBeTrue();
+        expect(Schema::hasTable($table))->toBeTrue();
+    });
 })->with([
     'canvas_posts',
     'canvas_tags',

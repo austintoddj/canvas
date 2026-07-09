@@ -5,7 +5,7 @@ use Canvas\Support\MediaService;
 use Canvas\Support\Paths;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 
 beforeEach(function (): void {
     Storage::fake(config('canvas.storage_disk'));
@@ -19,7 +19,7 @@ it('rolls back stored files when media library save fails', function (): void {
     $service = app(MediaService::class);
     $file = UploadedFile::fake()->image('photo.jpg');
 
-    expect(fn () => $service->storeMediaUpload($file, $this->admin, (string) Uuid::uuid4()))
+    expect(fn () => $service->storeMediaUpload($file, $this->admin, (string) Str::uuid()))
         ->toThrow(RuntimeException::class);
 
     $path = Paths::baseStoragePath().'/'.$file->hashName();

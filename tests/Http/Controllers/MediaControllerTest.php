@@ -6,7 +6,7 @@ use Canvas\Tests\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Storage;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 
 beforeEach(function (): void {
     Storage::fake(config('canvas.storage_disk'));
@@ -99,7 +99,7 @@ it('returns not found for media the user cannot view', function (): void {
 });
 
 it('stores uploaded media and persists the file', function (): void {
-    $id = Uuid::uuid4()->toString();
+    $id = (string) Str::uuid();
     $file = UploadedFile::fake()->image('photo.jpg');
 
     $response = $this->actingAs($this->admin, 'canvas')
@@ -172,7 +172,7 @@ it('cleans up the stored file when media save fails', function (): void {
         throw new RuntimeException('Simulated database failure');
     });
 
-    $id = Uuid::uuid4()->toString();
+    $id = (string) Str::uuid();
     $file = UploadedFile::fake()->image('photo.jpg');
 
     $this->actingAs($this->admin, 'canvas')
@@ -185,7 +185,7 @@ it('cleans up the stored file when media save fails', function (): void {
 });
 
 it('rejects an upload with no file', function (): void {
-    $id = Uuid::uuid4()->toString();
+    $id = (string) Str::uuid();
 
     $this->actingAs($this->admin, 'canvas')
         ->postJson("canvas/api/media/{$id}")
@@ -193,7 +193,7 @@ it('rejects an upload with no file', function (): void {
 });
 
 it('rejects an upload that exceeds the maximum filesize', function (): void {
-    $id = Uuid::uuid4()->toString();
+    $id = (string) Str::uuid();
     $oversizeKb = (int) (config('canvas.upload_filesize') / 1024) + 1024;
 
     $this->actingAs($this->admin, 'canvas')
@@ -204,7 +204,7 @@ it('rejects an upload that exceeds the maximum filesize', function (): void {
 });
 
 it('rejects media uploads with disallowed mime types', function (): void {
-    $id = Uuid::uuid4()->toString();
+    $id = (string) Str::uuid();
 
     $this->actingAs($this->admin, 'canvas')
         ->postJson("canvas/api/media/{$id}", [
@@ -268,6 +268,9 @@ it('deletes media and removes the stored file', function (): void {
         'id' => $media->id,
         'path' => $path,
     ]);
+
+    // Restoring the soft-deleted row would not bring the disk file back.
+    expect(Storage::disk(config('canvas.storage_disk'))->exists($path))->toBeFalse();
 });
 
 it('forbids deleting media owned by another contributor', function (): void {

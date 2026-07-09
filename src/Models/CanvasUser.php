@@ -9,13 +9,18 @@ use Canvas\Database\Factories\CanvasUserFactory;
 use Canvas\Enums\Role;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property-read int|null $posts_count
+ *
+ * @use HasFactory<CanvasUserFactory>
+ */
 class CanvasUser extends Model
 {
+    /** @use HasFactory<CanvasUserFactory> */
     use HasFactory;
 
     protected $table = 'canvas_users';
@@ -24,23 +29,32 @@ class CanvasUser extends Model
 
     public $incrementing = false;
 
+    /** @var list<string> */
     protected $guarded = [];
 
+    /** @var array<string, string> */
     protected $casts = [
+        'user_id' => 'integer',
         'digest' => 'boolean',
         'role' => Role::class,
         'social' => 'array',
         'preferences' => 'array',
     ];
 
-    protected static function newFactory(): Factory
+    protected static function newFactory(): CanvasUserFactory
     {
         return CanvasUserFactory::new();
     }
 
+    /**
+     * @return BelongsTo<Model, $this>
+     */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(config('canvas.user_model'), 'user_id');
+        /** @var class-string<Model> $userModel */
+        $userModel = config('canvas.user_model');
+
+        return $this->belongsTo($userModel, 'user_id');
     }
 
     /**
@@ -58,6 +72,12 @@ class CanvasUser extends Model
 
     public static function roleFor(object $user): ?Role
     {
+        if ($user instanceof Model && $user->relationLoaded('canvasUser')) {
+            $canvasUser = $user->getRelation('canvasUser');
+
+            return $canvasUser instanceof self ? $canvasUser->role : null;
+        }
+
         $userId = $user instanceof Model
             ? $user->getKey()
             : ($user instanceof Authenticatable ? $user->getAuthIdentifier() : null);

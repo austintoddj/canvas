@@ -14,6 +14,7 @@ use Canvas\Console\PublishCommand;
 use Canvas\Console\RemoveAccessCommand;
 use Canvas\Console\ShowUserCommand;
 use Canvas\Console\UiCommand;
+use Canvas\Console\UpgradeReportCommand;
 use Canvas\Events\PostViewed;
 use Canvas\Http\Requests\FormRequest;
 use Canvas\Listeners\CaptureView;
@@ -31,7 +32,6 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Validation\ValidatesWhenResolved;
 use Illuminate\Events\Dispatcher;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -55,8 +55,6 @@ class CanvasServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        JsonResource::withoutWrapping();
-
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'canvas');
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'canvas');
         $this->configurePublishing();
@@ -141,6 +139,7 @@ class CanvasServiceProvider extends ServiceProvider
             RemoveAccessCommand::class,
             ShowUserCommand::class,
             UiCommand::class,
+            UpgradeReportCommand::class,
         ]);
     }
 

@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
@@ -40,10 +40,12 @@ class PostController extends Controller
             ->withCount('views')
             ->paginate();
 
+        $counts = $this->draftAndPublishedCounts($baseQuery);
+
         return response()->json([
             'posts' => $posts,
-            'draftCount' => (clone $baseQuery)->draft()->count(),
-            'publishedCount' => (clone $baseQuery)->published()->count(),
+            'draftCount' => $counts['draft'],
+            'publishedCount' => $counts['published'],
         ], 200);
     }
 
@@ -52,7 +54,7 @@ class PostController extends Controller
      */
     public function create(): JsonResponse
     {
-        $uuid = Uuid::uuid4();
+        $uuid = Str::uuid();
 
         return response()->json([
             'post' => Post::query()->make([
@@ -69,12 +71,13 @@ class PostController extends Controller
      *
      * @throws Exception
      */
-    public function store(PostRequest $request, $id): JsonResponse
+    public function store(PostRequest $request, string $id): JsonResponse
     {
         $data = $request->validated();
         $user = request()->user(config('canvas.guard'));
 
         $post = Post::query()->with('tags', 'topic')->find($id);
+        $created = $post === null;
 
         if ($post && Gate::forUser($user)->denies('update', $post)) {
             throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
@@ -83,13 +86,13 @@ class PostController extends Controller
         $post ??= new Post(['id' => $id]);
 
         $post->fill($data);
-        $post->user_id ??= $user->id;
+        $post->user_id ??= data_get($user, 'id');
         $post->topic_id = $this->resolveTopicId($request->input('topic', []), $user);
         $post->save();
 
         $post->tags()->sync($this->resolveTagsForSync($request->input('tags', []), $user));
 
-        return response()->json($post->refresh(), 201);
+        return response()->json($post->refresh(), $created ? 201 : 200);
     }
 
     /**
@@ -119,8 +122,10 @@ class PostController extends Controller
             throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
         }
 
+        $locale = data_get(request()->user(config('canvas.guard')), 'locale');
+
         return response()->json(
-            PostInsights::for($post, request()->user(config('canvas.guard'))?->locale)
+            PostInsights::for($post, is_string($locale) ? $locale : null)
         );
     }
 
@@ -147,16 +152,46 @@ class PostController extends Controller
         }
     }
 
+    /**
+     * @return Builder<Post>
+     */
     private function visiblePostsQuery(mixed $user, bool $canViewAll): Builder
     {
         return Post::query()->when(
             ! $canViewAll || request()->query('scope', 'user') !== 'all',
-            fn (Builder $query) => $query->where('user_id', $user->id)
+            fn (Builder $query) => $query->where('user_id', data_get($user, 'id'))
         );
     }
 
     /**
+     * @param  Builder<Post>  $baseQuery
+     * @return array{draft: int, published: int}
+     */
+    private function draftAndPublishedCounts(Builder $baseQuery): array
+    {
+        $now = now()->toDateTimeString();
+
+        $counts = (clone $baseQuery)
+            ->reorder()
+            ->toBase()
+            ->selectRaw(
+                'SUM(CASE WHEN published_at IS NULL OR published_at > ? THEN 1 ELSE 0 END) as draft_count,
+                 SUM(CASE WHEN published_at IS NOT NULL AND published_at <= ? THEN 1 ELSE 0 END) as published_count',
+                [$now, $now],
+            )
+            ->first();
+
+        return [
+            'draft' => (int) ($counts->draft_count ?? 0),
+            'published' => (int) ($counts->published_count ?? 0),
+        ];
+    }
+
+    /**
      * Find or create tags from the given input and return their IDs for sync.
+     *
+     * @param  array<int, array{name: string, slug: string}>  $tagInputs
+     * @return list<string>
      */
     private function resolveTagsForSync(array $tagInputs, mixed $user): array
     {
@@ -164,16 +199,18 @@ class PostController extends Controller
 
         return collect($tagInputs)->map(function (array $item) use ($existing, $user): string {
             return (string) ($existing->firstWhere('slug', $item['slug']) ?? Tag::create([
-                'id' => Uuid::uuid4()->toString(),
+                'id' => (string) Str::uuid(),
                 'name' => $item['name'],
                 'slug' => $item['slug'],
-                'user_id' => $user->id,
+                'user_id' => data_get($user, 'id'),
             ]))->id;
-        })->toArray();
+        })->values()->all();
     }
 
     /**
      * Find or create a topic from the given input and return its ID, or null.
+     *
+     * @param  array<int, array{name: string, slug: string}>  $topicInput
      */
     private function resolveTopicId(array $topicInput, mixed $user): ?string
     {
@@ -184,10 +221,10 @@ class PostController extends Controller
         }
 
         return (string) (Topic::query()->firstWhere('slug', $input['slug']) ?? Topic::create([
-            'id' => Uuid::uuid4()->toString(),
+            'id' => (string) Str::uuid(),
             'name' => $input['name'],
             'slug' => $input['slug'],
-            'user_id' => $user->id,
+            'user_id' => data_get($user, 'id'),
         ]))->id;
     }
 }

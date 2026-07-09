@@ -3,6 +3,7 @@
 use Canvas\Http\Resources\CanvasUserResource;
 use Canvas\Http\Resources\UserResource;
 use Canvas\Tests\Models\User;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 it('transforms a host user with nested canvas data', function (): void {
     $user = User::factory()->contributor()->create([
@@ -60,3 +61,30 @@ it('exposes canvas defaults for create forms', function (): void {
         ],
     ]);
 });
+
+it('serializes a canvas user resource instance with an email', function (): void {
+    $user = User::factory()->contributor()->create([
+        'email' => 'resource@example.com',
+    ]);
+
+    $payload = CanvasUserResource::make($user->canvasUser)
+        ->withEmail('resource@example.com')
+        ->resolve();
+
+    expect($payload['username'])->toBe($user->canvasUser->username)
+        ->and($payload['avatar_url'])->toBeString()
+        ->and($payload['role'])->toBe(1);
+});
+
+it('returns defaults when profile array receives a null canvas user', function (): void {
+    expect(CanvasUserResource::toProfileArray(null, 'nobody@example.com'))
+        ->toBe(CanvasUserResource::defaults());
+});
+
+it('aborts when the host user is missing from a canvas user resource', function (): void {
+    $user = User::factory()->contributor()->create();
+    $canvasUser = $user->canvasUser;
+    $canvasUser->setRelation('user', null);
+
+    UserResource::hostUserFromCanvasUser($canvasUser);
+})->throws(NotFoundHttpException::class);

@@ -5,7 +5,7 @@ use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 
 describe('when listing posts', function (): void {
     it('fetches published posts by default', function (): void {
@@ -311,14 +311,14 @@ describe('when fetching post stats', function (): void {
 describe('when storing and updating posts', function (): void {
     it('stores a new post', function (): void {
         $data = [
-            'id' => Uuid::uuid4()->toString(),
+            'id' => (string) Str::uuid(),
             'slug' => 'a-new-post',
             'title' => 'A new post',
         ];
 
         $this->actingAs($this->admin, 'canvas')
             ->postJson("canvas/api/posts/{$data['id']}", $data)
-            ->assertSuccessful()
+            ->assertCreated()
             ->assertJsonFragment([
                 'id' => $data['id'],
                 'slug' => $data['slug'],
@@ -336,7 +336,7 @@ describe('when storing and updating posts', function (): void {
 
         $this->actingAs($this->admin, 'canvas')
             ->postJson("canvas/api/posts/{$post->id}", $data)
-            ->assertSuccessful()
+            ->assertOk()
             ->assertJsonFragment([
                 'id' => $post->id,
                 'title' => $data['title'],
@@ -355,12 +355,59 @@ describe('when storing and updating posts', function (): void {
 
         $this->actingAs($this->contributor, 'canvas')
             ->postJson("canvas/api/posts/{$post->id}", $data)
-            ->assertSuccessful()
+            ->assertOk()
             ->assertJsonFragment([
                 'id' => $post->id,
                 'title' => $data['title'],
                 'slug' => $data['slug'],
             ]);
+    });
+
+    // Regression: store path must deny updates the contributor cannot perform
+    it('blocks contributors from updating other users posts via store', function (): void {
+        $post = Post::factory()->create([
+            'user_id' => $this->admin->id,
+            'slug' => 'owned-by-admin',
+        ]);
+
+        $this->actingAs($this->contributor, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => 'Hijacked',
+                'slug' => 'hijacked',
+            ])
+            ->assertNotFound();
+    });
+
+    // Invariant: slug uniqueness is scoped to the post owner, not the editing editor
+    it('scopes slug uniqueness to the post owner when an editor updates another authors post', function (): void {
+        $authorPost = Post::factory()->create([
+            'user_id' => $this->contributor->id,
+            'slug' => 'authors-existing-slug',
+        ]);
+
+        $otherAuthorPost = Post::factory()->create([
+            'user_id' => $this->contributor->id,
+            'slug' => 'other-slug',
+        ]);
+
+        $this->actingAs($this->editor, 'canvas')
+            ->postJson("canvas/api/posts/{$otherAuthorPost->id}", [
+                'title' => $otherAuthorPost->title,
+                'slug' => 'authors-existing-slug',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['slug']);
+
+        $this->actingAs($this->editor, 'canvas')
+            ->postJson("canvas/api/posts/{$otherAuthorPost->id}", [
+                'title' => 'Edited by editor',
+                'slug' => 'editor-unique-for-author',
+            ])
+            ->assertOk()
+            ->assertJsonPath('slug', 'editor-unique-for-author')
+            ->assertJsonPath('user_id', $this->contributor->id);
+
+        expect($authorPost->fresh()->slug)->toBe('authors-existing-slug');
     });
 });
 

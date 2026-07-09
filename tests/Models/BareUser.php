@@ -22,8 +22,4 @@ class BareUser extends Authenticatable
         'password',
         'remember_token',
     ];
-
-    protected $keyType = 'string';
-
-    public $incrementing = false;
 }

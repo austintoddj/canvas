@@ -13,3 +13,11 @@ it('maps role labels', function (): void {
     expect(Role::Editor->label())->toBe('Editor');
     expect(Role::Admin->label())->toBe('Admin');
 });
+
+it('exposes integer values for validation and storage', function (): void {
+    expect(Role::values())->toBe([1, 2, 3]);
+});
+
+it('exposes case names for tooling and commands', function (): void {
+    expect(Role::names())->toBe(['Contributor', 'Editor', 'Admin']);
+});

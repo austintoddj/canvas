@@ -16,7 +16,7 @@ import type { UserResource } from '@/types/boot';
 
 function userWithRole(role: number | null): UserResource {
     return {
-        id: 'user-1',
+        id: 1,
         name: 'Test User',
         email: 'test@example.com',
         avatar_url: 'https://example.com/avatar.jpg',

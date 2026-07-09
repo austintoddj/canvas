@@ -51,6 +51,33 @@ abstract class TestCase extends OrchestraTestCase
         return $this->actingAs($this->admin, 'canvas');
     }
 
+    /**
+     * Serialize mutations to the shared Testbench app tree (config + public assets).
+     * Parallel Pest workers share vendor/orchestra/testbench-core/laravel.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    public static function withSharedTestbenchLock(callable $callback): mixed
+    {
+        $lock = fopen(sys_get_temp_dir().'/canvas-testbench-shared.lock', 'c');
+
+        if ($lock === false) {
+            return $callback();
+        }
+
+        flock($lock, LOCK_EX);
+
+        try {
+            return $callback();
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
+    }
+
     protected function setUp(): void
     {
         $this->ensurePublishedConfigExists();
@@ -99,7 +126,7 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function defineDatabaseMigrations(): void
     {
-        $this->loadLaravelMigrations();
+        // Package test `users` table mirrors stock Laravel bigint keys (+ soft deletes for HasCanvasAccess tests).
         $this->loadMigrationsFrom(__DIR__.'/database/migrations');
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
@@ -113,28 +140,21 @@ abstract class TestCase extends OrchestraTestCase
             return;
         }
 
-        $targetDirectory = dirname($target);
+        self::withSharedTestbenchLock(function () use ($source, $target): void {
+            $targetDirectory = dirname($target);
 
-        if (! is_dir($targetDirectory)) {
-            mkdir($targetDirectory, 0777, true);
-        }
-
-        $lock = fopen(sys_get_temp_dir().'/canvas-test-config.lock', 'c');
-
-        if ($lock === false) {
-            return;
-        }
-
-        flock($lock, LOCK_EX);
-
-        try {
-            if (! is_file($target)) {
-                copy($source, $target);
+            if (! is_dir($targetDirectory)) {
+                mkdir($targetDirectory, 0777, true);
             }
-        } finally {
-            flock($lock, LOCK_UN);
-            fclose($lock);
-        }
+
+            if ($this->publishedConfigLooksValid($target)) {
+                return;
+            }
+
+            $staging = $target.'.staging.'.getmypid();
+            copy($source, $staging);
+            rename($staging, $target);
+        });
     }
 
     protected function publishPackageAssets(): void
@@ -146,31 +166,43 @@ abstract class TestCase extends OrchestraTestCase
             return;
         }
 
-        File::ensureDirectoryExists(dirname($target));
+        self::withSharedTestbenchLock(function () use ($source, $target): void {
+            File::ensureDirectoryExists(dirname($target));
 
-        $lock = fopen(sys_get_temp_dir().'/canvas-test-assets.lock', 'c');
-
-        if ($lock === false) {
-            return;
-        }
-
-        flock($lock, LOCK_EX);
-
-        try {
             if (! File::exists($target.'/manifest.json')) {
+                $staging = dirname($target).'/canvas-assets-staging-'.getmypid();
+
+                if (File::isDirectory($staging)) {
+                    File::deleteDirectory($staging);
+                }
+
+                File::copyDirectory($source, $staging);
+
                 if (File::isDirectory($target)) {
                     File::deleteDirectory($target);
                 }
 
-                File::copyDirectory($source, $target);
+                rename($staging, $target);
             }
 
             if (File::exists($target.'/canvas.hot')) {
                 File::delete($target.'/canvas.hot');
             }
-        } finally {
-            flock($lock, LOCK_UN);
-            fclose($lock);
+        });
+    }
+
+    private function publishedConfigLooksValid(string $path): bool
+    {
+        if (! is_file($path) || filesize($path) === 0) {
+            return false;
         }
+
+        $contents = file_get_contents($path);
+
+        if ($contents === false || ! str_contains($contents, 'CANVAS_PATH')) {
+            return false;
+        }
+
+        return true;
     }
 }

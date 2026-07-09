@@ -24,7 +24,7 @@ class ShowUserCommand extends Command
         $canvasUser = CanvasUser::query()->firstWhere('user_id', $user->getKey());
 
         if ($canvasUser === null) {
-            $this->error(sprintf('%s does not have Canvas access.', $user->email));
+            $this->error(sprintf('%s does not have Canvas access.', (string) data_get($user, 'email', '')));
 
             return self::FAILURE;
         }

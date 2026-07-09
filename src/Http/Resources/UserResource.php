@@ -10,8 +10,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin Model
+ *
+ * @property Model $resource
+ */
 class UserResource extends JsonResource
 {
+    public static $wrap = null;
+
     public static function hostUserFromCanvasUser(CanvasUser $canvasUser): Model
     {
         $hostUser = $canvasUser->user;
@@ -34,15 +41,20 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $email = (string) data_get($this->resource, 'email', '');
-        $canvasUser = $this->loadedCanvasUser();
+        /** @var Model $user */
+        $user = $this->resource;
+        $email = (string) data_get($user, 'email', '');
+        $canvasUser = $this->loadedCanvasUser($user);
 
         return [
-            'id' => $this->getKey(),
-            'name' => data_get($this->resource, 'name'),
+            'id' => $user->getKey(),
+            'name' => data_get($user, 'name'),
             'email' => $email,
             'avatar_url' => AuthorAvatar::url($canvasUser?->avatar, $email),
-            'posts_count' => $this->whenCounted('posts'),
+            'posts_count' => $this->when(
+                array_key_exists('posts_count', $user->getAttributes()),
+                fn (): mixed => $user->getAttribute('posts_count'),
+            ),
             'canvas' => $this->when(
                 $canvasUser !== null,
                 fn (): array => CanvasUserResource::toProfileArray($canvasUser, $email),
@@ -50,13 +62,13 @@ class UserResource extends JsonResource
         ];
     }
 
-    private function loadedCanvasUser(): ?CanvasUser
+    private function loadedCanvasUser(Model $user): ?CanvasUser
     {
-        if (! $this->relationLoaded('canvasUser')) {
+        if (! $user->relationLoaded('canvasUser')) {
             return null;
         }
 
-        $canvasUser = $this->resource->getRelation('canvasUser');
+        $canvasUser = $user->getRelation('canvasUser');
 
         return $canvasUser instanceof CanvasUser ? $canvasUser : null;
     }

@@ -19,10 +19,10 @@ class ListUsersCommand extends Command
         $rows = CanvasUser::query()
             ->with('user')
             ->get()
-            ->sortBy(fn ($canvasUser) => $canvasUser->user?->name)
-            ->map(fn ($canvasUser): array => [
-                $canvasUser->user?->name,
-                $canvasUser->user?->email,
+            ->sortBy(fn (CanvasUser $canvasUser): mixed => data_get($canvasUser->user, 'name'))
+            ->map(fn (CanvasUser $canvasUser): array => [
+                data_get($canvasUser->user, 'name'),
+                data_get($canvasUser->user, 'email'),
                 $canvasUser->username,
                 $canvasUser->role->label(),
                 Localization::resolveLocale($canvasUser->locale),

@@ -8,8 +8,12 @@ enum MediaType: string
 {
     case Image = 'image';
 
-    public static function fromMimeType(string $mimeType): ?self
+    public static function fromMimeType(?string $mimeType): ?self
     {
+        if ($mimeType === null || $mimeType === '') {
+            return null;
+        }
+
         return match (true) {
             str_starts_with($mimeType, 'image/') => self::Image,
             default => null,

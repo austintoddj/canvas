@@ -15,7 +15,7 @@ function bootWithRole(role: number): CanvasBoot {
         unsplash: null,
         version: '7.0.0',
         user: {
-            id: 'user-1',
+            id: 1,
             name: 'Test User',
             email: 'test@example.com',
             avatar_url: 'https://example.com/avatar.jpg',

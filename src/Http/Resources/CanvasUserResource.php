@@ -16,6 +16,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class CanvasUserResource extends JsonResource
 {
+    public static $wrap = null;
+
     private string $email = '';
 
     public function withEmail(string $email): self
@@ -64,7 +66,7 @@ class CanvasUserResource extends JsonResource
         }
 
         return [
-            'role' => $canvasUser->role?->value,
+            'role' => $canvasUser->role->value,
             'username' => $canvasUser->username,
             'summary' => $canvasUser->summary,
             'avatar' => $canvasUser->avatar,

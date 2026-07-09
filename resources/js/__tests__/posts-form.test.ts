@@ -26,7 +26,7 @@ const samplePost: Post = {
     created_at: '2026-06-01T00:00:00Z',
     updated_at: '2026-06-02T00:00:00Z',
     views_count: 3,
-    user_id: 'user-1',
+    user_id: 1,
     topic_id: 'topic-1',
     meta: { title: 'SEO title' },
     tags: [{ name: 'News', slug: 'news' }],

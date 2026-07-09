@@ -1,7 +1,10 @@
 <?php
 
 use Canvas\Models\Post;
+use Canvas\Policies\UserPolicy;
+use Canvas\Tests\Models\BareUser;
 use Canvas\Tests\TestCase;
+use Illuminate\Support\Facades\Gate;
 
 uses(TestCase::class)->in('.');
 
@@ -19,6 +22,17 @@ require_once __DIR__.'/Http/Requests/helpers.php';
 |   // Invariant: short description of the expected behavior
 |
 */
+
+function useBareUserModel(): void
+{
+    config()->set('canvas.user_model', BareUser::class);
+    Gate::policy(BareUser::class, UserPolicy::class);
+}
+
+function bareUser(int|string $id): BareUser
+{
+    return BareUser::query()->findOrFail($id);
+}
 
 function createPublishedPost(array $attributes = []): Post
 {

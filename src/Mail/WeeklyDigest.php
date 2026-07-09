@@ -16,6 +16,9 @@ class WeeklyDigest extends Mailable
 
     /**
      * Create a new message instance.
+     *
+     * @param  array<int, array<string, mixed>>  $posts
+     * @param  array<string, mixed>  $totals
      */
     public function __construct(
         public readonly string $userName,

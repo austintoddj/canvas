@@ -17,6 +17,9 @@ class DestroyMediaRequest extends FormRequest
         return Gate::forUser($this->user(config('canvas.guard')))->allows('delete', $media);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [];

@@ -1,11 +1,15 @@
 <?php
 
 use App\Http\Controllers\Canvas\CanvasUiController;
+use Canvas\Enums\Role;
 use Canvas\Events\PostViewed;
 use Canvas\Http\Middleware\Session;
+use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
+use Canvas\Tests\Models\BareUser;
+use Canvas\Tests\Models\User;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 
@@ -21,8 +25,10 @@ beforeEach(function (): void {
         }
 
         try {
-            if (! is_file($controllerPath)) {
-                $this->artisan('canvas:ui', ['--force' => true]);
+            $this->artisan('canvas:ui', ['--force' => true]);
+
+            if (function_exists('opcache_invalidate')) {
+                opcache_invalidate($controllerPath, true);
             }
 
             require_once $controllerPath;
@@ -318,4 +324,46 @@ it('shows authors on tag listing pages', function (): void {
     $this->get("canvas-ui/tags/{$tag->slug}")
         ->assertSuccessful()
         ->assertSee($this->admin->name);
+});
+
+// Invariant: sample reader works with bare host users (no HasCanvasAccess)
+it('renders the reader for bare host users without canvas relations', function (): void {
+    config()->set('canvas.user_model', BareUser::class);
+
+    $host = User::factory()->create([
+        'name' => 'Bare Reader Author',
+        'email' => 'bare-reader@example.com',
+    ]);
+
+    CanvasUser::factory()->create([
+        'user_id' => $host->id,
+        'role' => Role::Contributor,
+        'username' => 'bare-reader',
+        'avatar' => 'bare-avatar-hash',
+        'summary' => 'Writes without a trait',
+    ]);
+
+    $post = Post::factory()->create([
+        'user_id' => $host->id,
+        'published_at' => now()->subDay(),
+        'title' => 'Bare Host Post',
+    ]);
+
+    $this->get('canvas-ui')
+        ->assertSuccessful()
+        ->assertSee('Bare Host Post')
+        ->assertSee('Bare Reader Author')
+        ->assertSee('bare-avatar-hash');
+
+    $this->get("canvas-ui/{$post->slug}")
+        ->assertSuccessful()
+        ->assertSee('Bare Host Post')
+        ->assertSee('Bare Reader Author');
+
+    $this->get('canvas-ui/@bare-reader')
+        ->assertSuccessful()
+        ->assertViewIs('canvas::ui.author')
+        ->assertSee('Bare Reader Author')
+        ->assertSee('Writes without a trait')
+        ->assertSee('Bare Host Post');
 });

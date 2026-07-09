@@ -30,6 +30,9 @@ class UiCommand extends Command
         $this->newLine();
         $this->line('Add the following to your routes/web.php to activate the reader UI:');
         $this->line("  require __DIR__.'/canvas-ui.php';");
+        $this->newLine();
+        $this->line('HasCanvasAccess on your User model is optional — the sample reader does not require it.');
+        $this->line('Post show routes use Canvas\\Http\\Middleware\\Session to prune analytics session keys.');
     }
 
     private function publishController(): void

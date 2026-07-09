@@ -21,3 +21,18 @@ it('makes a user an admin by id', function (): void {
         'role' => Role::Admin->value,
     ]);
 });
+
+it('assigns admin to a host user without prior canvas access', function (): void {
+    $user = User::factory()->create();
+
+    $this->artisan('canvas:make-admin', [
+        'user' => $user->email,
+    ])
+        ->assertExitCode(0)
+        ->expectsOutput(sprintf('Assigned Admin to %s.', $user->email));
+
+    $this->assertDatabaseHas('canvas_users', [
+        'user_id' => $user->id,
+        'role' => Role::Admin->value,
+    ]);
+});

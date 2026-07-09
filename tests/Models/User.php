@@ -34,10 +34,6 @@ class User extends Authenticatable
         'default_locale',
     ];
 
-    protected $keyType = 'string';
-
-    public $incrementing = false;
-
     protected static function newFactory(): Factory
     {
         return UserFactory::new();

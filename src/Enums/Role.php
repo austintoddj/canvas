@@ -19,6 +19,9 @@ enum Role: int
         };
     }
 
+    /**
+     * @return array<int, string>
+     */
     public static function options(): array
     {
         return collect(self::cases())->mapWithKeys(
@@ -26,11 +29,17 @@ enum Role: int
         )->all();
     }
 
+    /**
+     * @return list<int>
+     */
     public static function values(): array
     {
         return array_column(self::cases(), 'value');
     }
 
+    /**
+     * @return list<string>
+     */
     public static function names(): array
     {
         return array_map(

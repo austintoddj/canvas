@@ -16,7 +16,7 @@ export type CanvasProfile = {
 };
 
 export type UserResource = {
-    id: string;
+    id: number;
     name: string;
     email: string;
     avatar_url: string;

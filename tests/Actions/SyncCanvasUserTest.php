@@ -115,6 +115,32 @@ it('normalizes empty social links to null', function (): void {
     expect(CanvasUser::find($user->id)->social)->toBeNull();
 });
 
+it('allows an admin to change role on an existing canvas user', function (): void {
+    $user = User::factory()->contributor()->create();
+    $syncCanvasUser = new SyncCanvasUser;
+
+    $created = $syncCanvasUser($user->id, [
+        'role' => Role::Editor->value,
+    ], true);
+
+    expect($created)->toBeFalse();
+    $this->assertDatabaseHas('canvas_users', [
+        'user_id' => $user->id,
+        'role' => Role::Editor->value,
+    ]);
+});
+
+it('normalizes non-array social payloads to null', function (): void {
+    $user = User::factory()->contributor()->create();
+    $syncCanvasUser = new SyncCanvasUser;
+
+    $syncCanvasUser($user->id, [
+        'social' => 'not-an-array',
+    ], false);
+
+    expect(CanvasUser::find($user->id)->social)->toBeNull();
+});
+
 it('does not change the host user record', function (): void {
     $user = User::factory()->contributor()->create();
     $originalName = $user->name;

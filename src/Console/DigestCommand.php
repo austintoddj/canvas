@@ -11,46 +11,64 @@ use Canvas\Support\DigestPeriod;
 use Canvas\Support\Localization;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
 
 class DigestCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'canvas:digest';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Send the weekly email digest';
 
-    /**
-     * Execute the console command.
-     */
     public function handle(): int
     {
+        /** @var class-string<Model> $userModel */
         $userModel = config('canvas.user_model');
 
-        $digestUserIds = CanvasUser::query()
+        $publishedAuthorIds = Post::published()
+            ->whereNotNull('user_id')
+            ->pluck('user_id')
+            ->unique()
+            ->filter()
+            ->values();
+
+        if ($publishedAuthorIds->isEmpty()) {
+            return self::SUCCESS;
+        }
+
+        $canvasUsers = CanvasUser::query()
             ->where('digest', true)
-            ->pluck('user_id');
+            ->whereIn('user_id', $publishedAuthorIds)
+            ->get()
+            ->keyBy('user_id');
 
-        $publishedAuthorIds = Post::published()->pluck('user_id')->unique();
+        if ($canvasUsers->isEmpty()) {
+            return self::SUCCESS;
+        }
 
-        $recipients = $userModel::query()
-            ->whereIn('id', $digestUserIds->intersect($publishedAuthorIds))
-            ->with('canvasUser')
-            ->get();
+        $hosts = $userModel::query()
+            ->whereIn('id', $canvasUsers->keys())
+            ->get()
+            ->keyBy(fn (Model $user): int|string => $user->getKey());
 
-        foreach ($recipients as $user) {
-            $period = DigestPeriod::forTimezone($user->canvasUser?->timezone);
+        foreach ($canvasUsers as $userId => $canvasUser) {
+            $user = $hosts->get($userId);
 
-            $posts = Post::where('user_id', $user->id)
+            if ($user === null) {
+                continue;
+            }
+
+            $email = data_get($user, 'email');
+            $name = data_get($user, 'name');
+
+            if (! is_string($email) || $email === '' || ! is_string($name)) {
+                continue;
+            }
+
+            $period = DigestPeriod::forTimezone($canvasUser->timezone);
+
+            $posts = Post::query()
+                ->where('user_id', $userId)
                 ->published()
                 ->withCount([
                     'views' => fn (Builder $query) => $query->whereBetween('created_at', [
@@ -65,10 +83,10 @@ class DigestCommand extends Command
                 ->orderByDesc('views_count')
                 ->get();
 
-            Mail::to($user->email)
-                ->locale(Localization::resolveLocale($user->canvasUser?->locale))
+            Mail::to($email)
+                ->locale(Localization::resolveLocale($canvasUser->locale))
                 ->send(new WeeklyDigest(
-                    userName: $user->name,
+                    userName: $name,
                     posts: $posts->toArray(),
                     totals: [
                         'views' => $posts->sum('views_count'),

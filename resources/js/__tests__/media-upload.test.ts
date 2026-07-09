@@ -18,7 +18,7 @@ function imageFile(name: string, type: string, sizeBytes: number): File {
 
 const uploadedMedia: Media = {
     id: 'media-uuid',
-    user_id: 'user-1',
+    user_id: 1,
     path: 'uploads/photo.jpg',
     filename: 'photo.jpg',
     original_name: 'photo.jpg',

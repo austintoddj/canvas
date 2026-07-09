@@ -11,6 +11,7 @@ use Canvas\Http\Resources\UserResource;
 use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Exception;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
@@ -54,9 +55,10 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(UserRequest $request, SyncCanvasUser $syncCanvasUser, $id): JsonResponse
+    public function store(UserRequest $request, SyncCanvasUser $syncCanvasUser, int|string $id): JsonResponse
     {
         $currentUser = request()->user(config('canvas.guard'));
+        /** @var class-string<Model> $userModel */
         $userModel = config('canvas.user_model');
 
         $user = $userModel::query()->find($id);
@@ -80,7 +82,7 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($user): UserResource
+    public function show(Model $user): UserResource
     {
         $canvasUser = CanvasUser::query()
             ->with(['user' => fn ($query) => $query->select('id', 'name', 'email')])
@@ -93,7 +95,7 @@ class UserController extends Controller
     /**
      * Display the specified relationship.
      */
-    public function posts($user): JsonResponse
+    public function posts(Model $user): JsonResponse
     {
         return response()->json(
             Post::query()
@@ -107,11 +109,9 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @return mixed
-     *
      * @throws Exception
      */
-    public function destroy($user)
+    public function destroy(Model $user): JsonResponse
     {
         Gate::forUser(request()->user(config('canvas.guard')))->authorize('delete', $user);
 

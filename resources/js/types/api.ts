@@ -48,7 +48,7 @@ export type Post = PostListItem & {
     slug: string;
     body: string | null;
     featured_image_caption: string | null;
-    user_id: string | null;
+    user_id: number | null;
     topic_id: string | null;
     meta: PostMeta | null;
     read_time?: string;
@@ -117,7 +117,7 @@ export type PostsIndexParams = {
 
 export type Media = {
     id: string;
-    user_id: string;
+    user_id: number;
     path: string;
     filename: string;
     original_name: string | null;
@@ -223,7 +223,7 @@ export type TopicSearchResult = {
 };
 
 export type UserSearchResult = {
-    id: string;
+    id: number;
     name: string;
     email: string;
     username: string | null;

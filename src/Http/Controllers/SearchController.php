@@ -19,11 +19,6 @@ class SearchController extends Controller
 {
     private const RESULTS_PER_TYPE = 10;
 
-    /**
-     * Search all accessible content types for the command palette.
-     *
-     * TODO: Introduce caching
-     */
     public function index(Request $request): JsonResponse
     {
         $user = $request->user(config('canvas.guard'));
@@ -53,13 +48,16 @@ class SearchController extends Controller
         return response()->json($results->values());
     }
 
+    /**
+     * @return list<array{id: string, title: string, type: string, route: string}>
+     */
     private function searchPosts(mixed $user, string $query): array
     {
         $canViewAll = Gate::forUser($user)->allows('viewAll', Post::class);
 
         return Post::query()
             ->select('id', 'title')
-            ->when(! $canViewAll, fn (Builder $q) => $q->where('user_id', $user->id))
+            ->when(! $canViewAll, fn (Builder $q) => $q->where('user_id', data_get($user, 'id')))
             ->when($query !== '', fn (Builder $q) => $q->where('title', 'like', "%{$query}%"))
             ->latest()
             ->limit(self::RESULTS_PER_TYPE)
@@ -73,6 +71,9 @@ class SearchController extends Controller
             ->all();
     }
 
+    /**
+     * @return list<array{id: string, name: string, type: string, route: string}>
+     */
     private function searchTags(string $query): array
     {
         return Tag::query()
@@ -90,6 +91,9 @@ class SearchController extends Controller
             ->all();
     }
 
+    /**
+     * @return list<array{id: string, name: string, type: string, route: string}>
+     */
     private function searchTopics(string $query): array
     {
         return Topic::query()
@@ -107,6 +111,9 @@ class SearchController extends Controller
             ->all();
     }
 
+    /**
+     * @return list<array{id: int, name: mixed, email: mixed, username: string|null, avatar_url: string, type: string, route: string}>
+     */
     private function searchUsers(string $query): array
     {
         return CanvasUser::query()

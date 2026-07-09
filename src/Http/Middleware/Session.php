@@ -6,33 +6,37 @@ namespace Canvas\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Date;
+use Symfony\Component\HttpFoundation\Response;
 
 class Session
 {
     /**
      * Handle the incoming request.
-     *
-     * @return Response
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         if (session()->has('viewed_posts')) {
-            $stale = collect(session()->get('viewed_posts'))
-                ->filter(fn ($timestamp) => $timestamp < now()->subHour()->timestamp)
+            /** @var array<string|int, int|string> $viewedPosts */
+            $viewedPosts = session()->get('viewed_posts', []);
+
+            $stale = collect($viewedPosts)
+                ->filter(fn (int|string $timestamp): bool => (int) $timestamp < now()->subHour()->timestamp)
                 ->keys()
-                ->map(fn ($id) => "viewed_posts.{$id}")
+                ->map(fn (string|int $id): string => "viewed_posts.{$id}")
                 ->all();
 
             session()->forget($stale);
         }
 
         if (session()->has('visited_posts')) {
-            $stale = collect(session()->get('visited_posts'))
-                ->filter(fn ($item) => ! Date::createFromTimestamp($item['timestamp'])->isToday())
+            /** @var array<string|int, array{timestamp: int|string}> $visitedPosts */
+            $visitedPosts = session()->get('visited_posts', []);
+
+            $stale = collect($visitedPosts)
+                ->filter(fn (array $item): bool => ! Date::createFromTimestamp((int) $item['timestamp'])->isToday())
                 ->keys()
-                ->map(fn ($id) => "visited_posts.{$id}")
+                ->map(fn (string|int $id): string => "visited_posts.{$id}")
                 ->all();
 
             session()->forget($stale);

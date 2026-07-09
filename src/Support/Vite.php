@@ -19,19 +19,33 @@ final class Vite
 
     public static function tags(): HtmlString
     {
-        try {
-            return self::instance()(['resources/js/app.tsx']);
-        } catch (ViteException) {
-            return new HtmlString('');
-        }
+        return self::safe(
+            static fn (): HtmlString => self::instance()(['resources/js/app.tsx']),
+            new HtmlString(''),
+        );
     }
 
     public static function reactRefresh(): HtmlString|string
     {
+        return self::safe(
+            static fn (): HtmlString|string => self::instance()->reactRefresh() ?? '',
+            '',
+        );
+    }
+
+    /**
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @param  T  $default
+     * @return T
+     */
+    private static function safe(callable $callback, mixed $default): mixed
+    {
         try {
-            return self::instance()->reactRefresh() ?? '';
+            return $callback();
         } catch (ViteException) {
-            return '';
+            return $default;
         }
     }
 }

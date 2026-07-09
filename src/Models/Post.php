@@ -7,7 +7,6 @@ namespace Canvas\Models;
 use Canvas\Database\Factories\PostFactory;
 use Canvas\Support\ReadTime;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,75 +14,46 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @use HasFactory<PostFactory>
+ */
 class Post extends Model
 {
+    /** @use HasFactory<PostFactory> */
     use HasFactory;
+
     use SoftDeletes;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'canvas_posts';
 
-    /**
-     * The attributes that aren't mass assignable.
-     *
-     * @var array
-     */
+    /** @var list<string> */
     protected $guarded = [];
 
-    /**
-     * The "type" of the auto-incrementing ID.
-     *
-     * @var string
-     */
     protected $keyType = 'string';
 
-    /**
-     * Indicates if the IDs are auto-incrementing.
-     *
-     * @var bool
-     */
     public $incrementing = false;
 
-    /**
-     * The number of models to return for pagination.
-     *
-     * @var int
-     */
     protected $perPage = 10;
 
-    /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array
-     */
+    /** @var list<string> */
     protected $appends = [
         'read_time',
     ];
 
-    /**
-     * The attributes that should be casted.
-     *
-     * @var array
-     */
+    /** @var array<string, string> */
     protected $casts = [
+        'user_id' => 'integer',
         'published_at' => 'datetime:Y-m-d',
         'meta' => 'array',
     ];
 
-    /**
-     * Create a new factory instance for the model.
-     */
-    protected static function newFactory(): Factory
+    protected static function newFactory(): PostFactory
     {
         return PostFactory::new();
     }
 
     /**
-     * Get the tags relationship.
+     * @return BelongsToMany<Tag, $this>
      */
     public function tags(): BelongsToMany
     {
@@ -96,7 +66,7 @@ class Post extends Model
     }
 
     /**
-     * Get the topic relationship.
+     * @return BelongsTo<Topic, $this>
      */
     public function topic(): BelongsTo
     {
@@ -104,15 +74,18 @@ class Post extends Model
     }
 
     /**
-     * Get the user relationship.
+     * @return BelongsTo<Model, $this>
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(config('canvas.user_model'));
+        /** @var class-string<Model> $userModel */
+        $userModel = config('canvas.user_model');
+
+        return $this->belongsTo($userModel);
     }
 
     /**
-     * Get the views relationship.
+     * @return HasMany<View, $this>
      */
     public function views(): HasMany
     {
@@ -120,31 +93,26 @@ class Post extends Model
     }
 
     /**
-     * Get the visits relationship.
+     * @return HasMany<Visit, $this>
      */
     public function visits(): HasMany
     {
         return $this->hasMany(Visit::class);
     }
 
-    /**
-     * Get the human-friendly estimated reading time of a given text.
-     */
     public function getReadTimeAttribute(): string
     {
-        return ReadTime::calculate($this->body, request()->user()?->locale);
+        return ReadTime::calculate($this->body, app()->getLocale());
     }
 
-    /**
-     * Check to see if the post is published.
-     */
     public function getPublishedAttribute(): bool
     {
         return ! is_null($this->published_at) && $this->published_at <= now()->toDateTimeString();
     }
 
     /**
-     * Scope a query to only include published posts.
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
      */
     public function scopePublished(Builder $query): Builder
     {
@@ -152,7 +120,8 @@ class Post extends Model
     }
 
     /**
-     * Scope a query to only include drafted posts.
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
      */
     public function scopeDraft(Builder $query): Builder
     {
@@ -162,12 +131,9 @@ class Post extends Model
         );
     }
 
-    /**
-     * The "booting" method of the model.
-     */
     protected static function booted(): void
     {
-        static::deleting(function (self $post) {
+        static::deleting(function (self $post): void {
             $post->tags()->detach();
         });
     }

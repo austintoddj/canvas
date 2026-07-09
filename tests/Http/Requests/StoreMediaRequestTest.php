@@ -2,10 +2,10 @@
 
 use Canvas\Http\Requests\StoreMediaRequest;
 use Illuminate\Http\UploadedFile;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 
 it('requires an uploaded file', function (): void {
-    $id = Uuid::uuid4()->toString();
+    $id = (string) Str::uuid();
 
     assertFormRequestInvalid(
         StoreMediaRequest::class,
@@ -18,7 +18,7 @@ it('requires an uploaded file', function (): void {
 });
 
 it('rejects uploads that exceed the maximum filesize', function (): void {
-    $id = Uuid::uuid4()->toString();
+    $id = (string) Str::uuid();
     $oversizeKb = (int) (config('canvas.upload_filesize') / 1024) + 1024;
 
     assertFormRequestInvalid(
@@ -34,7 +34,7 @@ it('rejects uploads that exceed the maximum filesize', function (): void {
 });
 
 it('rejects uploads with disallowed mime types', function (): void {
-    $id = Uuid::uuid4()->toString();
+    $id = (string) Str::uuid();
 
     assertFormRequestInvalid(
         StoreMediaRequest::class,
@@ -49,7 +49,7 @@ it('rejects uploads with disallowed mime types', function (): void {
 });
 
 it('rejects metadata fields that exceed the maximum length', function (): void {
-    $id = Uuid::uuid4()->toString();
+    $id = (string) Str::uuid();
 
     assertFormRequestInvalid(
         StoreMediaRequest::class,
@@ -68,7 +68,7 @@ it('rejects metadata fields that exceed the maximum length', function (): void {
 });
 
 it('accepts a valid media upload payload', function (): void {
-    $id = Uuid::uuid4()->toString();
+    $id = (string) Str::uuid();
 
     assertFormRequestValid(
         StoreMediaRequest::class,

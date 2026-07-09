@@ -55,6 +55,27 @@ it('scaffolds a controller with all reader methods', function (): void {
     }
 });
 
+// Invariant: sample reader must not require HasCanvasAccess host relations
+it('scaffolds a controller that does not require host canvasUser or posts relations', function (): void {
+    $this->artisan('canvas:ui', ['--force' => true]);
+
+    $contents = file_get_contents(app_path('Http/Controllers/Canvas/CanvasUiController.php'));
+
+    expect($contents)
+        ->not->toContain("with('user.canvasUser'")
+        ->not->toContain("with('canvasUser')")
+        ->not->toContain('$user->posts()')
+        ->toContain('setRelation')
+        ->toContain('CanvasUser::query()')
+        ->toContain("where('user_id', \$canvasUser->user_id)");
+});
+
+it('mentions that HasCanvasAccess is optional', function (): void {
+    $this->artisan('canvas:ui', ['--force' => true])
+        ->expectsOutputToContain('HasCanvasAccess on your User model is optional')
+        ->assertExitCode(0);
+});
+
 it('scaffolds a controller that is syntactically valid PHP', function (): void {
     $this->artisan('canvas:ui');
 

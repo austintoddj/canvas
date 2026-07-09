@@ -17,6 +17,9 @@ class UpdateMediaRequest extends FormRequest
         return Gate::forUser($this->user(config('canvas.guard')))->allows('update', $media);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
