@@ -5,6 +5,7 @@ import { Button } from '@/components/button';
 import { Dialog, DialogBody, DialogDescription, DialogTitle } from '@/components/dialog';
 import { Description, Field, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
+import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Text } from '@/components/text';
 import { usePermissions } from '@/hooks/usePermissions';
 import { mediaApi, uploadMedia } from '@/lib/api/media';
@@ -136,30 +137,17 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
 
                 <div className="flex flex-wrap items-center gap-2">
                     {canViewAllMedia ? (
-                        <div className="flex rounded-lg border border-zinc-950/10 p-0.5 dark:border-white/10">
-                            <Button
-                                type="button"
-                                plain
-                                className={scope === 'user' ? 'bg-zinc-950/5 dark:bg-white/10' : ''}
-                                onClick={() => {
-                                    setScope('user');
-                                    void loadMedia(1, false, { scope: 'user', search, page: 1 });
-                                }}
-                            >
-                                Mine
-                            </Button>
-                            <Button
-                                type="button"
-                                plain
-                                className={scope === 'all' ? 'bg-zinc-950/5 dark:bg-white/10' : ''}
-                                onClick={() => {
-                                    setScope('all');
-                                    void loadMedia(1, false, { scope: 'all', search, page: 1 });
-                                }}
-                            >
-                                All
-                            </Button>
-                        </div>
+                        <PillNav
+                            value={scope}
+                            onChange={(next) => {
+                                setScope(next);
+                                void loadMedia(1, false, { scope: next, search, page: 1 });
+                            }}
+                            aria-label="Media author scope"
+                        >
+                            <PillNavItem value="user">Mine</PillNavItem>
+                            <PillNavItem value="all">All</PillNavItem>
+                        </PillNav>
                     ) : null}
 
                     <Button type="button" outline onClick={() => void loadMedia(1, false, currentQuery())}>

@@ -22,6 +22,7 @@ import {
     PaginationPage,
     PaginationPrevious,
 } from '@/components/pagination';
+import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table';
 import { Text } from '@/components/text';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -202,70 +203,30 @@ export default function PostsIndex() {
             </div>
 
             <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex gap-0.5 rounded-lg bg-zinc-950/5 p-0.5 dark:bg-white/5">
-                    <Button
-                        type="button"
-                        plain
-                        className={
-                            filters.tab === 'published'
-                                ? 'bg-white shadow-sm dark:bg-zinc-700 data-hover:bg-white dark:data-hover:bg-zinc-700'
-                                : ''
-                        }
-                        onClick={() => setFilters({ tab: 'published' }, true)}
-                    >
+                <PillNav
+                    value={filters.tab}
+                    onChange={(tab) => setFilters({ tab }, true)}
+                    aria-label="Post status"
+                >
+                    <PillNavItem value="published">
                         Published
-                        {response ? (
-                            <Badge color="zinc" className="ml-2">
-                                {response.publishedCount}
-                            </Badge>
-                        ) : null}
-                    </Button>
-                    <Button
-                        type="button"
-                        plain
-                        className={
-                            filters.tab === 'draft'
-                                ? 'bg-white shadow-sm dark:bg-zinc-700 data-hover:bg-white dark:data-hover:bg-zinc-700'
-                                : ''
-                        }
-                        onClick={() => setFilters({ tab: 'draft' }, true)}
-                    >
+                        {response ? <Badge color="zinc">{response.publishedCount}</Badge> : null}
+                    </PillNavItem>
+                    <PillNavItem value="draft">
                         Drafts
-                        {response ? (
-                            <Badge color="zinc" className="ml-2">
-                                {response.draftCount}
-                            </Badge>
-                        ) : null}
-                    </Button>
-                </div>
+                        {response ? <Badge color="zinc">{response.draftCount}</Badge> : null}
+                    </PillNavItem>
+                </PillNav>
 
                 {canViewAllPosts ? (
-                    <div className="flex gap-0.5 rounded-lg bg-zinc-950/5 p-0.5 dark:bg-white/5">
-                        <Button
-                            type="button"
-                            plain
-                            className={
-                                filters.scope === 'user'
-                                    ? 'bg-white shadow-sm dark:bg-zinc-700 data-hover:bg-white dark:data-hover:bg-zinc-700'
-                                    : ''
-                            }
-                            onClick={() => setFilters({ scope: 'user' }, true)}
-                        >
-                            Mine
-                        </Button>
-                        <Button
-                            type="button"
-                            plain
-                            className={
-                                filters.scope === 'all'
-                                    ? 'bg-white shadow-sm dark:bg-zinc-700 data-hover:bg-white dark:data-hover:bg-zinc-700'
-                                    : ''
-                            }
-                            onClick={() => setFilters({ scope: 'all' }, true)}
-                        >
-                            All authors
-                        </Button>
-                    </div>
+                    <PillNav
+                        value={filters.scope}
+                        onChange={(scope) => setFilters({ scope }, true)}
+                        aria-label="Post author scope"
+                    >
+                        <PillNavItem value="user">Mine</PillNavItem>
+                        <PillNavItem value="all">All authors</PillNavItem>
+                    </PillNav>
                 ) : null}
             </div>
 
