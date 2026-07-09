@@ -1,40 +1,39 @@
-import { MagnifyingGlassIcon, PhotoIcon } from '@heroicons/react/20/solid';
-import { useEffect, useRef, useState } from 'react';
+import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/button';
 import { Dialog, DialogBody, DialogDescription, DialogTitle } from '@/components/dialog';
-import { Description, Field, Label } from '@/components/fieldset';
+import { Field, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
+import { MediaDropzone } from '@/components/media/MediaDropzone';
+import { MediaGrid } from '@/components/media/MediaGrid';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Text } from '@/components/text';
 import { usePermissions } from '@/hooks/usePermissions';
 import { mediaApi, uploadMedia } from '@/lib/api/media';
+import { mediaIndexQueryParams, type MediaListFilters } from '@/lib/media/list';
 import type { Media, Paginated } from '@/types/api';
 
 type MediaPickerPanelProps = {
     onSelect: (url: string, media?: Media) => void;
 };
 
-type MediaQuery = {
-    scope: 'user' | 'all';
-    search: string;
-    page: number;
-};
+type MediaQuery = Pick<MediaListFilters, 'scope' | 'search' | 'page'>;
 
 async function fetchMediaPage(query: MediaQuery, signal?: AbortSignal): Promise<Paginated<Media>> {
     return mediaApi.index(
-        {
+        mediaIndexQueryParams({
             scope: query.scope,
-            search: query.search.trim() === '' ? undefined : query.search.trim(),
+            search: query.search,
+            mime: '',
             page: query.page,
-        },
+        }),
         signal
     );
 }
 
 export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
     const { canViewAllMedia } = usePermissions();
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [scope, setScope] = useState<'user' | 'all'>('user');
     const [search, setSearch] = useState('');
@@ -101,12 +100,17 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
         return { scope, search, page: pageNumber };
     }
 
-    async function handleUpload(file: File) {
+    async function handleFiles(files: File[]) {
+        if (files.length === 0) {
+            setError('File type not supported. Use JPG, GIF, PNG, or WebP.');
+            return;
+        }
+
         setUploading(true);
         setError(null);
 
         try {
-            const uploaded = await uploadMedia(file);
+            const uploaded = await uploadMedia(files[0]);
             setMedia((current) => [uploaded, ...current]);
             onSelect(uploaded.url, uploaded);
         } catch (uploadError) {
@@ -154,57 +158,28 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                         <MagnifyingGlassIcon data-slot="icon" />
                         Search
                     </Button>
-
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/jpeg,image/gif,image/png,image/webp"
-                        className="hidden"
-                        onChange={(event) => {
-                            const file = event.target.files?.[0];
-
-                            if (file) {
-                                void handleUpload(file);
-                            }
-
-                            event.target.value = '';
-                        }}
-                    />
-                    <Button type="button" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
-                        {uploading ? 'Uploading…' : 'Upload'}
-                    </Button>
                 </div>
             </div>
+
+            <MediaDropzone
+                className="mt-4"
+                uploading={uploading}
+                multiple={false}
+                label="Drop an image here, or click to browse"
+                onFiles={(files) => void handleFiles(files)}
+            />
 
             {error ? <Text className="mt-4 text-sm text-red-600 dark:text-red-500">{error}</Text> : null}
 
             {loading ? (
                 <Text className="mt-6 text-sm text-zinc-500">Loading media…</Text>
-            ) : media.length === 0 ? (
-                <div className="mt-6 flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-950/10 px-6 py-12 text-center dark:border-white/10">
-                    <PhotoIcon className="size-10 text-zinc-400" />
-                    <Text className="mt-3 text-sm text-zinc-500">No images found. Upload one to get started.</Text>
-                </div>
             ) : (
-                <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                    {media.map((item) => (
-                        <button
-                            key={item.id}
-                            type="button"
-                            className="group overflow-hidden rounded-lg border border-zinc-950/10 text-left transition hover:border-zinc-950/20 dark:border-white/10 dark:hover:border-white/20"
-                            onClick={() => onSelect(item.url, item)}
-                        >
-                            <img
-                                src={item.url}
-                                alt={item.alt ?? item.original_name ?? item.filename}
-                                className="aspect-square w-full object-cover transition group-hover:opacity-90"
-                            />
-                            <Description className="truncate px-2 py-1.5 text-xs">
-                                {item.original_name ?? item.filename}
-                            </Description>
-                        </button>
-                    ))}
-                </div>
+                <MediaGrid
+                    className="mt-6"
+                    items={media}
+                    emptyMessage="No images found. Drop one above to get started."
+                    onSelect={(item) => onSelect(item.url, item)}
+                />
             )}
 
             {page < lastPage ? (
