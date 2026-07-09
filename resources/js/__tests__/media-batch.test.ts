@@ -6,6 +6,7 @@ import {
     filtersAfterUpload,
     prependMediaItems,
     removeMediaItems,
+    shouldRefillMediaListAfterDelete,
     summarizeMediaDestroys,
     summarizeMediaUploads,
     toggleSelectedId,
@@ -215,5 +216,18 @@ describe('removeMediaItems and toggleSelectedId', () => {
         const selected = new Set(['a']);
         expect(Array.from(toggleSelectedId(selected, 'b'))).toEqual(['a', 'b']);
         expect(Array.from(toggleSelectedId(selected, 'a'))).toEqual([]);
+    });
+});
+
+describe('shouldRefillMediaListAfterDelete', () => {
+    it('refills when the loaded page is empty but later pages remain', () => {
+        expect(shouldRefillMediaListAfterDelete(0, 2)).toBe(true);
+        expect(shouldRefillMediaListAfterDelete(0, 3)).toBe(true);
+    });
+
+    it('does not refill when items remain or the library is truly empty', () => {
+        expect(shouldRefillMediaListAfterDelete(1, 2)).toBe(false);
+        expect(shouldRefillMediaListAfterDelete(0, 1)).toBe(false);
+        expect(shouldRefillMediaListAfterDelete(5, 1)).toBe(false);
     });
 });

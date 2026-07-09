@@ -43,4 +43,10 @@ describe('media library page chrome (shipped source)', () => {
         // Index does not opt into captions for the library grid.
         expect(mediaIndexSource).not.toContain('showCaptions');
     });
+
+    it('refills page 1 after deletes empty the loaded list while later pages remain', () => {
+        expect(mediaIndexSource).toContain('shouldRefillMediaListAfterDelete');
+        expect(mediaIndexSource).toContain('refillFirstPage');
+        expect(mediaIndexSource).toContain('applyRemovedMedia');
+    });
 });

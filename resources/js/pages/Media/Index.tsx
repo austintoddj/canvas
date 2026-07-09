@@ -23,6 +23,7 @@ import {
     filtersAfterUpload,
     prependMediaItems,
     removeMediaItems,
+    shouldRefillMediaListAfterDelete,
     summarizeMediaDestroys,
     summarizeMediaUploads,
     toggleSelectedId,
@@ -277,6 +278,52 @@ export default function MediaIndex() {
         }
     }
 
+    async function refillFirstPage() {
+        setLoading(true);
+        setError(null);
+        setPage(1);
+        setSelectedIds(new Set());
+        setConfirmBulkDeleteOpen(false);
+
+        try {
+            const data = await mediaApi.index(
+                mediaIndexQueryParams({
+                    scope: filters.scope,
+                    search: filters.search,
+                    mime: filters.mime,
+                    sort: filters.sort,
+                    page: 1,
+                })
+            );
+
+            setItems(data.data);
+            setPage(data.current_page);
+            setLastPage(data.last_page);
+        } catch {
+            setError('Unable to load media.');
+            setItems([]);
+            setPage(1);
+            setLastPage(1);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function applyRemovedMedia(ids: Iterable<string>) {
+        let remainingCount = 0;
+
+        setItems((current) => {
+            const next = removeMediaItems(current, ids);
+            remainingCount = next.length;
+
+            return next;
+        });
+
+        if (shouldRefillMediaListAfterDelete(remainingCount, lastPage)) {
+            void refillFirstPage();
+        }
+    }
+
     async function handleFiles(files: File[]) {
         if (files.length === 0) {
             setError(null);
@@ -361,7 +408,7 @@ export default function MediaIndex() {
         }
 
         toastFromTone(summary.message, summary.tone);
-        setItems((current) => removeMediaItems(current, summary.succeeded));
+        applyRemovedMedia(summary.succeeded);
         setSelectedIds((current) => {
             const next = new Set(current);
 
@@ -689,7 +736,7 @@ export default function MediaIndex() {
                     setItems((current) => current.map((item) => (item.id === updated.id ? updated : item)));
                 }}
                 onDeleted={(mediaId) => {
-                    setItems((current) => removeMediaItems(current, [mediaId]));
+                    applyRemovedMedia([mediaId]);
                     setSelectedIds((current) => {
                         if (!current.has(mediaId)) {
                             return current;

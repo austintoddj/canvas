@@ -216,6 +216,14 @@ export function removeMediaItems(existing: Media[], ids: Iterable<string>): Medi
     return existing.filter((item) => !remove.has(item.id));
 }
 
+/**
+ * After deleting every currently loaded item, the library can still have later
+ * pages (load-more). Refetch page 1 instead of treating the list as empty.
+ */
+export function shouldRefillMediaListAfterDelete(remainingItemCount: number, lastPage: number): boolean {
+    return remainingItemCount === 0 && lastPage > 1;
+}
+
 export function toggleSelectedId(selected: ReadonlySet<string>, id: string): Set<string> {
     const next = new Set(selected);
 
