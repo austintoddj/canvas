@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CZcjcDnw.js";import{t}from"./heading-PjO5r1EO.js";import{t as n}from"./text-zqqG4kLH.js";var r=e();function i({title:e,description:i}){return(0,r.jsxs)(`div`,{className:`p-8`,children:[(0,r.jsx)(t,{children:e}),i?(0,r.jsx)(n,{className:`mt-2 text-zinc-500 dark:text-zinc-400`,children:i}):null]})}export{i as t};

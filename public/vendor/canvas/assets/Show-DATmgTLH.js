@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-CZcjcDnw.js";import{t}from"./PlaceholderPage-nm6O_GHw.js";var n=e();function r(){return(0,n.jsx)(t,{title:`User detail`,description:`Coming in Step 7.`})}export{r as default};

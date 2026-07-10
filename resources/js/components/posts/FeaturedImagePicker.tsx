@@ -85,13 +85,13 @@ export default function FeaturedImagePicker({ form, onChange, disabled = false }
     return (
         <Fieldset className="space-y-4">
             {form.featuredImage ? (
-                <div className="overflow-hidden rounded-lg border border-zinc-950/10 dark:border-white/10">
+                <div className="overflow-hidden rounded-lg border border-zinc-950/10 dark:border-white/10 dark:ring-1 dark:ring-white/5">
                     <img
                         src={form.featuredImage}
                         alt={form.featuredImageCaption ?? 'Featured image'}
                         className="aspect-[1.91/1] w-full object-cover"
                     />
-                    <div className="flex items-center justify-between gap-2 p-3">
+                    <div className="flex items-center justify-between gap-2 p-3 dark:bg-white/[0.02]">
                         <Text className="truncate text-sm text-zinc-600 dark:text-zinc-300">Featured image</Text>
                         <Button
                             type="button"
@@ -105,9 +105,9 @@ export default function FeaturedImagePicker({ form, onChange, disabled = false }
                     </div>
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-950/10 px-4 py-8 text-center dark:border-white/10">
-                    <PhotoIcon className="size-8 text-zinc-400" />
-                    <Text className="mt-2 text-sm text-zinc-500">No featured image selected</Text>
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-950/10 bg-zinc-950/[0.01] px-4 py-8 text-center dark:border-white/10 dark:bg-white/[0.02]">
+                    <PhotoIcon className="size-8 text-zinc-400 dark:text-zinc-500" />
+                    <Text className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">No featured image selected</Text>
                 </div>
             )}
 

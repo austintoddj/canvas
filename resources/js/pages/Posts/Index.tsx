@@ -232,8 +232,8 @@ export default function PostsIndex() {
             {loading ? (
                 <Text className="mt-8 text-sm text-zinc-500">Loading posts…</Text>
             ) : posts === null || posts.data.length === 0 ? (
-                <div className="mt-8 rounded-xl border border-dashed border-zinc-950/10 px-6 py-12 text-center dark:border-white/10">
-                    <Text className="text-sm text-zinc-500">
+                <div className="mt-8 rounded-xl border border-dashed border-zinc-950/10 bg-zinc-950/[0.01] px-6 py-12 text-center dark:border-white/10 dark:bg-white/[0.02]">
+                    <Text className="text-sm text-zinc-500 dark:text-zinc-400">
                         {filters.tab === 'draft' ? 'No drafts yet.' : 'No published posts yet.'}
                     </Text>
                     <div className="mt-4">

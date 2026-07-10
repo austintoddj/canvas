@@ -64,7 +64,7 @@ function ThemeToggle({ mode, setMode }: { mode: ThemeMode; setMode: (m: ThemeMod
     return (
         <div className="col-span-full flex items-center justify-between px-3.5 py-2 sm:px-3 sm:py-1.5">
             <span className="text-base/6 text-zinc-950 sm:text-sm/6 dark:text-white">Theme</span>
-            <div className="flex rounded-lg bg-zinc-950/5 p-0.5 dark:bg-white/10" role="group" aria-label="Theme">
+            <div className="flex rounded-lg bg-zinc-950/5 p-0.5 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/5" role="group" aria-label="Theme">
                 {options.map(({ value, label, Icon }) => (
                     <button
                         key={value}
@@ -76,7 +76,7 @@ function ThemeToggle({ mode, setMode }: { mode: ThemeMode; setMode: (m: ThemeMod
                         className={clsx(
                             'rounded-md p-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950/20 dark:focus-visible:ring-white/25',
                             mode === value
-                                ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-900 dark:text-white'
+                                ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-700 dark:text-white dark:ring-1 dark:ring-white/10'
                                 : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'
                         )}
                     >
@@ -158,7 +158,7 @@ function UserDropdownContent({ mode, setMode }: { mode: ThemeMode; setMode: (m: 
 
             <DropdownDivider />
 
-            <div className="col-span-full rounded-b-xl bg-zinc-50 px-3.5 py-2 dark:bg-zinc-800/50 sm:px-3">
+            <div className="col-span-full rounded-b-xl bg-zinc-50 px-3.5 py-2 dark:bg-white/[0.03] sm:px-3">
                 <p className="text-xs text-zinc-400 dark:text-zinc-500">Version {boot.version}</p>
             </div>
         </>

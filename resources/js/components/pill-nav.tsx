@@ -50,7 +50,7 @@ export function PillNav<T extends string>({
                 aria-label={ariaLabel}
                 className={clsx(
                     className,
-                    'inline-flex items-center gap-0.5 rounded-full bg-zinc-950/5 p-1 dark:bg-white/5'
+                    'inline-flex items-center gap-0.5 rounded-full bg-zinc-950/5 p-1 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/5'
                 )}
             >
                 <PillNavContext.Provider
@@ -105,7 +105,7 @@ export function PillNavItem({
             {current ? (
                 <motion.span
                     layoutId={layoutId}
-                    className="absolute inset-0 -z-10 rounded-full bg-white shadow-sm dark:bg-zinc-700"
+                    className="absolute inset-0 -z-10 rounded-full bg-white shadow-sm dark:bg-zinc-700 dark:shadow-none dark:ring-1 dark:ring-white/10"
                     transition={{ type: 'spring', bounce: 0.15, duration: 0.45 }}
                 />
             ) : null}

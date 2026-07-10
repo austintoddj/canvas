@@ -10,7 +10,7 @@ export function Kbd({ children, className }: KbdProps) {
     return (
         <kbd
             className={clsx(
-                'inline-flex h-5 min-w-5 items-center justify-center rounded border border-zinc-200 bg-white px-1 font-sans text-[0.625rem]/4 font-medium text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
+                'inline-flex h-5 min-w-5 items-center justify-center rounded border border-zinc-200 bg-white px-1 font-sans text-[0.625rem]/4 font-medium text-zinc-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-400',
                 className
             )}
         >

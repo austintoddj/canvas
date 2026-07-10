@@ -537,7 +537,7 @@ export default function MediaIndex() {
                 {pageDragging ? (
                     <motion.div
                         key="media-drop-overlay"
-                        className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/40 p-6 backdrop-blur-md dark:bg-black/50"
+                        className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/40 p-6 backdrop-blur-md dark:bg-zinc-950/70"
                         aria-hidden="true"
                         data-media-drop-overlay="true"
                         initial={{ opacity: 0 }}
@@ -546,7 +546,7 @@ export default function MediaIndex() {
                         transition={{ duration: 0.18, ease: 'easeOut' }}
                     >
                         <motion.div
-                            className="flex w-full max-w-lg flex-col items-center rounded-3xl border border-white/20 bg-white/90 px-8 py-12 text-center shadow-2xl shadow-zinc-950/20 ring-1 ring-zinc-950/5 dark:border-white/10 dark:bg-zinc-900/90 dark:shadow-black/40 dark:ring-white/10"
+                            className="flex w-full max-w-lg flex-col items-center rounded-3xl border border-white/20 bg-white/90 px-8 py-12 text-center shadow-2xl shadow-zinc-950/20 ring-1 ring-zinc-950/5 dark:border-white/15 dark:bg-zinc-800/90 dark:shadow-none dark:ring-1 dark:ring-white/10 dark:backdrop-blur-xl"
                             initial={{ opacity: 0, y: 18 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
@@ -570,10 +570,38 @@ export default function MediaIndex() {
                 <PageHeader
                     title="Media"
                     actions={
-                        <Button type="button" color="dark/zinc" disabled={uploading} onClick={openBrowse}>
-                            <ArrowUpTrayIcon data-slot="icon" />
-                            {uploadLabel}
-                        </Button>
+                        selectionCount > 0 ? (
+                            <div className="flex flex-wrap items-center gap-2" data-media-selection-actions="true">
+                                <Text
+                                    className="text-sm font-medium text-zinc-950 dark:text-white"
+                                    aria-live="polite"
+                                >
+                                    {selectionCount} selected
+                                </Text>
+                                <Button
+                                    type="button"
+                                    plain
+                                    disabled={bulkDeleting}
+                                    onClick={() => setSelectedIds(new Set())}
+                                >
+                                    Clear
+                                </Button>
+                                <Button
+                                    type="button"
+                                    color="red"
+                                    disabled={bulkDeleting || uploading}
+                                    onClick={openBulkDeleteConfirm}
+                                >
+                                    <TrashIcon data-slot="icon" />
+                                    {bulkDeleting ? 'Deleting…' : 'Delete'}
+                                </Button>
+                            </div>
+                        ) : (
+                            <Button type="button" color="dark/zinc" disabled={uploading} onClick={openBrowse}>
+                                <ArrowUpTrayIcon data-slot="icon" />
+                                {uploadLabel}
+                            </Button>
+                        )
                     }
                 />
 
@@ -638,33 +666,6 @@ export default function MediaIndex() {
                         role="alert"
                     >
                         <Text className="text-sm text-red-600 dark:text-red-400">{error}</Text>
-                    </div>
-                ) : null}
-
-                {selectionCount > 0 ? (
-                    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-950/10 bg-zinc-950/[0.02] px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-                        <Text className="text-sm font-medium text-zinc-950 dark:text-white">
-                            {selectionCount} {selectionCount === 1 ? 'image' : 'images'} selected
-                        </Text>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Button
-                                type="button"
-                                plain
-                                disabled={bulkDeleting}
-                                onClick={() => setSelectedIds(new Set())}
-                            >
-                                Clear
-                            </Button>
-                            <Button
-                                type="button"
-                                color="red"
-                                disabled={bulkDeleting || uploading}
-                                onClick={openBulkDeleteConfirm}
-                            >
-                                <TrashIcon data-slot="icon" />
-                                Delete selected
-                            </Button>
-                        </div>
                     </div>
                 ) : null}
 

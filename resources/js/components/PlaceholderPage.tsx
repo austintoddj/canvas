@@ -10,7 +10,7 @@ export default function PlaceholderPage({ title, description }: PlaceholderPageP
     return (
         <div className="p-8">
             <Heading>{title}</Heading>
-            {description ? <Text className="mt-2 text-zinc-500">{description}</Text> : null}
+            {description ? <Text className="mt-2 text-zinc-500 dark:text-zinc-400">{description}</Text> : null}
         </div>
     );
 }

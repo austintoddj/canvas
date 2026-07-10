@@ -31,7 +31,7 @@ export default function PublishPanel({ form, onChange, onSaveNow, saveStatus, di
     const statusText = saveStatusLabel(saveStatus);
 
     return (
-        <Fieldset className="rounded-lg border border-zinc-950/10 p-4 dark:border-white/10">
+        <Fieldset className="rounded-lg border border-zinc-950/10 p-4 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5">
             <div className="flex items-center justify-between gap-3">
                 <Badge color={published ? 'green' : 'amber'}>{published ? 'Published' : 'Draft'}</Badge>
                 {statusText ? (

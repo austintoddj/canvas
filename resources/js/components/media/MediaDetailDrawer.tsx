@@ -201,7 +201,7 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                     transition
                     className="flex h-full w-full max-w-md transition duration-300 ease-in-out data-closed:translate-x-full sm:max-w-lg"
                 >
-                    <div className="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-xs ring-1 ring-zinc-950/5 dark:bg-zinc-900 dark:ring-white/10">
+                    <div className="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white shadow-xs ring-1 ring-zinc-950/5 dark:bg-zinc-900 dark:shadow-2xl dark:shadow-black/40 dark:ring-white/10">
                         <div className="flex items-start justify-between gap-3 border-b border-zinc-950/5 px-5 py-4 dark:border-white/10">
                             <div className="min-w-0">
                                 <Headless.DialogTitle className="text-base/6 font-semibold text-zinc-950 dark:text-white">
@@ -236,7 +236,7 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
 
                             {!loading && media !== null ? (
                                 <div className="flex flex-1 flex-col">
-                                    <div className="border-b border-zinc-950/5 bg-zinc-50 dark:border-white/10 dark:bg-zinc-950/40">
+                                    <div className="border-b border-zinc-950/5 bg-zinc-50 dark:border-white/10 dark:bg-white/[0.03]">
                                         <img
                                             src={media.url}
                                             alt={media.alt ?? mediaDisplayName(media)}

@@ -87,14 +87,14 @@ export function MediaGrid({
             <div
                 className={clsx(
                     className,
-                    'flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-950/10 px-6 py-14 text-center dark:border-white/10'
+                    'flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-950/10 bg-zinc-950/[0.01] px-6 py-14 text-center dark:border-white/10 dark:bg-white/[0.02]'
                 )}
                 data-media-filtered-empty="true"
             >
-                <span className="flex size-11 items-center justify-center rounded-full bg-zinc-950/5 text-zinc-400 dark:bg-white/10">
+                <span className="flex size-11 items-center justify-center rounded-full bg-zinc-950/5 text-zinc-400 dark:bg-white/10 dark:text-zinc-400">
                     <PhotoIcon className="size-5" />
                 </span>
-                <Text className="mt-3 text-sm text-zinc-500">{emptyMessage}</Text>
+                <Text className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">{emptyMessage}</Text>
             </div>
         );
     }
@@ -109,10 +109,10 @@ export function MediaGrid({
                 const isSelected = selectedIds?.has(item.id) ?? false;
 
                 const shellClassName = clsx(
-                    'group/tile relative overflow-hidden rounded-xl border bg-white text-left shadow-sm shadow-zinc-950/5 transition duration-200 dark:bg-zinc-900/40 dark:shadow-none',
+                    'group/tile relative overflow-hidden rounded-xl border bg-white text-left shadow-sm shadow-zinc-950/5 transition duration-200 dark:bg-zinc-800/60 dark:shadow-none',
                     isSelected
-                        ? 'border-blue-600/40 ring-2 ring-blue-600/25 dark:border-blue-400/40 dark:ring-blue-400/20'
-                        : 'border-zinc-950/10 hover:border-zinc-950/20 hover:shadow-md hover:shadow-zinc-950/10 dark:border-white/10 dark:hover:border-white/20'
+                        ? 'border-blue-600/40 ring-2 ring-blue-600/25 dark:border-blue-400/45 dark:ring-blue-400/25'
+                        : 'border-zinc-950/10 hover:border-zinc-950/20 hover:shadow-md hover:shadow-zinc-950/10 dark:border-white/10 dark:ring-1 dark:ring-white/5 dark:hover:border-white/20 dark:hover:bg-zinc-800/80 dark:hover:ring-white/10'
                 );
 
                 const mediaSurface = (

@@ -131,7 +131,7 @@ export function CommandPalette({ open, onClose }: Props) {
             <div className="fixed inset-0 overflow-y-auto p-4 sm:p-6 lg:p-20">
                 <Headless.DialogPanel
                     transition
-                    className="mx-auto max-w-xl transform overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition-all duration-100 data-closed:scale-95 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in dark:bg-zinc-900 dark:ring-white/10"
+                    className="mx-auto max-w-xl transform overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition-all duration-100 data-closed:scale-95 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in dark:bg-zinc-900 dark:shadow-black/50 dark:ring-white/10"
                 >
                     <Headless.Combobox<SearchResult | null>
                         onChange={handleSelect}
@@ -139,7 +139,7 @@ export function CommandPalette({ open, onClose }: Props) {
                             /* keep open while dialog is open */
                         }}
                     >
-                        <div className="flex items-center border-b border-zinc-200 px-4 dark:border-zinc-700">
+                        <div className="flex items-center border-b border-zinc-200 px-4 dark:border-white/10">
                             <MagnifyingGlassIcon className="size-5 shrink-0 text-zinc-400" />
 
                             <Headless.ComboboxInput
@@ -222,7 +222,7 @@ function ResultItem({ result }: { result: SearchResult }) {
                 clsx(
                     'flex cursor-pointer select-none items-center gap-3 px-4 py-2.5 data-disabled:cursor-not-allowed',
                     focus
-                        ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white'
+                        ? 'bg-zinc-100 text-zinc-900 dark:bg-white/10 dark:text-white'
                         : 'text-zinc-700 dark:text-zinc-300'
                 )
             }
@@ -238,7 +238,7 @@ type FilterHint = ReturnType<typeof searchFilterHints>[number];
 
 function HelpPanel({ filterHints }: { filterHints: FilterHint[] }) {
     return (
-        <div className="border-b border-zinc-200 px-4 py-5 text-sm dark:border-zinc-700">
+        <div className="border-b border-zinc-200 px-4 py-5 text-sm dark:border-white/10">
             <p className="font-medium text-zinc-900 dark:text-white">Search tips</p>
             <ul className="mt-3 space-y-2 text-zinc-600 dark:text-zinc-300">
                 <li>
@@ -265,7 +265,7 @@ function HelpPanel({ filterHints }: { filterHints: FilterHint[] }) {
 
 function CommandPaletteFooter({ filterHints }: { filterHints: FilterHint[] }) {
     return (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-zinc-200 bg-zinc-50 px-4 py-2.5 text-xs text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-zinc-200 bg-zinc-50 px-4 py-2.5 text-xs text-zinc-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400">
             {filterHints.length > 0 && (
                 <span className="flex flex-wrap items-center gap-2">
                     {filterHints.map((hint) => (

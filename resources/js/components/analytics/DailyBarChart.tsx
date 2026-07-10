@@ -13,17 +13,17 @@ export default function DailyBarChart({ title, data }: DailyBarChartProps) {
 
     if (data.length === 0) {
         return (
-            <div className="rounded-xl border border-zinc-950/10 p-5 dark:border-white/10">
+            <div className="rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5">
                 <Subheading level={3} className="text-sm/6">
                     {title}
                 </Subheading>
-                <Text className="mt-4 text-sm text-zinc-500">No data for this period.</Text>
+                <Text className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">No data for this period.</Text>
             </div>
         );
     }
 
     return (
-        <div className="rounded-xl border border-zinc-950/10 p-5 dark:border-white/10">
+        <div className="rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5">
             <div className="flex items-baseline justify-between gap-3">
                 <Subheading level={3} className="text-sm/6">
                     {title}

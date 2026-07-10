@@ -16,12 +16,17 @@ export function EmptyState({ headline, description, action, visual, className }:
         <div
             className={clsx(
                 className,
-                'relative overflow-hidden rounded-3xl border border-zinc-950/10 bg-gradient-to-b from-zinc-950/[0.02] to-transparent px-6 py-14 text-center sm:px-10 dark:border-white/10 dark:from-white/[0.03]'
+                'relative overflow-hidden rounded-3xl border border-zinc-950/10 bg-gradient-to-b from-zinc-950/[0.02] to-transparent px-6 py-14 text-center sm:px-10',
+                'dark:border-white/10 dark:from-white/[0.06] dark:to-white/[0.01] dark:ring-1 dark:ring-white/5'
             )}
             data-empty-state="true"
         >
             <div
-                className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.08),transparent_55%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(96,165,250,0.12),transparent_55%)]"
+                className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.08),transparent_55%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(147,197,253,0.14),transparent_58%)]"
+                aria-hidden="true"
+            />
+            <div
+                className="pointer-events-none absolute inset-0 hidden dark:block dark:bg-[radial-gradient(ellipse_at_bottom,rgba(167,139,250,0.06),transparent_50%)]"
                 aria-hidden="true"
             />
 

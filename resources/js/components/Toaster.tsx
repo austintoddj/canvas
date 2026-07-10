@@ -65,7 +65,7 @@ function ToastCard({ item }: { item: ToastItem }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.7 }}
-            className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border border-zinc-950/10 bg-white px-3.5 py-3 text-sm shadow-lg shadow-zinc-950/10 ring-1 ring-zinc-950/5 dark:border-white/10 dark:bg-zinc-900 dark:shadow-black/40 dark:ring-white/10"
+            className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border border-zinc-950/10 bg-white px-3.5 py-3 text-sm shadow-lg shadow-zinc-950/10 ring-1 ring-zinc-950/5 dark:border-white/10 dark:bg-zinc-800 dark:shadow-2xl dark:shadow-black/50 dark:ring-white/10"
         >
             <ToastToneIcon tone={item.tone} />
             <p className="min-w-0 flex-1 text-[13px]/leading-5 text-zinc-950 dark:text-zinc-100">{item.message}</p>

@@ -150,10 +150,10 @@ export function MediaDropzone({
                 className,
                 'relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-6 text-center transition duration-200',
                 spacious ? 'min-h-56 py-14' : 'min-h-28 py-8',
-                isDisabled ? 'cursor-not-allowed opacity-60' : 'hover:border-zinc-950/25 dark:hover:border-white/25',
+                isDisabled ? 'cursor-not-allowed opacity-60' : 'hover:border-zinc-950/25 dark:hover:border-white/20 dark:hover:bg-white/[0.04]',
                 showDragging
-                    ? 'border-zinc-950 bg-zinc-950/[0.04] dark:border-white dark:bg-white/10'
-                    : 'border-zinc-950/10 bg-zinc-950/[0.02] dark:border-white/10 dark:bg-white/[0.02]',
+                    ? 'border-zinc-950 bg-zinc-950/[0.04] dark:border-white/40 dark:bg-white/[0.08]'
+                    : 'border-zinc-950/10 bg-zinc-950/[0.02] dark:border-white/10 dark:bg-white/[0.03]',
                 'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
             )}
         >
@@ -175,7 +175,7 @@ export function MediaDropzone({
                     'flex size-11 items-center justify-center rounded-full transition duration-200',
                     showDragging
                         ? 'bg-zinc-950 text-white dark:bg-white dark:text-zinc-950'
-                        : 'bg-zinc-950/5 text-zinc-500 dark:bg-white/10 dark:text-zinc-400'
+                        : 'bg-zinc-950/5 text-zinc-500 dark:bg-white/10 dark:text-zinc-300'
                 )}
             >
                 {uploading ? (

@@ -36,6 +36,14 @@ describe('media library page chrome (shipped source)', () => {
         expect(mediaEmptyVisualSource).toContain('data-media-empty-visual');
     });
 
+    it('swaps header Upload for selection actions without a layout-shifting selection bar', () => {
+        expect(mediaIndexSource).toContain('data-media-selection-actions');
+        expect(mediaIndexSource).toContain('{selectionCount} selected');
+        expect(mediaIndexSource).toContain('Clear');
+        expect(mediaIndexSource).not.toContain('Delete selected');
+        expect(mediaIndexSource).not.toMatch(/images selected/);
+    });
+
     it('defaults library grid tiles to image-first (captions off)', () => {
         expect(mediaGridSource).toContain('showCaptions = false');
         expect(mediaGridSource).toContain('data-media-tile-caption');

@@ -17,7 +17,7 @@ function SerpPreview({ post }: SeoPreviewProps) {
     }
 
     return (
-        <div className="rounded-lg border border-zinc-950/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950/40">
+        <div className="rounded-lg border border-zinc-950/10 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03] dark:ring-1 dark:ring-white/5">
             <Text className="text-xs text-zinc-500 dark:text-zinc-400">{hostname}</Text>
             <p className="mt-1 truncate text-base text-blue-700 dark:text-blue-400">{seo.canonicalUrl}</p>
             <p className="mt-1 line-clamp-1 text-lg text-blue-800 dark:text-blue-300">{seo.title}</p>
@@ -30,11 +30,11 @@ function SocialPreview({ post }: SeoPreviewProps) {
     const seo = resolvePostSeo(post);
 
     return (
-        <div className="overflow-hidden rounded-lg border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-zinc-950/40">
+        <div className="overflow-hidden rounded-lg border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-white/[0.03] dark:ring-1 dark:ring-white/5">
             {seo.imageUrl ? (
                 <img src={seo.imageUrl} alt={seo.imageAlt} className="aspect-[1.91/1] w-full object-cover" />
             ) : (
-                <div className="flex aspect-[1.91/1] items-center justify-center bg-zinc-100 text-sm text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
+                <div className="flex aspect-[1.91/1] items-center justify-center bg-zinc-100 text-sm text-zinc-500 dark:bg-white/[0.04] dark:text-zinc-400">
                     No image selected
                 </div>
             )}
