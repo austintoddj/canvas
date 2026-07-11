@@ -3,9 +3,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    formFromCreateResponse,
     isPublished,
     postToFormState,
     publishFormState,
+    saveStatusLabel,
     serializeFormState,
     slugify,
     taxonomyFromName,
@@ -53,6 +55,23 @@ describe('postToFormState', () => {
             meta: { title: 'SEO title' },
             tags: [{ name: 'News', slug: 'news' }],
             topic: { name: 'Updates', slug: 'updates' },
+        });
+    });
+});
+
+describe('formFromCreateResponse', () => {
+    it('builds an empty draft form from create() UUID payload without requiring show()', () => {
+        expect(formFromCreateResponse({ id: 'new-1', slug: 'post-new-1' })).toEqual({
+            title: '',
+            slug: 'post-new-1',
+            summary: '',
+            body: null,
+            publishedAt: null,
+            featuredImage: null,
+            featuredImageCaption: null,
+            meta: null,
+            tags: [],
+            topic: null,
         });
     });
 });
@@ -114,5 +133,15 @@ describe('serializeFormState', () => {
         const form = postToFormState(samplePost);
 
         expect(serializeFormState(form)).toBe(serializeFormState(postToFormState(samplePost)));
+    });
+});
+
+describe('saveStatusLabel', () => {
+    it('maps autosave statuses to editor chrome copy', () => {
+        expect(saveStatusLabel('idle')).toBeNull();
+        expect(saveStatusLabel('pending')).toBe('Unsaved changes');
+        expect(saveStatusLabel('saving')).toBe('Saving…');
+        expect(saveStatusLabel('saved')).toBe('Saved');
+        expect(saveStatusLabel('error')).toBe('Save failed');
     });
 });

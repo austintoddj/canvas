@@ -1,3 +1,5 @@
+// @vitest-environment happy-dom
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -15,7 +17,21 @@ import {
     mediaMimeLabel,
     nextCommittedMediaSearch,
     parseMediaListFilters,
+    resolveMediaUrl,
 } from '@/lib/media/list';
+
+describe('resolveMediaUrl', () => {
+    it('rewrites public storage URLs to the current origin', () => {
+        expect(resolveMediaUrl('https://app.test/storage/canvas/images/a.jpg')).toBe(
+            `${window.location.origin}/storage/canvas/images/a.jpg`
+        );
+        expect(resolveMediaUrl('/storage/canvas/images/b.png')).toBe(
+            `${window.location.origin}/storage/canvas/images/b.png`
+        );
+        expect(resolveMediaUrl('https://cdn.example.com/x.jpg')).toBe('https://cdn.example.com/x.jpg');
+        expect(resolveMediaUrl(null)).toBe('');
+    });
+});
 
 describe('parseMediaListFilters', () => {
     it('reads scope, search, mime, sort, and page from search params', () => {

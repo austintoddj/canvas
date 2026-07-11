@@ -1,3 +1,4 @@
+import { AnimatedOutlet } from '@/components/AnimatedOutlet';
 import { Avatar } from '@/components/avatar';
 import { CommandPalette } from '@/components/CommandPalette';
 import {
@@ -47,12 +48,11 @@ import {
     RectangleStackIcon,
     RocketLaunchIcon,
     SunIcon,
-    TagIcon,
     UsersIcon,
 } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 import { useCallback, useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 function ThemeToggle({ mode, setMode }: { mode: ThemeMode; setMode: (m: ThemeMode) => void }) {
     const options: { value: ThemeMode; label: string; Icon: typeof SunIcon }[] = [
@@ -64,7 +64,11 @@ function ThemeToggle({ mode, setMode }: { mode: ThemeMode; setMode: (m: ThemeMod
     return (
         <div className="col-span-full flex items-center justify-between px-3.5 py-2 sm:px-3 sm:py-1.5">
             <span className="text-base/6 text-zinc-950 sm:text-sm/6 dark:text-white">Theme</span>
-            <div className="flex rounded-lg bg-zinc-950/5 p-0.5 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/5" role="group" aria-label="Theme">
+            <div
+                className="flex rounded-lg bg-zinc-950/5 p-0.5 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/5"
+                role="group"
+                aria-label="Theme"
+            >
                 {options.map(({ value, label, Icon }) => (
                     <button
                         key={value}
@@ -74,7 +78,7 @@ function ThemeToggle({ mode, setMode }: { mode: ThemeMode; setMode: (m: ThemeMod
                         title={label}
                         onClick={() => setMode(value)}
                         className={clsx(
-                            'rounded-md p-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950/20 dark:focus-visible:ring-white/25',
+                            'rounded-md p-1.5 transition-colors focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
                             mode === value
                                 ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-700 dark:text-white dark:ring-1 dark:ring-white/10'
                                 : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'
@@ -99,7 +103,9 @@ function UserDropdownContent({ mode, setMode }: { mode: ThemeMode; setMode: (m: 
                     <span className="block truncate text-sm/5 font-medium text-zinc-950 dark:text-white">
                         {user.name}
                     </span>
-                    <span className="block truncate text-xs/5 text-zinc-500 dark:text-zinc-400">{user.email}</span>
+                    <span className="block truncate text-xs/5 text-canvas-muted dark:text-canvas-muted-dark">
+                        {user.email}
+                    </span>
                 </div>
                 <DropdownTrailingIcon>
                     <Cog6ToothIcon />
@@ -250,16 +256,17 @@ export default function Layout() {
                                     <SidebarLabel>Media</SidebarLabel>
                                 </SidebarItem>
                                 {canManageTaxonomy ? (
-                                    <>
-                                        <SidebarItem href="/tags" current={pathname.startsWith('/tags')}>
-                                            <TagIcon />
-                                            <SidebarLabel>Tags</SidebarLabel>
-                                        </SidebarItem>
-                                        <SidebarItem href="/topics" current={pathname.startsWith('/topics')}>
-                                            <RectangleStackIcon />
-                                            <SidebarLabel>Topics</SidebarLabel>
-                                        </SidebarItem>
-                                    </>
+                                    <SidebarItem
+                                        href="/organize"
+                                        current={
+                                            pathname.startsWith('/organize') ||
+                                            pathname.startsWith('/tags') ||
+                                            pathname.startsWith('/topics')
+                                        }
+                                    >
+                                        <RectangleStackIcon />
+                                        <SidebarLabel>Organize</SidebarLabel>
+                                    </SidebarItem>
                                 ) : null}
                                 {canManageUsers ? (
                                     <SidebarItem
@@ -295,7 +302,7 @@ export default function Layout() {
                                             <span className="block truncate text-sm/5 font-medium text-zinc-950 dark:text-white">
                                                 {user.name}
                                             </span>
-                                            <span className="block truncate text-xs/5 font-normal text-zinc-500 dark:text-zinc-400">
+                                            <span className="block truncate text-xs/5 font-normal text-canvas-muted dark:text-canvas-muted-dark">
                                                 {user.email}
                                             </span>
                                         </span>
@@ -309,7 +316,7 @@ export default function Layout() {
                     </Sidebar>
                 }
             >
-                <Outlet />
+                <AnimatedOutlet />
             </SidebarLayout>
         </>
     );

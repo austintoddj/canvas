@@ -1,5 +1,3 @@
-'use client';
-
 import clsx from 'clsx';
 import type React from 'react';
 import { createContext, useContext, useState } from 'react';
@@ -37,7 +35,7 @@ export function Table({
 }
 
 export function TableHead({ className, ...props }: React.ComponentPropsWithoutRef<'thead'>) {
-    return <thead {...props} className={clsx(className, 'text-zinc-500 dark:text-zinc-400')} />;
+    return <thead {...props} className={clsx(className, 'text-canvas-muted dark:text-canvas-muted-dark')} />;
 }
 
 export function TableBody(props: React.ComponentPropsWithoutRef<'tbody'>) {

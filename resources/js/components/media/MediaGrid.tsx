@@ -2,9 +2,11 @@ import { CheckIcon, PhotoIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
 
+import { FadeInImage } from '@/components/FadeInImage';
 import { Link } from '@/components/link';
 import { Text } from '@/components/text';
-import { mediaDisplayName } from '@/lib/media/list';
+import { MEDIA_GRID_CLASS_NAME } from '@/lib/media/layout';
+import { mediaDisplayName, resolveMediaUrl } from '@/lib/media/list';
 import type { Media } from '@/types/api';
 
 type MediaGridProps = {
@@ -94,7 +96,7 @@ export function MediaGrid({
                 <span className="flex size-11 items-center justify-center rounded-full bg-zinc-950/5 text-zinc-400 dark:bg-white/10 dark:text-zinc-400">
                     <PhotoIcon className="size-5" />
                 </span>
-                <Text className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">{emptyMessage}</Text>
+                <Text className="mt-3 text-sm text-canvas-muted dark:text-canvas-muted-dark">{emptyMessage}</Text>
             </div>
         );
     }
@@ -103,7 +105,7 @@ export function MediaGrid({
     const selectionActive = selectable && (selectedIds?.size ?? 0) > 0;
 
     return (
-        <div className={clsx(className, 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4')}>
+        <div className={clsx(className, MEDIA_GRID_CLASS_NAME)} data-media-grid="true">
             {items.map((item) => {
                 const label = mediaDisplayName(item);
                 const isSelected = selectedIds?.has(item.id) ?? false;
@@ -122,14 +124,12 @@ export function MediaGrid({
                             isSelected && 'bg-blue-600/5 dark:bg-blue-400/10'
                         )}
                     >
-                        <img
-                            src={item.url}
+                        <FadeInImage
+                            src={resolveMediaUrl(item.url)}
                             alt={item.alt ?? label}
                             className={clsx(
                                 'size-full object-cover transition duration-200 ease-out',
-                                isSelected
-                                    ? 'scale-[0.92] rounded-sm opacity-95'
-                                    : 'group-hover/tile:scale-[1.02] group-hover/tile:opacity-95'
+                                isSelected ? 'scale-[0.92] rounded-sm' : 'group-hover/tile:scale-[1.02]'
                             )}
                         />
                         {isSelected ? (
@@ -143,7 +143,7 @@ export function MediaGrid({
 
                 const caption = showCaptions ? (
                     <span
-                        className="block truncate px-2.5 py-2 text-xs text-zinc-500 dark:text-zinc-400"
+                        className="block truncate px-2.5 py-2 text-xs text-canvas-muted dark:text-canvas-muted-dark"
                         data-media-tile-caption="true"
                     >
                         {label}

@@ -1,5 +1,9 @@
-import PlaceholderPage from '@/components/PlaceholderPage';
+import { Navigate, useSearchParams } from 'react-router-dom';
 
-export default function TagsIndex() {
-    return <PlaceholderPage title="Tags" description="Coming in Step 8." />;
+import { legacyTaxonomyRedirectPath } from '@/lib/taxonomy/list';
+
+export default function TagsIndexRedirect() {
+    const [searchParams] = useSearchParams();
+
+    return <Navigate to={legacyTaxonomyRedirectPath('tags', searchParams)} replace />;
 }

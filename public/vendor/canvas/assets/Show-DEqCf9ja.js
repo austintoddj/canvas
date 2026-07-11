@@ -1,0 +1,1 @@
+import{d as e,r as t,t as n}from"./jsx-runtime-BDSIhLyL.js";var r=n();function i(){let{id:n}=e();return n===void 0||n===``?(0,r.jsx)(t,{to:`/media`,replace:!0}):(0,r.jsx)(t,{to:`/media?detail=${encodeURIComponent(n)}`,replace:!0})}export{i as default};

@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useSyncExternalStore } from 'react';
 import {
     CheckCircleIcon,
@@ -20,7 +20,7 @@ function toneClasses(tone: ToastTone): string {
         case 'warning':
             return 'text-amber-600 dark:text-amber-400';
         default:
-            return 'text-zinc-500 dark:text-zinc-400';
+            return 'text-canvas-muted dark:text-canvas-muted-dark';
     }
 }
 
@@ -40,6 +40,8 @@ function ToastToneIcon({ tone, className }: { tone: ToastTone; className?: strin
 }
 
 function ToastCard({ item }: { item: ToastItem }) {
+    const reducedMotion = useReducedMotion();
+
     useEffect(() => {
         if (item.duration <= 0) {
             return;
@@ -56,22 +58,22 @@ function ToastCard({ item }: { item: ToastItem }) {
 
     return (
         <motion.div
-            layout
+            layout={!reducedMotion}
             role={item.tone === 'error' ? 'alert' : 'status'}
             aria-live={item.tone === 'error' ? 'assertive' : 'polite'}
             data-toast
             data-toast-tone={item.tone}
-            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.7 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98 }}
+            transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 520, damping: 36, mass: 0.7 }}
             className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border border-zinc-950/10 bg-white px-3.5 py-3 text-sm shadow-lg shadow-zinc-950/10 ring-1 ring-zinc-950/5 dark:border-white/10 dark:bg-zinc-800 dark:shadow-2xl dark:shadow-black/50 dark:ring-white/10"
         >
             <ToastToneIcon tone={item.tone} />
             <p className="min-w-0 flex-1 text-[13px]/leading-5 text-zinc-950 dark:text-zinc-100">{item.message}</p>
             <button
                 type="button"
-                className="shrink-0 rounded-md p-0.5 text-zinc-400 transition hover:bg-zinc-950/5 hover:text-zinc-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950/20 dark:hover:bg-white/10 dark:hover:text-zinc-200 dark:focus-visible:ring-white/25"
+                className="shrink-0 rounded-md p-0.5 text-zinc-400 transition hover:bg-zinc-950/5 hover:text-zinc-700 focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:hover:bg-white/10 dark:hover:text-zinc-200"
                 aria-label="Dismiss notification"
                 onClick={() => dismissToast(item.id)}
             >

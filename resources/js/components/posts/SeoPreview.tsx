@@ -18,7 +18,7 @@ function SerpPreview({ post }: SeoPreviewProps) {
 
     return (
         <div className="rounded-lg border border-zinc-950/10 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03] dark:ring-1 dark:ring-white/5">
-            <Text className="text-xs text-zinc-500 dark:text-zinc-400">{hostname}</Text>
+            <Text className="text-xs text-canvas-muted dark:text-canvas-muted-dark">{hostname}</Text>
             <p className="mt-1 truncate text-base text-blue-700 dark:text-blue-400">{seo.canonicalUrl}</p>
             <p className="mt-1 line-clamp-1 text-lg text-blue-800 dark:text-blue-300">{seo.title}</p>
             <p className="mt-1 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-300">{seo.description}</p>
@@ -39,7 +39,7 @@ function SocialPreview({ post }: SeoPreviewProps) {
                 </div>
             )}
             <div className="space-y-1 p-3">
-                <Text className="line-clamp-1 text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                <Text className="line-clamp-1 text-xs uppercase tracking-wide text-canvas-muted dark:text-canvas-muted-dark">
                     {(() => {
                         try {
                             return new URL(seo.canonicalUrl).hostname;

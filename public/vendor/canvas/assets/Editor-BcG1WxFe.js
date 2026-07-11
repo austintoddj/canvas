@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-CZcjcDnw.js";import{t}from"./PlaceholderPage-JvhC5DSd.js";var n=e();function r(){return(0,n.jsx)(t,{title:`Tag editor`,description:`Coming in Step 8.`})}export{r as default};

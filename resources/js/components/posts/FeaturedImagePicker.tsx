@@ -6,7 +6,7 @@ import { Button } from '@/components/button';
 import { Dialog, DialogBody, DialogDescription, DialogTitle } from '@/components/dialog';
 import { Description, Field, Fieldset, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
-import { Text } from '@/components/text';
+import { Text, ErrorText } from '@/components/text';
 import { unsplashApi } from '@/lib/api/unsplash';
 import type { PostFormState } from '@/lib/posts/form';
 import type { UnsplashPhoto } from '@/types/api';
@@ -107,7 +107,9 @@ export default function FeaturedImagePicker({ form, onChange, disabled = false }
             ) : (
                 <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-950/10 bg-zinc-950/[0.01] px-4 py-8 text-center dark:border-white/10 dark:bg-white/[0.02]">
                     <PhotoIcon className="size-8 text-zinc-400 dark:text-zinc-500" />
-                    <Text className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">No featured image selected</Text>
+                    <Text className="mt-2 text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                        No featured image selected
+                    </Text>
                 </div>
             )}
 
@@ -248,9 +250,7 @@ function TabbedImagePickerDialog({
                             </Button>
                         </div>
 
-                        {unsplashError ? (
-                            <Text className="mt-4 text-sm text-red-600 dark:text-red-500">{unsplashError}</Text>
-                        ) : null}
+                        {unsplashError ? <ErrorText className="mt-4">{unsplashError}</ErrorText> : null}
 
                         {unsplashLoading ? (
                             <Text className="mt-6 text-sm text-zinc-500">Searching Unsplash…</Text>

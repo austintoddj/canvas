@@ -1,7 +1,7 @@
-import clsx from 'clsx';
 import type { ReactNode } from 'react';
 
 import { Text } from '@/components/text';
+import { cn } from '@/lib/utils';
 
 type EmptyStateProps = {
     headline: string;
@@ -14,10 +14,10 @@ type EmptyStateProps = {
 export function EmptyState({ headline, description, action, visual, className }: EmptyStateProps) {
     return (
         <div
-            className={clsx(
+            className={cn(
                 className,
-                'relative overflow-hidden rounded-3xl border border-zinc-950/10 bg-gradient-to-b from-zinc-950/[0.02] to-transparent px-6 py-14 text-center sm:px-10',
-                'dark:border-white/10 dark:from-white/[0.06] dark:to-white/[0.01] dark:ring-1 dark:ring-white/5'
+                'relative overflow-hidden rounded-3xl border border-canvas-border bg-gradient-to-b from-zinc-950/[0.02] to-transparent px-6 py-14 text-center sm:px-10',
+                'dark:border-canvas-border-dark dark:from-white/[0.06] dark:to-white/[0.01] dark:ring-1 dark:ring-white/5'
             )}
             data-empty-state="true"
         >
@@ -33,10 +33,10 @@ export function EmptyState({ headline, description, action, visual, className }:
             <div className="relative mx-auto flex max-w-lg flex-col items-center">
                 {visual ? <div className="mb-8">{visual}</div> : null}
 
-                <h2 className="text-xl font-semibold tracking-tight text-zinc-950 sm:text-2xl dark:text-white">
+                <h2 className="text-xl font-semibold tracking-tight text-canvas-fg sm:text-2xl dark:text-canvas-fg-dark">
                     {headline}
                 </h2>
-                <Text className="mt-3 text-pretty text-sm text-zinc-500 dark:text-zinc-400">{description}</Text>
+                <Text className="mt-3 text-pretty text-sm">{description}</Text>
                 {action ? <div className="mt-8 flex flex-wrap items-center justify-center gap-3">{action}</div> : null}
             </div>
         </div>

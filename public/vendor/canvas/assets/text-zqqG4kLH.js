@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-CZcjcDnw.js";import"./link-6hVol0uR.js";import{t}from"./clsx-CjueKrWZ.js";var n=e();function r({className:e,...r}){return(0,n.jsx)(`p`,{"data-slot":`text`,...r,className:t(e,`text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400`)})}export{r as t};

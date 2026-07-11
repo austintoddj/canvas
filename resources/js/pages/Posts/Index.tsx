@@ -2,8 +2,12 @@ import { EllipsisVerticalIcon, PlusIcon } from '@heroicons/react/20/solid';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
+import { ContentReveal } from '@/components/ContentReveal';
+import { EmptyState } from '@/components/EmptyState';
+import { EmptyStateReveal } from '@/components/EmptyStateReveal';
 import { Link } from '@/components/link';
 import {
     Dropdown,
@@ -13,7 +17,8 @@ import {
     DropdownLabel,
     DropdownMenu,
 } from '@/components/dropdown';
-import { Heading } from '@/components/heading';
+import { PageHeader } from '@/components/PageHeader';
+import { PostsEmptyVisual } from '@/components/posts/PostsEmptyVisual';
 import {
     Pagination,
     PaginationGap,
@@ -24,9 +29,13 @@ import {
 } from '@/components/pagination';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table';
-import { Text } from '@/components/text';
+import { TableListSkeleton } from '@/components/TableListSkeleton';
+import { Text, PageDescription, ErrorText } from '@/components/text';
+import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { usePermissions } from '@/hooks/usePermissions';
+import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { postsApi } from '@/lib/api/posts';
+import { paginationWindow, shouldGoToPreviousPageAfterDelete } from '@/lib/list-pagination';
 import {
     formatPostDate,
     isPostPublished,
@@ -70,29 +79,6 @@ function updateFilters(current: URLSearchParams, patch: Partial<PostsListFilters
     return next;
 }
 
-function paginationWindow(currentPage: number, lastPage: number): (number | 'gap')[] {
-    if (lastPage <= 7) {
-        return Array.from({ length: lastPage }, (_, index) => index + 1);
-    }
-
-    const pages = new Set<number>([1, lastPage, currentPage, currentPage - 1, currentPage + 1]);
-    const sorted = [...pages].filter((page) => page >= 1 && page <= lastPage).sort((a, b) => a - b);
-    const result: (number | 'gap')[] = [];
-
-    for (let index = 0; index < sorted.length; index += 1) {
-        const page = sorted[index];
-        const previous = sorted[index - 1];
-
-        if (index > 0 && previous !== undefined && page - previous > 1) {
-            result.push('gap');
-        }
-
-        result.push(page);
-    }
-
-    return result;
-}
-
 export default function PostsIndex() {
     const { canViewAllPosts } = usePermissions();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -103,6 +89,7 @@ export default function PostsIndex() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [pendingDelete, setPendingDelete] = useState<PostListItem | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -156,14 +143,24 @@ export default function PostsIndex() {
         setSearchParams(updateFilters(searchParams, patch, resetPage));
     }
 
-    async function handleDelete(post: PostListItem) {
-        const title = post.title.trim() === '' ? 'Untitled post' : post.title;
-        const confirmed = window.confirm(`Delete “${title}”? This cannot be undone.`);
+    function requestDelete(post: PostListItem) {
+        setPendingDelete(post);
+    }
 
-        if (!confirmed) {
+    function closeDeleteConfirm() {
+        if (deletingId !== null) {
             return;
         }
 
+        setPendingDelete(null);
+    }
+
+    async function confirmDelete() {
+        if (pendingDelete === null) {
+            return;
+        }
+
+        const post = pendingDelete;
         setDeletingId(post.id);
 
         try {
@@ -171,7 +168,9 @@ export default function PostsIndex() {
 
             const posts = response?.posts;
             const shouldGoBack =
-                posts !== undefined && posts.data.length === 1 && posts.current_page > 1 && filters.page > 1;
+                posts !== undefined && shouldGoToPreviousPageAfterDelete(posts.data.length, posts.current_page);
+
+            setPendingDelete(null);
 
             if (shouldGoBack) {
                 setFilters({ page: filters.page - 1 });
@@ -179,6 +178,7 @@ export default function PostsIndex() {
             }
 
             await reloadPosts();
+            toast.success('Post deleted.');
         } catch {
             toast.error('Unable to delete this post.');
         } finally {
@@ -187,23 +187,38 @@ export default function PostsIndex() {
     }
 
     const posts: Paginated<PostListItem> | null = response?.posts ?? null;
+    const itemCount = posts?.data.length ?? 0;
+    const showInitialSkeleton = isInitialLoading(loading, itemCount);
+    const refreshing = isRefreshing(loading, itemCount);
+    const isEmpty = shouldShowEmpty(loading, itemCount);
+    const { animateEmpty, animateContent } = useAsyncReveal(loading, itemCount);
+    const emptyHeadline = filters.tab === 'draft' ? 'No drafts yet' : 'No published posts yet';
+    const emptyDescription =
+        filters.tab === 'draft'
+            ? 'Start a draft when you’re ready to write. It stays private until you publish.'
+            : 'Publish a post to share it with readers. Drafts live on the other tab until then.';
+    const pendingTitle =
+        pendingDelete === null
+            ? 'this post'
+            : pendingDelete.title.trim() === ''
+              ? 'Untitled post'
+              : `“${pendingDelete.title}”`;
 
     return (
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <Heading>Posts</Heading>
-                    <Text className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                        Manage drafts and published posts
-                    </Text>
-                </div>
-                <Button href="/posts/new" color="dark/zinc">
-                    <PlusIcon data-slot="icon" />
-                    New post
-                </Button>
-            </div>
+        <div className="space-y-8">
+            <PageHeader
+                title="Posts"
+                actions={
+                    <Button href="/posts/new" color="dark/zinc">
+                        <PlusIcon data-slot="icon" />
+                        New post
+                    </Button>
+                }
+            >
+                <PageDescription>Write, publish, and manage your content</PageDescription>
+            </PageHeader>
 
-            <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
                 <PillNav value={filters.tab} onChange={(tab) => setFilters({ tab }, true)} aria-label="Post status">
                     <PillNavItem value="published">
                         Published
@@ -227,24 +242,27 @@ export default function PostsIndex() {
                 ) : null}
             </div>
 
-            {error ? <Text className="mt-6 text-sm text-red-600 dark:text-red-500">{error}</Text> : null}
+            {error ? <ErrorText>{error}</ErrorText> : null}
 
-            {loading ? (
-                <Text className="mt-8 text-sm text-zinc-500">Loading posts…</Text>
-            ) : posts === null || posts.data.length === 0 ? (
-                <div className="mt-8 rounded-xl border border-dashed border-zinc-950/10 bg-zinc-950/[0.01] px-6 py-12 text-center dark:border-white/10 dark:bg-white/[0.02]">
-                    <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                        {filters.tab === 'draft' ? 'No drafts yet.' : 'No published posts yet.'}
-                    </Text>
-                    <div className="mt-4">
-                        <Button href="/posts/new" outline>
-                            Create a post
-                        </Button>
-                    </div>
-                </div>
-            ) : (
-                <>
-                    <Table striped className="mt-8 [--gutter:--spacing(4)]">
+            {showInitialSkeleton ? (
+                <TableListSkeleton rows={6} columns={4} />
+            ) : isEmpty ? (
+                <EmptyStateReveal animate={animateEmpty}>
+                    <EmptyState
+                        headline={emptyHeadline}
+                        description={emptyDescription}
+                        visual={<PostsEmptyVisual />}
+                        action={
+                            <Button href="/posts/new" color="dark/zinc">
+                                <PlusIcon data-slot="icon" />
+                                Create a post
+                            </Button>
+                        }
+                    />
+                </EmptyStateReveal>
+            ) : posts ? (
+                <ContentReveal busy={refreshing} animate={animateContent}>
+                    <Table striped className="[--gutter:--spacing(4)]">
                         <TableHead>
                             <TableRow>
                                 <TableHeader>Title</TableHeader>
@@ -272,7 +290,7 @@ export default function PostsIndex() {
                                                     {title}
                                                 </Link>
                                                 {post.summary ? (
-                                                    <Text className="mt-1 line-clamp-1 text-sm text-zinc-500 dark:text-zinc-400">
+                                                    <Text className="mt-1 line-clamp-1 text-sm text-canvas-muted dark:text-canvas-muted-dark">
                                                         {post.summary}
                                                     </Text>
                                                 ) : null}
@@ -284,7 +302,7 @@ export default function PostsIndex() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell>{post.views_count.toLocaleString()}</TableCell>
-                                        <TableCell className="text-zinc-500 dark:text-zinc-400">
+                                        <TableCell className="text-canvas-muted dark:text-canvas-muted-dark">
                                             {formatPostDate(post.updated_at)}
                                         </TableCell>
                                         <TableCell className="text-right">
@@ -304,7 +322,7 @@ export default function PostsIndex() {
                                                     <DropdownDivider />
                                                     <DropdownItem
                                                         disabled={deletingId === post.id}
-                                                        onClick={() => void handleDelete(post)}
+                                                        onClick={() => requestDelete(post)}
                                                     >
                                                         <DropdownLabel>
                                                             {deletingId === post.id ? 'Deleting…' : 'Delete'}
@@ -352,8 +370,26 @@ export default function PostsIndex() {
                             />
                         </Pagination>
                     ) : null}
-                </>
-            )}
+                </ContentReveal>
+            ) : null}
+
+            <Alert open={pendingDelete !== null} onClose={closeDeleteConfirm} size="sm">
+                <AlertTitle>Delete post?</AlertTitle>
+                <AlertDescription>Delete {pendingTitle}? This cannot be undone.</AlertDescription>
+                <AlertActions>
+                    <Button type="button" plain disabled={deletingId !== null} onClick={closeDeleteConfirm}>
+                        Cancel
+                    </Button>
+                    <Button
+                        type="button"
+                        color="red"
+                        disabled={deletingId !== null}
+                        onClick={() => void confirmDelete()}
+                    >
+                        {deletingId !== null ? 'Deleting…' : 'Delete'}
+                    </Button>
+                </AlertActions>
+            </Alert>
         </div>
     );
 }

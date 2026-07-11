@@ -1,5 +1,3 @@
-'use client';
-
 import * as Headless from '@headlessui/react';
 import clsx from 'clsx';
 import { LayoutGroup, motion } from 'motion/react';
@@ -71,7 +69,7 @@ export function SidebarHeading({ className, ...props }: React.ComponentPropsWith
     return (
         <h3
             {...props}
-            className={clsx(className, 'mb-1 px-2 text-xs/6 font-medium text-zinc-500 dark:text-zinc-400')}
+            className={clsx(className, 'mb-1 px-2 text-xs/6 font-medium text-canvas-muted dark:text-canvas-muted-dark')}
         />
     );
 }

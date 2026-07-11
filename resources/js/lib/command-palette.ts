@@ -64,3 +64,25 @@ export function searchFilterHints(options: {
 
     return hints;
 }
+
+export function canSearchEntityType(
+    entityType: SearchEntityType,
+    options: { canManageTaxonomy: boolean; canManageUsers: boolean }
+): boolean {
+    switch (entityType) {
+        case 'Post':
+            return true;
+        case 'Tag':
+        case 'Topic':
+            return options.canManageTaxonomy;
+        case 'User':
+            return options.canManageUsers;
+    }
+}
+
+export function filterSearchResultsByPermissions(
+    results: SearchResult[],
+    options: { canManageTaxonomy: boolean; canManageUsers: boolean }
+): SearchResult[] {
+    return results.filter((result) => canSearchEntityType(result.type, options));
+}

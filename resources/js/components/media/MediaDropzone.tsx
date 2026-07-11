@@ -1,5 +1,3 @@
-'use client';
-
 import { ArrowUpTrayIcon, PhotoIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 import { useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
@@ -150,7 +148,9 @@ export function MediaDropzone({
                 className,
                 'relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-6 text-center transition duration-200',
                 spacious ? 'min-h-56 py-14' : 'min-h-28 py-8',
-                isDisabled ? 'cursor-not-allowed opacity-60' : 'hover:border-zinc-950/25 dark:hover:border-white/20 dark:hover:bg-white/[0.04]',
+                isDisabled
+                    ? 'cursor-not-allowed opacity-60'
+                    : 'hover:border-zinc-950/25 dark:hover:border-white/20 dark:hover:bg-white/[0.04]',
                 showDragging
                     ? 'border-zinc-950 bg-zinc-950/[0.04] dark:border-white/40 dark:bg-white/[0.08]'
                     : 'border-zinc-950/10 bg-zinc-950/[0.02] dark:border-white/10 dark:bg-white/[0.03]',
@@ -188,7 +188,7 @@ export function MediaDropzone({
             <Text className="mt-3 text-sm font-medium text-zinc-950 dark:text-white">
                 {uploading ? 'Uploading…' : showDragging ? 'Drop to upload' : label}
             </Text>
-            <Text className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{resolvedHint}</Text>
+            <Text className="mt-1 text-xs text-canvas-muted dark:text-canvas-muted-dark">{resolvedHint}</Text>
         </div>
     );
 }

@@ -9,7 +9,9 @@ import { Kbd, KbdGroup } from '@/components/kbd';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
 import {
+    canSearchEntityType,
     entityTypeToApiParam,
+    filterSearchResultsByPermissions,
     parseSearchQuery,
     searchFilterHints,
     type SearchEntityType,
@@ -45,14 +47,18 @@ export function CommandPalette({ open, onClose }: Props) {
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const parsed = useMemo(() => parseSearchQuery(query), [query]);
-    const filterHints = useMemo(
-        () =>
-            searchFilterHints({
-                canManageTaxonomy: permissions.canManageTaxonomy,
-                canManageUsers: permissions.canManageUsers,
-            }),
+    const permissionOptions = useMemo(
+        () => ({
+            canManageTaxonomy: permissions.canManageTaxonomy,
+            canManageUsers: permissions.canManageUsers,
+        }),
         [permissions.canManageTaxonomy, permissions.canManageUsers]
     );
+    const filterHints = useMemo(() => searchFilterHints(permissionOptions), [permissionOptions]);
+    const restrictedEntity =
+        parsed.mode === 'search' &&
+        parsed.entityType !== null &&
+        !canSearchEntityType(parsed.entityType, permissionOptions);
 
     useEffect(() => {
         if (debounceRef.current) {
@@ -66,6 +72,10 @@ export function CommandPalette({ open, onClose }: Props) {
         const showRecentPosts = parsed.entityType === null && parsed.term === '';
 
         if (showRecentPosts) {
+            return;
+        }
+
+        if (parsed.entityType !== null && !canSearchEntityType(parsed.entityType, permissionOptions)) {
             return;
         }
 
@@ -83,7 +93,7 @@ export function CommandPalette({ open, onClose }: Props) {
             const queryString = params.toString();
 
             api.get<SearchResult[]>(`/search${queryString === '' ? '' : `?${queryString}`}`)
-                .then(setResults)
+                .then((items) => setResults(filterSearchResultsByPermissions(items, permissionOptions)))
                 .catch(() => setResults([]));
         }, 250);
 
@@ -92,7 +102,7 @@ export function CommandPalette({ open, onClose }: Props) {
                 clearTimeout(debounceRef.current);
             }
         };
-    }, [parsed]);
+    }, [parsed, permissionOptions]);
 
     function handleSelect(result: SearchResult | null) {
         if (!result) return;
@@ -108,7 +118,7 @@ export function CommandPalette({ open, onClose }: Props) {
     }));
 
     const showRecentPosts = parsed.mode === 'search' && parsed.entityType === null && parsed.term === '';
-    const displayResults = showRecentPosts ? recentPostResults : results;
+    const displayResults = restrictedEntity ? [] : showRecentPosts ? recentPostResults : results;
 
     const grouped = displayResults.reduce<Record<string, SearchResult[]>>((acc, result) => {
         const group = acc[result.type] ?? [];
@@ -181,16 +191,26 @@ export function CommandPalette({ open, onClose }: Props) {
                             </Headless.ComboboxOptions>
                         )}
 
-                        {parsed.mode === 'search' && !hasResults && parsed.term !== '' && (
+                        {parsed.mode === 'search' && restrictedEntity && (
+                            <div className="px-6 py-14 text-center text-sm sm:px-14">
+                                <p className="font-semibold text-zinc-900 dark:text-white">Unavailable</p>
+                                <p className="mt-2 text-canvas-muted dark:text-canvas-muted-dark">
+                                    Your role cannot search {emptyStateLabel.toLowerCase()}.
+                                </p>
+                            </div>
+                        )}
+
+                        {parsed.mode === 'search' && !restrictedEntity && !hasResults && parsed.term !== '' && (
                             <div className="px-6 py-14 text-center text-sm sm:px-14">
                                 <p className="font-semibold text-zinc-900 dark:text-white">No results found</p>
-                                <p className="mt-2 text-zinc-500 dark:text-zinc-400">
+                                <p className="mt-2 text-canvas-muted dark:text-canvas-muted-dark">
                                     Nothing matched &ldquo;{parsed.term}&rdquo;. Try a different search term.
                                 </p>
                             </div>
                         )}
 
                         {parsed.mode === 'search' &&
+                            !restrictedEntity &&
                             !hasResults &&
                             parsed.term === '' &&
                             parsed.entityType !== null && (
@@ -198,7 +218,7 @@ export function CommandPalette({ open, onClose }: Props) {
                                     <p className="font-semibold text-zinc-900 dark:text-white">
                                         No {emptyStateLabel.toLowerCase()} yet
                                     </p>
-                                    <p className="mt-2 text-zinc-500 dark:text-zinc-400">
+                                    <p className="mt-2 text-canvas-muted dark:text-canvas-muted-dark">
                                         Create some {emptyStateLabel.toLowerCase()} to see them here.
                                     </p>
                                 </div>

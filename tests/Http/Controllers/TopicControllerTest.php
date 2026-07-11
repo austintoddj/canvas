@@ -19,6 +19,27 @@ it('lists all topics', function (): void {
 
     $this->assertCount(2, $response->getOriginalContent());
 });
+
+it('filters topics by search and sorts by name', function (): void {
+    Topic::factory()->create(['name' => 'Zebra', 'slug' => 'zebra']);
+    Topic::factory()->create(['name' => 'Alpha Notes', 'slug' => 'alpha-notes']);
+    Topic::factory()->create(['name' => 'Beta', 'slug' => 'beta']);
+
+    $search = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/topics?search=Alpha')
+        ->assertSuccessful()
+        ->getOriginalContent();
+
+    expect($search)->toHaveCount(1);
+    expect($search->first()->name)->toBe('Alpha Notes');
+
+    $sorted = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/topics?sort=name')
+        ->assertSuccessful()
+        ->getOriginalContent();
+
+    expect($sorted->pluck('name')->all())->toBe(['Alpha Notes', 'Beta', 'Zebra']);
+});
 it('returns data for creating a topic', function (): void {
     $response = $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/topics/create')

@@ -8,18 +8,17 @@ Canvas is a Laravel package that adds a full blog/publishing system to an existi
 
 This file is the **durable coding standard** for Canvas. Implementation plans are tactical and must not drift from it.
 
-| Document                                               | Role                                                           |
-| ------------------------------------------------------ | -------------------------------------------------------------- |
-| **`Agents.md` (this file)**                            | Always-on rules for how we write, test, and ship code          |
-| [`.github/UPGRADE.md`](.github/UPGRADE.md)             | Host contract, v6→v7 upgrade, support notes for installers     |
-| [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md)   | Contributor setup, support window, FormRequest major checklist |
-| [`.github/docs/spa-plan.md`](.github/docs/spa-plan.md) | Admin SPA tracker (frontend)                                   |
+| Document                                             | Role                                                           |
+| ---------------------------------------------------- | -------------------------------------------------------------- |
+| **`Agents.md` (this file)**                          | Always-on rules for how we write, test, and ship code          |
+| [`.github/UPGRADE.md`](.github/UPGRADE.md)           | Host contract, v6→v7 upgrade, support notes for installers     |
+| [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) | Contributor setup, support window, FormRequest major checklist |
 
 **Rules for agents and humans working plans:**
 
 1. **Every** tracker item is implemented under these standards — not just “what the tracker says,” but _how_ it is written.
 2. When product/architecture decisions land, implement them in code **and** keep this file (or UPGRADE) updated if the decision is durable.
-3. Prefer this file for permanent style/quality philosophy; UPGRADE for host integration; SPA plan for ordered frontend work.
+3. Prefer this file for permanent style/quality philosophy; UPGRADE for host integration and ordered host-facing work.
 4. If a plan step would violate this file, fix the approach (or update this file first) — do not ship exceptions quietly.
 
 ## Core Rules
@@ -103,6 +102,33 @@ When touching existing code: do not leave behind narrative comments; clean them 
 - Prefer the smallest practical set of `illuminate/*` packages.
 - Respect the existing structure (`src/`, `config/`, `resources/`, etc.) unless intentionally refactoring.
 - Maintain backward compatibility where reasonable; keep the distraction-free writing philosophy intact.
+
+### SPA loading UX (admin React)
+
+Durable patterns for list pages and media (set by the media library; reuse elsewhere):
+
+- **Stable chrome** — shell, page header, filters, and primary actions appear immediately and never blank while data loads. Do not rise/fade known chrome on route change.
+- **Route transitions** — `AnimatedOutlet` swaps route bodies **instantly** (no whole-page opacity or Y motion). Hard refresh stays skeleton-first via Suspense/`PageFallback`. Never invent artificial wait for data that is already ready.
+- **Skeletons** — when `isInitialLoading` (loading + no items), show a layout-matched skeleton **with no entrance motion**. Same rules for hard refresh and SPA navigation — decide from `loading` + `itemCount`, not navigation type.
+- **Filled content** — wrap list bodies/grids in `ContentReveal` (opacity-only settle ~150ms, `busy` dim while refetching). No vertical travel. Pass `animate={false}` when re-settling without a skeleton→data transition (see `useAsyncReveal` / `nextRevealAnimation`).
+- **Empty states** — only when `shouldShowEmpty` (`!loading` + zero items), wrap in `EmptyStateReveal`. Soft lift (~200ms / 8px) only when the list previously had items (e.g. last delete). **Never** lift after initial skeleton→empty — that thrash is not polish. Honor `prefers-reduced-motion` via `shouldAnimateReveal`.
+- **Suspense** — lazy routes use a **neutral** `PageFallback` (header + rows, not media-grid-shaped) so chunk load is never a hard blank or shape flash.
+- **Overlays** — reserve fuller spring/Y motion for drawers, drop targets, dialogs, toasts.
+- **Shared primitives** — `ContentReveal`, `EmptyStateReveal`, `useAsyncReveal`, `Skeleton`, layout-matched skeletons (e.g. `MediaGridSkeleton`), and `FadeInImage` (opacity reveal, `loading="lazy"`, cached-image complete check).
+- **Media empty splash** — `MediaEmptyVisual` + `MEDIA_EMPTY_STATE` is the gold-standard empty design; do not redesign it casually. Reuse the `EmptyState` shell pattern elsewhere.
+- **Taxonomy IA** — Tags and Topics share one **Organize** surface (`/organize?tab=topics|tags`); legacy `/tags` and `/topics` redirect. One sidebar item when `canManageTaxonomy`.
+- Do not clear list items the moment a filter request starts; replace when the response arrives.
+- Prefer layout-owned width (`SidebarLayout` max-w-6xl); avoid re-wrapping every page in `mx-auto max-w-6xl px-4 py-8`. Use `mx-auto max-w-2xl` only for narrow forms (settings).
+- **Side drawers** — Media and taxonomy detail UIs share `SideDrawer` chrome; keep domain logic in feature drawers.
+- **Danger text** — `text-red-600 dark:text-red-400` (not `red-500` in dark).
+- **Reduced motion** — `ContentReveal` / `EmptyStateReveal` / Toaster / PillNav honor `prefers-reduced-motion`.
+- **Post editor** — loading uses layout-matched skeleton (`data-post-editor-skeleton`); toolbar toggles use `aria-pressed`; link editing uses a dialog (never `window.prompt`).
+- **Focus rings** — prefer blue outline (`focus-visible:outline-2 outline-offset-2 outline-blue-500` / Catalyst `data-focus:outline-blue-500`).
+- **Dashboard zero traffic** — when `totalActivity === 0`, keep stats cards and show EmptyState + write CTA (not empty charts thrash).
+- **Organize filters** — search/sort via URL + API; true empty splash vs filtered-empty message (Media pattern).
+- **Design tokens** — semantic `canvas-*` colors live in `resources/css/app.css` `@theme` (muted, danger, panel, border, focus). Prefer them for **app chrome**; Catalyst kit may stay zinc-first.
+- **Typography helpers** — use `PageDescription` (page subtitles) and `ErrorText` (list/form errors) from `components/text.tsx` instead of one-off muted/danger class soups.
+- **Design system of record** — AGENTS + Vitest source contracts (no Storybook required for this package).
 
 ## Development Commands
 

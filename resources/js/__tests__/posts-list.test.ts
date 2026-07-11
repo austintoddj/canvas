@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { isPostPublished, parsePostsListFilters, postsIndexPath, postsIndexQueryParams } from '@/lib/posts/list';
+import postsIndexSource from '@/pages/Posts/Index.tsx?raw';
+import mediaIndexSource from '@/pages/Media/Index.tsx?raw';
 
 describe('isPostPublished', () => {
     it('detects published posts from published_at', () => {
@@ -45,5 +47,25 @@ describe('postsIndexQueryParams', () => {
             scope: 'all',
             page: 3,
         });
+    });
+});
+
+describe('posts list UX (shipped source)', () => {
+    it('matches list chrome/skeleton/empty patterns and uses Alert for deletes', () => {
+        expect(postsIndexSource).toContain('PageHeader');
+        expect(postsIndexSource).toContain('title="Posts"');
+        expect(postsIndexSource).toContain('TableListSkeleton');
+        expect(postsIndexSource).toContain('ContentReveal');
+        expect(postsIndexSource).toContain('EmptyStateReveal');
+        expect(postsIndexSource).toContain('PostsEmptyVisual');
+        expect(postsIndexSource).toContain('Alert');
+        expect(postsIndexSource).not.toContain('window.confirm');
+        expect(postsIndexSource).not.toContain('Loading posts…');
+    });
+});
+
+describe('media page title (shipped source)', () => {
+    it('uses Media Library as the page title', () => {
+        expect(mediaIndexSource).toContain('title="Media Library"');
     });
 });

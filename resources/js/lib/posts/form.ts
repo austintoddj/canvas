@@ -1,5 +1,7 @@
 import type { Post, PostMeta, PostStorePayload, TaxonomyOption } from '@/types/api';
 
+import { normalizeBodyHtml } from '@/lib/posts/body';
+
 export type PostFormState = {
     title: string;
     slug: string;
@@ -12,6 +14,25 @@ export type PostFormState = {
     tags: TaxonomyOption[];
     topic: TaxonomyOption | null;
 };
+
+export type PostSaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
+
+export function saveStatusLabel(status: PostSaveStatus): string | null {
+    switch (status) {
+        case 'pending':
+            return 'Unsaved changes';
+        case 'saving':
+            return 'Saving…';
+        case 'saved':
+            return 'Saved';
+        case 'error':
+            return 'Save failed';
+        default:
+            return null;
+    }
+}
+
+export { bodyFromEditorHtml, bodyHtmlForEditor, normalizeBodyHtml } from '@/lib/posts/body';
 
 export function slugify(value: string): string {
     const slug = value
@@ -46,7 +67,7 @@ export function postToFormState(post: Post): PostFormState {
         title: post.title ?? '',
         slug: post.slug ?? '',
         summary: post.summary ?? '',
-        body: post.body,
+        body: normalizeBodyHtml(post.body),
         publishedAt: post.published_at,
         featuredImage: post.featured_image,
         featuredImageCaption: post.featured_image_caption,
@@ -56,12 +77,28 @@ export function postToFormState(post: Post): PostFormState {
     };
 }
 
+/** Draft shell from GET /posts/create (UUID only — row is not persisted yet). */
+export function formFromCreateResponse(post: Pick<Post, 'id' | 'slug'>): PostFormState {
+    return {
+        title: '',
+        slug: post.slug ?? '',
+        summary: '',
+        body: null,
+        publishedAt: null,
+        featuredImage: null,
+        featuredImageCaption: null,
+        meta: null,
+        tags: [],
+        topic: null,
+    };
+}
+
 export function toStorePayload(form: PostFormState): PostStorePayload {
     return {
         title: form.title,
         slug: form.slug,
         summary: form.summary === '' ? null : form.summary,
-        body: form.body,
+        body: normalizeBodyHtml(form.body),
         published_at: form.publishedAt,
         featured_image: form.featuredImage,
         featured_image_caption: form.featuredImageCaption,

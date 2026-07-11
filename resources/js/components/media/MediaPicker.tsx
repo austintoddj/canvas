@@ -7,9 +7,11 @@ import { Field, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import { MediaDropzone } from '@/components/media/MediaDropzone';
 import { MediaGrid } from '@/components/media/MediaGrid';
+import { MediaGridSkeleton } from '@/components/media/MediaGridSkeleton';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
-import { Text } from '@/components/text';
+import { ErrorText } from '@/components/text';
 import { usePermissions } from '@/hooks/usePermissions';
+import { isInitialLoading, isRefreshing } from '@/lib/async-ui';
 import { mediaApi, uploadMedia } from '@/lib/api/media';
 import { mediaIndexQueryParams, type MediaListFilters } from '@/lib/media/list';
 import type { Media, Paginated } from '@/types/api';
@@ -121,6 +123,9 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
         }
     }
 
+    const showInitialSkeleton = isInitialLoading(loading, media.length);
+    const refreshing = isRefreshing(loading, media.length);
+
     return (
         <div>
             <div className="flex flex-wrap items-end justify-between gap-3">
@@ -170,20 +175,28 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                 onFiles={(files) => void handleFiles(files)}
             />
 
-            {error ? <Text className="mt-4 text-sm text-red-600 dark:text-red-500">{error}</Text> : null}
+            {error ? <ErrorText className="mt-4">{error}</ErrorText> : null}
 
-            {loading ? (
-                <Text className="mt-6 text-sm text-zinc-500">Loading media…</Text>
-            ) : (
-                <MediaGrid
-                    className="mt-6"
-                    items={media}
-                    emptyMessage="No images found. Drop one above to get started."
-                    onSelect={(item) => onSelect(item.url, item)}
-                />
-            )}
+            {showInitialSkeleton ? <MediaGridSkeleton className="mt-6" count={6} /> : null}
 
-            {page < lastPage ? (
+            {!showInitialSkeleton ? (
+                <div
+                    className={
+                        refreshing
+                            ? 'mt-6 opacity-50 transition-opacity duration-200'
+                            : 'mt-6 transition-opacity duration-200'
+                    }
+                    aria-busy={refreshing || undefined}
+                >
+                    <MediaGrid
+                        items={media}
+                        emptyMessage="No images found. Drop one above to get started."
+                        onSelect={(item) => onSelect(item.url, item)}
+                    />
+                </div>
+            ) : null}
+
+            {page < lastPage && !loading ? (
                 <div className="mt-4 flex justify-center">
                     <Button
                         type="button"

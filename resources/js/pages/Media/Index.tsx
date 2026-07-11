@@ -5,17 +5,22 @@ import { useSearchParams } from 'react-router-dom';
 
 import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
 import { Button } from '@/components/button';
+import { ContentReveal } from '@/components/ContentReveal';
 import { EmptyState } from '@/components/EmptyState';
+import { EmptyStateReveal } from '@/components/EmptyStateReveal';
 import { Field, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import { MediaDetailDrawer } from '@/components/media/MediaDetailDrawer';
 import { MediaEmptyVisual } from '@/components/media/MediaEmptyVisual';
 import { MediaGrid } from '@/components/media/MediaGrid';
+import { MediaGridSkeleton } from '@/components/media/MediaGridSkeleton';
 import { PageHeader } from '@/components/PageHeader';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Select } from '@/components/select';
-import { Text } from '@/components/text';
+import { Text, PageDescription, ErrorText } from '@/components/text';
+import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { usePermissions } from '@/hooks/usePermissions';
+import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { ALLOWED_MEDIA_MIME_TYPES, mediaApi, uploadMedia } from '@/lib/api/media';
 import {
     appendMediaItems,
@@ -499,10 +504,15 @@ export default function MediaIndex() {
     }
 
     const hasFilters = mediaListHasActiveFilters(filters);
-    const isEmpty = !loading && items.length === 0;
+    const itemCount = items.length;
+    const showInitialSkeleton = isInitialLoading(loading, itemCount);
+    const refreshing = isRefreshing(loading, itemCount);
+    const isEmpty = shouldShowEmpty(loading, itemCount);
+    const { animateEmpty, animateContent } = useAsyncReveal(loading, itemCount);
     const showEmptyLibrary = isEmpty && !hasFilters;
-    const showFilledLibrary = !loading && !isEmpty;
-    const canLoadMore = showFilledLibrary && page < lastPage;
+    const showFilteredEmpty = isEmpty && hasFilters;
+    const showFilledLibrary = itemCount > 0;
+    const canLoadMore = showFilledLibrary && !loading && page < lastPage;
     const selectionCount = selectedIds.size;
 
     const uploadLabel =
@@ -558,7 +568,7 @@ export default function MediaIndex() {
                             <Text className="mt-5 text-lg font-semibold text-zinc-950 dark:text-white">
                                 Drop to upload
                             </Text>
-                            <Text className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                            <Text className="mt-2 text-sm text-canvas-muted dark:text-canvas-muted-dark">
                                 Release to add images to your library
                             </Text>
                         </motion.div>
@@ -566,16 +576,13 @@ export default function MediaIndex() {
                 ) : null}
             </AnimatePresence>
 
-            <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="space-y-8">
                 <PageHeader
-                    title="Media"
+                    title="Media Library"
                     actions={
                         selectionCount > 0 ? (
                             <div className="flex flex-wrap items-center gap-2" data-media-selection-actions="true">
-                                <Text
-                                    className="text-sm font-medium text-zinc-950 dark:text-white"
-                                    aria-live="polite"
-                                >
+                                <Text className="text-sm font-medium text-zinc-950 dark:text-white" aria-live="polite">
                                     {selectionCount} selected
                                 </Text>
                                 <Button
@@ -603,9 +610,11 @@ export default function MediaIndex() {
                             </Button>
                         )
                     }
-                />
+                >
+                    <PageDescription>Upload and organize images for posts</PageDescription>
+                </PageHeader>
 
-                <div className="mt-8 flex flex-wrap items-end justify-between gap-4">
+                <div className="flex flex-wrap items-end justify-between gap-4">
                     <div className="flex min-w-0 flex-1 flex-wrap items-end gap-3">
                         <Field className="min-w-[12rem] flex-1 sm:max-w-xs">
                             <Label className="sr-only">Search media</Label>
@@ -662,70 +671,64 @@ export default function MediaIndex() {
 
                 {error ? (
                     <div
-                        className="mt-6 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 dark:border-red-500/30 dark:bg-red-500/10"
+                        className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 dark:border-red-500/30 dark:bg-red-500/10"
                         role="alert"
                     >
-                        <Text className="text-sm text-red-600 dark:text-red-400">{error}</Text>
+                        <ErrorText>{error}</ErrorText>
                     </div>
                 ) : null}
 
-                {loading ? (
-                    <div className="mt-10 space-y-4" aria-busy="true" aria-live="polite">
-                        <Text className="text-sm text-zinc-500">Loading media…</Text>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                            {Array.from({ length: 8 }, (_, index) => (
-                                <div
-                                    key={index}
-                                    className="aspect-square animate-pulse rounded-xl bg-zinc-950/5 dark:bg-white/5"
-                                />
-                            ))}
-                        </div>
-                    </div>
-                ) : null}
+                {showInitialSkeleton ? <MediaGridSkeleton /> : null}
 
                 {showEmptyLibrary ? (
-                    <EmptyState
-                        className="mt-10"
-                        headline={MEDIA_EMPTY_STATE.headline}
-                        description={MEDIA_EMPTY_STATE.blurb}
-                        visual={<MediaEmptyVisual />}
-                        action={
-                            <Button type="button" color="dark/zinc" disabled={uploading} onClick={openBrowse}>
-                                <ArrowUpTrayIcon data-slot="icon" />
-                                {uploading ? 'Uploading…' : MEDIA_EMPTY_STATE.cta}
-                            </Button>
-                        }
-                    />
+                    <EmptyStateReveal animate={animateEmpty}>
+                        <EmptyState
+                            headline={MEDIA_EMPTY_STATE.headline}
+                            description={MEDIA_EMPTY_STATE.blurb}
+                            visual={<MediaEmptyVisual />}
+                            action={
+                                <Button type="button" color="dark/zinc" disabled={uploading} onClick={openBrowse}>
+                                    <ArrowUpTrayIcon data-slot="icon" />
+                                    {uploading ? 'Uploading…' : MEDIA_EMPTY_STATE.cta}
+                                </Button>
+                            }
+                        />
+                    </EmptyStateReveal>
                 ) : null}
 
-                {isEmpty && hasFilters ? (
-                    <MediaGrid className="mt-10" items={[]} emptyMessage={MEDIA_FILTERED_EMPTY_MESSAGE} />
+                {showFilteredEmpty ? (
+                    <EmptyStateReveal animate={animateEmpty}>
+                        <MediaGrid items={[]} emptyMessage={MEDIA_FILTERED_EMPTY_MESSAGE} />
+                    </EmptyStateReveal>
                 ) : null}
 
                 {showFilledLibrary ? (
-                    <>
-                        <MediaGrid
-                            className="mt-10"
-                            items={items}
-                            selectedIds={selectedIds}
-                            selectionDisabled={bulkDeleting}
-                            onOpen={(item) => openDetail(item.id)}
-                            onToggleSelect={(item) => setSelectedIds((current) => toggleSelectedId(current, item.id))}
-                        />
+                    <ContentReveal busy={refreshing} animate={animateContent}>
+                        <div data-media-library-body="true">
+                            <MediaGrid
+                                items={items}
+                                selectedIds={selectedIds}
+                                selectionDisabled={bulkDeleting || refreshing}
+                                onOpen={(item) => openDetail(item.id)}
+                                onToggleSelect={(item) =>
+                                    setSelectedIds((current) => toggleSelectedId(current, item.id))
+                                }
+                            />
 
-                        {canLoadMore ? (
-                            <div className="mt-8 flex justify-center">
-                                <Button
-                                    type="button"
-                                    outline
-                                    disabled={loadingMore || uploading}
-                                    onClick={() => void loadMore()}
-                                >
-                                    {loadingMore ? 'Loading…' : 'Load more'}
-                                </Button>
-                            </div>
-                        ) : null}
-                    </>
+                            {canLoadMore ? (
+                                <div className="mt-8 flex justify-center">
+                                    <Button
+                                        type="button"
+                                        outline
+                                        disabled={loadingMore || uploading}
+                                        onClick={() => void loadMore()}
+                                    >
+                                        {loadingMore ? 'Loading…' : 'Load more'}
+                                    </Button>
+                                </div>
+                            ) : null}
+                        </div>
+                    </ContentReveal>
                 ) : null}
             </div>
 

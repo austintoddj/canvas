@@ -260,6 +260,8 @@ export type TagStorePayload = {
 
 export type TagsIndexParams = {
     page?: number;
+    search?: string;
+    sort?: 'newest' | 'posts' | 'name';
 };
 
 export type TagPostsParams = {
@@ -285,6 +287,8 @@ export type TopicStorePayload = {
 
 export type TopicsIndexParams = {
     page?: number;
+    search?: string;
+    sort?: 'newest' | 'posts' | 'name';
 };
 
 export type TopicPostsParams = {
@@ -333,9 +337,9 @@ export function searchResultPath(result: SearchResult): string {
         case 'edit-post':
             return `/posts/${result.id}`;
         case 'edit-tag':
-            return `/tags/${result.id}`;
+            return `/organize?tab=tags&detail=${encodeURIComponent(result.id)}`;
         case 'edit-topic':
-            return `/topics/${result.id}`;
+            return `/organize?tab=topics&detail=${encodeURIComponent(result.id)}`;
         case 'edit-user':
             return `/settings/users/${result.id}`;
     }

@@ -17,7 +17,9 @@ export default function DailyBarChart({ title, data }: DailyBarChartProps) {
                 <Subheading level={3} className="text-sm/6">
                     {title}
                 </Subheading>
-                <Text className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">No data for this period.</Text>
+                <Text className="mt-4 text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                    No data for this period.
+                </Text>
             </div>
         );
     }
@@ -28,7 +30,9 @@ export default function DailyBarChart({ title, data }: DailyBarChartProps) {
                 <Subheading level={3} className="text-sm/6">
                     {title}
                 </Subheading>
-                <Text className="text-sm text-zinc-500 dark:text-zinc-400">{total.toLocaleString()} total</Text>
+                <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                    {total.toLocaleString()} total
+                </Text>
             </div>
 
             <div
@@ -49,7 +53,7 @@ export default function DailyBarChart({ title, data }: DailyBarChartProps) {
                 ))}
             </div>
 
-            <div className="mt-3 flex justify-between text-xs text-zinc-500 dark:text-zinc-400">
+            <div className="mt-3 flex justify-between text-xs text-canvas-muted dark:text-canvas-muted-dark">
                 <span>{data[0]?.label}</span>
                 <span>{data[data.length - 1]?.label}</span>
             </div>

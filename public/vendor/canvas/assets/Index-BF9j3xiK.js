@@ -1,0 +1,1 @@
+import{f as e,r as t,t as n}from"./jsx-runtime-BDSIhLyL.js";import{r}from"./list-DftLb1nE.js";var i=n();function a(){let[n]=e();return(0,i.jsx)(t,{to:r(`topics`,n),replace:!0})}export{a as default};

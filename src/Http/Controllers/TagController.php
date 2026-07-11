@@ -6,8 +6,10 @@ namespace Canvas\Http\Controllers;
 
 use Canvas\Http\Requests\TagRequest;
 use Canvas\Models\Tag;
+use Canvas\Support\TaxonomyIndexQuery;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
 
@@ -16,15 +18,15 @@ class TagController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(
-            Tag::query()
-                ->select('id', 'name', 'created_at')
-                ->latest()
-                ->withCount('posts')
-                ->paginate(), 200
-        );
+        $query = Tag::query()
+            ->select('id', 'name', 'created_at')
+            ->withCount('posts');
+
+        TaxonomyIndexQuery::apply($query, $request);
+
+        return response()->json($query->paginate(), 200);
     }
 
     /**

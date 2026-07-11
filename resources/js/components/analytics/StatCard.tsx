@@ -15,7 +15,7 @@ export default function StatCard({ label, value, change }: StatCardProps) {
 
     return (
         <div className="rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5">
-            <Text className="text-sm text-zinc-500 dark:text-zinc-400">{label}</Text>
+            <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">{label}</Text>
             <p className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">{value.toLocaleString()}</p>
             {change ? (
                 <p

@@ -19,6 +19,31 @@ it('lists all tags', function (): void {
 
     $this->assertCount(2, $response->getOriginalContent());
 });
+
+it('filters tags by search and sorts by post count', function (): void {
+    $popular = Tag::factory()->create(['name' => 'Laravel Tips', 'slug' => 'laravel-tips']);
+    Tag::factory()->create(['name' => 'PHP News', 'slug' => 'php-news']);
+    $quiet = Tag::factory()->create(['name' => 'Laravel Basics', 'slug' => 'laravel-basics']);
+
+    $post = Post::factory()->create();
+    $popular->posts()->sync([$post->id]);
+
+    $search = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/tags?search=Laravel')
+        ->assertSuccessful()
+        ->getOriginalContent();
+
+    expect($search->pluck('name')->all())->toEqualCanonicalizing(['Laravel Tips', 'Laravel Basics']);
+
+    $sorted = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/tags?sort=posts')
+        ->assertSuccessful()
+        ->getOriginalContent();
+
+    expect($sorted->first()->is($popular))->toBeTrue();
+    expect($sorted->first()->posts_count)->toBe(1);
+    expect($quiet->name)->toBe('Laravel Basics');
+});
 it('returns data for creating a tag', function (): void {
     $response = $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/tags/create')

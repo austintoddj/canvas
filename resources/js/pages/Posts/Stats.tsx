@@ -8,7 +8,7 @@ import { Button } from '@/components/button';
 import { DescriptionDetails, DescriptionList, DescriptionTerm } from '@/components/description-list';
 import { Divider } from '@/components/divider';
 import { Heading, Subheading } from '@/components/heading';
-import { Text } from '@/components/text';
+import { Text, PageDescription, ErrorText } from '@/components/text';
 import { postsApi } from '@/lib/api/posts';
 import { parseDailyGraph, rankedEntries } from '@/lib/analytics';
 import type { PostStatsResponse } from '@/types/api';
@@ -90,8 +90,8 @@ export default function PostsStats() {
 
     if (error !== null || stats === null) {
         return (
-            <div className="px-8 py-12">
-                <Text className="text-red-600 dark:text-red-500">{error ?? 'Post not found.'}</Text>
+            <div className="space-y-4">
+                <ErrorText>{error ?? 'Post not found.'}</ErrorText>
             </div>
         );
     }
@@ -101,24 +101,24 @@ export default function PostsStats() {
     const visitsSeries = parseDailyGraph(stats.graph.visits);
 
     return (
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="space-y-8">
             <div className="flex flex-wrap items-center gap-3">
                 <Button href={`/posts/${stats.post.id}`} plain aria-label="Back to post">
                     <ArrowLeftIcon data-slot="icon" />
                 </Button>
                 <div>
                     <Heading>{title}</Heading>
-                    <Text className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Post analytics</Text>
+                    <PageDescription>Post analytics</PageDescription>
                 </div>
             </div>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <StatCard label="Views this month" value={stats.monthlyViews} change={stats.monthOverMonthViews} />
                 <StatCard label="Visits this month" value={stats.monthlyVisits} change={stats.monthOverMonthVisits} />
                 <StatCard label="All-time views" value={stats.totalViews} />
             </div>
 
-            <div className="mt-8 grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-6 lg:grid-cols-2">
                 <DailyBarChart title="Views (last 30 days)" data={viewsSeries} />
                 <DailyBarChart title="Visits (last 30 days)" data={visitsSeries} />
             </div>

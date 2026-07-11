@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { buildQueryString } from '@/lib/api/query';
+import { normalizeResourceCollectionPage, type ResourceCollectionPage } from '@/lib/users/list';
 import type {
     Paginated,
     PostListItem,
@@ -12,8 +13,10 @@ import type {
 import type { UserResource } from '@/types/boot';
 
 export const usersApi = {
-    index(params: UsersIndexParams = {}, signal?: AbortSignal) {
-        return api.get<Paginated<UserResource>>(`/users${buildQueryString(params)}`, signal);
+    async index(params: UsersIndexParams = {}, signal?: AbortSignal): Promise<Paginated<UserResource>> {
+        const body = await api.get<ResourceCollectionPage<UserResource>>(`/users${buildQueryString(params)}`, signal);
+
+        return normalizeResourceCollectionPage(body);
     },
 
     create(signal?: AbortSignal) {

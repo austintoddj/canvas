@@ -1,0 +1,1 @@
+var e={settled:1,busy:.55};function t(e,t){return e&&t===0}function n(e,t){return e&&t>0}function r(e,t){return!e&&t===0}function i(e){return e.animate&&!e.reducedMotion}function a(e,t){return t===0?{animateEmpty:e!==null&&e>0,animateContent:!1}:{animateEmpty:!1,animateContent:e===null||e===0}}export{i as a,a as i,t as n,r as o,n as r,e as t};

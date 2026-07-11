@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-CZcjcDnw.js";import{t}from"./divider-Dp5uRkMV.js";import{t as n}from"./heading-PjO5r1EO.js";var r=e();function i(){return(0,r.jsxs)(r.Fragment,{children:[(0,r.jsx)(n,{children:`Dashboard`}),(0,r.jsx)(t,{className:`mt-6`})]})}export{i as default};
