@@ -42,7 +42,7 @@ import {
 } from '@/components/dropdown';
 import { Field, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
-import MediaPicker from '@/components/media/MediaPicker';
+import ImageSourcePicker from '@/components/media/ImageSourcePicker';
 import { resolveMediaUrl } from '@/lib/media/list';
 import { bodyFromEditorHtml, bodyHtmlForEditor } from '@/lib/posts/body';
 import { CODE_BLOCK_LANGUAGES, createPostEditorExtensions } from '@/lib/posts/editor-extensions';
@@ -637,10 +637,10 @@ export default function PostBodyEditor({
                 inputRef={dialogInputRef}
             />
 
-            <MediaPicker
+            <ImageSourcePicker
                 open={mediaOpen}
                 onClose={() => setMediaOpen(false)}
-                onSelect={(url, media) => {
+                onSelect={(selection) => {
                     if (editor === null) {
                         return;
                     }
@@ -649,8 +649,8 @@ export default function PostBodyEditor({
                         .chain()
                         .focus()
                         .setImage({
-                            src: resolveMediaUrl(url),
-                            alt: media?.alt ?? media?.original_name ?? media?.filename ?? '',
+                            src: resolveMediaUrl(selection.url),
+                            alt: selection.alt ?? '',
                         })
                         .run();
                 }}

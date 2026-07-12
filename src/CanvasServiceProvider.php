@@ -26,6 +26,7 @@ use Canvas\Policies\PostPolicy;
 use Canvas\Policies\UserPolicy;
 use Canvas\Support\MediaService;
 use Canvas\Support\MediaStorage;
+use Canvas\Support\SettingsRepository;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
@@ -47,6 +48,7 @@ class CanvasServiceProvider extends ServiceProvider
 
         $this->app->singleton(MediaStorage::class, static fn (): MediaStorage => MediaStorage::make());
         $this->app->singleton(MediaService::class);
+        $this->app->singleton(SettingsRepository::class);
     }
 
     /**
@@ -162,6 +164,10 @@ class CanvasServiceProvider extends ServiceProvider
         });
 
         Gate::define('manage-taxonomy', static function ($user): bool {
+            return CanvasUser::isAdmin($user);
+        });
+
+        Gate::define('manage-settings', static function ($user): bool {
             return CanvasUser::isAdmin($user);
         });
     }

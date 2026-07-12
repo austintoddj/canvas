@@ -9,7 +9,7 @@ use Canvas\Support\Paths;
 use Canvas\Support\Version;
 
 it('builds the frontend boot payload', function (): void {
-    config()->set('canvas.unsplash.access_key', 'test-access-key');
+    setUnsplashAccessKey('test-access-key');
 
     $bootData = FrontendBootData::forUser($this->admin);
 
@@ -20,7 +20,7 @@ it('builds the frontend boot payload', function (): void {
         'roles' => Role::options(),
         'timezone' => config('app.timezone'),
         'translations' => Localization::availableTranslations($this->admin->locale),
-        'unsplash' => 'test-access-key',
+        'unsplash' => true,
         'version' => Version::installed(),
     ]);
 
@@ -48,6 +48,12 @@ it('builds boot payload for host users without a canvasUser relationship', funct
     expect($bootData['user']['id'])->toBe($this->admin->id);
     expect($bootData['user']['canvas']['role'])->toBe(Role::Admin->value);
     expect($bootData['user']['avatar_url'])->toBeString();
+});
+
+it('reports unsplash as false when no access key is stored', function (): void {
+    $bootData = FrontendBootData::forUser($this->admin);
+
+    expect($bootData['unsplash'])->toBeFalse();
 });
 
 it('includes nested canvas data when the relationship is set without a canvasUser method', function (): void {

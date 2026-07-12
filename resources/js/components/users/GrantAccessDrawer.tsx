@@ -5,9 +5,9 @@ import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
 import { Description, ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/fieldset';
 import { Input } from '@/components/input';
-import { Select } from '@/components/select';
 import { SideDrawer } from '@/components/SideDrawer';
 import { Text, ErrorText } from '@/components/text';
+import { RoleSelectDropdown } from '@/components/users/RoleSelectDropdown';
 import { useCanvas } from '@/hooks/useCanvas';
 import { ApiError, ValidationError } from '@/lib/api';
 import { usersApi } from '@/lib/api/users';
@@ -21,7 +21,7 @@ import {
     normalizeLookupIdentifier,
     roleLabelFromHost,
 } from '@/lib/users/grant';
-import { ROLE_OPTIONS, userInitials } from '@/lib/users/roles';
+import { userInitials } from '@/lib/users/roles';
 import type { UserLookupResult } from '@/types/api';
 import type { UserResource } from '@/types/boot';
 
@@ -257,36 +257,25 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
 
                             {host.has_canvas_access ? (
                                 <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                                    This person already has Canvas access. Open their profile to change role or revoke
-                                    access.
+                                    This person already has Canvas access. Open them to change role or revoke access.
                                 </Text>
                             ) : (
-                                <Fieldset>
-                                    <Legend>Access</Legend>
-                                    <FieldGroup>
-                                        <Field>
-                                            <Label>Role</Label>
-                                            <Description>What this person can manage in Canvas.</Description>
-                                            <Select
-                                                name="role"
-                                                value={String(role)}
-                                                onChange={(event) => {
-                                                    setRole(Number.parseInt(event.target.value, 10) as RoleValue);
-                                                }}
-                                                disabled={granting}
-                                            >
-                                                {ROLE_OPTIONS.map((option) => (
-                                                    <option key={option.value} value={option.value}>
-                                                        {boot.roles[option.value] ?? option.label}
-                                                    </option>
-                                                ))}
-                                            </Select>
-                                            {fieldErrors.role?.[0] ? (
-                                                <ErrorMessage>{fieldErrors.role[0]}</ErrorMessage>
-                                            ) : null}
-                                        </Field>
-                                    </FieldGroup>
-                                </Fieldset>
+                                <Field>
+                                    <Label>Role</Label>
+                                    <Description>What this person can manage in Canvas.</Description>
+                                    <div className="mt-3">
+                                        <RoleSelectDropdown
+                                            value={role}
+                                            onChange={setRole}
+                                            labels={boot.roles}
+                                            disabled={granting}
+                                            invalid={Boolean(fieldErrors.role)}
+                                        />
+                                    </div>
+                                    {fieldErrors.role?.[0] ? (
+                                        <ErrorMessage>{fieldErrors.role[0]}</ErrorMessage>
+                                    ) : null}
+                                </Field>
                             )}
                         </div>
                     ) : null}

@@ -268,6 +268,15 @@ Confirm these settings in `config/canvas.php`:
 
 Your host app owns login, logout, and password reset for the configured guard.
 
+### Integrations (Unsplash)
+
+Unsplash is configured in the admin SPA at **Integrations** (`/settings/integrations`), not via environment variables.
+
+- Access keys are stored encrypted in the `canvas_settings` table (`unsplash.access_key`).
+- **`CANVAS_UNSPLASH_ACCESS_KEY` and `config('canvas.unsplash')` are removed.** If you previously set an Unsplash key in `.env`, open Integrations after upgrade and paste the same access key there.
+- The SPA boot payload exposes `unsplash` as a **boolean** (enabled or not), never the raw secret.
+- When configured, Unsplash appears in the post editor for featured images and body image insert.
+
 ### Access model
 
 Canvas access is a row in `canvas_users`, not a flag on the host user:

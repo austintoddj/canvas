@@ -1,3 +1,4 @@
+import { Role, type RoleValue } from '@/lib/permissions';
 import type { UserStorePayload } from '@/types/api';
 import type { CanvasProfile, UserResource } from '@/types/boot';
 
@@ -103,23 +104,23 @@ export function serializeProfileForm(form: ProfileFormState): string {
     return JSON.stringify(toProfileStorePayload(form));
 }
 
-export type AdminUserFormState = ProfileFormState & {
-    role: number | null;
+export type AdminUserFormState = {
+    role: RoleValue | null;
 };
 
-export function adminUserFromResource(
-    user: UserResource,
-    defaults?: { locale?: string; timezone?: string }
-): AdminUserFormState {
+export function adminUserFromResource(user: UserResource): AdminUserFormState {
+    const role = user.canvas?.role;
+
     return {
-        ...profileFromUser(user, defaults),
-        role: user.canvas?.role ?? null,
+        role:
+            role === Role.Contributor || role === Role.Editor || role === Role.Admin
+                ? role
+                : null,
     };
 }
 
 export function toAdminUserStorePayload(form: AdminUserFormState): UserStorePayload {
     return {
-        ...toProfileStorePayload(form),
         role: form.role,
     };
 }

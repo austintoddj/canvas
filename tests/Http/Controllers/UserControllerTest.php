@@ -156,13 +156,14 @@ describe('when granting and updating access', function (): void {
 
         $response->assertJsonPath('user.id', $user->id)
             ->assertJsonPath('user.canvas.role', 1)
-            ->assertJsonPath('user.canvas.summary', 'Writer bio');
+            ->assertJsonPath('user.canvas.summary', null);
 
         $this->assertDatabaseHas('canvas_users', [
             'user_id' => $user->id,
             'role' => 1,
-            'summary' => 'Writer bio',
         ]);
+
+        expect(CanvasUser::find($user->id)?->summary)->toBeNull();
     });
 
     it('returns not found when storing profile for a missing host user', function (): void {
@@ -173,22 +174,30 @@ describe('when granting and updating access', function (): void {
             ->assertNotFound();
     });
 
-    it('updates an existing canvas profile', function (): void {
+    it('allows admins to change another users role only', function (): void {
         $user = User::factory()->contributor()->create();
+
+        CanvasUser::query()->where('user_id', $user->id)->update([
+            'summary' => 'Keep my bio',
+            'username' => 'writer',
+        ]);
 
         $response = $this->actingAs($this->admin, 'canvas')
             ->postJson("canvas/api/users/{$user->id}", [
-                'summary' => 'Updated bio',
-                'username' => 'updated-user',
+                'role' => 2,
+                'summary' => 'Admin overwrite',
+                'username' => 'admin-owned',
             ])
             ->assertSuccessful()
-            ->assertJsonPath('user.canvas.summary', 'Updated bio')
-            ->assertJsonPath('user.canvas.username', 'updated-user');
+            ->assertJsonPath('user.canvas.role', 2)
+            ->assertJsonPath('user.canvas.summary', 'Keep my bio')
+            ->assertJsonPath('user.canvas.username', 'writer');
 
         $this->assertDatabaseHas('canvas_users', [
             'user_id' => $user->id,
-            'summary' => 'Updated bio',
-            'username' => 'updated-user',
+            'role' => 2,
+            'summary' => 'Keep my bio',
+            'username' => 'writer',
         ]);
     });
 
@@ -197,7 +206,7 @@ describe('when granting and updating access', function (): void {
         $originalName = $user->name;
         $originalEmail = $user->email;
 
-        $this->actingAs($this->admin, 'canvas')
+        $this->actingAs($user, 'canvas')
             ->postJson("canvas/api/users/{$user->id}", [
                 'summary' => 'Only Canvas data',
                 'username' => 'canvas-only',

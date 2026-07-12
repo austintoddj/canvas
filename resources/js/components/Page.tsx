@@ -13,8 +13,8 @@ export const TagsIndex = lazy(() => import('@/pages/Tags/Index'));
 export const TagsEditor = lazy(() => import('@/pages/Tags/Editor'));
 export const TopicsIndex = lazy(() => import('@/pages/Topics/Index'));
 export const TopicsEditor = lazy(() => import('@/pages/Topics/Editor'));
-export const SettingsProfile = lazy(() => import('@/pages/Settings/Profile'));
 export const SettingsUsersIndex = lazy(() => import('@/pages/Settings/Users/Index'));
+export const SettingsIntegrations = lazy(() => import('@/pages/Settings/Integrations'));
 
 export default function Page({ component: Component }: { component: ComponentType }) {
     return (

@@ -28,6 +28,7 @@ import {
 } from '@/components/sidebar';
 import { SidebarLayout } from '@/components/sidebar-layout';
 import { Toaster } from '@/components/Toaster';
+import { UserDetailDrawer } from '@/components/users/UserDetailDrawer';
 import { useCanvas } from '@/hooks/useCanvas';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
@@ -37,7 +38,6 @@ import { hostHomeUrl } from '@/lib/urls';
 import {
     ArrowTopRightOnSquareIcon,
     BookOpenIcon,
-    Cog6ToothIcon,
     ComputerDesktopIcon,
     DocumentTextIcon,
     HomeIcon,
@@ -45,6 +45,7 @@ import {
     MagnifyingGlassIcon,
     MoonIcon,
     PhotoIcon,
+    PuzzlePieceIcon,
     RectangleStackIcon,
     RocketLaunchIcon,
     SunIcon,
@@ -92,12 +93,20 @@ function ThemeToggle({ mode, setMode }: { mode: ThemeMode; setMode: (m: ThemeMod
     );
 }
 
-function UserDropdownContent({ mode, setMode }: { mode: ThemeMode; setMode: (m: ThemeMode) => void }) {
+function UserDropdownContent({
+    mode,
+    setMode,
+    onOpenProfile,
+}: {
+    mode: ThemeMode;
+    setMode: (m: ThemeMode) => void;
+    onOpenProfile: () => void;
+}) {
     const { user, boot } = useCanvas();
 
     return (
         <>
-            <DropdownItem href="/settings" className={dropdownProfileItemClass}>
+            <DropdownItem onClick={onOpenProfile} className={dropdownProfileItemClass}>
                 <Avatar src={user.avatar_url} className="size-8 shrink-0" square alt="" />
                 <div className="min-w-0 flex-1 text-left">
                     <span className="block truncate text-sm/5 font-medium text-zinc-950 dark:text-white">
@@ -107,9 +116,6 @@ function UserDropdownContent({ mode, setMode }: { mode: ThemeMode; setMode: (m: 
                         {user.email}
                     </span>
                 </div>
-                <DropdownTrailingIcon>
-                    <Cog6ToothIcon />
-                </DropdownTrailingIcon>
             </DropdownItem>
 
             <DropdownDivider />
@@ -173,14 +179,17 @@ function UserDropdownContent({ mode, setMode }: { mode: ThemeMode; setMode: (m: 
 
 export default function Layout() {
     const { user } = useCanvas();
-    const { canManageTaxonomy, canManageUsers } = usePermissions();
+    const { canManageTaxonomy, canManageUsers, canManageSettings } = usePermissions();
     const { pathname } = useLocation();
     const { posts: recentPosts } = useRecentPosts(5);
     const { mode, setMode } = useTheme();
     const [paletteOpen, setPaletteOpen] = useState(false);
+    const [profileOpen, setProfileOpen] = useState(false);
 
     const openPalette = useCallback(() => setPaletteOpen(true), []);
     const closePalette = useCallback(() => setPaletteOpen(false), []);
+    const openProfile = useCallback(() => setProfileOpen(true), []);
+    const closeProfile = useCallback(() => setProfileOpen(false), []);
 
     useEffect(() => {
         function onKeyDown(e: KeyboardEvent) {
@@ -199,6 +208,11 @@ export default function Layout() {
         <>
             <CommandPalette key={String(paletteOpen)} open={paletteOpen} onClose={closePalette} />
             <Toaster />
+            <UserDetailDrawer
+                open={profileOpen}
+                userId={profileOpen ? String(user.id) : null}
+                onClose={closeProfile}
+            />
 
             <SidebarLayout
                 navbar={
@@ -213,7 +227,11 @@ export default function Layout() {
                                     <Avatar src={user.avatar_url} square />
                                 </DropdownButton>
                                 <DropdownMenu className="min-w-72" anchor="bottom end">
-                                    <UserDropdownContent mode={mode} setMode={setMode} />
+                                    <UserDropdownContent
+                                        mode={mode}
+                                        setMode={setMode}
+                                        onOpenProfile={openProfile}
+                                    />
                                 </DropdownMenu>
                             </Dropdown>
                         </NavbarSection>
@@ -277,6 +295,15 @@ export default function Layout() {
                                         <SidebarLabel>Users</SidebarLabel>
                                     </SidebarItem>
                                 ) : null}
+                                {canManageSettings ? (
+                                    <SidebarItem
+                                        href="/settings/integrations"
+                                        current={pathname.startsWith('/settings/integrations')}
+                                    >
+                                        <PuzzlePieceIcon />
+                                        <SidebarLabel>Integrations</SidebarLabel>
+                                    </SidebarItem>
+                                ) : null}
                             </SidebarSection>
 
                             {recentPosts.length > 0 && (
@@ -309,7 +336,11 @@ export default function Layout() {
                                     </span>
                                 </DropdownButton>
                                 <DropdownMenu className="min-w-72" anchor="top start">
-                                    <UserDropdownContent mode={mode} setMode={setMode} />
+                                    <UserDropdownContent
+                                        mode={mode}
+                                        setMode={setMode}
+                                        onOpenProfile={openProfile}
+                                    />
                                 </DropdownMenu>
                             </Dropdown>
                         </SidebarFooter>

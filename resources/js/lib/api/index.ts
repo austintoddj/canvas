@@ -13,6 +13,8 @@ export { searchApi } from '@/lib/api/search';
 export { tagsApi } from '@/lib/api/tags';
 export { topicsApi } from '@/lib/api/topics';
 export { unsplashApi } from '@/lib/api/unsplash';
+export { integrationsApi } from '@/lib/api/integrations';
+export type { IntegrationsStatus, UnsplashIntegrationStatus, UpdateIntegrationsPayload } from '@/lib/api/integrations';
 
 export { buildQueryString } from '@/lib/api/query';
 

@@ -1,4 +1,3 @@
-import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/button';
@@ -13,7 +12,7 @@ import { ErrorText } from '@/components/text';
 import { usePermissions } from '@/hooks/usePermissions';
 import { isInitialLoading, isRefreshing } from '@/lib/async-ui';
 import { mediaApi, uploadMedia } from '@/lib/api/media';
-import { mediaIndexQueryParams, type MediaListFilters } from '@/lib/media/list';
+import { MEDIA_SEARCH_DEBOUNCE_MS, mediaIndexQueryParams, type MediaListFilters } from '@/lib/media/list';
 import type { Media, Paginated } from '@/types/api';
 
 type MediaPickerPanelProps = {
@@ -40,6 +39,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
 
     const [scope, setScope] = useState<'user' | 'all'>('user');
     const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [media, setMedia] = useState<Media[]>([]);
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
@@ -49,10 +49,21 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
     const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
-        let cancelled = false;
-        const controller = new AbortController();
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, MEDIA_SEARCH_DEBOUNCE_MS);
 
-        void fetchMediaPage({ scope: 'user', search: '', page: 1 }, controller.signal)
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        let cancelled = false;
+
+        setLoading(true);
+        setError(null);
+
+        void fetchMediaPage({ scope, search: debouncedSearch, page: 1 }, controller.signal)
             .then((response) => {
                 if (cancelled) {
                     return;
@@ -61,11 +72,14 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                 setMedia(response.data);
                 setPage(response.current_page);
                 setLastPage(response.last_page);
-                setLoading(false);
             })
             .catch(() => {
-                if (!cancelled) {
+                if (!cancelled && !controller.signal.aborted) {
                     setError('Unable to load media.');
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
                     setLoading(false);
                 }
             });
@@ -74,33 +88,26 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
             cancelled = true;
             controller.abort();
         };
-    }, []);
+    }, [scope, debouncedSearch]);
 
-    async function loadMedia(nextPage: number, append: boolean, query: MediaQuery) {
-        if (nextPage === 1) {
-            setLoading(true);
-        } else {
-            setLoadingMore(true);
+    async function loadMore() {
+        if (loadingMore || page >= lastPage) {
+            return;
         }
 
+        setLoadingMore(true);
         setError(null);
 
         try {
-            const response = await fetchMediaPage(query);
-
-            setMedia((current) => (append ? [...current, ...response.data] : response.data));
+            const response = await fetchMediaPage({ scope, search: debouncedSearch, page: page + 1 });
+            setMedia((current) => [...current, ...response.data]);
             setPage(response.current_page);
             setLastPage(response.last_page);
         } catch {
             setError('Unable to load media.');
         } finally {
-            setLoading(false);
             setLoadingMore(false);
         }
-    }
-
-    function currentQuery(pageNumber: number = 1): MediaQuery {
-        return { scope, search, page: pageNumber };
     }
 
     async function handleFiles(files: File[]) {
@@ -136,35 +143,19 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                         value={search}
                         placeholder="Search media…"
                         onChange={(event) => setSearch(event.target.value)}
-                        onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
-                                event.preventDefault();
-                                void loadMedia(1, false, currentQuery());
-                            }
-                        }}
                     />
                 </Field>
 
-                <div className="flex flex-wrap items-center gap-2">
-                    {canViewAllMedia ? (
-                        <PillNav
-                            value={scope}
-                            onChange={(next) => {
-                                setScope(next);
-                                void loadMedia(1, false, { scope: next, search, page: 1 });
-                            }}
-                            aria-label="Media author scope"
-                        >
-                            <PillNavItem value="user">Mine</PillNavItem>
-                            <PillNavItem value="all">All</PillNavItem>
-                        </PillNav>
-                    ) : null}
-
-                    <Button type="button" outline onClick={() => void loadMedia(1, false, currentQuery())}>
-                        <MagnifyingGlassIcon data-slot="icon" />
-                        Search
-                    </Button>
-                </div>
+                {canViewAllMedia ? (
+                    <PillNav
+                        value={scope}
+                        onChange={(next) => setScope(next)}
+                        aria-label="Media author scope"
+                    >
+                        <PillNavItem value="user">Mine</PillNavItem>
+                        <PillNavItem value="all">All</PillNavItem>
+                    </PillNav>
+                ) : null}
             </div>
 
             <MediaDropzone
@@ -198,12 +189,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
 
             {page < lastPage && !loading ? (
                 <div className="mt-4 flex justify-center">
-                    <Button
-                        type="button"
-                        outline
-                        disabled={loadingMore}
-                        onClick={() => void loadMedia(page + 1, true, currentQuery(page + 1))}
-                    >
+                    <Button type="button" outline disabled={loadingMore} onClick={() => void loadMore()}>
                         {loadingMore ? 'Loading…' : 'Load more'}
                     </Button>
                 </div>

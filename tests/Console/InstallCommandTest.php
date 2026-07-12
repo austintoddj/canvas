@@ -46,4 +46,5 @@ it('creates all canvas database tables', function (string $table): void {
     'canvas_visits',
     'canvas_users',
     'canvas_media',
+    'canvas_settings',
 ]);

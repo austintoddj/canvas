@@ -1,6 +1,15 @@
 import * as Headless from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
-import { DocumentTextIcon, RectangleStackIcon, TagIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import {
+    DocumentTextIcon,
+    HomeIcon,
+    PhotoIcon,
+    PuzzlePieceIcon,
+    RectangleStackIcon,
+    TagIcon,
+    UserCircleIcon,
+    UsersIcon,
+} from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -11,24 +20,41 @@ import { useRecentPosts } from '@/hooks/useRecentPosts';
 import {
     canSearchEntityType,
     entityTypeToApiParam,
+    filterNavigationPages,
     filterSearchResultsByPermissions,
     parseSearchQuery,
-    searchFilterHints,
+    paletteItemKey,
+    paletteItemLabel,
+    paletteItemPath,
+    type PaletteItem,
     type SearchEntityType,
+    searchFilterHints,
 } from '@/lib/command-palette';
 import { api } from '@/lib/api';
-import { type SearchResult, searchResultLabel, searchResultPath } from '@/types/api';
+import { type SearchResult } from '@/types/api';
 
 type Props = {
     open: boolean;
     onClose: () => void;
 };
 
-const TYPE_ICONS: Record<SearchResult['type'], React.ElementType> = {
+const ENTITY_ICONS: Record<SearchResult['type'], React.ElementType> = {
     Post: DocumentTextIcon,
     Tag: TagIcon,
     Topic: RectangleStackIcon,
     User: UserCircleIcon,
+};
+
+const PAGE_ICONS: Record<string, React.ElementType> = {
+    dashboard: HomeIcon,
+    posts: DocumentTextIcon,
+    'new-post': DocumentTextIcon,
+    media: PhotoIcon,
+    organize: RectangleStackIcon,
+    tags: TagIcon,
+    topics: RectangleStackIcon,
+    users: UsersIcon,
+    integrations: PuzzlePieceIcon,
 };
 
 const GROUP_LABELS: Record<SearchEntityType, string> = {
@@ -51,14 +77,22 @@ export function CommandPalette({ open, onClose }: Props) {
         () => ({
             canManageTaxonomy: permissions.canManageTaxonomy,
             canManageUsers: permissions.canManageUsers,
+            canManageSettings: permissions.canManageSettings,
         }),
-        [permissions.canManageTaxonomy, permissions.canManageUsers]
+        [permissions.canManageTaxonomy, permissions.canManageUsers, permissions.canManageSettings]
     );
     const filterHints = useMemo(() => searchFilterHints(permissionOptions), [permissionOptions]);
     const restrictedEntity =
         parsed.mode === 'search' &&
         parsed.entityType !== null &&
         !canSearchEntityType(parsed.entityType, permissionOptions);
+
+    const showPages = parsed.mode === 'search' && parsed.entityType === null && !restrictedEntity;
+    const pageSearchTerm = parsed.mode === 'search' ? parsed.term : '';
+    const pageResults = useMemo(
+        () => (showPages ? filterNavigationPages(pageSearchTerm, permissionOptions) : []),
+        [showPages, pageSearchTerm, permissionOptions]
+    );
 
     useEffect(() => {
         if (debounceRef.current) {
@@ -104,9 +138,9 @@ export function CommandPalette({ open, onClose }: Props) {
         };
     }, [parsed, permissionOptions]);
 
-    function handleSelect(result: SearchResult | null) {
-        if (!result) return;
-        navigate(searchResultPath(result));
+    function handleSelect(item: PaletteItem | null) {
+        if (!item) return;
+        navigate(paletteItemPath(item));
         onClose();
     }
 
@@ -118,16 +152,19 @@ export function CommandPalette({ open, onClose }: Props) {
     }));
 
     const showRecentPosts = parsed.mode === 'search' && parsed.entityType === null && parsed.term === '';
-    const displayResults = restrictedEntity ? [] : showRecentPosts ? recentPostResults : results;
+    const entityResults = restrictedEntity ? [] : showRecentPosts ? recentPostResults : results;
 
-    const grouped = displayResults.reduce<Record<string, SearchResult[]>>((acc, result) => {
+    const pageItems: PaletteItem[] = pageResults.map((page) => ({ kind: 'page', page }));
+    const entityItems: PaletteItem[] = entityResults.map((result) => ({ kind: 'entity', result }));
+
+    const groupedEntities = entityResults.reduce<Record<string, SearchResult[]>>((acc, result) => {
         const group = acc[result.type] ?? [];
         group.push(result);
         acc[result.type] = group;
         return acc;
     }, {});
 
-    const hasResults = displayResults.length > 0;
+    const hasResults = pageItems.length > 0 || entityItems.length > 0;
     const emptyStateLabel =
         parsed.mode === 'search' && parsed.entityType !== null ? GROUP_LABELS[parsed.entityType] : 'results';
 
@@ -143,7 +180,7 @@ export function CommandPalette({ open, onClose }: Props) {
                     transition
                     className="mx-auto max-w-xl transform overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition-all duration-100 data-closed:scale-95 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in dark:bg-zinc-900 dark:shadow-black/50 dark:ring-white/10"
                 >
-                    <Headless.Combobox<SearchResult | null>
+                    <Headless.Combobox<PaletteItem | null>
                         onChange={handleSelect}
                         onClose={() => {
                             /* keep open while dialog is open */
@@ -155,7 +192,7 @@ export function CommandPalette({ open, onClose }: Props) {
                             <Headless.ComboboxInput
                                 autoFocus
                                 className="h-12 w-full border-0 bg-transparent pl-3 pr-4 text-zinc-900 placeholder:text-zinc-400 focus:outline-none sm:text-sm dark:text-white dark:placeholder:text-zinc-500"
-                                placeholder="Search posts, tags, topics, and users…"
+                                placeholder="Search pages, posts, tags, topics, and users…"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Escape' && onClose()}
@@ -166,27 +203,46 @@ export function CommandPalette({ open, onClose }: Props) {
 
                         {parsed.mode === 'search' && hasResults && (
                             <Headless.ComboboxOptions static className="max-h-80 scroll-py-2 overflow-y-auto py-2">
-                                {showRecentPosts && (
-                                    <p className="px-4 pb-1 pt-0.5 text-xs font-semibold text-zinc-400 uppercase tracking-wide dark:text-zinc-500">
-                                        Recent Posts
-                                    </p>
+                                {pageItems.length > 0 && (
+                                    <li>
+                                        <p className="px-4 pb-1 pt-0.5 text-xs font-semibold text-zinc-400 uppercase tracking-wide dark:text-zinc-500">
+                                            Pages
+                                        </p>
+                                        <ul>
+                                            {pageItems.map((item) => (
+                                                <ResultItem key={paletteItemKey(item)} item={item} />
+                                            ))}
+                                        </ul>
+                                    </li>
                                 )}
+
+                                {showRecentPosts && entityItems.length > 0 && (
+                                    <>
+                                        <p className="px-4 pb-1 pt-2 text-xs font-semibold text-zinc-400 uppercase tracking-wide dark:text-zinc-500">
+                                            Recent Posts
+                                        </p>
+                                        {entityItems.map((item) => (
+                                            <ResultItem key={paletteItemKey(item)} item={item} />
+                                        ))}
+                                    </>
+                                )}
+
                                 {!showRecentPosts &&
-                                    Object.entries(grouped).map(([type, items]) => (
+                                    Object.entries(groupedEntities).map(([type, items]) => (
                                         <li key={type}>
                                             <p className="px-4 pb-1 pt-2 text-xs font-semibold text-zinc-400 uppercase tracking-wide dark:text-zinc-500">
                                                 {GROUP_LABELS[type as SearchEntityType] ?? `${type}s`}
                                             </p>
                                             <ul>
-                                                {items.map((item) => (
-                                                    <ResultItem key={`${item.type}-${item.id}`} result={item} />
-                                                ))}
+                                                {items.map((result) => {
+                                                    const item: PaletteItem = { kind: 'entity', result };
+
+                                                    return (
+                                                        <ResultItem key={paletteItemKey(item)} item={item} />
+                                                    );
+                                                })}
                                             </ul>
                                         </li>
-                                    ))}
-                                {showRecentPosts &&
-                                    recentPostResults.map((item) => (
-                                        <ResultItem key={`${item.type}-${item.id}`} result={item} />
                                     ))}
                             </Headless.ComboboxOptions>
                         )}
@@ -232,12 +288,16 @@ export function CommandPalette({ open, onClose }: Props) {
     );
 }
 
-function ResultItem({ result }: { result: SearchResult }) {
-    const Icon = TYPE_ICONS[result.type];
+function ResultItem({ item }: { item: PaletteItem }) {
+    const Icon =
+        item.kind === 'page'
+            ? (PAGE_ICONS[item.page.id] ?? MagnifyingGlassIcon)
+            : ENTITY_ICONS[item.result.type];
+    const meta = item.kind === 'page' ? 'Page' : item.result.type;
 
     return (
         <Headless.ComboboxOption
-            value={result}
+            value={item}
             className={({ focus }) =>
                 clsx(
                     'flex cursor-pointer select-none items-center gap-3 px-4 py-2.5 data-disabled:cursor-not-allowed',
@@ -248,8 +308,8 @@ function ResultItem({ result }: { result: SearchResult }) {
             }
         >
             <Icon className="size-5 shrink-0 text-zinc-400" />
-            <span className="flex-1 truncate text-sm">{searchResultLabel(result)}</span>
-            <span className="text-xs text-zinc-400 dark:text-zinc-500">{result.type}</span>
+            <span className="flex-1 truncate text-sm">{paletteItemLabel(item)}</span>
+            <span className="text-xs text-zinc-400 dark:text-zinc-500">{meta}</span>
         </Headless.ComboboxOption>
     );
 }
@@ -262,7 +322,7 @@ function HelpPanel({ filterHints }: { filterHints: FilterHint[] }) {
             <p className="font-medium text-zinc-900 dark:text-white">Search tips</p>
             <ul className="mt-3 space-y-2 text-zinc-600 dark:text-zinc-300">
                 <li>
-                    Type to search across posts
+                    Type to jump to pages or search posts
                     {filterHints.length > 0
                         ? `, ${filterHints.map((hint) => hint.label.toLowerCase()).join(', ')}`
                         : ''}

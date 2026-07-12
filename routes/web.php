@@ -1,5 +1,6 @@
 <?php
 
+use Canvas\Http\Controllers\IntegrationSettingsController;
 use Canvas\Http\Controllers\MediaController;
 use Canvas\Http\Controllers\PostController;
 use Canvas\Http\Controllers\SearchController;
@@ -28,6 +29,12 @@ Route::middleware([
 
         // Unsplash routes...
         Route::get('unsplash', UnsplashController::class);
+
+        // Integration settings (admin)...
+        Route::prefix('settings/integrations')->middleware(['can:manage-settings'])->group(function (): void {
+            Route::get('/', [IntegrationSettingsController::class, 'show']);
+            Route::put('/', [IntegrationSettingsController::class, 'update']);
+        });
 
         // Media routes...
         Route::prefix('media')->controller(MediaController::class)->group(function (): void {

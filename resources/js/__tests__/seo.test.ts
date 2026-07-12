@@ -21,7 +21,7 @@ function bootFixture(website: string | null = null): CanvasBoot {
         roles: { 1: 'Contributor', 2: 'Editor', 3: 'Admin' },
         timezone: 'UTC',
         translations: '{}',
-        unsplash: null,
+        unsplash: false,
         version: '7.0.0',
         user: {
             id: 1,

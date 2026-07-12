@@ -104,21 +104,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Unsplash Integration
-    |--------------------------------------------------------------------------
-    |
-    | Visit https://unsplash.com/oauth/applications to create a new Unsplash
-    | app. Use the confidential Access Key given to you to integrate with
-    | the API. Note that demo apps are limited to 50 requests per hour.
-    |
-    */
-
-    'unsplash' => [
-        'access_key' => env('CANVAS_UNSPLASH_ACCESS_KEY'),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | E-Mail Notifications
     |--------------------------------------------------------------------------
     |

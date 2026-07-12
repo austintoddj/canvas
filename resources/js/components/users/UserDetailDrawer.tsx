@@ -2,36 +2,31 @@ import { useEffect, useState } from 'react';
 
 import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
 import { Avatar } from '@/components/avatar';
+import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
-import { Description, ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/fieldset';
-import { Input } from '@/components/input';
-import { Select } from '@/components/select';
+import { ErrorMessage } from '@/components/fieldset';
 import { SideDrawer } from '@/components/SideDrawer';
-import { Switch, SwitchField } from '@/components/switch';
 import { Text, ErrorText } from '@/components/text';
-import { Textarea } from '@/components/textarea';
+import { AuthorProfileFields } from '@/components/users/AuthorProfileFields';
+import { RoleSelectDropdown } from '@/components/users/RoleSelectDropdown';
 import { useCanvas } from '@/hooks/useCanvas';
 import { ValidationError, type LaravelValidationErrors } from '@/lib/api';
 import { usersApi } from '@/lib/api/users';
+import type { RoleValue } from '@/lib/permissions';
 import {
     adminUserFromResource,
+    profileFromUser,
     serializeAdminUserForm,
-    SOCIAL_FIELD_KEYS,
+    serializeProfileForm,
     toAdminUserStorePayload,
+    toProfileStorePayload,
     type AdminUserFormState,
+    type ProfileFormState,
     type SocialFieldKey,
 } from '@/lib/settings/profile';
 import { toast } from '@/lib/toast';
-import { ROLE_OPTIONS, userInitials } from '@/lib/users/roles';
+import { roleLabel, userInitials } from '@/lib/users/roles';
 import type { UserResource } from '@/types/boot';
-
-const SOCIAL_LABELS: Record<SocialFieldKey, string> = {
-    twitter: 'Twitter / X',
-    github: 'GitHub',
-    facebook: 'Facebook',
-    instagram: 'Instagram',
-    linkedin: 'LinkedIn',
-};
 
 type UserDetailDrawerProps = {
     open: boolean;
@@ -45,7 +40,8 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
     const { boot, user: currentUser } = useCanvas();
 
     const [user, setUser] = useState<UserResource | null>(null);
-    const [form, setForm] = useState<AdminUserFormState | null>(null);
+    const [accessForm, setAccessForm] = useState<AdminUserFormState | null>(null);
+    const [profileForm, setProfileForm] = useState<ProfileFormState | null>(null);
     const [baseline, setBaseline] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -53,6 +49,8 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
     const [revoking, setRevoking] = useState(false);
     const [confirmRevokeOpen, setConfirmRevokeOpen] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<LaravelValidationErrors>({});
+
+    const isSelf = user !== null && user.id === currentUser.id;
 
     useEffect(() => {
         if (!open || userId === null) {
@@ -73,7 +71,8 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
             setConfirmRevokeOpen(false);
             setRevoking(false);
             setUser(null);
-            setForm(null);
+            setAccessForm(null);
+            setProfileForm(null);
             setBaseline('');
         });
 
@@ -84,13 +83,23 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                     return;
                 }
 
-                const nextForm = adminUserFromResource(fresh, {
-                    locale: boot.languageCodes[0] ?? 'en',
-                    timezone: boot.timezone,
-                });
+                const self = fresh.id === currentUser.id;
                 setUser(fresh);
-                setForm(nextForm);
-                setBaseline(serializeAdminUserForm(nextForm));
+
+                if (self) {
+                    const nextProfile = profileFromUser(fresh, {
+                        locale: boot.languageCodes[0] ?? 'en',
+                        timezone: boot.timezone,
+                    });
+                    setProfileForm(nextProfile);
+                    setAccessForm(null);
+                    setBaseline(serializeProfileForm(nextProfile));
+                } else {
+                    const nextAccess = adminUserFromResource(fresh);
+                    setAccessForm(nextAccess);
+                    setProfileForm(null);
+                    setBaseline(serializeAdminUserForm(nextAccess));
+                }
             })
             .catch(() => {
                 if (!cancelled) {
@@ -107,19 +116,46 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
             cancelled = true;
             controller.abort();
         };
-    }, [boot.languageCodes, boot.timezone, open, userId]);
+    }, [boot.languageCodes, boot.timezone, currentUser.id, open, userId]);
 
-    const isDirty = form !== null && serializeAdminUserForm(form) !== baseline;
-    const isSelf = user !== null && user.id === currentUser.id;
-    const showForm = !loading && error === null && user !== null && form !== null;
+    const isDirty =
+        isSelf && profileForm !== null
+            ? serializeProfileForm(profileForm) !== baseline
+            : accessForm !== null
+              ? serializeAdminUserForm(accessForm) !== baseline
+              : false;
+
+    const showForm =
+        !loading &&
+        error === null &&
+        user !== null &&
+        (isSelf ? profileForm !== null : accessForm !== null);
+
     const title = loading ? 'User' : (user?.name ?? 'User');
+    const postsCount = user?.posts_count ?? 0;
+    const postsLabel = `${postsCount.toLocaleString()} ${postsCount === 1 ? 'post' : 'posts'}`;
+    const roleDisplay =
+        user !== null ? roleLabel(user.canvas?.role ?? null, boot.roles) : null;
 
-    function patchForm(patch: Partial<AdminUserFormState>) {
-        setForm((current) => (current === null ? current : { ...current, ...patch }));
+    function setRole(role: RoleValue) {
+        setAccessForm((current) => (current === null ? current : { ...current, role }));
+        setFieldErrors((current) => {
+            if (current.role === undefined) {
+                return current;
+            }
+
+            const next = { ...current };
+            delete next.role;
+            return next;
+        });
+    }
+
+    function patchProfile(patch: Partial<ProfileFormState>) {
+        setProfileForm((current) => (current === null ? current : { ...current, ...patch }));
     }
 
     function patchSocial(key: SocialFieldKey, value: string) {
-        setForm((current) => {
+        setProfileForm((current) => {
             if (current === null) {
                 return current;
             }
@@ -128,6 +164,12 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                 ...current,
                 social: { ...current.social, [key]: value },
             };
+        });
+        setFieldErrors((current) => {
+            const next = { ...current };
+            delete next[`social.${key}`];
+            delete next.social;
+            return next;
         });
     }
 
@@ -144,7 +186,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
     }
 
     async function handleSave() {
-        if (userId === null || form === null || saving || loading) {
+        if (userId === null || saving || loading || !showForm) {
             return;
         }
 
@@ -153,23 +195,33 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
         setError(null);
 
         try {
-            const response = await usersApi.store(userId, toAdminUserStorePayload(form));
-            const nextForm = adminUserFromResource(response.user, {
-                locale: boot.languageCodes[0] ?? 'en',
-                timezone: boot.timezone,
-            });
-            setUser(response.user);
-            setForm(nextForm);
-            setBaseline(serializeAdminUserForm(nextForm));
-            toast.success('User updated.');
-            onSaved?.(response.user);
+            if (isSelf && profileForm !== null) {
+                const response = await usersApi.store(userId, toProfileStorePayload(profileForm));
+                const nextProfile = profileFromUser(response.user, {
+                    locale: boot.languageCodes[0] ?? 'en',
+                    timezone: boot.timezone,
+                });
+                setUser(response.user);
+                setProfileForm(nextProfile);
+                setBaseline(serializeProfileForm(nextProfile));
+                toast.success('Profile saved.');
+                onSaved?.(response.user);
+            } else if (!isSelf && accessForm !== null) {
+                const response = await usersApi.store(userId, toAdminUserStorePayload(accessForm));
+                const nextAccess = adminUserFromResource(response.user);
+                setUser(response.user);
+                setAccessForm(nextAccess);
+                setBaseline(serializeAdminUserForm(nextAccess));
+                toast.success('Access updated.');
+                onSaved?.(response.user);
+            }
         } catch (saveError) {
             if (saveError instanceof ValidationError) {
                 setFieldErrors(saveError.errors);
                 toast.error('Please fix the highlighted fields.');
             } else {
-                setError('Unable to save this user.');
-                toast.error('Unable to save this user.');
+                setError(isSelf ? 'Unable to save your profile.' : 'Unable to save this user.');
+                toast.error(isSelf ? 'Unable to save your profile.' : 'Unable to save this user.');
             }
         } finally {
             setSaving(false);
@@ -218,7 +270,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                 open={open}
                 onClose={onClose}
                 title={title}
-                description="Role, profile, and preferences"
+                description={isSelf ? 'Your author profile' : undefined}
                 titleClassName="truncate"
                 footer={
                     open && userId !== null ? (
@@ -246,7 +298,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                                     disabled={loading || saving || revoking || !isDirty || !showForm}
                                     onClick={() => void handleSave()}
                                 >
-                                    {saving ? 'Saving…' : 'Save'}
+                                    {saving ? 'Saving…' : isSelf ? 'Save profile' : 'Save'}
                                 </Button>
                             </div>
                         </>
@@ -262,9 +314,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                                 <div className="h-3 w-48 animate-pulse rounded bg-zinc-950/10 dark:bg-white/10" />
                             </div>
                         </div>
-                        <div className="h-4 w-20 animate-pulse rounded bg-zinc-950/10 dark:bg-white/10" />
                         <div className="h-10 w-full animate-pulse rounded-lg bg-zinc-950/10 dark:bg-white/10" />
-                        <div className="h-4 w-16 animate-pulse rounded bg-zinc-950/10 dark:bg-white/10" />
                         <div className="h-24 w-full animate-pulse rounded-lg bg-zinc-950/10 dark:bg-white/10" />
                     </div>
                 ) : null}
@@ -275,7 +325,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                     </div>
                 ) : null}
 
-                {showForm && form !== null && user !== null ? (
+                {showForm && user !== null ? (
                     <form
                         className="flex flex-1 flex-col"
                         onSubmit={(event) => {
@@ -283,12 +333,16 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                             void handleSave();
                         }}
                     >
-                        <div className="space-y-8 px-5 py-5">
+                        <div className="space-y-6 px-5 py-5">
                             {error ? <ErrorText>{error}</ErrorText> : null}
 
                             <div className="flex items-center gap-4 rounded-2xl border border-zinc-950/10 bg-zinc-950/[0.02] p-4 dark:border-white/10 dark:bg-white/[0.03]">
                                 <Avatar
-                                    src={user.avatar_url}
+                                    src={
+                                        isSelf
+                                            ? user.avatar_url || profileForm?.avatar || null
+                                            : user.avatar_url
+                                    }
                                     initials={userInitials(user.name)}
                                     className="size-14"
                                     alt=""
@@ -300,194 +354,40 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                                     <Text className="mt-0.5 truncate text-sm text-canvas-muted dark:text-canvas-muted-dark">
                                         {user.email}
                                     </Text>
-                                    <Text className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
-                                        Host identity is read-only · {(user.posts_count ?? 0).toLocaleString()} posts
-                                    </Text>
+                                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                                        {isSelf && roleDisplay && roleDisplay !== 'No access' ? (
+                                            <Badge color="zinc">{roleDisplay}</Badge>
+                                        ) : null}
+                                        <Text className="text-xs text-zinc-400 dark:text-zinc-500">{postsLabel}</Text>
+                                    </div>
                                 </div>
                             </div>
 
-                            <Fieldset>
-                                <Legend>Access</Legend>
-                                <FieldGroup>
-                                    <Field>
-                                        <Label>Role</Label>
-                                        <Description>What this person can manage in Canvas.</Description>
-                                        <Select
-                                            name="role"
-                                            value={form.role === null ? '' : String(form.role)}
-                                            onChange={(event) => {
-                                                const value = event.target.value;
-                                                patchForm({ role: value === '' ? null : Number.parseInt(value, 10) });
-                                                clearFieldError('role');
-                                            }}
-                                            invalid={Boolean(fieldErrors.role)}
-                                            disabled={isSelf}
-                                        >
-                                            {ROLE_OPTIONS.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {boot.roles[option.value] ?? option.label}
-                                                </option>
-                                            ))}
-                                        </Select>
-                                        {isSelf ? (
-                                            <Description>You can’t change your own role here.</Description>
-                                        ) : null}
-                                        {fieldErrors.role?.[0] ? (
-                                            <ErrorMessage>{fieldErrors.role[0]}</ErrorMessage>
-                                        ) : null}
-                                    </Field>
-                                </FieldGroup>
-                            </Fieldset>
+                            {isSelf && profileForm !== null ? (
+                                <AuthorProfileFields
+                                    form={profileForm}
+                                    fieldErrors={fieldErrors}
+                                    languageCodes={boot.languageCodes}
+                                    onPatch={patchProfile}
+                                    onPatchSocial={patchSocial}
+                                    onClearFieldError={clearFieldError}
+                                />
+                            ) : null}
 
-                            <Fieldset>
-                                <Legend>Profile</Legend>
-                                <FieldGroup>
-                                    <Field>
-                                        <Label>Username</Label>
-                                        <Description>Public handle on the author page.</Description>
-                                        <Input
-                                            name="username"
-                                            value={form.username}
-                                            onChange={(event) => {
-                                                patchForm({ username: event.target.value });
-                                                clearFieldError('username');
-                                            }}
-                                            invalid={Boolean(fieldErrors.username)}
-                                        />
-                                        {fieldErrors.username?.[0] ? (
-                                            <ErrorMessage>{fieldErrors.username[0]}</ErrorMessage>
-                                        ) : null}
-                                    </Field>
-
-                                    <Field>
-                                        <Label>Bio</Label>
-                                        <Description>A short intro shown with their posts.</Description>
-                                        <Textarea
-                                            name="summary"
-                                            rows={3}
-                                            value={form.summary}
-                                            onChange={(event) => {
-                                                patchForm({ summary: event.target.value });
-                                                clearFieldError('summary');
-                                            }}
-                                            invalid={Boolean(fieldErrors.summary)}
-                                        />
-                                        {fieldErrors.summary?.[0] ? (
-                                            <ErrorMessage>{fieldErrors.summary[0]}</ErrorMessage>
-                                        ) : null}
-                                    </Field>
-
-                                    <Field>
-                                        <Label>Avatar URL</Label>
-                                        <Description>Leave blank to use their host avatar.</Description>
-                                        <Input
-                                            name="avatar"
-                                            type="url"
-                                            value={form.avatar}
-                                            onChange={(event) => {
-                                                patchForm({ avatar: event.target.value });
-                                                clearFieldError('avatar');
-                                            }}
-                                            invalid={Boolean(fieldErrors.avatar)}
-                                            placeholder="https://"
-                                        />
-                                        {fieldErrors.avatar?.[0] ? (
-                                            <ErrorMessage>{fieldErrors.avatar[0]}</ErrorMessage>
-                                        ) : null}
-                                    </Field>
-
-                                    <Field>
-                                        <Label>Website</Label>
-                                        <Input
-                                            name="website"
-                                            type="url"
-                                            value={form.website}
-                                            onChange={(event) => {
-                                                patchForm({ website: event.target.value });
-                                                clearFieldError('website');
-                                            }}
-                                            invalid={Boolean(fieldErrors.website)}
-                                            placeholder="https://"
-                                        />
-                                        {fieldErrors.website?.[0] ? (
-                                            <ErrorMessage>{fieldErrors.website[0]}</ErrorMessage>
-                                        ) : null}
-                                    </Field>
-                                </FieldGroup>
-                            </Fieldset>
-
-                            <Fieldset>
-                                <Legend>Social links</Legend>
-                                <FieldGroup>
-                                    {SOCIAL_FIELD_KEYS.map((key) => (
-                                        <Field key={key}>
-                                            <Label>{SOCIAL_LABELS[key]}</Label>
-                                            <Input
-                                                name={`social.${key}`}
-                                                type="url"
-                                                value={form.social[key]}
-                                                onChange={(event) => patchSocial(key, event.target.value)}
-                                                placeholder="https://"
-                                            />
-                                        </Field>
-                                    ))}
-                                </FieldGroup>
-                            </Fieldset>
-
-                            <Fieldset>
-                                <Legend>Preferences</Legend>
-                                <FieldGroup>
-                                    <Field>
-                                        <Label>Locale</Label>
-                                        <Select
-                                            name="locale"
-                                            value={form.locale}
-                                            onChange={(event) => {
-                                                patchForm({ locale: event.target.value });
-                                                clearFieldError('locale');
-                                            }}
-                                            invalid={Boolean(fieldErrors.locale)}
-                                        >
-                                            {boot.languageCodes.map((code) => (
-                                                <option key={code} value={code}>
-                                                    {code}
-                                                </option>
-                                            ))}
-                                        </Select>
-                                        {fieldErrors.locale?.[0] ? (
-                                            <ErrorMessage>{fieldErrors.locale[0]}</ErrorMessage>
-                                        ) : null}
-                                    </Field>
-
-                                    <Field>
-                                        <Label>Timezone</Label>
-                                        <Input
-                                            name="timezone"
-                                            value={form.timezone}
-                                            onChange={(event) => {
-                                                patchForm({ timezone: event.target.value });
-                                                clearFieldError('timezone');
-                                            }}
-                                            invalid={Boolean(fieldErrors.timezone)}
-                                            placeholder="UTC"
-                                        />
-                                        {fieldErrors.timezone?.[0] ? (
-                                            <ErrorMessage>{fieldErrors.timezone[0]}</ErrorMessage>
-                                        ) : null}
-                                    </Field>
-
-                                    <SwitchField>
-                                        <Label>Weekly digest</Label>
-                                        <Description>Email a summary of site activity.</Description>
-                                        <Switch
-                                            name="digest"
-                                            checked={form.digest}
-                                            onChange={(checked) => patchForm({ digest: checked })}
-                                            color="dark/zinc"
-                                        />
-                                    </SwitchField>
-                                </FieldGroup>
-                            </Fieldset>
+                            {!isSelf && accessForm !== null ? (
+                                <div className="space-y-2">
+                                    <Text className="text-sm font-medium text-zinc-950 dark:text-white">Role</Text>
+                                    <RoleSelectDropdown
+                                        value={accessForm.role}
+                                        onChange={setRole}
+                                        labels={boot.roles}
+                                        invalid={Boolean(fieldErrors.role)}
+                                    />
+                                    {fieldErrors.role?.[0] ? (
+                                        <ErrorMessage>{fieldErrors.role[0]}</ErrorMessage>
+                                    ) : null}
+                                </div>
+                            ) : null}
                         </div>
                     </form>
                 ) : null}

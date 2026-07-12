@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 import Page, {
     Dashboard,
@@ -8,7 +8,7 @@ import Page, {
     PostsEditor,
     PostsIndex,
     PostsStats,
-    SettingsProfile,
+    SettingsIntegrations,
     SettingsUsersIndex,
     TagsEditor,
     TagsIndex,
@@ -35,8 +35,9 @@ export const router = createBrowserRouter(
                 { path: 'tags/:id', element: <Page component={TagsEditor} /> },
                 { path: 'topics', element: <Page component={TopicsIndex} /> },
                 { path: 'topics/:id', element: <Page component={TopicsEditor} /> },
-                { path: 'settings', element: <Page component={SettingsProfile} /> },
+                { path: 'settings', element: <Navigate to="/" replace /> },
                 { path: 'settings/users', element: <Page component={SettingsUsersIndex} /> },
+                { path: 'settings/integrations', element: <Page component={SettingsIntegrations} /> },
             ],
         },
     ],

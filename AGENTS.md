@@ -93,6 +93,7 @@ When touching existing code: do not leave behind narrative comments; clean them 
 - **Dependencies:** prefer Illuminate primitives (`Str::uuid()`, etc.); no transitive-only critical packages.
 - Prefer class-based factories and `Model::factory()` over legacy `factory()` helpers.
 - **Taxonomy from the post editor:** **attach existing** tags/topics only, via Catalyst **Dropdown** menus (same pattern as the editor toolbar More menu — `cursor-pointer`, checkmarks for selection). No free-typed minting in the post settings drawer; Organize remains the place to create taxonomy deliberately.
+- **Author profile vs access:** Authors own bio, username, avatar, website, socials, locale, timezone, and digest via a **profile drawer** (avatar menu or self in Users) — not a standalone `/settings` page. Admins managing **other** users only change **role** and **revoke access**. API enforces the same: self may not set `role`; admin-on-other payloads are role-only.
 
 ### Artisan command naming
 
@@ -119,8 +120,9 @@ Durable patterns for list pages and media (set by the media library; reuse elsew
 - **Media empty splash** — `MediaEmptyVisual` + `MEDIA_EMPTY_STATE` is the gold-standard empty design; do not redesign it casually. Reuse the `EmptyState` shell pattern elsewhere.
 - **Taxonomy IA** — Tags and Topics share one **Organize** surface (`/organize?tab=topics|tags`); legacy `/tags` and `/topics` redirect. One sidebar item when `canManageTaxonomy`.
 - Do not clear list items the moment a filter request starts; replace when the response arrives.
-- Prefer layout-owned width (`SidebarLayout` max-w-6xl); avoid re-wrapping every page in `mx-auto max-w-6xl px-4 py-8`. Use `mx-auto max-w-2xl` only for narrow forms (settings).
-- **Side drawers** — Media and taxonomy detail UIs share `SideDrawer` chrome; keep domain logic in feature drawers.
+- Prefer layout-owned width (`SidebarLayout` max-w-6xl); avoid re-wrapping every page in `mx-auto max-w-6xl px-4 py-8`. Use `mx-auto max-w-2xl` only for narrow forms (integrations).
+- **Side drawers** — Media, taxonomy, and user detail UIs share `SideDrawer` chrome; keep domain logic in feature drawers. User drawer is dual-mode: **self** = author profile fields; **other** = role dropdown + revoke (no Access/Role fieldset nesting, no admin-edited bios). Role/locale pickers use Catalyst **Dropdown** menus with checkmarks — not native `<select>`.
+- **No author settings page** — `/settings` redirects home. Avatar menu opens the self profile drawer. Site integrations stay on `/settings/integrations`.
 - **Danger text** — `text-red-600 dark:text-red-400` (not `red-500` in dark).
 - **Reduced motion** — `ContentReveal` / `EmptyStateReveal` / Toaster / PillNav honor `prefers-reduced-motion`.
 - **Post editor** — loading uses layout-matched skeleton (`data-post-editor-skeleton`); toolbar toggles use `aria-pressed`; link editing uses a dialog (never `window.prompt`). Quiet writing surface: **no bubble/floating selection menu** — formatting lives on the fixed toolbar only. Primary toolbar stays a single row (no wrap thrash): everyday marks/blocks/media stay visible; secondary tools (strike, highlight, HR, table insert, alignment) live under a **More** menu (`data-post-body-toolbar-more`). Rich embeds (YouTube, X, Vimeo, …) are **paste-only** — no per-provider toolbar buttons. **Focus mode** lives on the body toolbar (`data-post-focus-toggle` / arrows-out icon), not the page nav; full-viewport writing surface (`data-post-editor-focus`); Esc exits. Editor nav uses **icon-only** outline buttons for **SEO** (`data-post-seo-trigger` / globe) and **Settings** (`data-post-settings-trigger` / cog) — each opens its own side drawer (SEO is not nested inside Settings). **Nav save status** is ephemeral: hidden when idle/pending, `Saving…` while in flight, `Saved` for a few seconds after success (not a permanent “Saved” badge).

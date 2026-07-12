@@ -12,7 +12,7 @@ function bootWithRole(role: number): CanvasBoot {
         roles: { 1: 'Contributor', 2: 'Editor', 3: 'Admin' },
         timezone: 'UTC',
         translations: JSON.stringify({ hello: 'Hello' }),
-        unsplash: null,
+        unsplash: false,
         version: '7.0.0',
         user: {
             id: 1,
@@ -53,6 +53,7 @@ describe('buildCanvasContextValue', () => {
             isAdmin: false,
             canManageUsers: false,
             canManageTaxonomy: false,
+            canManageSettings: false,
             canViewAllPosts: true,
             canViewAllMedia: true,
         });
@@ -60,6 +61,7 @@ describe('buildCanvasContextValue', () => {
         const admin = buildCanvasContextValue(bootWithRole(Role.Admin)).permissions;
         expect(admin.canManageUsers).toBe(true);
         expect(admin.canManageTaxonomy).toBe(true);
+        expect(admin.canManageSettings).toBe(true);
 
         const contributor = buildCanvasContextValue(bootWithRole(Role.Contributor)).permissions;
         expect(contributor.isContributor).toBe(true);

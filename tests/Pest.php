@@ -1,7 +1,9 @@
 <?php
 
+use Canvas\Enums\SettingKey;
 use Canvas\Models\Post;
 use Canvas\Policies\UserPolicy;
+use Canvas\Support\SettingsRepository;
 use Canvas\Tests\Models\BareUser;
 use Canvas\Tests\TestCase;
 use Illuminate\Support\Facades\Gate;
@@ -65,4 +67,9 @@ function createPublishedPosts(int|string $userId, int $count = 2): void
         'user_id' => $userId,
         'published_at' => now()->subDay(),
     ]);
+}
+
+function setUnsplashAccessKey(?string $key): void
+{
+    app(SettingsRepository::class)->set(SettingKey::UnsplashAccessKey, $key);
 }

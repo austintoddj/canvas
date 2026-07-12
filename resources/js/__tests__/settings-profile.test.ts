@@ -73,7 +73,9 @@ describe('settings profile helpers', () => {
         expect(serializeProfileForm(form)).toBe(JSON.stringify(toProfileStorePayload(form)));
 
         const admin = adminUserFromResource(sampleUser);
-        expect(admin.role).toBe(2);
-        expect(toAdminUserStorePayload(admin).role).toBe(2);
+        expect(admin).toEqual({ role: 2 });
+        expect(toAdminUserStorePayload(admin)).toEqual({ role: 2 });
+        expect(toAdminUserStorePayload(admin)).not.toHaveProperty('summary');
+        expect(toAdminUserStorePayload(admin)).not.toHaveProperty('username');
     });
 });

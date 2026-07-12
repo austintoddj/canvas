@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Http;
 
 it('returns results from the Unsplash API', function (): void {
-    config(['canvas.unsplash.access_key' => 'test-access-key']);
+    setUnsplashAccessKey('test-access-key');
 
     Http::fake([
         'api.unsplash.com/*' => Http::response([
@@ -26,12 +26,21 @@ it('returns results from the Unsplash API', function (): void {
 });
 
 it('returns 422 when the access key is not configured', function (): void {
-    config(['canvas.unsplash.access_key' => null]);
+    setUnsplashAccessKey(null);
 
     $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/unsplash?query=mountains')
         ->assertStatus(422)
         ->assertJsonStructure(['error']);
+});
+
+it('returns 422 when the search query is empty', function (): void {
+    setUnsplashAccessKey('test-access-key');
+
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/unsplash?query=')
+        ->assertStatus(422)
+        ->assertJsonPath('error', 'A search query is required.');
 });
 
 it('requires authentication to search unsplash', function (): void {
@@ -40,7 +49,7 @@ it('requires authentication to search unsplash', function (): void {
 });
 
 it('forwards not found responses from the unsplash api', function (): void {
-    config(['canvas.unsplash.access_key' => 'test-access-key']);
+    setUnsplashAccessKey('test-access-key');
 
     Http::fake([
         'api.unsplash.com/*' => Http::response(['errors' => ['Not Found']], 404),
@@ -53,7 +62,7 @@ it('forwards not found responses from the unsplash api', function (): void {
 });
 
 it('forwards server error responses from the unsplash api', function (): void {
-    config(['canvas.unsplash.access_key' => 'test-access-key']);
+    setUnsplashAccessKey('test-access-key');
 
     Http::fake([
         'api.unsplash.com/*' => Http::response(['error' => 'Service unavailable'], 503),
@@ -66,7 +75,7 @@ it('forwards server error responses from the unsplash api', function (): void {
 });
 
 it('forwards rate limit responses from the unsplash api', function (): void {
-    config(['canvas.unsplash.access_key' => 'test-access-key']);
+    setUnsplashAccessKey('test-access-key');
 
     Http::fake([
         'api.unsplash.com/*' => Http::response(['error' => 'Rate Limit Exceeded'], 429),

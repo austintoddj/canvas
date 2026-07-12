@@ -32,7 +32,7 @@ final class FrontendBootData
             'roles' => Role::options(),
             'timezone' => config('app.timezone'),
             'translations' => Localization::availableTranslations($locale),
-            'unsplash' => config('canvas.unsplash.access_key'),
+            'unsplash' => Unsplash::configured(),
             'user' => UserResource::make($user)->resolve(),
             'version' => Version::installed(),
         ];

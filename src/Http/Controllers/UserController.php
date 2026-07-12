@@ -12,12 +12,14 @@ use Canvas\Http\Resources\UserResource;
 use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Support\AuthorAvatar;
+use Canvas\Support\CanvasUserAttributes;
 use Canvas\Support\HostUser;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 
 class UserController extends Controller
@@ -100,7 +102,15 @@ class UserController extends Controller
 
         Gate::forUser($currentUser)->authorize('update', $user);
 
-        $created = $syncCanvasUser((string) $user->getKey(), $request->validated(), CanvasUser::isAdmin($currentUser));
+        $validated = $request->validated();
+        $isSelf = (string) $currentUser->getKey() === (string) $user->getKey();
+
+        // Admins manage other users' access only. Authors own their own profile fields.
+        $payload = $isSelf
+            ? Arr::except($validated, CanvasUserAttributes::ACCESS)
+            : Arr::only($validated, CanvasUserAttributes::ACCESS);
+
+        $created = $syncCanvasUser((string) $user->getKey(), $payload, CanvasUser::isAdmin($currentUser));
 
         $canvasUser = CanvasUser::query()->findOrFail($user->getKey());
         $user->setRelation('canvasUser', $canvasUser);

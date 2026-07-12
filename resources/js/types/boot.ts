@@ -32,7 +32,7 @@ export type CanvasBoot = {
     roles: Record<number, string>;
     timezone: string;
     translations: string;
-    unsplash: string | null;
+    unsplash: boolean;
     version: string;
     user: UserResource;
 };

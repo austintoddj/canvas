@@ -39,6 +39,11 @@ export function canManageTaxonomy(user: UserResource): boolean {
     return isAdmin(user);
 }
 
+/** Gate: `manage-settings` — Admin only. */
+export function canManageSettings(user: UserResource): boolean {
+    return isAdmin(user);
+}
+
 /** Policy: `viewAll` on `Post` — Editor and Admin; Contributors see own content only. */
 export function canViewAllPosts(user: UserResource): boolean {
     const role = canvasRole(user);
