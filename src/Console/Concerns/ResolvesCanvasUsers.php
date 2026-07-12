@@ -6,6 +6,7 @@ namespace Canvas\Console\Concerns;
 
 use Canvas\Enums\Role;
 use Canvas\Models\CanvasUser;
+use Canvas\Support\HostUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -13,17 +14,12 @@ trait ResolvesCanvasUsers
 {
     protected function userModel(): string
     {
-        return config('canvas.user_model');
+        return HostUser::modelClass();
     }
 
     protected function resolveUser(int|string $value): Model
     {
-        $userModel = $this->userModel();
-        $identifier = (string) $value;
-
-        return filter_var($identifier, FILTER_VALIDATE_EMAIL)
-            ? $userModel::query()->where('email', $identifier)->firstOrFail()
-            : $userModel::query()->findOrFail($value);
+        return HostUser::findByIdentifierOrFail($value);
     }
 
     protected function resolveRole(string $value): ?Role

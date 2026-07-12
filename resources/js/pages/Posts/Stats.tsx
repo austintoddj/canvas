@@ -9,6 +9,7 @@ import { DescriptionDetails, DescriptionList, DescriptionTerm } from '@/componen
 import { Divider } from '@/components/divider';
 import { Heading, Subheading } from '@/components/heading';
 import { Text, PageDescription, ErrorText } from '@/components/text';
+import { ApiError } from '@/lib/api';
 import { postsApi } from '@/lib/api/posts';
 import { parseDailyGraph, rankedEntries } from '@/lib/analytics';
 import type { PostStatsResponse } from '@/types/api';
@@ -62,9 +63,10 @@ export default function PostsStats() {
                     setStats(response);
                 }
             })
-            .catch(() => {
+            .catch((error: unknown) => {
                 if (!cancelled) {
-                    setError('Unable to load post stats.');
+                    const notFound = error instanceof ApiError && error.status === 404;
+                    setError(notFound ? 'Stats are available for published posts.' : 'Unable to load post stats.');
                     setStats(null);
                 }
             })
@@ -108,7 +110,7 @@ export default function PostsStats() {
                 </Button>
                 <div>
                     <Heading>{title}</Heading>
-                    <PageDescription>Post analytics</PageDescription>
+                    <PageDescription>Views and visits for this post.</PageDescription>
                 </div>
             </div>
 

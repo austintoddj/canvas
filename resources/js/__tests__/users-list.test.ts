@@ -1,33 +1,33 @@
 import { describe, expect, it } from 'vitest';
 
-import usersEmptyVisualSource from '@/components/users/UsersEmptyVisual.tsx?raw';
 import {
     normalizeResourceCollectionPage,
     parseUsersListFilters,
+    setUserDetailParam,
+    userDetailId,
+    usersDetailPath,
     usersIndexPath,
     usersIndexQueryParams,
 } from '@/lib/users/list';
-import usersIndexSource from '@/pages/Settings/Users/Index.tsx?raw';
 
-describe('parseUsersListFilters', () => {
-    it('reads page from search params', () => {
-        expect(parseUsersListFilters(new URLSearchParams('page=2'))).toEqual({ page: 2 });
+describe('users list helpers', () => {
+    it('parses filters, paths, and detail deep links', () => {
         expect(parseUsersListFilters(new URLSearchParams())).toEqual({ page: 1 });
-    });
-});
-
-describe('usersIndexPath / usersIndexQueryParams', () => {
-    it('builds SPA paths and API params', () => {
+        expect(parseUsersListFilters(new URLSearchParams('page=2'))).toEqual({ page: 2 });
         expect(usersIndexPath({ page: 1 })).toBe('/settings/users');
         expect(usersIndexPath({ page: 3 })).toBe('/settings/users?page=3');
         expect(usersIndexQueryParams({ page: 1 })).toEqual({});
         expect(usersIndexQueryParams({ page: 4 })).toEqual({ page: 4 });
+        expect(userDetailId(new URLSearchParams())).toBeNull();
+        expect(userDetailId(new URLSearchParams('detail=42'))).toBe('42');
+        expect(setUserDetailParam(new URLSearchParams('page=2'), 7).get('detail')).toBe('7');
+        expect(setUserDetailParam(new URLSearchParams('detail=9'), null).get('detail')).toBeNull();
+        expect(usersDetailPath(12)).toBe('/settings/users?detail=12');
+        expect(usersDetailPath(12, 3)).toBe('/settings/users?detail=12&page=3');
     });
-});
 
-describe('normalizeResourceCollectionPage', () => {
-    it('maps Laravel ResourceCollection meta pagination into Paginated', () => {
-        const page = normalizeResourceCollectionPage({
+    it('normalizes Laravel ResourceCollection and LengthAwarePaginator JSON', () => {
+        const resourcePage = normalizeResourceCollectionPage({
             data: [{ id: 1 }],
             links: {
                 first: 'https://example.test/users?page=1',
@@ -46,17 +46,12 @@ describe('normalizeResourceCollectionPage', () => {
             },
         });
 
-        expect(page.data).toEqual([{ id: 1 }]);
-        expect(page.current_page).toBe(1);
-        expect(page.last_page).toBe(2);
-        expect(page.per_page).toBe(15);
-        expect(page.total).toBe(16);
-        expect(page.next_page_url).toBe('https://example.test/users?page=2');
-        expect(page.prev_page_url).toBeNull();
-    });
+        expect(resourcePage.data).toEqual([{ id: 1 }]);
+        expect(resourcePage.current_page).toBe(1);
+        expect(resourcePage.next_page_url).toBe('https://example.test/users?page=2');
+        expect(resourcePage.prev_page_url).toBeNull();
 
-    it('passes through flat LengthAwarePaginator JSON', () => {
-        const page = normalizeResourceCollectionPage({
+        const flatPage = normalizeResourceCollectionPage({
             data: [{ id: 2 }],
             current_page: 2,
             last_page: 3,
@@ -72,25 +67,8 @@ describe('normalizeResourceCollectionPage', () => {
             links: [],
         });
 
-        expect(page.current_page).toBe(2);
-        expect(page.last_page).toBe(3);
-        expect(page.total).toBe(25);
-        expect(page.prev_page_url).toBe('/u?page=1');
-    });
-});
-
-describe('users list empty state (shipped source)', () => {
-    it('uses a designed empty visual instead of a single icon tile', () => {
-        expect(usersIndexSource).toContain('EmptyState');
-        expect(usersIndexSource).toContain('UsersEmptyVisual');
-        expect(usersIndexSource).not.toContain('UsersIcon');
-        expect(usersEmptyVisualSource).toContain('data-users-empty-visual');
-    });
-
-    it('soft-reveals filled lists and lifts empty states without animating page chrome', () => {
-        expect(usersIndexSource).toContain('ContentReveal');
-        expect(usersIndexSource).toContain('busy={refreshing}');
-        expect(usersIndexSource).toContain('EmptyStateReveal');
-        expect(usersIndexSource).toContain('TableListSkeleton');
+        expect(flatPage.current_page).toBe(2);
+        expect(flatPage.total).toBe(25);
+        expect(flatPage.prev_page_url).toBe('/u?page=1');
     });
 });

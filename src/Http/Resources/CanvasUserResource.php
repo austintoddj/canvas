@@ -45,6 +45,7 @@ class CanvasUserResource extends JsonResource
             'theme' => 'system',
             'digest' => false,
             'preferences' => UserPreferences::defaults(),
+            'updated_at' => null,
         ];
     }
 
@@ -78,6 +79,7 @@ class CanvasUserResource extends JsonResource
             'theme' => $canvasUser->theme ?? 'system',
             'digest' => (bool) $canvasUser->digest,
             'preferences' => $canvasUser->resolvedPreferences(),
+            'updated_at' => $canvasUser->updated_at?->toIso8601String(),
         ];
     }
 }

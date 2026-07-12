@@ -1,11 +1,22 @@
+import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
+import clsx from 'clsx';
+
 import { BadgeButton } from '@/components/badge';
+import {
+    Dropdown,
+    DropdownButton,
+    DropdownItem,
+    DropdownLabel,
+    DropdownMenu,
+    DropdownTrailingIcon,
+    dropdownInsetItemClass,
+} from '@/components/dropdown';
 import { Description, ErrorMessage, Field, Fieldset, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import { Textarea } from '@/components/textarea';
-import { slugify, taxonomyFromName, type PostFormState } from '@/lib/posts/form';
+import { isExistingTaxonomy, type PostFormState } from '@/lib/posts/form';
 import type { LaravelValidationErrors } from '@/lib/api';
 import type { TaxonomyOption } from '@/types/api';
-import { useState } from 'react';
 
 type PostSidebarProps = {
     form: PostFormState;
@@ -21,6 +32,53 @@ function fieldError(errors: LaravelValidationErrors, key: string): string | unde
     return errors[key]?.[0];
 }
 
+function TaxonomySelectButton({
+    label,
+    emptyLabel,
+    disabled,
+}: {
+    label: string | null;
+    emptyLabel: string;
+    disabled?: boolean;
+}) {
+    return (
+        <DropdownButton
+            outline
+            disabled={disabled}
+            className={clsx(
+                'mt-3 w-full cursor-pointer justify-between font-normal',
+                label === null && 'text-zinc-500 dark:text-zinc-400'
+            )}
+        >
+            <span className="min-w-0 truncate text-left">{label ?? emptyLabel}</span>
+            <ChevronDownIcon data-slot="icon" className="shrink-0" />
+        </DropdownButton>
+    );
+}
+
+function TaxonomyMenuItem({
+    label,
+    selected,
+    disabled,
+    onClick,
+}: {
+    label: string;
+    selected?: boolean;
+    disabled?: boolean;
+    onClick: () => void;
+}) {
+    return (
+        <DropdownItem disabled={disabled} onClick={onClick} className={dropdownInsetItemClass}>
+            <DropdownLabel inset>{label}</DropdownLabel>
+            {selected ? (
+                <DropdownTrailingIcon inset>
+                    <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
+                </DropdownTrailingIcon>
+            ) : null}
+        </DropdownItem>
+    );
+}
+
 export default function PostSidebar({
     form,
     onChange,
@@ -30,24 +88,13 @@ export default function PostSidebar({
     fieldErrors,
     disabled = false,
 }: PostSidebarProps) {
-    const [tagQuery, setTagQuery] = useState('');
-
     const canvasPath = (window.Canvas?.path ?? '/canvas').replace(/\/$/, '');
     const slugPreview = form.slug === '' ? '…' : form.slug;
 
-    function updateTopicFromQuery(value: string) {
-        const trimmed = value.trim();
+    const tagChoices = availableTags.filter((tag) => !form.tags.some((selected) => selected.slug === tag.slug));
 
-        if (trimmed === '') {
-            onChange({ ...form, topic: null });
-            return;
-        }
-
-        const existing =
-            availableTopics.find((topic) => topic.name.toLowerCase() === trimmed.toLowerCase()) ??
-            availableTopics.find((topic) => topic.slug === slugify(trimmed));
-
-        onChange({ ...form, topic: existing ?? taxonomyFromName(trimmed) });
+    function setTopic(topic: TaxonomyOption | null) {
+        onChange({ ...form, topic });
     }
 
     function addTag(tag: TaxonomyOption) {
@@ -56,30 +103,17 @@ export default function PostSidebar({
         }
 
         onChange({ ...form, tags: [...form.tags, tag] });
-        setTagQuery('');
     }
 
     function removeTag(slug: string) {
         onChange({ ...form, tags: form.tags.filter((tag) => tag.slug !== slug) });
     }
 
-    function commitTagQuery() {
-        const trimmed = tagQuery.trim();
-
-        if (trimmed === '') {
-            return;
-        }
-
-        addTag(taxonomyFromName(trimmed));
-    }
-
-    const tagSuggestions = availableTags.filter((tag) => !form.tags.some((selected) => selected.slug === tag.slug));
-
     return (
         <Fieldset className="space-y-6">
-            <Field>
+            <Field className="min-w-0">
                 <Label>Slug</Label>
-                <Description>{`${canvasPath}/posts/${slugPreview}`}</Description>
+                <Description className="break-all">{`${canvasPath}/posts/${slugPreview}`}</Description>
                 <Input
                     name="slug"
                     value={form.slug}
@@ -97,7 +131,7 @@ export default function PostSidebar({
 
             <Field>
                 <Label>Summary</Label>
-                <Description>A short deck shown below the title on the reader.</Description>
+                <Description>A short excerpt shown in lists and previews.</Description>
                 <Textarea
                     name="summary"
                     rows={3}
@@ -112,67 +146,88 @@ export default function PostSidebar({
                 ) : null}
             </Field>
 
-            <Field>
+            <Field className="min-w-0">
                 <Label>Topic</Label>
-                <Description>Select an existing topic or type a new one.</Description>
-                <Input
-                    name="topic"
-                    value={form.topic?.name ?? ''}
-                    disabled={disabled}
-                    placeholder="Topic"
-                    list="post-topic-suggestions"
-                    onChange={(event) => updateTopicFromQuery(event.target.value)}
-                    onBlur={(event) => updateTopicFromQuery(event.target.value)}
-                />
-                <datalist id="post-topic-suggestions">
-                    {availableTopics.map((topic) => (
-                        <option key={topic.slug} value={topic.name} />
-                    ))}
-                </datalist>
+                <Description>One category for this post. Create topics in Organize.</Description>
+                <Dropdown>
+                    <TaxonomySelectButton
+                        label={form.topic?.name ?? null}
+                        emptyLabel="Select a topic"
+                        disabled={disabled}
+                    />
+                    <DropdownMenu anchor="bottom start" className="z-50 min-w-56 max-w-sm">
+                        <TaxonomyMenuItem
+                            label="No topic"
+                            selected={form.topic === null}
+                            onClick={() => setTopic(null)}
+                        />
+                        {availableTopics.length === 0 ? (
+                            <TaxonomyMenuItem label="No topics yet" disabled onClick={() => undefined} />
+                        ) : (
+                            availableTopics.map((topic) => (
+                                <TaxonomyMenuItem
+                                    key={topic.slug}
+                                    label={topic.name}
+                                    selected={form.topic?.slug === topic.slug}
+                                    onClick={() => setTopic(topic)}
+                                />
+                            ))
+                        )}
+                    </DropdownMenu>
+                </Dropdown>
             </Field>
 
-            <Field>
+            <Field className="min-w-0">
                 <Label>Tags</Label>
-                <Description>Press Enter to add a tag. Unknown tags are created on save.</Description>
+                <Description>Attach existing tags. Create tags in Organize.</Description>
                 {form.tags.length > 0 ? (
                     <div className="mt-3 flex flex-wrap gap-2">
-                        {form.tags.map((tag) => (
-                            <BadgeButton
-                                key={tag.slug}
-                                color="zinc"
-                                disabled={disabled}
-                                onClick={() => removeTag(tag.slug)}
-                            >
-                                {tag.name}
-                                <span aria-hidden="true" className="ml-1 text-zinc-400">
-                                    ×
-                                </span>
-                            </BadgeButton>
-                        ))}
+                        {form.tags.map((tag) => {
+                            const isNew = !isExistingTaxonomy(tag, availableTags);
+
+                            return (
+                                <BadgeButton
+                                    key={tag.slug}
+                                    color={isNew ? 'amber' : 'zinc'}
+                                    disabled={disabled}
+                                    onClick={() => removeTag(tag.slug)}
+                                    title={isNew ? 'Unknown tag — remove or manage in Organize' : 'Remove tag'}
+                                    data-pending-taxonomy={isNew ? 'tag' : undefined}
+                                >
+                                    {tag.name}
+                                    {isNew ? (
+                                        <span className="ml-1 text-[0.65rem] font-medium uppercase tracking-wide opacity-80">
+                                            new
+                                        </span>
+                                    ) : null}
+                                    <span aria-hidden="true" className="ml-1 text-zinc-400">
+                                        ×
+                                    </span>
+                                </BadgeButton>
+                            );
+                        })}
                     </div>
                 ) : null}
-                <div className="mt-3">
-                    <Input
-                        name="tags"
-                        value={tagQuery}
-                        disabled={disabled}
-                        placeholder="Add a tag"
-                        list="post-tag-suggestions"
-                        onChange={(event) => setTagQuery(event.target.value)}
-                        onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
-                                event.preventDefault();
-                                commitTagQuery();
-                            }
-                        }}
-                        onBlur={commitTagQuery}
+                <Dropdown>
+                    <TaxonomySelectButton
+                        label={null}
+                        emptyLabel="Add a tag"
+                        disabled={disabled || tagChoices.length === 0}
                     />
-                    <datalist id="post-tag-suggestions">
-                        {tagSuggestions.map((tag) => (
-                            <option key={tag.slug} value={tag.name} />
-                        ))}
-                    </datalist>
-                </div>
+                    <DropdownMenu anchor="bottom start" className="z-50 min-w-56 max-w-sm">
+                        {tagChoices.length === 0 ? (
+                            <TaxonomyMenuItem
+                                label={availableTags.length === 0 ? 'No tags yet' : 'All tags attached'}
+                                disabled
+                                onClick={() => undefined}
+                            />
+                        ) : (
+                            tagChoices.map((tag) => (
+                                <TaxonomyMenuItem key={tag.slug} label={tag.name} onClick={() => addTag(tag)} />
+                            ))
+                        )}
+                    </DropdownMenu>
+                </Dropdown>
             </Field>
         </Fieldset>
     );

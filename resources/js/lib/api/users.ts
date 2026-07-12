@@ -5,6 +5,8 @@ import type {
     Paginated,
     PostListItem,
     UserCreateResponse,
+    UserLookupParams,
+    UserLookupResult,
     UserPostsParams,
     UserStorePayload,
     UserStoreResponse,
@@ -21,6 +23,10 @@ export const usersApi = {
 
     create(signal?: AbortSignal) {
         return api.get<UserCreateResponse>('/users/create', signal);
+    },
+
+    lookup(params: UserLookupParams, signal?: AbortSignal) {
+        return api.get<UserLookupResult>(`/users/lookup${buildQueryString(params)}`, signal);
     },
 
     show(id: string, signal?: AbortSignal) {

@@ -7,14 +7,16 @@ type TableListSkeletonProps = {
 
 export function TableListSkeleton({ rows = 6, columns = 4 }: TableListSkeletonProps) {
     return (
-        <div className="mt-8 space-y-3" aria-hidden="true" data-table-list-skeleton="true">
-            <div className="flex gap-4 border-b border-zinc-950/5 pb-3 dark:border-white/5">
-                {Array.from({ length: columns }, (_, index) => (
-                    <Skeleton key={`head-${index}`} className="h-4 flex-1 rounded-md" />
-                ))}
-            </div>
+        <div
+            className="overflow-hidden rounded-xl border border-zinc-950/10 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5"
+            aria-hidden="true"
+            data-table-list-skeleton="true"
+        >
             {Array.from({ length: rows }, (_, row) => (
-                <div key={`row-${row}`} className="flex items-center gap-4 py-2">
+                <div
+                    key={`row-${row}`}
+                    className="flex items-center gap-4 px-4 py-4 even:bg-zinc-950/2.5 dark:even:bg-white/2.5"
+                >
                     {Array.from({ length: columns }, (_, col) => (
                         <Skeleton
                             key={`cell-${row}-${col}`}

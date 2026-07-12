@@ -38,25 +38,15 @@ function bootWithRole(role: number): CanvasBoot {
 }
 
 describe('buildCanvasContextValue', () => {
-    it('exposes boot data and user', () => {
-        const boot = bootWithRole(Role.Editor);
-        const context = buildCanvasContextValue(boot);
+    it('exposes boot data, translations, and role permissions', () => {
+        const editorBoot = bootWithRole(Role.Editor);
+        const editor = buildCanvasContextValue(editorBoot);
 
-        expect(context.boot).toBe(boot);
-        expect(context.user).toBe(boot.user);
-    });
-
-    it('wires translations into t()', () => {
-        const context = buildCanvasContextValue(bootWithRole(Role.Admin));
-
-        expect(context.t('hello')).toBe('Hello');
-        expect(context.t('missing')).toBe('missing');
-    });
-
-    it('computes permissions for an editor', () => {
-        const context = buildCanvasContextValue(bootWithRole(Role.Editor));
-
-        expect(context.permissions).toEqual({
+        expect(editor.boot).toBe(editorBoot);
+        expect(editor.user).toBe(editorBoot.user);
+        expect(editor.t('hello')).toBe('Hello');
+        expect(editor.t('missing')).toBe('missing');
+        expect(editor.permissions).toEqual({
             role: Role.Editor,
             isContributor: false,
             isEditor: true,
@@ -66,19 +56,13 @@ describe('buildCanvasContextValue', () => {
             canViewAllPosts: true,
             canViewAllMedia: true,
         });
-    });
 
-    it('computes permissions for an admin', () => {
-        const context = buildCanvasContextValue(bootWithRole(Role.Admin));
+        const admin = buildCanvasContextValue(bootWithRole(Role.Admin)).permissions;
+        expect(admin.canManageUsers).toBe(true);
+        expect(admin.canManageTaxonomy).toBe(true);
 
-        expect(context.permissions.canManageUsers).toBe(true);
-        expect(context.permissions.canManageTaxonomy).toBe(true);
-    });
-
-    it('computes permissions for a contributor', () => {
-        const context = buildCanvasContextValue(bootWithRole(Role.Contributor));
-
-        expect(context.permissions.canViewAllPosts).toBe(false);
-        expect(context.permissions.isContributor).toBe(true);
+        const contributor = buildCanvasContextValue(bootWithRole(Role.Contributor)).permissions;
+        expect(contributor.isContributor).toBe(true);
+        expect(contributor.canViewAllPosts).toBe(false);
     });
 });

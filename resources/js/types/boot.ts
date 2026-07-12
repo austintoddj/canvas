@@ -13,6 +13,7 @@ export type CanvasProfile = {
     preferences: {
         onboarding: { complete: boolean };
     };
+    updated_at?: string | null;
 };
 
 export type UserResource = {

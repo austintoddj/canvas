@@ -36,6 +36,7 @@ it('transforms a host user with nested canvas data', function (): void {
         'theme' => 'system',
         'digest' => true,
     ]);
+    expect($payload['canvas']['updated_at'])->toBeString();
 });
 
 it('omits canvas when the relationship is not loaded', function (): void {

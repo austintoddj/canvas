@@ -6,6 +6,35 @@ export type UsersListFilters = {
     page: number;
 };
 
+export function userDetailId(searchParams: URLSearchParams): string | null {
+    const detail = searchParams.get('detail');
+
+    if (detail === null || detail.trim() === '') {
+        return null;
+    }
+
+    return detail;
+}
+
+export function setUserDetailParam(current: URLSearchParams, userId: string | number | null): URLSearchParams {
+    const next = new URLSearchParams(current);
+
+    if (userId === null || userId === '') {
+        next.delete('detail');
+    } else {
+        next.set('detail', String(userId));
+    }
+
+    return next;
+}
+
+export function usersDetailPath(userId: string | number, page = 1): string {
+    return `/settings/users${buildQueryString({
+        detail: String(userId),
+        page: page > 1 ? page : undefined,
+    })}`;
+}
+
 /** Laravel ResourceCollection pagination (meta/links) or flat LengthAwarePaginator JSON. */
 export type ResourceCollectionPage<T> = {
     data: T[];

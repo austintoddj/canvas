@@ -11,6 +11,7 @@ import PostSidebar from '@/components/posts/PostSidebar';
 import PublishPanel from '@/components/posts/PublishPanel';
 import { Divider } from '@/components/divider';
 import { Heading } from '@/components/heading';
+import { SideDrawer } from '@/components/SideDrawer';
 import { Skeleton } from '@/components/Skeleton';
 import { PageDescription, ErrorText } from '@/components/text';
 import { useMarkOnboardingComplete } from '@/hooks/useMarkOnboardingComplete';
@@ -18,11 +19,15 @@ import { usePostAutosave } from '@/hooks/usePostAutosave';
 import { postsApi } from '@/lib/api/posts';
 import {
     formFromCreateResponse,
+    mergeTaxonomyOptions,
     postToFormState,
+    publishFormState,
     serializeFormState,
     slugify,
+    unpublishFormState,
     type PostFormState,
 } from '@/lib/posts/form';
+import { toast } from '@/lib/toast';
 import type { TaxonomyOption } from '@/types/api';
 
 const emptyForm = (): PostFormState => ({
@@ -51,34 +56,91 @@ export default function PostsEditor() {
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [seoOpen, setSeoOpen] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [pendingDelete, setPendingDelete] = useState(false);
 
     const slugManuallyEditedRef = useRef(slugManuallyEdited);
     /** create() only mints a UUID — skip show() after redirect to /posts/:id. */
     const bootstrappedPostId = useRef<string | null>(null);
+    const allowLeaveRef = useRef(false);
+    const markOnboardingComplete = useMarkOnboardingComplete();
 
     useEffect(() => {
         slugManuallyEditedRef.current = slugManuallyEdited;
     }, [slugManuallyEdited]);
 
     const autosaveEnabled = postId !== null && !loading && loadError === null;
-    const markOnboardingComplete = useMarkOnboardingComplete();
 
-    const { saveStatus, fieldErrors, isDirty, saveNow, resetBaseline } = usePostAutosave({
+    const handleSaved = useCallback(
+        (post: { published_at: string | null }) => {
+            setForm((current) => {
+                if (post.published_at !== null) {
+                    const nextTags = current.tags;
+                    const nextTopic = current.topic;
+
+                    queueMicrotask(() => {
+                        setAvailableTags((tags) => mergeTaxonomyOptions(tags, nextTags));
+                        if (nextTopic !== null) {
+                            setAvailableTopics((topics) => mergeTaxonomyOptions(topics, [nextTopic]));
+                        }
+                    });
+                }
+
+                if (current.publishedAt === post.published_at) {
+                    return current;
+                }
+
+                return {
+                    ...current,
+                    publishedAt: post.published_at,
+                };
+            });
+            markOnboardingComplete();
+        },
+        [markOnboardingComplete]
+    );
+
+    const { saveStatus, fieldErrors, isDirty, resetBaseline, saveNow } = usePostAutosave({
         postId,
         form,
         enabled: autosaveEnabled,
-        onSaved: (post) => {
-            setForm((current) => ({
-                ...current,
-                publishedAt: post.published_at,
-            }));
-            markOnboardingComplete();
-        },
+        onSaved: handleSaved,
     });
+
+    async function handlePublish() {
+        const next = publishFormState(form);
+        setForm(next);
+
+        const ok = await saveNow(next);
+
+        if (ok) {
+            toast.success('Post published.');
+        } else {
+            toast.error('Unable to publish this post.');
+        }
+    }
+
+    async function handleUnpublish() {
+        const next = unpublishFormState(form);
+        setForm(next);
+
+        const ok = await saveNow(next);
+
+        if (ok) {
+            toast.success('Post unpublished.');
+        } else {
+            toast.error('Unable to unpublish this post.');
+        }
+    }
 
     const blocker = useBlocker(
         ({ currentLocation, nextLocation }) =>
-            isDirty && saveStatus !== 'saving' && currentLocation.pathname !== nextLocation.pathname
+            !allowLeaveRef.current &&
+            isDirty &&
+            saveStatus !== 'saving' &&
+            currentLocation.pathname !== nextLocation.pathname
     );
 
     const leaveConfirmOpen = blocker.state === 'blocked';
@@ -171,6 +233,35 @@ export default function PostsEditor() {
         }));
     }
 
+    function closeDeleteConfirm() {
+        if (deleting) {
+            return;
+        }
+
+        setPendingDelete(false);
+    }
+
+    async function confirmDelete() {
+        if (postId === null || deleting) {
+            return;
+        }
+
+        setDeleting(true);
+
+        try {
+            await postsApi.destroy(postId);
+            allowLeaveRef.current = true;
+            resetBaseline(serializeFormState(form));
+            setPendingDelete(false);
+            setSettingsOpen(false);
+            toast.success('Post deleted.');
+            navigate('/posts', { replace: true });
+        } catch {
+            toast.error('Unable to delete this post.');
+            setDeleting(false);
+        }
+    }
+
     if (loading) {
         return (
             <div className="space-y-8" aria-busy="true" data-post-editor-skeleton="true">
@@ -180,18 +271,14 @@ export default function PostsEditor() {
                         <Skeleton className="h-7 w-48 rounded-lg" />
                         <Skeleton className="h-6 w-16 rounded-full" />
                     </div>
-                    <Skeleton className="h-9 w-20 rounded-lg" />
+                    <div className="flex gap-2">
+                        <Skeleton className="size-9 rounded-lg" />
+                        <Skeleton className="size-9 rounded-lg" />
+                    </div>
                 </div>
-                <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
-                    <div className="min-w-0 space-y-6">
-                        <Skeleton className="h-12 w-3/4 max-w-xl rounded-lg" />
-                        <Skeleton className="h-64 w-full rounded-lg" />
-                    </div>
-                    <div className="space-y-4">
-                        <Skeleton className="h-40 w-full rounded-lg" />
-                        <Skeleton className="h-32 w-full rounded-lg" />
-                        <Skeleton className="h-28 w-full rounded-lg" />
-                    </div>
+                <div className="mx-auto max-w-3xl space-y-6">
+                    <Skeleton className="h-14 w-3/4 max-w-xl rounded-lg" />
+                    <Skeleton className="h-64 w-full rounded-lg" />
                 </div>
             </div>
         );
@@ -205,73 +292,114 @@ export default function PostsEditor() {
         );
     }
 
+    const deleteTitle = form.title.trim() === '' ? 'this post' : `“${form.title}”`;
+
     return (
         <>
             <PostEditorLayout
                 form={form}
+                postId={postId}
                 titleError={fieldErrors.title?.[0]}
                 saveStatus={saveStatus}
                 disabled={!autosaveEnabled}
                 onTitleChange={handleTitleChange}
-                onSaveNow={() => void saveNow()}
-                body={<PostBodyEditor body={form.body} disabled={!autosaveEnabled} onChange={handleBodyChange} />}
-                sidebar={
-                    <>
-                        <PostSidebar
-                            form={form}
-                            availableTags={availableTags}
-                            availableTopics={availableTopics}
-                            fieldErrors={fieldErrors}
-                            disabled={!autosaveEnabled}
-                            onChange={handleFormChange}
-                            onSlugManualEdit={() => setSlugManuallyEdited(true)}
-                        />
-
-                        <Divider soft />
-
-                        <div>
-                            <Heading level={3} className="text-base/7">
-                                Featured image
-                            </Heading>
-                            <PageDescription>Hero image for the post and social previews</PageDescription>
-                            <div className="mt-4">
-                                <FeaturedImagePicker
-                                    form={form}
-                                    disabled={!autosaveEnabled}
-                                    onChange={handleFormChange}
-                                />
-                            </div>
-                        </div>
-
-                        <Divider soft />
-
-                        <div>
-                            <Heading level={3} className="text-base/7">
-                                SEO
-                            </Heading>
-                            <PageDescription>Search and social metadata overrides</PageDescription>
-                            <div className="mt-4">
-                                <PostSeoPanel
-                                    form={form}
-                                    fieldErrors={fieldErrors}
-                                    disabled={!autosaveEnabled}
-                                    onChange={handleFormChange}
-                                />
-                            </div>
-                        </div>
-
-                        <Divider soft />
-
-                        <PublishPanel
-                            form={form}
-                            saveStatus={saveStatus}
-                            disabled={!autosaveEnabled}
-                            onChange={handleFormChange}
-                            onSaveNow={() => void saveNow()}
-                        />
-                    </>
-                }
+                onOpenSettings={() => {
+                    setSeoOpen(false);
+                    setSettingsOpen(true);
+                }}
+                onOpenSeo={() => {
+                    setSettingsOpen(false);
+                    setSeoOpen(true);
+                }}
+                body={({ focusMode, onToggleFocusMode }) => (
+                    <PostBodyEditor
+                        body={form.body}
+                        disabled={!autosaveEnabled}
+                        focusMode={focusMode}
+                        onToggleFocusMode={onToggleFocusMode}
+                        onChange={handleBodyChange}
+                    />
+                )}
             />
+
+            <SideDrawer
+                open={settingsOpen}
+                onClose={() => setSettingsOpen(false)}
+                title="Post settings"
+                description="URL, summary, taxonomy, image, and publish"
+            >
+                <div className="min-w-0 space-y-6 overflow-x-hidden px-5 py-5">
+                    <div className="min-w-0">
+                        <Heading level={3} className="text-base/7">
+                            Details
+                        </Heading>
+                        <PageDescription>Slug, excerpt, topic, and tags</PageDescription>
+                        <div className="mt-4 min-w-0">
+                            <PostSidebar
+                                form={form}
+                                availableTags={availableTags}
+                                availableTopics={availableTopics}
+                                fieldErrors={fieldErrors}
+                                disabled={!autosaveEnabled}
+                                onChange={handleFormChange}
+                                onSlugManualEdit={() => setSlugManuallyEdited(true)}
+                            />
+                        </div>
+                    </div>
+
+                    <Divider soft />
+
+                    <div className="min-w-0">
+                        <Heading level={3} className="text-base/7">
+                            Featured image
+                        </Heading>
+                        <PageDescription>Shown at the top of the post and in social previews.</PageDescription>
+                        <div className="mt-4 min-w-0">
+                            <FeaturedImagePicker form={form} disabled={!autosaveEnabled} onChange={handleFormChange} />
+                        </div>
+                    </div>
+
+                    <Divider soft />
+
+                    <PublishPanel
+                        form={form}
+                        disabled={!autosaveEnabled}
+                        deleting={deleting}
+                        onPublish={handlePublish}
+                        onUnpublish={handleUnpublish}
+                        onDelete={() => setPendingDelete(true)}
+                    />
+                </div>
+            </SideDrawer>
+
+            <SideDrawer
+                open={seoOpen}
+                onClose={() => setSeoOpen(false)}
+                title="SEO"
+                description="Title, description, and canonical URL for search"
+            >
+                <div className="min-w-0 overflow-x-hidden px-5 py-5">
+                    <PostSeoPanel
+                        form={form}
+                        fieldErrors={fieldErrors}
+                        disabled={!autosaveEnabled}
+                        onChange={handleFormChange}
+                    />
+                </div>
+            </SideDrawer>
+
+            <Alert open={pendingDelete} onClose={closeDeleteConfirm} size="sm">
+                <AlertTitle>Delete post?</AlertTitle>
+                <AlertDescription>Delete {deleteTitle}? This cannot be undone.</AlertDescription>
+                <AlertActions>
+                    <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
+                        Cancel
+                    </Button>
+                    <Button type="button" color="red" disabled={deleting} onClick={() => void confirmDelete()}>
+                        {deleting ? 'Deleting…' : 'Delete'}
+                    </Button>
+                </AlertActions>
+            </Alert>
 
             <Alert open={leaveConfirmOpen} onClose={cancelLeave} size="sm">
                 <AlertTitle>Leave without saving?</AlertTitle>

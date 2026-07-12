@@ -8,6 +8,7 @@ import { Description, Field, Fieldset, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import { Text, ErrorText } from '@/components/text';
 import { unsplashApi } from '@/lib/api/unsplash';
+import { resolveMediaUrl } from '@/lib/media/list';
 import type { PostFormState } from '@/lib/posts/form';
 import type { UnsplashPhoto } from '@/types/api';
 
@@ -85,11 +86,11 @@ export default function FeaturedImagePicker({ form, onChange, disabled = false }
     return (
         <Fieldset className="space-y-4">
             {form.featuredImage ? (
-                <div className="overflow-hidden rounded-lg border border-zinc-950/10 dark:border-white/10 dark:ring-1 dark:ring-white/5">
+                <div className="min-w-0 overflow-hidden rounded-lg border border-zinc-950/10 dark:border-white/10 dark:ring-1 dark:ring-white/5">
                     <img
-                        src={form.featuredImage}
+                        src={resolveMediaUrl(form.featuredImage)}
                         alt={form.featuredImageCaption ?? 'Featured image'}
-                        className="aspect-[1.91/1] w-full object-cover"
+                        className="aspect-[1.91/1] w-full max-w-full object-cover"
                     />
                     <div className="flex items-center justify-between gap-2 p-3 dark:bg-white/[0.02]">
                         <Text className="truncate text-sm text-zinc-600 dark:text-zinc-300">Featured image</Text>

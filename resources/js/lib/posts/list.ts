@@ -14,6 +14,19 @@ export function isPostPublished(publishedAt: string | null): boolean {
         return false;
     }
 
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(publishedAt.trim());
+
+    if (match !== null) {
+        const year = Number(match[1]);
+        const month = Number(match[2]);
+        const day = Number(match[3]);
+        const published = new Date(year, month - 1, day);
+
+        if (published.getFullYear() === year && published.getMonth() === month - 1 && published.getDate() === day) {
+            return published <= new Date();
+        }
+    }
+
     const published = new Date(publishedAt);
 
     if (Number.isNaN(published.getTime())) {
@@ -57,20 +70,4 @@ export function postsIndexQueryParams(filters: PostsListFilters): PostsIndexPara
     };
 }
 
-export function formatPostDate(value: string | null): string {
-    if (value === null || value === '') {
-        return '—';
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return '—';
-    }
-
-    return date.toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    });
-}
+export { formatListDate as formatPostDate } from '@/lib/format-list-date';

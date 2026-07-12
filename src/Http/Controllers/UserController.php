@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Canvas\Http\Controllers;
 
 use Canvas\Actions\SyncCanvasUser;
+use Canvas\Http\Requests\UserLookupRequest;
 use Canvas\Http\Requests\UserRequest;
 use Canvas\Http\Resources\CanvasUserResource;
 use Canvas\Http\Resources\UserResource;
 use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
+use Canvas\Support\AuthorAvatar;
+use Canvas\Support\HostUser;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -24,7 +27,7 @@ class UserController extends Controller
      */
     public function index(): AnonymousResourceCollection
     {
-        $userModel = config('canvas.user_model');
+        $userModel = HostUser::modelClass();
         $hostTable = (new $userModel)->getTable();
 
         $canvasUsers = CanvasUser::query()
@@ -53,15 +56,43 @@ class UserController extends Controller
     }
 
     /**
+     * Look up a host user by email or id for granting Canvas access.
+     */
+    public function lookup(UserLookupRequest $request): JsonResponse
+    {
+        $identifier = $request->identifier();
+
+        if ($identifier === '') {
+            abort(404);
+        }
+
+        $user = HostUser::findByIdentifier($identifier);
+
+        if ($user === null) {
+            abort(404);
+        }
+
+        $email = (string) data_get($user, 'email', '');
+        $canvasUser = CanvasUser::query()->find($user->getKey());
+
+        return response()->json([
+            'id' => $user->getKey(),
+            'name' => data_get($user, 'name'),
+            'email' => $email,
+            'avatar_url' => AuthorAvatar::url($canvasUser?->avatar, $email),
+            'has_canvas_access' => $canvasUser !== null,
+            'role' => $canvasUser?->role?->value,
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(UserRequest $request, SyncCanvasUser $syncCanvasUser, int|string $id): JsonResponse
     {
         $currentUser = request()->user(config('canvas.guard'));
-        /** @var class-string<Model> $userModel */
-        $userModel = config('canvas.user_model');
 
-        $user = $userModel::query()->find($id);
+        $user = HostUser::modelClass()::query()->find($id);
 
         if (! $user) {
             abort(404);

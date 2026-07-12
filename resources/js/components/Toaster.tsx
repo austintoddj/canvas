@@ -88,7 +88,7 @@ export function Toaster() {
 
     return (
         <div
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-end gap-2 p-4 sm:inset-x-auto sm:right-0 sm:bottom-0 sm:max-w-md sm:p-6"
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-[80] flex flex-col items-end gap-2 p-4 sm:inset-x-auto sm:right-0 sm:bottom-0 sm:max-w-md sm:p-6"
             data-toaster
             aria-label="Notifications"
         >

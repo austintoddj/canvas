@@ -611,7 +611,7 @@ export default function MediaIndex() {
                         )
                     }
                 >
-                    <PageDescription>Upload and organize images for posts</PageDescription>
+                    <PageDescription>Images you can use in posts and featured media.</PageDescription>
                 </PageHeader>
 
                 <div className="flex flex-wrap items-end justify-between gap-4">

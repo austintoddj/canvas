@@ -73,6 +73,7 @@ Route::middleware([
         Route::prefix('users')->controller(UserController::class)->group(function (): void {
             Route::get('/', 'index')->middleware(['can:manage-users']);
             Route::get('create', 'create')->middleware(['can:manage-users']);
+            Route::get('lookup', 'lookup')->middleware(['can:manage-users']);
             Route::get('{user}/posts', 'posts');
             Route::get('{user}', 'show');
             Route::post('{id}', 'store');

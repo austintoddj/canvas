@@ -1,13 +1,15 @@
-import { PlusIcon } from '@heroicons/react/20/solid';
+import { PlusIcon, TrashIcon } from '@heroicons/react/20/solid';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
 import { Button } from '@/components/button';
 import { ContentReveal } from '@/components/ContentReveal';
 import { EmptyState } from '@/components/EmptyState';
 import { EmptyStateReveal } from '@/components/EmptyStateReveal';
 import { Field, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
+import { ListRowActionButton, ListRowEnd } from '@/components/ListRowEnd';
 import { PageHeader } from '@/components/PageHeader';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
 import {
@@ -19,7 +21,7 @@ import {
     PaginationPrevious,
 } from '@/components/pagination';
 import { Select } from '@/components/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table';
+import { Table, TableBody, TableCell, TableRow } from '@/components/table';
 import { TableListSkeleton } from '@/components/TableListSkeleton';
 import { TagsEmptyVisual } from '@/components/tags/TagsEmptyVisual';
 import { TaxonomyDetailDrawer } from '@/components/taxonomy/TaxonomyDetailDrawer';
@@ -29,10 +31,10 @@ import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { tagsApi } from '@/lib/api/tags';
 import { topicsApi } from '@/lib/api/topics';
+import { formatListDate } from '@/lib/format-list-date';
 import { paginationWindow, shouldGoToPreviousPageAfterDelete } from '@/lib/list-pagination';
 import { toast } from '@/lib/toast';
 import {
-    formatTaxonomyDate,
     organizeIndexPath,
     parseOrganizeListFilters,
     setOrganizeTabParam,
@@ -89,8 +91,7 @@ const tabCopy = {
         createLabel: 'Create a topic',
         creatingLabel: 'Creating…',
         emptyHeadline: 'No topics yet',
-        emptyDescription:
-            'Topics are the main categories on your blog. Create a few so authors can classify posts — one topic per post.',
+        emptyDescription: 'Topics are broad categories — one per post. Add a few so authors can classify their work.',
         filteredEmpty: 'No topics match your search.',
         searchLabel: 'Search topics',
         loadError: 'Unable to load topics.',
@@ -103,8 +104,7 @@ const tabCopy = {
         createLabel: 'Create a tag',
         creatingLabel: 'Creating…',
         emptyHeadline: 'No tags yet',
-        emptyDescription:
-            'Create tags to group related posts. Authors can attach them while writing — many tags per post.',
+        emptyDescription: 'Tags group related posts. Authors can add as many as they need while writing.',
         filteredEmpty: 'No tags match your search.',
         searchLabel: 'Search tags',
         loadError: 'Unable to load tags.',
@@ -127,6 +127,8 @@ export default function OrganizeIndex() {
     const [error, setError] = useState<string | null>(null);
     const [creating, setCreating] = useState(false);
     const [creatingId, setCreatingId] = useState<string | null>(null);
+    const [pendingDelete, setPendingDelete] = useState<TaxonomyItem | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     if (filters.search !== syncedSearch) {
         setSyncedSearch(filters.search);
@@ -272,6 +274,40 @@ export default function OrganizeIndex() {
         await reloadList();
     }
 
+    function closeDeleteConfirm() {
+        if (deleting) {
+            return;
+        }
+
+        setPendingDelete(null);
+    }
+
+    async function confirmDelete() {
+        if (pendingDelete === null || deleting) {
+            return;
+        }
+
+        setDeleting(true);
+        const itemId = pendingDelete.id;
+        const api = tab === 'tags' ? tagsApi : topicsApi;
+
+        try {
+            await api.destroy(itemId);
+            setPendingDelete(null);
+            toast.success(tab === 'tags' ? 'Tag deleted.' : 'Topic deleted.');
+
+            if (detailId === itemId) {
+                closeDetail();
+            }
+
+            await handleDeleted(itemId);
+        } catch {
+            toast.error(tab === 'tags' ? 'Unable to delete this tag.' : 'Unable to delete this topic.');
+        } finally {
+            setDeleting(false);
+        }
+    }
+
     const itemCount = response?.data.length ?? 0;
     const showInitialSkeleton = isInitialLoading(loading, itemCount);
     const refreshing = isRefreshing(loading, itemCount);
@@ -296,9 +332,7 @@ export default function OrganizeIndex() {
                     </Button>
                 }
             >
-                <PageDescription>
-                    Topics classify posts; tags label them. Authors pick these while writing.
-                </PageDescription>
+                <PageDescription>Topics and tags help readers browse related posts.</PageDescription>
             </PageHeader>
 
             <PillNav value={tab} onChange={setTab} aria-label="Taxonomy type">
@@ -362,26 +396,20 @@ export default function OrganizeIndex() {
                 </EmptyStateReveal>
             ) : response ? (
                 <ContentReveal busy={refreshing} animate={animateContent}>
-                    <Table striped className="[--gutter:--spacing(4)]">
-                        <TableHead>
-                            <TableRow>
-                                <TableHeader>Name</TableHeader>
-                                <TableHeader>Posts</TableHeader>
-                                <TableHeader>Created</TableHeader>
-                            </TableRow>
-                        </TableHead>
+                    <Table striped>
                         <TableBody>
                             {response.data.map((item) => {
                                 const name = item.name.trim() === '' ? copy.untitled : item.name;
                                 const selected = detailId === item.id;
+                                const postsCount = item.posts_count ?? 0;
 
                                 return (
                                     <TableRow
                                         key={item.id}
                                         className={
                                             selected
-                                                ? 'cursor-pointer bg-zinc-950/5 dark:bg-white/5'
-                                                : 'cursor-pointer hover:bg-zinc-950/5 dark:hover:bg-white/5'
+                                                ? 'group/list-row cursor-pointer bg-zinc-950/5 dark:bg-white/5'
+                                                : 'group/list-row cursor-pointer hover:bg-zinc-950/5 dark:hover:bg-white/5'
                                         }
                                         tabIndex={0}
                                         aria-label={`Edit ${name}`}
@@ -394,14 +422,26 @@ export default function OrganizeIndex() {
                                             }
                                         }}
                                     >
-                                        <TableCell>
-                                            <span className="font-medium text-zinc-950 dark:text-white">{name}</span>
+                                        <TableCell className="w-full max-w-0">
+                                            <div className="min-w-0">
+                                                <span className="block truncate font-medium text-zinc-950 dark:text-white">
+                                                    {name}
+                                                </span>
+                                                <Text className="mt-0.5 text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                                                    {postsCount.toLocaleString()} {postsCount === 1 ? 'post' : 'posts'}
+                                                </Text>
+                                            </div>
                                         </TableCell>
-                                        <TableCell className="text-canvas-muted dark:text-canvas-muted-dark">
-                                            {(item.posts_count ?? 0).toLocaleString()}
-                                        </TableCell>
-                                        <TableCell className="text-canvas-muted dark:text-canvas-muted-dark">
-                                            {formatTaxonomyDate(item.created_at)}
+                                        <TableCell className="w-px whitespace-nowrap">
+                                            <ListRowEnd date={formatListDate(item.created_at)}>
+                                                <ListRowActionButton
+                                                    label={`Delete ${name}`}
+                                                    danger
+                                                    onClick={() => setPendingDelete(item)}
+                                                >
+                                                    <TrashIcon className="size-5" aria-hidden="true" />
+                                                </ListRowActionButton>
+                                            </ListRowEnd>
                                         </TableCell>
                                     </TableRow>
                                 );
@@ -488,6 +528,25 @@ export default function OrganizeIndex() {
                     void handleDeleted(itemId);
                 }}
             />
+
+            <Alert open={pendingDelete !== null} onClose={closeDeleteConfirm} size="sm">
+                <AlertTitle>{tab === 'tags' ? 'Delete tag?' : 'Delete topic?'}</AlertTitle>
+                <AlertDescription>
+                    Delete{' '}
+                    {pendingDelete === null || pendingDelete.name.trim() === ''
+                        ? copy.untitled
+                        : pendingDelete.name.trim()}
+                    ? This cannot be undone.
+                </AlertDescription>
+                <AlertActions>
+                    <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
+                        Cancel
+                    </Button>
+                    <Button type="button" color="red" disabled={deleting} onClick={() => void confirmDelete()}>
+                        {deleting ? 'Deleting…' : 'Delete'}
+                    </Button>
+                </AlertActions>
+            </Alert>
         </div>
     );
 }

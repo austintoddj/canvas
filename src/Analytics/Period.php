@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Canvas\Analytics;
 
-use Carbon\Carbon;
+use Carbon\CarbonInterface;
 
 final readonly class Period
 {
     public function __construct(
-        public Carbon $start,
-        public Carbon $end,
+        public CarbonInterface $start,
+        public CarbonInterface $end,
     ) {}
 
     public static function days(int $days): self

@@ -87,10 +87,13 @@ class PostController extends Controller
 
         $post->fill($data);
         $post->user_id ??= data_get($user, 'id');
-        $post->topic_id = $this->resolveTopicId($request->input('topic', []), $user);
+
+        $allowTaxonomyCreate = $post->published_at !== null;
+
+        $post->topic_id = $this->resolveTopicId($request->input('topic', []), $user, $allowTaxonomyCreate);
         $post->save();
 
-        $post->tags()->sync($this->resolveTagsForSync($request->input('tags', []), $user));
+        $post->tags()->sync($this->resolveTagsForSync($request->input('tags', []), $user, $allowTaxonomyCreate));
 
         return response()->json($post->refresh(), $created ? 201 : 200);
     }
@@ -188,31 +191,49 @@ class PostController extends Controller
     }
 
     /**
-     * Find or create tags from the given input and return their IDs for sync.
+     * Resolve tag IDs for sync. Unknown slugs create rows only when publishing.
      *
      * @param  array<int, array{name: string, slug: string}>  $tagInputs
      * @return list<string>
      */
-    private function resolveTagsForSync(array $tagInputs, mixed $user): array
+    private function resolveTagsForSync(array $tagInputs, mixed $user, bool $allowCreate): array
     {
         $existing = Tag::query()->get(['id', 'name', 'slug']);
 
-        return collect($tagInputs)->map(function (array $item) use ($existing, $user): string {
-            return (string) ($existing->firstWhere('slug', $item['slug']) ?? Tag::create([
-                'id' => (string) Str::uuid(),
-                'name' => $item['name'],
-                'slug' => $item['slug'],
-                'user_id' => data_get($user, 'id'),
-            ]))->id;
-        })->values()->all();
+        return collect($tagInputs)
+            ->map(function (array $item) use ($existing, $user, $allowCreate): ?string {
+                $match = $existing->firstWhere('slug', $item['slug']);
+
+                if ($match !== null) {
+                    return (string) $match->id;
+                }
+
+                if (! $allowCreate) {
+                    return null;
+                }
+
+                $created = Tag::query()->create([
+                    'id' => (string) Str::uuid(),
+                    'name' => $item['name'],
+                    'slug' => $item['slug'],
+                    'user_id' => data_get($user, 'id'),
+                ]);
+
+                $existing->push($created);
+
+                return (string) $created->id;
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /**
-     * Find or create a topic from the given input and return its ID, or null.
+     * Resolve a topic ID. Unknown slugs create a row only when publishing.
      *
      * @param  array<int, array{name: string, slug: string}>  $topicInput
      */
-    private function resolveTopicId(array $topicInput, mixed $user): ?string
+    private function resolveTopicId(array $topicInput, mixed $user, bool $allowCreate): ?string
     {
         $input = collect($topicInput)->first();
 
@@ -220,11 +241,21 @@ class PostController extends Controller
             return null;
         }
 
-        return (string) (Topic::query()->firstWhere('slug', $input['slug']) ?? Topic::create([
+        $match = Topic::query()->firstWhere('slug', $input['slug']);
+
+        if ($match !== null) {
+            return (string) $match->id;
+        }
+
+        if (! $allowCreate) {
+            return null;
+        }
+
+        return (string) Topic::query()->create([
             'id' => (string) Str::uuid(),
             'name' => $input['name'],
             'slug' => $input['slug'],
             'user_id' => data_get($user, 'id'),
-        ]))->id;
+        ])->id;
     }
 }

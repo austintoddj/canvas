@@ -15,7 +15,6 @@ export const TopicsIndex = lazy(() => import('@/pages/Topics/Index'));
 export const TopicsEditor = lazy(() => import('@/pages/Topics/Editor'));
 export const SettingsProfile = lazy(() => import('@/pages/Settings/Profile'));
 export const SettingsUsersIndex = lazy(() => import('@/pages/Settings/Users/Index'));
-export const SettingsUsersShow = lazy(() => import('@/pages/Settings/Users/Show'));
 
 export default function Page({ component: Component }: { component: ComponentType }) {
     return (

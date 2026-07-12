@@ -27,8 +27,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * linked `canvas_users` row (`isAdmin`, `username`, `locale`, etc.).
  *
  * Granting access still happens outside this trait — via `canvas:make-admin`,
- * `canvas:assign-role`, or the Canvas admin API — which create the `canvas_users`
- * row this trait reads from.
+ * `canvas:assign-role`, the Canvas admin Users UI, or the admin API — which
+ * create the `canvas_users` row this trait reads from.
  */
 trait HasCanvasAccess
 {

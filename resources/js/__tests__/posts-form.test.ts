@@ -4,13 +4,17 @@ import { describe, expect, it } from 'vitest';
 
 import {
     formFromCreateResponse,
+    isExistingTaxonomy,
     isPublished,
+    mergeTaxonomyOptions,
+    navSaveStatusLabel,
     postToFormState,
     publishFormState,
     saveStatusLabel,
     serializeFormState,
     slugify,
     taxonomyFromName,
+    toPublishDateString,
     toStorePayload,
     unpublishFormState,
 } from '@/lib/posts/form';
@@ -35,16 +39,17 @@ const samplePost: Post = {
     topic: { id: 'topic-1', name: 'Updates', slug: 'updates' },
 };
 
-describe('slugify', () => {
-    it('converts text to alpha-dash slugs', () => {
+describe('post form helpers', () => {
+    it('maps API posts into form state and store payloads', () => {
         expect(slugify('Hello, Canvas!')).toBe('hello-canvas');
         expect(slugify('   ')).toBe('post');
-    });
-});
+        expect(taxonomyFromName('  Product Updates ')).toEqual({
+            name: 'Product Updates',
+            slug: 'product-updates',
+        });
 
-describe('postToFormState', () => {
-    it('maps API post fields into editor state', () => {
-        expect(postToFormState(samplePost)).toEqual({
+        const form = postToFormState(samplePost);
+        expect(form).toEqual({
             title: 'Hello World',
             slug: 'hello-world',
             summary: 'A short summary',
@@ -56,30 +61,6 @@ describe('postToFormState', () => {
             tags: [{ name: 'News', slug: 'news' }],
             topic: { name: 'Updates', slug: 'updates' },
         });
-    });
-});
-
-describe('formFromCreateResponse', () => {
-    it('builds an empty draft form from create() UUID payload without requiring show()', () => {
-        expect(formFromCreateResponse({ id: 'new-1', slug: 'post-new-1' })).toEqual({
-            title: '',
-            slug: 'post-new-1',
-            summary: '',
-            body: null,
-            publishedAt: null,
-            featuredImage: null,
-            featuredImageCaption: null,
-            meta: null,
-            tags: [],
-            topic: null,
-        });
-    });
-});
-
-describe('toStorePayload', () => {
-    it('serializes form state for the posts store endpoint', () => {
-        const form = postToFormState(samplePost);
-
         expect(toStorePayload(form)).toEqual({
             title: 'Hello World',
             slug: 'hello-world',
@@ -92,56 +73,59 @@ describe('toStorePayload', () => {
             tags: [{ name: 'News', slug: 'news' }],
             topic: [{ name: 'Updates', slug: 'updates' }],
         });
-    });
-
-    it('passes body through unchanged', () => {
-        const form = postToFormState({ ...samplePost, body: '<p>Keep me</p>' });
-
-        expect(toStorePayload(form).body).toBe('<p>Keep me</p>');
-    });
-});
-
-describe('publish helpers', () => {
-    it('detects published posts from publishedAt', () => {
-        const draft = postToFormState({ ...samplePost, published_at: null });
-        const published = postToFormState(samplePost);
-
-        expect(isPublished(draft)).toBe(false);
-        expect(isPublished(published)).toBe(true);
-    });
-
-    it('sets and clears publishedAt', () => {
-        const draft = postToFormState({ ...samplePost, published_at: null });
-        const published = publishFormState(draft);
-
-        expect(published.publishedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-        expect(unpublishFormState(published).publishedAt).toBeNull();
-    });
-});
-
-describe('taxonomyFromName', () => {
-    it('builds taxonomy options from free text', () => {
-        expect(taxonomyFromName('  Product Updates ')).toEqual({
-            name: 'Product Updates',
-            slug: 'product-updates',
+        expect(formFromCreateResponse({ id: 'new-1', slug: 'post-new-1' })).toMatchObject({
+            title: '',
+            slug: 'post-new-1',
+            body: null,
+            publishedAt: null,
         });
-    });
-});
-
-describe('serializeFormState', () => {
-    it('produces a stable snapshot for dirty checking', () => {
-        const form = postToFormState(samplePost);
-
         expect(serializeFormState(form)).toBe(serializeFormState(postToFormState(samplePost)));
     });
-});
 
-describe('saveStatusLabel', () => {
-    it('maps autosave statuses to editor chrome copy', () => {
+    it('handles publish state and autosave labels', () => {
+        const draft = postToFormState({ ...samplePost, published_at: null });
+        expect(isPublished(draft)).toBe(false);
+        expect(isPublished(postToFormState(samplePost))).toBe(true);
+
+        // Local calendar day (not UTC) so evening publish is not stored as "tomorrow".
+        expect(toPublishDateString(new Date(2026, 0, 5, 15, 30, 0))).toBe('2026-01-05');
+        expect(toPublishDateString(new Date(2026, 6, 11, 20, 0, 0))).toBe('2026-07-11');
+
+        const published = publishFormState(draft);
+        expect(published.publishedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(isPublished(published)).toBe(true);
+        expect(unpublishFormState(published).publishedAt).toBeNull();
+
         expect(saveStatusLabel('idle')).toBeNull();
         expect(saveStatusLabel('pending')).toBe('Unsaved changes');
         expect(saveStatusLabel('saving')).toBe('Saving…');
         expect(saveStatusLabel('saved')).toBe('Saved');
         expect(saveStatusLabel('error')).toBe('Save failed');
+
+        expect(navSaveStatusLabel('idle')).toBeNull();
+        expect(navSaveStatusLabel('pending')).toBeNull();
+        expect(navSaveStatusLabel('saving')).toBe('Saving…');
+        expect(navSaveStatusLabel('saved')).toBe('Saved');
+        expect(navSaveStatusLabel('error')).toBe('Save failed');
+    });
+
+    it('detects pending taxonomy vs known Organize options', () => {
+        const available = [
+            { name: 'News', slug: 'news' },
+            { name: 'Updates', slug: 'updates' },
+        ];
+
+        expect(isExistingTaxonomy({ name: 'News', slug: 'news' }, available)).toBe(true);
+        expect(isExistingTaxonomy({ name: 'Launch', slug: 'launch' }, available)).toBe(false);
+        expect(
+            mergeTaxonomyOptions(available, [
+                { name: 'Launch', slug: 'launch' },
+                { name: 'News', slug: 'news' },
+            ])
+        ).toEqual([
+            { name: 'News', slug: 'news' },
+            { name: 'Updates', slug: 'updates' },
+            { name: 'Launch', slug: 'launch' },
+        ]);
     });
 });

@@ -412,12 +412,13 @@ describe('when storing and updating posts', function (): void {
 });
 
 describe('when syncing taxonomy', function (): void {
-    it('syncs new tags', function (): void {
+    it('creates new tags when the post is published', function (): void {
         $post = Post::factory()->create();
 
         $data = [
             'title' => $post->title,
             'slug' => $post->slug,
+            'published_at' => now()->subDay()->toDateString(),
             'tags' => [
                 [
                     'name' => 'A new tag',
@@ -439,11 +440,68 @@ describe('when syncing taxonomy', function (): void {
                 'slug' => $data['slug'],
             ]);
 
-        $this->assertCount(2, $post->tags);
+        $this->assertCount(2, $post->fresh()->tags);
+        $this->assertDatabaseHas('canvas_tags', ['slug' => 'a-new-tag']);
         $this->assertDatabaseHas('canvas_posts_tags', [
             'post_id' => $post->id,
         ]);
     });
+
+    it('does not create tags while the post is a draft', function (): void {
+        $post = Post::factory()->draft()->create();
+
+        $data = [
+            'title' => $post->title,
+            'slug' => $post->slug,
+            'published_at' => null,
+            'tags' => [
+                [
+                    'name' => 'Draft only tag',
+                    'slug' => 'draft-only-tag',
+                ],
+            ],
+        ];
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", $data)
+            ->assertSuccessful();
+
+        $this->assertCount(0, $post->fresh()->tags);
+        $this->assertDatabaseMissing('canvas_tags', ['slug' => 'draft-only-tag']);
+    });
+
+    it('syncs existing tags on drafts without creating new ones', function (): void {
+        $post = Post::factory()->draft()->create();
+        $tag = Tag::factory()->create();
+
+        $data = [
+            'title' => $post->title,
+            'slug' => $post->slug,
+            'published_at' => null,
+            'tags' => [
+                [
+                    'name' => $tag->name,
+                    'slug' => $tag->slug,
+                ],
+                [
+                    'name' => 'Still pending',
+                    'slug' => 'still-pending',
+                ],
+            ],
+        ];
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", $data)
+            ->assertSuccessful();
+
+        $this->assertCount(1, $post->fresh()->tags);
+        $this->assertDatabaseHas('canvas_posts_tags', [
+            'post_id' => $post->id,
+            'tag_id' => $tag->id,
+        ]);
+        $this->assertDatabaseMissing('canvas_tags', ['slug' => 'still-pending']);
+    });
+
     it('syncs existing tags', function (): void {
         $post = Post::factory()->create();
         $tag = Tag::factory()->create();
@@ -468,18 +526,20 @@ describe('when syncing taxonomy', function (): void {
                 'slug' => $data['slug'],
             ]);
 
-        $this->assertCount(1, $post->tags);
+        $this->assertCount(1, $post->fresh()->tags);
         $this->assertDatabaseHas('canvas_posts_tags', [
             'post_id' => $post->id,
             'tag_id' => $tag->id,
         ]);
     });
-    it('syncs a new topic', function (): void {
+
+    it('creates a new topic when the post is published', function (): void {
         $post = Post::factory()->create();
 
         $data = [
             'title' => $post->title,
             'slug' => $post->slug,
+            'published_at' => now()->subDay()->toDateString(),
             'topic' => [
                 [
                     'name' => 'A new topic',
@@ -498,10 +558,32 @@ describe('when syncing taxonomy', function (): void {
             ]);
 
         $this->assertInstanceOf(Topic::class, $post->refresh()->topic);
-        $this->assertDatabaseHas('canvas_posts', [
-            'id' => $post->id,
-        ]);
+        $this->assertDatabaseHas('canvas_topics', ['slug' => 'a-new-topic']);
     });
+
+    it('does not create a topic while the post is a draft', function (): void {
+        $post = Post::factory()->draft()->create();
+
+        $data = [
+            'title' => $post->title,
+            'slug' => $post->slug,
+            'published_at' => null,
+            'topic' => [
+                [
+                    'name' => 'Draft topic',
+                    'slug' => 'draft-topic',
+                ],
+            ],
+        ];
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", $data)
+            ->assertSuccessful();
+
+        $this->assertNull($post->refresh()->topic_id);
+        $this->assertDatabaseMissing('canvas_topics', ['slug' => 'draft-topic']);
+    });
+
     it('syncs an existing topic', function (): void {
         $post = Post::factory()->create();
         $topic = Topic::factory()->create();

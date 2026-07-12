@@ -40,8 +40,8 @@ const copy = {
         singular: 'tag',
         titleNew: 'New tag',
         titleEdit: 'Edit tag',
-        subtitle: 'Name and slug — keep tags simple',
-        nameDescription: 'Shown to authors when attaching tags to a post.',
+        subtitle: 'Labels for grouping related posts',
+        nameDescription: 'What authors see when tagging a post.',
         loadError: 'Unable to load this tag.',
         saveError: 'Unable to save this tag.',
         deleteError: 'Unable to delete this tag.',
@@ -56,8 +56,8 @@ const copy = {
         singular: 'topic',
         titleNew: 'New topic',
         titleEdit: 'Edit topic',
-        subtitle: 'Name and slug — keep topics simple',
-        nameDescription: 'Primary category label authors pick when writing.',
+        subtitle: 'Main categories for your posts',
+        nameDescription: 'What authors see when choosing a topic.',
         loadError: 'Unable to load this topic.',
         saveError: 'Unable to save this topic.',
         deleteError: 'Unable to delete this topic.',
@@ -236,14 +236,19 @@ export function TaxonomyDetailDrawer({
         setError(null);
 
         try {
+            const wasCreate = isNew;
             const saved = await apiFor(kind).store(itemId, toTaxonomyStorePayload(form));
             const nextForm = taxonomyToFormState(saved);
             setForm(nextForm);
             setBaseline(serializeTaxonomyForm(nextForm));
             setSlugManuallyEdited(isSlugManuallyEdited(nextForm.name, nextForm.slug));
             setIsNew(false);
-            toast.success(isNew ? labels.created : labels.saved);
+            toast.success(wasCreate ? labels.created : labels.saved);
             onSaved?.(saved);
+
+            if (wasCreate) {
+                onClose();
+            }
         } catch (saveError) {
             if (saveError instanceof ValidationError) {
                 setFieldErrors(saveError.errors);
@@ -377,9 +382,7 @@ export function TaxonomyDetailDrawer({
 
                                 <Field>
                                     <Label>Slug</Label>
-                                    <Description>
-                                        URL-safe identifier. Auto-fills from the name until you edit it.
-                                    </Description>
+                                    <Description>Used in URLs. Fills in from the name until you edit it.</Description>
                                     <Input
                                         value={form.slug}
                                         onChange={(event) => handleSlugChange(event.target.value)}

@@ -29,6 +29,7 @@ dataset('authenticateProtectedRoutes', [
     ['DELETE', 'canvas/api/topics/{topic}'],
     ['GET', 'canvas/api/users'],
     ['GET', 'canvas/api/users/create'],
+    ['GET', 'canvas/api/users/lookup'],
     ['GET', 'canvas/api/users/{user}'],
     ['GET', 'canvas/api/users/{user}/posts'],
     ['POST', 'canvas/api/users/{id}'],

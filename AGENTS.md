@@ -92,6 +92,7 @@ When touching existing code: do not leave behind narrative comments; clean them 
 - **Optional gifts:** `HasCanvasAccess` (host sugar) and `canvas:ui` (sample reader). Core paths (API, gates, digest, policies) must work with a bare host `User`.
 - **Dependencies:** prefer Illuminate primitives (`Str::uuid()`, etc.); no transitive-only critical packages.
 - Prefer class-based factories and `Model::factory()` over legacy `factory()` helpers.
+- **Taxonomy from the post editor:** **attach existing** tags/topics only, via Catalyst **Dropdown** menus (same pattern as the editor toolbar More menu — `cursor-pointer`, checkmarks for selection). No free-typed minting in the post settings drawer; Organize remains the place to create taxonomy deliberately.
 
 ### Artisan command naming
 
@@ -122,13 +123,13 @@ Durable patterns for list pages and media (set by the media library; reuse elsew
 - **Side drawers** — Media and taxonomy detail UIs share `SideDrawer` chrome; keep domain logic in feature drawers.
 - **Danger text** — `text-red-600 dark:text-red-400` (not `red-500` in dark).
 - **Reduced motion** — `ContentReveal` / `EmptyStateReveal` / Toaster / PillNav honor `prefers-reduced-motion`.
-- **Post editor** — loading uses layout-matched skeleton (`data-post-editor-skeleton`); toolbar toggles use `aria-pressed`; link editing uses a dialog (never `window.prompt`).
+- **Post editor** — loading uses layout-matched skeleton (`data-post-editor-skeleton`); toolbar toggles use `aria-pressed`; link editing uses a dialog (never `window.prompt`). Quiet writing surface: **no bubble/floating selection menu** — formatting lives on the fixed toolbar only. Primary toolbar stays a single row (no wrap thrash): everyday marks/blocks/media stay visible; secondary tools (strike, highlight, HR, table insert, alignment) live under a **More** menu (`data-post-body-toolbar-more`). Rich embeds (YouTube, X, Vimeo, …) are **paste-only** — no per-provider toolbar buttons. **Focus mode** lives on the body toolbar (`data-post-focus-toggle` / arrows-out icon), not the page nav; full-viewport writing surface (`data-post-editor-focus`); Esc exits. Editor nav uses **icon-only** outline buttons for **SEO** (`data-post-seo-trigger` / globe) and **Settings** (`data-post-settings-trigger` / cog) — each opens its own side drawer (SEO is not nested inside Settings). **Nav save status** is ephemeral: hidden when idle/pending, `Saving…` while in flight, `Saved` for a few seconds after success (not a permanent “Saved” badge).
 - **Focus rings** — prefer blue outline (`focus-visible:outline-2 outline-offset-2 outline-blue-500` / Catalyst `data-focus:outline-blue-500`).
 - **Dashboard zero traffic** — when `totalActivity === 0`, keep stats cards and show EmptyState + write CTA (not empty charts thrash).
 - **Organize filters** — search/sort via URL + API; true empty splash vs filtered-empty message (Media pattern).
 - **Design tokens** — semantic `canvas-*` colors live in `resources/css/app.css` `@theme` (muted, danger, panel, border, focus). Prefer them for **app chrome**; Catalyst kit may stay zinc-first.
 - **Typography helpers** — use `PageDescription` (page subtitles) and `ErrorText` (list/form errors) from `components/text.tsx` instead of one-off muted/danger class soups.
-- **Design system of record** — AGENTS + Vitest source contracts (no Storybook required for this package).
+- **Design system of record** — AGENTS + shared components (no Storybook required for this package). Frontend Vitest covers pure `lib/` helpers and behavior, not `?raw` source string inventories.
 
 ## Development Commands
 

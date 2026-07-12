@@ -36,15 +36,15 @@ Canvas resolves the host user model via `config('canvas.user_model')` (default `
 
 Technical home for installers and upgraders (**not** the public `readme.md`).
 
-| Requirement             | Detail                                                                                                           |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| **Auth**                | Working authentication for `config('canvas.guard')` (single guard; point `CANVAS_GUARD` at `web`, `staff`, etc.) |
-| **User model**          | `config('canvas.user_model')` Eloquent authenticatable                                                           |
-| **Identity keys**       | Stock Laravel **bigint** unsigned primary key on the host user model                                             |
-| **Identity attributes** | Readable **`name`** and **`email`** (display, digest, Gravatar)                                                  |
-| **Access**              | A `canvas_users` row grants Canvas access (CLI or admin API). Canvas does not create host accounts               |
-| **Trait**               | `HasCanvasAccess` is **optional** host sugar — not required for routes, gates, policies, digest, or admin API    |
-| **Digest**              | Core package feature; works with a bare host `User` (no trait / host relations)                                  |
+| Requirement             | Detail                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Auth**                | Working authentication for `config('canvas.guard')` (single guard; point `CANVAS_GUARD` at `web`, `staff`, etc.)    |
+| **User model**          | `config('canvas.user_model')` Eloquent authenticatable                                                              |
+| **Identity keys**       | Stock Laravel **bigint** unsigned primary key on the host user model                                                |
+| **Identity attributes** | Readable **`name`** and **`email`** (display, digest, Gravatar)                                                     |
+| **Access**              | A `canvas_users` row grants Canvas access (CLI, admin Users UI, or admin API). Canvas does not create host accounts |
+| **Trait**               | `HasCanvasAccess` is **optional** host sugar — not required for routes, gates, policies, digest, or admin API       |
+| **Digest**              | Core package feature; works with a bare host `User` (no trait / host relations)                                     |
 
 **Canvas does not require:** owning login/password reset, writing host user rows, multi-guard simultaneous sessions, or config for every custom user schema.
 

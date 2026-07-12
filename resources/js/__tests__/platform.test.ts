@@ -2,21 +2,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { isApplePlatform, searchShortcutKeys } from '@/lib/platform';
 
-describe('platform', () => {
+describe('platform helpers', () => {
     afterEach(() => {
         vi.unstubAllGlobals();
     });
 
-    it('detects apple platforms', () => {
+    it('detects Apple vs non-Apple shortcut labels', () => {
         vi.stubGlobal('navigator', { platform: 'MacIntel', userAgent: 'Mozilla/5.0' });
-
         expect(isApplePlatform()).toBe(true);
         expect(searchShortcutKeys()).toEqual(['⌘', 'K']);
-    });
 
-    it('detects non-apple platforms', () => {
         vi.stubGlobal('navigator', { platform: 'Win32', userAgent: 'Mozilla/5.0' });
-
         expect(isApplePlatform()).toBe(false);
         expect(searchShortcutKeys()).toEqual(['Ctrl', 'K']);
     });

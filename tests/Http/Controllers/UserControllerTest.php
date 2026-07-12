@@ -61,6 +61,52 @@ describe('when listing users', function (): void {
         ]);
     });
 
+    it('looks up a host user without canvas access by email', function (): void {
+        $user = User::factory()->create([
+            'name' => 'Host Only',
+            'email' => 'host-only@example.com',
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/users/lookup?q=host-only@example.com')
+            ->assertSuccessful()
+            ->assertJsonPath('id', $user->id)
+            ->assertJsonPath('name', 'Host Only')
+            ->assertJsonPath('email', 'host-only@example.com')
+            ->assertJsonPath('has_canvas_access', false)
+            ->assertJsonPath('role', null)
+            ->assertJsonStructure(['avatar_url']);
+    });
+
+    it('looks up a host user by id and reports existing canvas access', function (): void {
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson("canvas/api/users/lookup?q={$this->editor->id}")
+            ->assertSuccessful()
+            ->assertJsonPath('id', $this->editor->id)
+            ->assertJsonPath('email', $this->editor->email)
+            ->assertJsonPath('has_canvas_access', true)
+            ->assertJsonPath('role', 2);
+    });
+
+    it('returns not found when looking up an unknown host user', function (): void {
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/users/lookup?q=missing@example.com')
+            ->assertNotFound();
+    });
+
+    it('validates the lookup query parameter', function (): void {
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/users/lookup')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['q']);
+    });
+
+    it('forbids non-admins from looking up host users', function (): void {
+        $this->actingAs($this->editor, 'canvas')
+            ->getJson('canvas/api/users/lookup?q=anyone@example.com')
+            ->assertForbidden();
+    });
+
     it('returns existing user data', function (): void {
         $response = $this->actingAs($this->admin, 'canvas')
             ->getJson("canvas/api/users/{$this->contributor->id}")

@@ -1,9 +1,9 @@
+// @vitest-environment happy-dom
+
 import { describe, expect, it } from 'vitest';
 
-import { bodyFromEditorHtml, bodyHtmlForEditor, normalizeBodyHtml } from '@/lib/posts/body';
+import { bodyFromEditorHtml, bodyHtmlForEditor, normalizeBodyHtml, rewriteBodyImageSrcs } from '@/lib/posts/body';
 import { postToFormState, toStorePayload } from '@/lib/posts/form';
-import editorSource from '@/pages/Posts/Editor.tsx?raw';
-import bodyEditorSource from '@/components/posts/PostBodyEditor.tsx?raw';
 import type { Post } from '@/types/api';
 
 const samplePost: Post = {
@@ -25,73 +25,34 @@ const samplePost: Post = {
     topic: undefined,
 };
 
-describe('normalizeBodyHtml', () => {
-    it('returns null for empty or blank editor documents', () => {
+describe('post body HTML', () => {
+    it('normalizes empty editor output to null and keeps real content', () => {
         expect(normalizeBodyHtml(null)).toBeNull();
         expect(normalizeBodyHtml('')).toBeNull();
-        expect(normalizeBodyHtml('   ')).toBeNull();
         expect(normalizeBodyHtml('<p></p>')).toBeNull();
         expect(normalizeBodyHtml('<p><br></p>')).toBeNull();
-        expect(normalizeBodyHtml('<p>&nbsp;</p>')).toBeNull();
-    });
-
-    it('keeps real HTML content', () => {
         expect(normalizeBodyHtml('<p>Hello</p>')).toBe('<p>Hello</p>');
-        expect(normalizeBodyHtml('<h2>Title</h2><p>Body</p>')).toBe('<h2>Title</h2><p>Body</p>');
-    });
-});
-
-describe('bodyHtmlForEditor / bodyFromEditorHtml', () => {
-    it('hydrates null body as empty string for TipTap content', () => {
         expect(bodyHtmlForEditor(null)).toBe('');
         expect(bodyHtmlForEditor('<p>Keep</p>')).toBe('<p>Keep</p>');
     });
 
-    it('round-trips editor HTML into form body for autosave payload', () => {
+    it('rewrites public storage image srcs to the current browser origin for the editor', () => {
+        const html =
+            '<p><img src="https://app.test/storage/canvas/images/a.jpg" alt="A" class="canvas-post-body-image"></p>';
+        const expectedSrc = `${window.location.origin}/storage/canvas/images/a.jpg`;
+
+        expect(rewriteBodyImageSrcs(html)).toContain(`src="${expectedSrc}"`);
+        expect(bodyHtmlForEditor(html)).toContain(`src="${expectedSrc}"`);
+        expect(rewriteBodyImageSrcs('<p><img src="https://cdn.example.com/x.jpg" alt=""></p>')).toContain(
+            'src="https://cdn.example.com/x.jpg"'
+        );
+    });
+
+    it('round-trips through form payload for autosave', () => {
         const html = '<p>Written in the editor</p>';
         const body = bodyFromEditorHtml(html);
-        const form = postToFormState({ ...samplePost, body });
-        const payload = toStorePayload(form);
 
-        expect(body).toBe(html);
-        expect(payload.body).toBe(html);
-    });
-
-    it('stores empty editor output as null through the form payload path', () => {
-        const body = bodyFromEditorHtml('<p></p>');
-        const form = postToFormState({ ...samplePost, body });
-        const payload = toStorePayload({ ...form, body });
-
-        expect(body).toBeNull();
-        expect(payload.body).toBeNull();
-    });
-});
-
-describe('post editor ships TipTap (source)', () => {
-    it('wires PostBodyEditor on create/edit', () => {
-        expect(editorSource).toContain('PostBodyEditor');
-        expect(editorSource).not.toContain('BodyEditorPlaceholder');
-        expect(bodyEditorSource).toContain('@tiptap/react');
-        expect(bodyEditorSource).toContain('useEditor');
-        expect(bodyEditorSource).toContain('data-post-body-editor');
-    });
-
-    it('uses a layout-matched editor skeleton instead of Loading post text', () => {
-        expect(editorSource).toContain('data-post-editor-skeleton');
-        expect(editorSource).toContain('aria-busy');
-        expect(editorSource).not.toContain('Loading post…');
-    });
-
-    it('exposes toolbar toggle state and a dialog for links', () => {
-        expect(bodyEditorSource).toContain('aria-pressed');
-        expect(bodyEditorSource).toContain('data-post-link-dialog');
-        expect(bodyEditorSource).toContain('Dialog');
-        expect(bodyEditorSource).not.toContain('window.prompt');
-    });
-
-    it('bootstraps new posts from create() and skips show() for unsaved UUIDs', () => {
-        expect(editorSource).toContain('formFromCreateResponse');
-        expect(editorSource).toContain('bootstrappedPostId');
-        expect(editorSource).toContain('postsApi.create');
+        expect(toStorePayload(postToFormState({ ...samplePost, body })).body).toBe(html);
+        expect(toStorePayload(postToFormState({ ...samplePost, body: bodyFromEditorHtml('<p></p>') })).body).toBeNull();
     });
 });

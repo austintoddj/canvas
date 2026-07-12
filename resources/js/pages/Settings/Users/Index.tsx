@@ -1,4 +1,4 @@
-import { EllipsisVerticalIcon } from '@heroicons/react/20/solid';
+import { PlusIcon, TrashIcon } from '@heroicons/react/20/solid';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -6,19 +6,13 @@ import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/
 import { Avatar } from '@/components/avatar';
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
-import {
-    Dropdown,
-    DropdownButton,
-    DropdownDivider,
-    DropdownItem,
-    DropdownLabel,
-    DropdownMenu,
-} from '@/components/dropdown';
 import { ContentReveal } from '@/components/ContentReveal';
 import { EmptyState } from '@/components/EmptyState';
 import { EmptyStateReveal } from '@/components/EmptyStateReveal';
-import { Link } from '@/components/link';
+import { ListRowActionButton, ListRowEnd } from '@/components/ListRowEnd';
 import { PageHeader } from '@/components/PageHeader';
+import { GrantAccessDrawer } from '@/components/users/GrantAccessDrawer';
+import { UserDetailDrawer } from '@/components/users/UserDetailDrawer';
 import { UsersEmptyVisual } from '@/components/users/UsersEmptyVisual';
 import {
     Pagination,
@@ -28,32 +22,26 @@ import {
     PaginationPage,
     PaginationPrevious,
 } from '@/components/pagination';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table';
+import { Table, TableBody, TableCell, TableRow } from '@/components/table';
 import { TableListSkeleton } from '@/components/TableListSkeleton';
 import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { usersApi } from '@/lib/api/users';
+import { formatListDate } from '@/lib/format-list-date';
 import { paginationWindow, shouldGoToPreviousPageAfterDelete } from '@/lib/list-pagination';
 import { toast } from '@/lib/toast';
-import { parseUsersListFilters, usersIndexPath, usersIndexQueryParams, type UsersListFilters } from '@/lib/users/list';
+import {
+    parseUsersListFilters,
+    setUserDetailParam,
+    userDetailId,
+    usersIndexPath,
+    usersIndexQueryParams,
+} from '@/lib/users/list';
 import { roleLabel, userInitials } from '@/lib/users/roles';
 import type { Paginated } from '@/types/api';
 import type { UserResource } from '@/types/boot';
-
-function updateFilters(current: URLSearchParams, patch: Partial<UsersListFilters>): URLSearchParams {
-    const next = new URLSearchParams(current);
-    const page = patch.page ?? 1;
-
-    if (page > 1) {
-        next.set('page', String(page));
-    } else {
-        next.delete('page');
-    }
-
-    return next;
-}
 
 function roleBadgeColor(role: number | null | undefined): 'zinc' | 'blue' | 'amber' | 'green' {
     if (role === 3) {
@@ -72,21 +60,22 @@ function roleBadgeColor(role: number | null | undefined): 'zinc' | 'blue' | 'amb
 }
 
 export default function SettingsUsersIndex() {
-    const { boot, user: currentUser } = useCanvas();
+    const { boot } = useCanvas();
+    const currentUserId = boot.user.id;
     const [searchParams, setSearchParams] = useSearchParams();
     const filters = parseUsersListFilters(searchParams);
-    const queryKey = searchParams.toString();
+    const detailId = userDetailId(searchParams);
 
     const [response, setResponse] = useState<Paginated<UserResource> | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [revokingId, setRevokingId] = useState<number | null>(null);
+    const [grantOpen, setGrantOpen] = useState(false);
     const [pendingRevoke, setPendingRevoke] = useState<UserResource | null>(null);
+    const [revoking, setRevoking] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
         const controller = new AbortController();
-        const currentFilters = parseUsersListFilters(searchParams);
 
         queueMicrotask(() => {
             if (!cancelled) {
@@ -96,7 +85,7 @@ export default function SettingsUsersIndex() {
         });
 
         usersApi
-            .index(usersIndexQueryParams(currentFilters), controller.signal)
+            .index(usersIndexQueryParams({ page: filters.page }), controller.signal)
             .then((data) => {
                 if (!cancelled) {
                     setResponse(data);
@@ -118,7 +107,7 @@ export default function SettingsUsersIndex() {
             cancelled = true;
             controller.abort();
         };
-    }, [queryKey, searchParams]);
+    }, [filters.page]);
 
     async function reloadUsers() {
         try {
@@ -131,21 +120,16 @@ export default function SettingsUsersIndex() {
         }
     }
 
-    function setPage(page: number) {
-        setSearchParams(updateFilters(searchParams, { page }));
+    function openDetail(userId: number) {
+        setSearchParams(setUserDetailParam(searchParams, userId), { replace: false });
     }
 
-    function requestRevoke(user: UserResource) {
-        if (user.id === currentUser.id) {
-            toast.error('You cannot revoke your own access.');
-            return;
-        }
-
-        setPendingRevoke(user);
+    function closeDetail() {
+        setSearchParams(setUserDetailParam(searchParams, null), { replace: true });
     }
 
     function closeRevokeConfirm() {
-        if (revokingId !== null) {
+        if (revoking) {
             return;
         }
 
@@ -153,32 +137,53 @@ export default function SettingsUsersIndex() {
     }
 
     async function confirmRevoke() {
-        if (pendingRevoke === null) {
+        if (pendingRevoke === null || revoking || pendingRevoke.id === currentUserId) {
             return;
         }
 
-        const user = pendingRevoke;
-        setRevokingId(user.id);
+        setRevoking(true);
+        const userId = pendingRevoke.id;
+        const name = pendingRevoke.name;
+        const remaining = (response?.data.length ?? 1) - 1;
+        const currentPage = response?.current_page ?? filters.page;
 
         try {
-            await usersApi.destroy(String(user.id));
-
-            const shouldGoBack =
-                response !== null && shouldGoToPreviousPageAfterDelete(response.data.length, response.current_page);
-
+            await usersApi.destroy(String(userId));
             setPendingRevoke(null);
+            toast.success(`Access revoked for ${name}.`);
 
-            if (shouldGoBack) {
-                setPage(filters.page - 1);
-                return;
+            if (detailId === String(userId)) {
+                closeDetail();
             }
 
-            await reloadUsers();
-            toast.success(`Access revoked for ${user.name}.`);
+            setResponse((current) => {
+                if (current === null) {
+                    return current;
+                }
+
+                return {
+                    ...current,
+                    data: current.data.filter((item) => item.id !== userId),
+                };
+            });
+
+            if (shouldGoToPreviousPageAfterDelete(remaining + 1, currentPage) && filters.page > 1) {
+                const next = setUserDetailParam(searchParams, null);
+
+                if (filters.page - 1 > 1) {
+                    next.set('page', String(filters.page - 1));
+                } else {
+                    next.delete('page');
+                }
+
+                setSearchParams(next, { replace: true });
+            } else {
+                void reloadUsers();
+            }
         } catch {
             toast.error('Unable to revoke access.');
         } finally {
-            setRevokingId(null);
+            setRevoking(false);
         }
     }
 
@@ -190,95 +195,104 @@ export default function SettingsUsersIndex() {
 
     return (
         <div className="space-y-8">
-            <PageHeader title="Users">
-                <PageDescription>People with Canvas access and their roles</PageDescription>
+            <PageHeader
+                title="Users"
+                actions={
+                    <Button type="button" color="dark/zinc" onClick={() => setGrantOpen(true)}>
+                        <PlusIcon data-slot="icon" />
+                        Invite
+                    </Button>
+                }
+            >
+                <PageDescription>People with access to Canvas and their roles.</PageDescription>
             </PageHeader>
 
             {error ? <ErrorText>{error}</ErrorText> : null}
 
             {showInitialSkeleton ? (
-                <TableListSkeleton rows={6} columns={4} />
+                <TableListSkeleton rows={6} columns={2} />
             ) : isEmpty ? (
                 <EmptyStateReveal animate={animateEmpty}>
                     <EmptyState
                         headline="No Canvas users"
-                        description="Users appear here once they have a Canvas role. Grant access with the canvas:make-admin Artisan command or by editing a host user id."
+                        description="Users show up here once they have a Canvas role. Look up an existing host account by email or ID to invite them."
                         visual={<UsersEmptyVisual />}
+                        action={
+                            <Button type="button" color="dark/zinc" onClick={() => setGrantOpen(true)}>
+                                <PlusIcon data-slot="icon" />
+                                Invite
+                            </Button>
+                        }
                     />
                 </EmptyStateReveal>
             ) : response ? (
                 <ContentReveal busy={refreshing} animate={animateContent}>
-                    <Table striped className="[--gutter:--spacing(4)]">
-                        <TableHead>
-                            <TableRow>
-                                <TableHeader>User</TableHeader>
-                                <TableHeader>Role</TableHeader>
-                                <TableHeader>Posts</TableHeader>
-                                <TableHeader className="text-right">
-                                    <span className="sr-only">Actions</span>
-                                </TableHeader>
-                            </TableRow>
-                        </TableHead>
+                    <Table striped>
                         <TableBody>
                             {response.data.map((user) => {
                                 const role = user.canvas?.role ?? null;
                                 const username = user.canvas?.username;
+                                const selected = detailId === String(user.id);
+                                const isSelf = user.id === currentUserId;
+                                const postsCount = user.posts_count ?? 0;
 
                                 return (
-                                    <TableRow key={user.id}>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
+                                    <TableRow
+                                        key={user.id}
+                                        className={
+                                            selected
+                                                ? 'group/list-row cursor-pointer bg-zinc-950/5 dark:bg-white/5'
+                                                : 'group/list-row cursor-pointer hover:bg-zinc-950/5 dark:hover:bg-white/5'
+                                        }
+                                        tabIndex={0}
+                                        aria-label={`Edit ${user.name}`}
+                                        data-selected={selected ? 'true' : undefined}
+                                        onClick={() => openDetail(user.id)}
+                                        onKeyDown={(event) => {
+                                            if (event.key === 'Enter' || event.key === ' ') {
+                                                event.preventDefault();
+                                                openDetail(user.id);
+                                            }
+                                        }}
+                                    >
+                                        <TableCell className="w-full max-w-0">
+                                            <div className="flex min-w-0 items-center gap-3">
                                                 <Avatar
                                                     src={user.avatar_url}
                                                     initials={userInitials(user.name)}
-                                                    className="size-9"
+                                                    className="size-9 shrink-0"
                                                     alt=""
                                                 />
                                                 <div className="min-w-0">
-                                                    <Link
-                                                        href={`/settings/users/${user.id}`}
-                                                        className="font-medium text-zinc-950 hover:underline dark:text-white"
-                                                    >
-                                                        {user.name}
-                                                    </Link>
+                                                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                                        <span className="truncate font-medium text-zinc-950 dark:text-white">
+                                                            {user.name}
+                                                        </span>
+                                                        <Badge color={roleBadgeColor(role)}>
+                                                            {roleLabel(role, boot.roles)}
+                                                        </Badge>
+                                                    </div>
                                                     <Text className="mt-0.5 truncate text-sm text-canvas-muted dark:text-canvas-muted-dark">
                                                         {username ? `@${username}` : user.email}
+                                                        {' · '}
+                                                        {postsCount.toLocaleString()}{' '}
+                                                        {postsCount === 1 ? 'post' : 'posts'}
                                                     </Text>
                                                 </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell>
-                                            <Badge color={roleBadgeColor(role)}>{roleLabel(role, boot.roles)}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-canvas-muted dark:text-canvas-muted-dark">
-                                            {(user.posts_count ?? 0).toLocaleString()}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Dropdown>
-                                                <DropdownButton plain aria-label={`Actions for ${user.name}`}>
-                                                    <EllipsisVerticalIcon data-slot="icon" />
-                                                </DropdownButton>
-                                                <DropdownMenu anchor="bottom end">
-                                                    <DropdownItem href={`/settings/users/${user.id}`}>
-                                                        <DropdownLabel>Edit</DropdownLabel>
-                                                    </DropdownItem>
-                                                    {user.id !== currentUser.id ? (
-                                                        <>
-                                                            <DropdownDivider />
-                                                            <DropdownItem
-                                                                disabled={revokingId === user.id}
-                                                                onClick={() => requestRevoke(user)}
-                                                            >
-                                                                <DropdownLabel>
-                                                                    {revokingId === user.id
-                                                                        ? 'Revoking…'
-                                                                        : 'Revoke access'}
-                                                                </DropdownLabel>
-                                                            </DropdownItem>
-                                                        </>
-                                                    ) : null}
-                                                </DropdownMenu>
-                                            </Dropdown>
+                                        <TableCell className="w-px whitespace-nowrap">
+                                            <ListRowEnd date={formatListDate(user.canvas?.updated_at)}>
+                                                {!isSelf ? (
+                                                    <ListRowActionButton
+                                                        label={`Revoke access for ${user.name}`}
+                                                        danger
+                                                        onClick={() => setPendingRevoke(user)}
+                                                    >
+                                                        <TrashIcon className="size-5" aria-hidden="true" />
+                                                    </ListRowActionButton>
+                                                ) : null}
+                                            </ListRowEnd>
                                         </TableCell>
                                     </TableRow>
                                 );
@@ -322,23 +336,63 @@ export default function SettingsUsersIndex() {
                 </ContentReveal>
             ) : null}
 
+            <UserDetailDrawer
+                open={detailId !== null}
+                userId={detailId}
+                onClose={closeDetail}
+                onSaved={(saved) => {
+                    setResponse((current) => {
+                        if (current === null) {
+                            void reloadUsers();
+                            return current;
+                        }
+
+                        return {
+                            ...current,
+                            data: current.data.map((item) => (item.id === saved.id ? { ...item, ...saved } : item)),
+                        };
+                    });
+                }}
+                onRevoked={(revokedId) => {
+                    setResponse((current) => {
+                        if (current === null) {
+                            return current;
+                        }
+
+                        return {
+                            ...current,
+                            data: current.data.filter((item) => item.id !== revokedId),
+                        };
+                    });
+                    void reloadUsers();
+                }}
+            />
+
+            <GrantAccessDrawer
+                open={grantOpen}
+                onClose={() => setGrantOpen(false)}
+                onGranted={(user) => {
+                    void reloadUsers().then(() => {
+                        openDetail(user.id);
+                    });
+                }}
+                onOpenExisting={(userId) => {
+                    openDetail(userId);
+                }}
+            />
+
             <Alert open={pendingRevoke !== null} onClose={closeRevokeConfirm} size="sm">
                 <AlertTitle>Revoke access?</AlertTitle>
                 <AlertDescription>
-                    Revoke Canvas access for {pendingRevoke?.name}? They will lose the admin dashboard until access is
-                    granted again.
+                    Revoke Canvas access for {pendingRevoke?.name ?? 'this user'}? They will no longer be able to use
+                    Canvas until invited again.
                 </AlertDescription>
                 <AlertActions>
-                    <Button type="button" plain disabled={revokingId !== null} onClick={closeRevokeConfirm}>
+                    <Button type="button" plain disabled={revoking} onClick={closeRevokeConfirm}>
                         Cancel
                     </Button>
-                    <Button
-                        type="button"
-                        color="red"
-                        disabled={revokingId !== null}
-                        onClick={() => void confirmRevoke()}
-                    >
-                        {revokingId !== null ? 'Revoking…' : 'Revoke access'}
+                    <Button type="button" color="red" disabled={revoking} onClick={() => void confirmRevoke()}>
+                        {revoking ? 'Revoking…' : 'Revoke access'}
                     </Button>
                 </AlertActions>
             </Alert>

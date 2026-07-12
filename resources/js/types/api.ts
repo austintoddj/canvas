@@ -162,6 +162,19 @@ export type UserCreateResponse = {
     canvas: CanvasProfile;
 };
 
+export type UserLookupResult = {
+    id: number;
+    name: string;
+    email: string;
+    avatar_url: string;
+    has_canvas_access: boolean;
+    role: number | null;
+};
+
+export type UserLookupParams = {
+    q: string;
+};
+
 export type UserStorePayload = {
     username?: string | null;
     summary?: string | null;
@@ -341,6 +354,6 @@ export function searchResultPath(result: SearchResult): string {
         case 'edit-topic':
             return `/organize?tab=topics&detail=${encodeURIComponent(result.id)}`;
         case 'edit-user':
-            return `/settings/users/${result.id}`;
+            return `/settings/users?detail=${encodeURIComponent(String(result.id))}`;
     }
 }

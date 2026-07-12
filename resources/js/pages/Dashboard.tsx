@@ -109,7 +109,7 @@ export default function Dashboard() {
     return (
         <div className="space-y-8">
             <PageHeader title="Dashboard">
-                <PageDescription>Views and visits for the last 30 days</PageDescription>
+                <PageDescription>Traffic across your posts for the last 30 days.</PageDescription>
             </PageHeader>
 
             {canViewAllPosts ? (

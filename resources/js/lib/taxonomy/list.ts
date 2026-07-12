@@ -170,23 +170,7 @@ export function taxonomyIndexQueryParams(filters: TaxonomyListFilters): TagsInde
     };
 }
 
-export function formatTaxonomyDate(value: string | null | undefined): string {
-    if (value === null || value === undefined || value === '') {
-        return '—';
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return '—';
-    }
-
-    return date.toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    });
-}
+export { formatListDate as formatTaxonomyDate } from '@/lib/format-list-date';
 
 export function legacyTaxonomyRedirectPath(kind: OrganizeTab, searchParams: URLSearchParams, itemId?: string): string {
     const filters = parseTaxonomyListFilters(searchParams);

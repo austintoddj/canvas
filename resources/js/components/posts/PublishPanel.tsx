@@ -1,74 +1,94 @@
+import { useState } from 'react';
+
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
 import { Description, Field, Fieldset, Label } from '@/components/fieldset';
-import {
-    isPublished,
-    publishFormState,
-    saveStatusLabel,
-    unpublishFormState,
-    type PostFormState,
-    type PostSaveStatus,
-} from '@/lib/posts/form';
+import { isPublished, type PostFormState } from '@/lib/posts/form';
 
 type PublishPanelProps = {
     form: PostFormState;
-    onChange: (form: PostFormState) => void;
-    onSaveNow: () => void;
-    saveStatus: PostSaveStatus;
+    onPublish: () => void | Promise<void>;
+    onUnpublish: () => void | Promise<void>;
+    onDelete?: () => void;
     disabled?: boolean;
+    deleting?: boolean;
 };
 
-export default function PublishPanel({ form, onChange, onSaveNow, saveStatus, disabled = false }: PublishPanelProps) {
+export default function PublishPanel({
+    form,
+    onPublish,
+    onUnpublish,
+    onDelete,
+    disabled = false,
+    deleting = false,
+}: PublishPanelProps) {
     const published = isPublished(form);
-    const statusText = saveStatusLabel(saveStatus) ?? '';
+    const [busyAction, setBusyAction] = useState<'publish' | 'unpublish' | null>(null);
+    const busy = disabled || deleting || busyAction !== null;
+
+    async function handlePublish() {
+        if (busy) {
+            return;
+        }
+
+        setBusyAction('publish');
+
+        try {
+            await onPublish();
+        } finally {
+            setBusyAction(null);
+        }
+    }
+
+    async function handleUnpublish() {
+        if (busy) {
+            return;
+        }
+
+        setBusyAction('unpublish');
+
+        try {
+            await onUnpublish();
+        } finally {
+            setBusyAction(null);
+        }
+    }
 
     return (
-        <Fieldset className="rounded-lg border border-zinc-950/10 p-4 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5">
-            <div className="flex items-center justify-between gap-3">
+        <Fieldset className="min-w-0 rounded-lg border border-zinc-950/10 p-4 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5">
+            <div className="flex min-w-0 items-center justify-between gap-3">
                 <Badge color={published ? 'green' : 'amber'}>{published ? 'Published' : 'Draft'}</Badge>
-                {statusText ? (
-                    <span
-                        className={
-                            saveStatus === 'error'
-                                ? 'text-sm text-canvas-danger dark:text-canvas-danger-dark'
-                                : 'text-sm text-canvas-muted dark:text-canvas-muted-dark'
-                        }
-                    >
-                        {statusText}
-                    </span>
-                ) : null}
             </div>
 
-            <Field className="mt-4">
+            <Field className="mt-4 min-w-0">
                 <Label>Visibility</Label>
                 <Description>
-                    {published ? 'This post is visible to readers.' : 'Save as draft until you are ready to publish.'}
+                    {published ? 'Live on your site.' : 'Only people with Canvas access can see drafts.'}
                 </Description>
                 <div className="mt-3 flex flex-wrap gap-2">
                     {published ? (
-                        <Button
-                            type="button"
-                            outline
-                            disabled={disabled || saveStatus === 'saving'}
-                            onClick={() => onChange(unpublishFormState(form))}
-                        >
-                            Unpublish
+                        <Button type="button" outline disabled={busy} onClick={() => void handleUnpublish()}>
+                            {busyAction === 'unpublish' ? 'Unpublishing…' : 'Unpublish'}
                         </Button>
                     ) : (
-                        <Button
-                            type="button"
-                            color="dark/zinc"
-                            disabled={disabled || saveStatus === 'saving'}
-                            onClick={() => onChange(publishFormState(form))}
-                        >
-                            Publish
+                        <Button type="button" color="dark/zinc" disabled={busy} onClick={() => void handlePublish()}>
+                            {busyAction === 'publish' ? 'Publishing…' : 'Publish'}
                         </Button>
                     )}
-                    <Button type="button" plain disabled={disabled || saveStatus === 'saving'} onClick={onSaveNow}>
-                        Save now
-                    </Button>
                 </div>
             </Field>
+
+            {onDelete !== undefined ? (
+                <Field className="mt-6 min-w-0 border-t border-zinc-950/10 pt-4 dark:border-white/10">
+                    <Label>Danger zone</Label>
+                    <Description>Permanently remove this post and its stats.</Description>
+                    <div className="mt-3">
+                        <Button type="button" outline color="red" disabled={busy} onClick={onDelete}>
+                            {deleting ? 'Deleting…' : 'Delete post'}
+                        </Button>
+                    </div>
+                </Field>
+            ) : null}
         </Fieldset>
     );
 }

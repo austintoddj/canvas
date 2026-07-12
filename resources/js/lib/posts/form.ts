@@ -32,6 +32,20 @@ export function saveStatusLabel(status: PostSaveStatus): string | null {
     }
 }
 
+/** Navbar-only: show activity, not steady “idle/pending/saved forever” chrome. */
+export function navSaveStatusLabel(status: PostSaveStatus): string | null {
+    switch (status) {
+        case 'saving':
+            return 'Saving…';
+        case 'saved':
+            return 'Saved';
+        case 'error':
+            return 'Save failed';
+        default:
+            return null;
+    }
+}
+
 export { bodyFromEditorHtml, bodyHtmlForEditor, normalizeBodyHtml } from '@/lib/posts/body';
 
 export function slugify(value: string): string {
@@ -45,7 +59,36 @@ export function slugify(value: string): string {
 }
 
 export function toPublishDateString(date: Date = new Date()): string {
-    return date.toISOString().slice(0, 10);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+function parseDateOnlyLocal(value: string): Date | null {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+
+    if (match !== null) {
+        const year = Number(match[1]);
+        const month = Number(match[2]);
+        const day = Number(match[3]);
+        const local = new Date(year, month - 1, day);
+
+        if (local.getFullYear() === year && local.getMonth() === month - 1 && local.getDate() === day) {
+            return local;
+        }
+
+        return null;
+    }
+
+    const parsed = new Date(value);
+
+    if (Number.isNaN(parsed.getTime())) {
+        return null;
+    }
+
+    return parsed;
 }
 
 export function isPublished(form: PostFormState): boolean {
@@ -53,9 +96,9 @@ export function isPublished(form: PostFormState): boolean {
         return false;
     }
 
-    const published = new Date(form.publishedAt);
+    const published = parseDateOnlyLocal(form.publishedAt);
 
-    if (Number.isNaN(published.getTime())) {
+    if (published === null) {
         return false;
     }
 
@@ -133,4 +176,21 @@ export function taxonomyFromName(name: string): TaxonomyOption {
         name: trimmed,
         slug: slugify(trimmed),
     };
+}
+
+/** True when this option already exists in Organize (by slug). */
+export function isExistingTaxonomy(option: TaxonomyOption, available: TaxonomyOption[]): boolean {
+    return available.some((item) => item.slug === option.slug);
+}
+
+export function mergeTaxonomyOptions(available: TaxonomyOption[], extras: TaxonomyOption[]): TaxonomyOption[] {
+    const bySlug = new Map(available.map((item) => [item.slug, item]));
+
+    for (const item of extras) {
+        if (!bySlug.has(item.slug)) {
+            bySlug.set(item.slug, item);
+        }
+    }
+
+    return Array.from(bySlug.values());
 }

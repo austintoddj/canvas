@@ -1,6 +1,6 @@
-import { EllipsisVerticalIcon, PlusIcon } from '@heroicons/react/20/solid';
+import { ChartBarIcon, PlusIcon, TrashIcon } from '@heroicons/react/20/solid';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
 import { Badge } from '@/components/badge';
@@ -8,15 +8,7 @@ import { Button } from '@/components/button';
 import { ContentReveal } from '@/components/ContentReveal';
 import { EmptyState } from '@/components/EmptyState';
 import { EmptyStateReveal } from '@/components/EmptyStateReveal';
-import { Link } from '@/components/link';
-import {
-    Dropdown,
-    DropdownButton,
-    DropdownDivider,
-    DropdownItem,
-    DropdownLabel,
-    DropdownMenu,
-} from '@/components/dropdown';
+import { ListRowActionButton, ListRowActionLink, ListRowEnd } from '@/components/ListRowEnd';
 import { PageHeader } from '@/components/PageHeader';
 import { PostsEmptyVisual } from '@/components/posts/PostsEmptyVisual';
 import {
@@ -28,16 +20,16 @@ import {
     PaginationPrevious,
 } from '@/components/pagination';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table';
+import { Table, TableBody, TableCell, TableRow } from '@/components/table';
 import { TableListSkeleton } from '@/components/TableListSkeleton';
 import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { usePermissions } from '@/hooks/usePermissions';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { postsApi } from '@/lib/api/posts';
+import { formatListDate } from '@/lib/format-list-date';
 import { paginationWindow, shouldGoToPreviousPageAfterDelete } from '@/lib/list-pagination';
 import {
-    formatPostDate,
     isPostPublished,
     parsePostsListFilters,
     postsIndexPath,
@@ -80,6 +72,7 @@ function updateFilters(current: URLSearchParams, patch: Partial<PostsListFilters
 }
 
 export default function PostsIndex() {
+    const navigate = useNavigate();
     const { canViewAllPosts } = usePermissions();
     const [searchParams, setSearchParams] = useSearchParams();
     const filters = parsePostsListFilters(searchParams);
@@ -88,8 +81,8 @@ export default function PostsIndex() {
     const [response, setResponse] = useState<PostsIndexResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [deletingId, setDeletingId] = useState<string | null>(null);
     const [pendingDelete, setPendingDelete] = useState<PostListItem | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -128,27 +121,12 @@ export default function PostsIndex() {
         };
     }, [queryKey, searchParams]);
 
-    async function reloadPosts() {
-        try {
-            const data = await postsApi.index(postsIndexQueryParams(parsePostsListFilters(searchParams)));
-            setResponse(data);
-            setError(null);
-        } catch {
-            setError('Unable to load posts.');
-            setResponse(null);
-        }
-    }
-
     function setFilters(patch: Partial<PostsListFilters>, resetPage = false) {
         setSearchParams(updateFilters(searchParams, patch, resetPage));
     }
 
-    function requestDelete(post: PostListItem) {
-        setPendingDelete(post);
-    }
-
     function closeDeleteConfirm() {
-        if (deletingId !== null) {
+        if (deleting) {
             return;
         }
 
@@ -156,33 +134,41 @@ export default function PostsIndex() {
     }
 
     async function confirmDelete() {
-        if (pendingDelete === null) {
+        if (pendingDelete === null || deleting) {
             return;
         }
 
-        const post = pendingDelete;
-        setDeletingId(post.id);
+        setDeleting(true);
+        const postId = pendingDelete.id;
+        const remaining = (response?.posts.data.length ?? 1) - 1;
+        const currentPage = response?.posts.current_page ?? filters.page;
 
         try {
-            await postsApi.destroy(post.id);
-
-            const posts = response?.posts;
-            const shouldGoBack =
-                posts !== undefined && shouldGoToPreviousPageAfterDelete(posts.data.length, posts.current_page);
-
+            await postsApi.destroy(postId);
             setPendingDelete(null);
-
-            if (shouldGoBack) {
-                setFilters({ page: filters.page - 1 });
-                return;
-            }
-
-            await reloadPosts();
             toast.success('Post deleted.');
+
+            setResponse((current) => {
+                if (current === null) {
+                    return current;
+                }
+
+                return {
+                    ...current,
+                    posts: {
+                        ...current.posts,
+                        data: current.posts.data.filter((item) => item.id !== postId),
+                    },
+                };
+            });
+
+            if (shouldGoToPreviousPageAfterDelete(remaining + 1, currentPage) && filters.page > 1) {
+                setSearchParams(updateFilters(searchParams, { page: filters.page - 1 }));
+            }
         } catch {
             toast.error('Unable to delete this post.');
         } finally {
-            setDeletingId(null);
+            setDeleting(false);
         }
     }
 
@@ -195,14 +181,10 @@ export default function PostsIndex() {
     const emptyHeadline = filters.tab === 'draft' ? 'No drafts yet' : 'No published posts yet';
     const emptyDescription =
         filters.tab === 'draft'
-            ? 'Start a draft when you’re ready to write. It stays private until you publish.'
-            : 'Publish a post to share it with readers. Drafts live on the other tab until then.';
-    const pendingTitle =
-        pendingDelete === null
-            ? 'this post'
-            : pendingDelete.title.trim() === ''
-              ? 'Untitled post'
-              : `“${pendingDelete.title}”`;
+            ? 'Drafts stay private until you publish them.'
+            : 'Nothing published yet. Drafts live on the other tab.';
+    const deleteLabel =
+        pendingDelete === null || pendingDelete.title.trim() === '' ? 'this post' : `“${pendingDelete.title.trim()}”`;
 
     return (
         <div className="space-y-8">
@@ -215,7 +197,7 @@ export default function PostsIndex() {
                     </Button>
                 }
             >
-                <PageDescription>Write, publish, and manage your content</PageDescription>
+                <PageDescription>All your drafts and published posts.</PageDescription>
             </PageHeader>
 
             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -245,7 +227,7 @@ export default function PostsIndex() {
             {error ? <ErrorText>{error}</ErrorText> : null}
 
             {showInitialSkeleton ? (
-                <TableListSkeleton rows={6} columns={4} />
+                <TableListSkeleton rows={6} columns={3} />
             ) : isEmpty ? (
                 <EmptyStateReveal animate={animateEmpty}>
                     <EmptyState
@@ -262,74 +244,61 @@ export default function PostsIndex() {
                 </EmptyStateReveal>
             ) : posts ? (
                 <ContentReveal busy={refreshing} animate={animateContent}>
-                    <Table striped className="[--gutter:--spacing(4)]">
-                        <TableHead>
-                            <TableRow>
-                                <TableHeader>Title</TableHeader>
-                                <TableHeader>Status</TableHeader>
-                                <TableHeader>Views</TableHeader>
-                                <TableHeader>Updated</TableHeader>
-                                <TableHeader className="text-right">
-                                    <span className="sr-only">Actions</span>
-                                </TableHeader>
-                            </TableRow>
-                        </TableHead>
+                    <Table striped>
                         <TableBody>
                             {posts.data.map((post) => {
                                 const published = isPostPublished(post.published_at);
                                 const title = post.title.trim() === '' ? 'Untitled post' : post.title;
 
                                 return (
-                                    <TableRow key={post.id}>
-                                        <TableCell>
-                                            <div className="max-w-md">
-                                                <Link
-                                                    href={`/posts/${post.id}`}
-                                                    className="font-medium text-zinc-950 hover:underline dark:text-white"
-                                                >
-                                                    {title}
-                                                </Link>
-                                                {post.summary ? (
-                                                    <Text className="mt-1 line-clamp-1 text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                                                        {post.summary}
-                                                    </Text>
-                                                ) : null}
+                                    <TableRow
+                                        key={post.id}
+                                        className="group/list-row cursor-pointer hover:bg-zinc-950/5 dark:hover:bg-white/5"
+                                        tabIndex={0}
+                                        aria-label={`Edit ${title}`}
+                                        onClick={() => navigate(`/posts/${post.id}`)}
+                                        onKeyDown={(event) => {
+                                            if (event.key === 'Enter' || event.key === ' ') {
+                                                event.preventDefault();
+                                                navigate(`/posts/${post.id}`);
+                                            }
+                                        }}
+                                    >
+                                        <TableCell className="w-full max-w-0">
+                                            <div className="min-w-0">
+                                                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                                    <span className="truncate font-medium text-zinc-950 dark:text-white">
+                                                        {title}
+                                                    </span>
+                                                    <Badge color={published ? 'green' : 'amber'}>
+                                                        {published ? 'Published' : 'Draft'}
+                                                    </Badge>
+                                                </div>
+                                                <Text className="mt-1 line-clamp-1 text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                                                    {post.summary?.trim()
+                                                        ? post.summary
+                                                        : `${post.views_count.toLocaleString()} views`}
+                                                </Text>
                                             </div>
                                         </TableCell>
-                                        <TableCell>
-                                            <Badge color={published ? 'green' : 'amber'}>
-                                                {published ? 'Published' : 'Draft'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>{post.views_count.toLocaleString()}</TableCell>
-                                        <TableCell className="text-canvas-muted dark:text-canvas-muted-dark">
-                                            {formatPostDate(post.updated_at)}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Dropdown>
-                                                <DropdownButton plain aria-label={`Actions for ${title}`}>
-                                                    <EllipsisVerticalIcon data-slot="icon" />
-                                                </DropdownButton>
-                                                <DropdownMenu anchor="bottom end">
-                                                    <DropdownItem href={`/posts/${post.id}`}>
-                                                        <DropdownLabel>Edit</DropdownLabel>
-                                                    </DropdownItem>
-                                                    {published ? (
-                                                        <DropdownItem href={`/posts/${post.id}/stats`}>
-                                                            <DropdownLabel>Stats</DropdownLabel>
-                                                        </DropdownItem>
-                                                    ) : null}
-                                                    <DropdownDivider />
-                                                    <DropdownItem
-                                                        disabled={deletingId === post.id}
-                                                        onClick={() => requestDelete(post)}
+                                        <TableCell className="w-px whitespace-nowrap">
+                                            <ListRowEnd date={formatListDate(post.updated_at)}>
+                                                {published ? (
+                                                    <ListRowActionLink
+                                                        href={`/posts/${post.id}/stats`}
+                                                        label={`View stats for ${title}`}
                                                     >
-                                                        <DropdownLabel>
-                                                            {deletingId === post.id ? 'Deleting…' : 'Delete'}
-                                                        </DropdownLabel>
-                                                    </DropdownItem>
-                                                </DropdownMenu>
-                                            </Dropdown>
+                                                        <ChartBarIcon className="size-5" aria-hidden="true" />
+                                                    </ListRowActionLink>
+                                                ) : null}
+                                                <ListRowActionButton
+                                                    label={`Delete ${title}`}
+                                                    danger
+                                                    onClick={() => setPendingDelete(post)}
+                                                >
+                                                    <TrashIcon className="size-5" aria-hidden="true" />
+                                                </ListRowActionButton>
+                                            </ListRowEnd>
                                         </TableCell>
                                     </TableRow>
                                 );
@@ -375,18 +344,13 @@ export default function PostsIndex() {
 
             <Alert open={pendingDelete !== null} onClose={closeDeleteConfirm} size="sm">
                 <AlertTitle>Delete post?</AlertTitle>
-                <AlertDescription>Delete {pendingTitle}? This cannot be undone.</AlertDescription>
+                <AlertDescription>Delete {deleteLabel}? This cannot be undone.</AlertDescription>
                 <AlertActions>
-                    <Button type="button" plain disabled={deletingId !== null} onClick={closeDeleteConfirm}>
+                    <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
                         Cancel
                     </Button>
-                    <Button
-                        type="button"
-                        color="red"
-                        disabled={deletingId !== null}
-                        onClick={() => void confirmDelete()}
-                    >
-                        {deletingId !== null ? 'Deleting…' : 'Delete'}
+                    <Button type="button" color="red" disabled={deleting} onClick={() => void confirmDelete()}>
+                        {deleting ? 'Deleting…' : 'Delete'}
                     </Button>
                 </AlertActions>
             </Alert>

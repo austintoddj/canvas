@@ -150,7 +150,7 @@ export default function SettingsProfile() {
         return (
             <div className="mx-auto max-w-2xl space-y-8" aria-busy="true">
                 <PageHeader title="Settings">
-                    <PageDescription>Your Canvas profile</PageDescription>
+                    <PageDescription>Your author profile</PageDescription>
                 </PageHeader>
                 <FormPanelSkeleton fields={6} />
             </div>
@@ -172,7 +172,7 @@ export default function SettingsProfile() {
                     </Button>
                 }
             >
-                <PageDescription>Your author profile and notification preferences</PageDescription>
+                <PageDescription>How you appear as an author, plus digest preferences.</PageDescription>
             </PageHeader>
 
             {loadError ? <ErrorText>{loadError}</ErrorText> : null}
@@ -199,11 +199,11 @@ export default function SettingsProfile() {
             >
                 <Fieldset>
                     <Legend>Profile</Legend>
-                    <Text className="mt-1">Public author details used across Canvas.</Text>
+                    <Text className="mt-1">Shown on your public author page.</Text>
                     <FieldGroup>
                         <Field>
                             <Label>Username</Label>
-                            <Description>Unique handle for your author profile.</Description>
+                            <Description>Your public handle. Letters, numbers, and dashes work best.</Description>
                             <Input
                                 name="username"
                                 value={form.username}
@@ -218,6 +218,7 @@ export default function SettingsProfile() {
 
                         <Field>
                             <Label>Bio</Label>
+                            <Description>A short intro shown with your posts.</Description>
                             <Textarea
                                 name="summary"
                                 rows={4}
@@ -233,7 +234,7 @@ export default function SettingsProfile() {
 
                         <Field>
                             <Label>Avatar URL</Label>
-                            <Description>Full URL to an image. Leave blank to use your host avatar.</Description>
+                            <Description>Link to an image. Leave blank to use your account avatar.</Description>
                             <Input
                                 name="avatar"
                                 type="url"
@@ -268,7 +269,7 @@ export default function SettingsProfile() {
 
                 <Fieldset className="mt-12">
                     <Legend>Social links</Legend>
-                    <Text className="mt-1">Optional profile URLs shown on your author page.</Text>
+                    <Text className="mt-1">Optional. Shown on your author page when set.</Text>
                     <FieldGroup>
                         {SOCIAL_FIELD_KEYS.map((key) => (
                             <Field key={key}>
@@ -329,7 +330,7 @@ export default function SettingsProfile() {
 
                         <SwitchField>
                             <Label>Weekly digest</Label>
-                            <Description>Email a summary of activity when digests are enabled.</Description>
+                            <Description>Get a weekly email of views and new posts.</Description>
                             <Switch
                                 name="digest"
                                 checked={form.digest}

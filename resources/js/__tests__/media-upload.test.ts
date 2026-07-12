@@ -34,31 +34,7 @@ const uploadedMedia: Media = {
     updated_at: '2026-01-01T00:00:00.000000Z',
 };
 
-describe('getMaxUploadBytes', () => {
-    it('reads maxUpload from window.Canvas', () => {
-        window.Canvas = { ...window.Canvas, maxUpload: 2_097_152 };
-
-        expect(getMaxUploadBytes()).toBe(2_097_152);
-    });
-});
-
-describe('validateMediaFile', () => {
-    it('accepts allowed image MIME types', () => {
-        for (const type of ALLOWED_MEDIA_MIME_TYPES) {
-            expect(() => validateMediaFile(imageFile('photo', type, 100), 1024)).not.toThrow();
-        }
-    });
-
-    it('rejects unsupported MIME types', () => {
-        expect(() => validateMediaFile(imageFile('doc.pdf', 'application/pdf', 100), 1024)).toThrow(MediaUploadError);
-    });
-
-    it('rejects files larger than the max upload size', () => {
-        expect(() => validateMediaFile(imageFile('big.jpg', 'image/jpeg', 2048), 1024)).toThrow(/too large/i);
-    });
-});
-
-describe('uploadMedia', () => {
+describe('media upload', () => {
     beforeEach(() => {
         window.Canvas = { ...window.Canvas, maxUpload: 3_145_728 };
     });
@@ -67,37 +43,28 @@ describe('uploadMedia', () => {
         vi.restoreAllMocks();
     });
 
-    it('creates a media id then uploads the file', async () => {
+    it('validates mime/size and uploads through create then store', async () => {
+        expect(getMaxUploadBytes()).toBe(3_145_728);
+
+        for (const type of ALLOWED_MEDIA_MIME_TYPES) {
+            expect(() => validateMediaFile(imageFile('photo', type, 100), 1024)).not.toThrow();
+        }
+        expect(() => validateMediaFile(imageFile('doc.pdf', 'application/pdf', 100), 1024)).toThrow(MediaUploadError);
+        expect(() => validateMediaFile(imageFile('big.jpg', 'image/jpeg', 2048), 1024)).toThrow(/too large/i);
+
         const createSpy = vi.spyOn(mediaApi, 'create').mockResolvedValue({ id: 'media-uuid' });
         const storeSpy = vi.spyOn(mediaApi, 'store').mockResolvedValue(uploadedMedia);
-
+        const controller = new AbortController();
         const file = imageFile('photo.jpg', 'image/jpeg', 512);
-        const result = await uploadMedia(file, { alt: 'Hero' });
 
-        expect(createSpy).toHaveBeenCalledOnce();
-        expect(storeSpy).toHaveBeenCalledWith('media-uuid', file, { alt: 'Hero' }, undefined);
-        expect(result).toBe(uploadedMedia);
-    });
+        expect(await uploadMedia(file, { alt: 'Hero' }, controller.signal)).toBe(uploadedMedia);
+        expect(createSpy).toHaveBeenCalledWith(controller.signal);
+        expect(storeSpy).toHaveBeenCalledWith('media-uuid', file, { alt: 'Hero' }, controller.signal);
 
-    it('does not call the API when validation fails', async () => {
-        const createSpy = vi.spyOn(mediaApi, 'create');
-        const storeSpy = vi.spyOn(mediaApi, 'store');
-
+        createSpy.mockClear();
+        storeSpy.mockClear();
         await expect(uploadMedia(imageFile('bad.pdf', 'application/pdf', 100))).rejects.toThrow(MediaUploadError);
-
         expect(createSpy).not.toHaveBeenCalled();
         expect(storeSpy).not.toHaveBeenCalled();
-    });
-
-    it('forwards abort signal to create and store', async () => {
-        const controller = new AbortController();
-        const createSpy = vi.spyOn(mediaApi, 'create').mockResolvedValue({ id: 'media-uuid' });
-        const storeSpy = vi.spyOn(mediaApi, 'store').mockResolvedValue(uploadedMedia);
-
-        const file = imageFile('photo.jpg', 'image/jpeg', 512);
-        await uploadMedia(file, {}, controller.signal);
-
-        expect(createSpy).toHaveBeenCalledWith(controller.signal);
-        expect(storeSpy).toHaveBeenCalledWith('media-uuid', file, {}, controller.signal);
     });
 });
