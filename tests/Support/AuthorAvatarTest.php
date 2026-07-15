@@ -1,23 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 use Canvas\Support\AuthorAvatar;
-use Canvas\Support\Gravatar;
 
-it('falls back to gravatar when avatar is empty', function (): void {
-    $email = 'user@example.com';
-
-    expect(AuthorAvatar::url(null, $email))->toBe(Gravatar::url($email));
+it('returns null when avatar is empty', function (): void {
+    expect(AuthorAvatar::url(null))->toBeNull()
+        ->and(AuthorAvatar::url(''))->toBeNull()
+        ->and(AuthorAvatar::url('   '))->toBeNull();
 });
 
 it('returns absolute avatar urls unchanged', function (): void {
     $url = 'https://cdn.example.com/avatar.jpg';
 
-    expect(AuthorAvatar::url($url, 'user@example.com'))->toBe($url);
+    expect(AuthorAvatar::url($url))->toBe($url);
 });
 
-it('builds gravatar urls from stored avatar hashes', function (): void {
-    $hash = md5('user@example.com');
-
-    expect(AuthorAvatar::url($hash, 'user@example.com'))
-        ->toBe('https://secure.gravatar.com/avatar/'.$hash.'?s=200&d=retro&r=g');
+it('returns null for non-url avatar values', function (): void {
+    expect(AuthorAvatar::url('not-a-url'))->toBeNull()
+        ->and(AuthorAvatar::url(md5('user@example.com')))->toBeNull();
 });

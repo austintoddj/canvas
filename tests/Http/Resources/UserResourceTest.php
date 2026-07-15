@@ -14,6 +14,7 @@ it('transforms a host user with nested canvas data', function (): void {
     $user->canvasUser->update([
         'username' => 'writer',
         'summary' => 'Bio',
+        'avatar' => 'https://cdn.example.com/writer.jpg',
         'website' => 'https://example.com',
         'social' => ['x' => 'writer'],
     ]);
@@ -24,13 +25,15 @@ it('transforms a host user with nested canvas data', function (): void {
         'id' => $user->id,
         'name' => 'Writer',
         'email' => 'writer@example.com',
+        'avatar_url' => 'https://cdn.example.com/writer.jpg',
     ]);
 
-    expect($payload['avatar_url'])->toBeString();
     expect($payload['canvas'])->toMatchArray([
         'role' => 1,
         'username' => 'writer',
         'summary' => 'Bio',
+        'avatar' => 'https://cdn.example.com/writer.jpg',
+        'avatar_url' => 'https://cdn.example.com/writer.jpg',
         'website' => 'https://example.com',
         'social' => ['x' => 'writer'],
         'theme' => 'system',
@@ -63,22 +66,21 @@ it('exposes canvas defaults for create forms', function (): void {
     ]);
 });
 
-it('serializes a canvas user resource instance with an email', function (): void {
+it('serializes a canvas user resource instance', function (): void {
     $user = User::factory()->contributor()->create([
         'email' => 'resource@example.com',
     ]);
+    $user->canvasUser->update(['avatar' => 'https://cdn.example.com/resource.jpg']);
 
-    $payload = CanvasUserResource::make($user->canvasUser)
-        ->withEmail('resource@example.com')
-        ->resolve();
+    $payload = CanvasUserResource::make($user->canvasUser->fresh())->resolve();
 
     expect($payload['username'])->toBe($user->canvasUser->username)
-        ->and($payload['avatar_url'])->toBeString()
-        ->and($payload['role'])->toBe(1);
+        ->and($payload['role'])->toBe(1)
+        ->and($payload['avatar_url'])->toBe('https://cdn.example.com/resource.jpg');
 });
 
 it('returns defaults when profile array receives a null canvas user', function (): void {
-    expect(CanvasUserResource::toProfileArray(null, 'nobody@example.com'))
+    expect(CanvasUserResource::toProfileArray(null))
         ->toBe(CanvasUserResource::defaults());
 });
 

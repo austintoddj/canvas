@@ -21,7 +21,7 @@ class CanvasUserFactory extends Factory
             'role' => fake()->randomElement(Role::cases()),
             'username' => Str::slug(fake()->unique()->userName()),
             'summary' => fake()->sentence(),
-            'avatar' => md5(fake()->unique()->safeEmail()),
+            'avatar' => fake()->boolean(70) ? 'https://cdn.example.com/avatars/'.fake()->uuid().'.jpg' : null,
             'website' => fake()->optional()->url(),
             'social' => [
                 'x' => Str::slug(fake()->userName()),

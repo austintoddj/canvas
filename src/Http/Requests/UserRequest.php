@@ -50,7 +50,7 @@ class UserRequest extends FormRequest
                 Rule::unique('canvas_users', 'username')->ignore($this->route('id'), 'user_id'),
             ],
             'summary' => 'nullable|string|max:5000',
-            'avatar' => 'nullable|string|max:255',
+            'avatar' => 'nullable|url|max:255',
             'website' => 'nullable|url|max:255',
             'social' => 'nullable|array',
             'social.*' => 'nullable|string|max:255',

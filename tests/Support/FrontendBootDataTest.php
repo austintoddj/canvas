@@ -33,7 +33,7 @@ it('builds the frontend boot payload', function (): void {
         'email' => $this->admin->email,
     ]);
 
-    expect($bootData['user']['avatar_url'])->toBeString();
+    expect($bootData['user'])->toHaveKey('avatar_url');
     expect($bootData['user']['canvas'])->toMatchArray([
         'role' => $this->admin->canvas_role->value,
         'username' => $this->admin->username,
@@ -50,7 +50,7 @@ it('builds boot payload for host users without a canvasUser relationship', funct
 
     expect($bootData['user']['id'])->toBe($this->admin->id);
     expect($bootData['user']['canvas']['role'])->toBe(Role::Admin->value);
-    expect($bootData['user']['avatar_url'])->toBeString();
+    expect($bootData['user'])->toHaveKey('avatar_url');
 });
 
 it('reports unsplash as false when no access key is stored', function (): void {

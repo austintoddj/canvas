@@ -5,6 +5,7 @@ use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 describe('when listing posts', function (): void {
@@ -343,6 +344,67 @@ describe('when storing and updating posts', function (): void {
                 'slug' => $data['slug'],
             ]);
     });
+
+    it('stores a future published_at with time-of-day fidelity and keeps the post non-live', function (): void {
+        $post = Post::factory()->draft()->create([
+            'user_id' => $this->admin->id,
+        ]);
+
+        $scheduledAt = now()->addDays(3)->seconds(0)->milliseconds(0);
+        $payload = $scheduledAt->format('Y-m-d H:i:s');
+
+        $response = $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'published_at' => $payload,
+            ])
+            ->assertOk();
+
+        $fresh = $post->fresh();
+
+        expect($fresh)->not->toBeNull()
+            ->and($fresh->published_at)->not->toBeNull()
+            ->and($fresh->published_at->format('Y-m-d H:i:s'))->toBe($payload)
+            ->and($fresh->published)->toBeFalse()
+            ->and(Post::query()->published()->whereKey($post->id)->exists())->toBeFalse()
+            ->and(Post::query()->draft()->whereKey($post->id)->exists())->toBeTrue();
+
+        $responsePublishedAt = $response->json('published_at');
+        expect($responsePublishedAt)->not->toBeNull();
+
+        $returned = Carbon::parse($responsePublishedAt);
+        expect($returned->format('Y-m-d H:i'))->toBe($scheduledAt->format('Y-m-d H:i'));
+    });
+
+    it('treats a past published_at datetime as live after store', function (): void {
+        $post = Post::factory()->draft()->create([
+            'user_id' => $this->admin->id,
+        ]);
+
+        $publishedAt = now()->subHours(2)->seconds(0)->milliseconds(0);
+        $payload = $publishedAt->format('Y-m-d H:i:s');
+
+        $response = $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'published_at' => $payload,
+            ])
+            ->assertOk();
+
+        $returned = Carbon::parse($response->json('published_at'));
+
+        expect($returned->format('Y-m-d H:i'))->toBe($publishedAt->format('Y-m-d H:i'));
+
+        $fresh = $post->fresh();
+
+        expect($fresh->published_at->format('Y-m-d H:i:s'))->toBe($payload)
+            ->and($fresh->published)->toBeTrue()
+            ->and(Post::query()->published()->whereKey($post->id)->exists())->toBeTrue()
+            ->and(Post::query()->draft()->whereKey($post->id)->exists())->toBeFalse();
+    });
+
     it('lets contributors update only their own posts', function (): void {
         $post = Post::factory()->create([
             'user_id' => $this->contributor->id,

@@ -166,7 +166,7 @@ export type UserLookupResult = {
     id: number;
     name: string;
     email: string;
-    avatar_url: string;
+    avatar_url: string | null;
     has_canvas_access: boolean;
     role: number | null;
 };
@@ -242,7 +242,7 @@ export type UserSearchResult = {
     name: string;
     email: string;
     username: string | null;
-    avatar_url: string;
+    avatar_url: string | null;
     type: 'User';
     route: 'edit-user';
 };
@@ -318,6 +318,8 @@ export type UnsplashPhotoUrls = {
 
 export type UnsplashPhoto = {
     id: string;
+    width: number;
+    height: number;
     urls: UnsplashPhotoUrls;
     alt_description: string | null;
     description: string | null;
@@ -340,6 +342,7 @@ export type UnsplashErrorResponse = {
 export type UnsplashParams = {
     query?: string;
     page?: number;
+    per_page?: number;
 };
 
 export function searchResultLabel(result: SearchResult): string {

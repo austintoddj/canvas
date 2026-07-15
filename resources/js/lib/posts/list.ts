@@ -1,4 +1,5 @@
 import { buildQueryString } from '@/lib/api/query';
+import { parsePublishedAt, type PostPublishStatus } from '@/lib/posts/form';
 import type { PostsIndexParams } from '@/types/api';
 
 export type PostsListTab = 'published' | 'draft';
@@ -9,31 +10,26 @@ export type PostsListFilters = {
     page: number;
 };
 
-export function isPostPublished(publishedAt: string | null): boolean {
+export function postListStatus(publishedAt: string | null, now: Date = new Date()): PostPublishStatus {
     if (publishedAt === null || publishedAt === '') {
-        return false;
+        return 'draft';
     }
 
-    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(publishedAt.trim());
+    const published = parsePublishedAt(publishedAt);
 
-    if (match !== null) {
-        const year = Number(match[1]);
-        const month = Number(match[2]);
-        const day = Number(match[3]);
-        const published = new Date(year, month - 1, day);
-
-        if (published.getFullYear() === year && published.getMonth() === month - 1 && published.getDate() === day) {
-            return published <= new Date();
-        }
+    if (published === null) {
+        return 'draft';
     }
 
-    const published = new Date(publishedAt);
+    return published <= now ? 'published' : 'scheduled';
+}
 
-    if (Number.isNaN(published.getTime())) {
-        return false;
-    }
+export function isPostPublished(publishedAt: string | null, now: Date = new Date()): boolean {
+    return postListStatus(publishedAt, now) === 'published';
+}
 
-    return published <= new Date();
+export function isPostScheduled(publishedAt: string | null, now: Date = new Date()): boolean {
+    return postListStatus(publishedAt, now) === 'scheduled';
 }
 
 export function postsIndexPath(filters: Partial<PostsListFilters> = {}): string {

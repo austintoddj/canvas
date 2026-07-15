@@ -4,17 +4,23 @@ import { describe, expect, it } from 'vitest';
 
 import {
     formFromCreateResponse,
+    fromDatetimeLocalValue,
     isExistingTaxonomy,
     isPublished,
+    isScheduled,
     mergeTaxonomyOptions,
     navSaveStatusLabel,
     postToFormState,
     publishFormState,
+    publishStatus,
     saveStatusLabel,
+    scheduleFormState,
     serializeFormState,
     slugify,
     taxonomyFromName,
+    toDatetimeLocalValue,
     toPublishDateString,
+    toPublishDateTimeString,
     toStorePayload,
     unpublishFormState,
 } from '@/lib/posts/form';
@@ -28,7 +34,7 @@ const samplePost: Post = {
     body: '<p>Existing body</p>',
     featured_image: null,
     featured_image_caption: null,
-    published_at: '2026-06-01',
+    published_at: '2026-06-01 09:30:00',
     created_at: '2026-06-01T00:00:00Z',
     updated_at: '2026-06-02T00:00:00Z',
     views_count: 3,
@@ -54,7 +60,7 @@ describe('post form helpers', () => {
             slug: 'hello-world',
             summary: 'A short summary',
             body: '<p>Existing body</p>',
-            publishedAt: '2026-06-01',
+            publishedAt: '2026-06-01 09:30:00',
             featuredImage: null,
             featuredImageCaption: null,
             meta: { title: 'SEO title' },
@@ -66,7 +72,7 @@ describe('post form helpers', () => {
             slug: 'hello-world',
             summary: 'A short summary',
             body: '<p>Existing body</p>',
-            published_at: '2026-06-01',
+            published_at: '2026-06-01 09:30:00',
             featured_image: null,
             featured_image_caption: null,
             meta: { title: 'SEO title' },
@@ -82,19 +88,33 @@ describe('post form helpers', () => {
         expect(serializeFormState(form)).toBe(serializeFormState(postToFormState(samplePost)));
     });
 
-    it('handles publish state and autosave labels', () => {
+    it('handles publish, schedule, and draft state with time fidelity', () => {
         const draft = postToFormState({ ...samplePost, published_at: null });
         expect(isPublished(draft)).toBe(false);
+        expect(isScheduled(draft)).toBe(false);
+        expect(publishStatus(draft)).toBe('draft');
         expect(isPublished(postToFormState(samplePost))).toBe(true);
 
-        // Local calendar day (not UTC) so evening publish is not stored as "tomorrow".
+        expect(toPublishDateTimeString(new Date(2026, 0, 5, 15, 30, 0))).toBe('2026-01-05 15:30:00');
+        expect(toPublishDateTimeString(new Date(2026, 6, 11, 20, 0, 45))).toBe('2026-07-11 20:00:45');
         expect(toPublishDateString(new Date(2026, 0, 5, 15, 30, 0))).toBe('2026-01-05');
-        expect(toPublishDateString(new Date(2026, 6, 11, 20, 0, 0))).toBe('2026-07-11');
 
-        const published = publishFormState(draft);
-        expect(published.publishedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-        expect(isPublished(published)).toBe(true);
+        const published = publishFormState(draft, new Date(2026, 2, 10, 8, 15, 30));
+        expect(published.publishedAt).toBe('2026-03-10 08:15:30');
+        expect(isPublished(published, new Date(2026, 2, 10, 8, 15, 30))).toBe(true);
         expect(unpublishFormState(published).publishedAt).toBeNull();
+
+        const scheduled = scheduleFormState(draft, '2099-06-15T14:45');
+        expect(scheduled.publishedAt).toBe('2099-06-15 14:45:00');
+        expect(publishStatus(scheduled, new Date(2026, 0, 1))).toBe('scheduled');
+        expect(isScheduled(scheduled, new Date(2026, 0, 1))).toBe(true);
+        expect(isPublished(scheduled, new Date(2026, 0, 1))).toBe(false);
+        expect(toStorePayload(scheduled).published_at).toBe('2099-06-15 14:45:00');
+
+        expect(toDatetimeLocalValue('2099-06-15 14:45:00')).toBe('2099-06-15T14:45');
+        expect(fromDatetimeLocalValue('2099-06-15T14:45')).toBe('2099-06-15 14:45:00');
+        expect(fromDatetimeLocalValue('')).toBeNull();
+        expect(fromDatetimeLocalValue('not-a-date')).toBeNull();
 
         expect(saveStatusLabel('idle')).toBeNull();
         expect(saveStatusLabel('pending')).toBe('Unsaved changes');

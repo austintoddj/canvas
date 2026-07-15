@@ -10,6 +10,7 @@ import {
     DropdownMenu,
     DropdownTrailingIcon,
     dropdownInsetItemClass,
+    selectDropdownMenuClass,
     selectDropdownTriggerClass,
 } from '@/components/dropdown';
 import { Description, ErrorMessage, Field, Fieldset, Label } from '@/components/fieldset';
@@ -159,7 +160,7 @@ export default function PostSidebar({
                         emptyLabel={t('editor.select_topic')}
                         disabled={disabled}
                     />
-                    <DropdownMenu anchor="bottom start" className="z-50 min-w-56 max-w-sm">
+                    <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                         <TaxonomyMenuItem
                             label={t('editor.no_topic')}
                             selected={form.topic === null}
@@ -218,7 +219,7 @@ export default function PostSidebar({
                         emptyLabel={t('editor.add_tag')}
                         disabled={disabled || tagChoices.length === 0}
                     />
-                    <DropdownMenu anchor="bottom start" className="z-50 min-w-56 max-w-sm">
+                    <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                         {tagChoices.length === 0 ? (
                             <TaxonomyMenuItem
                                 label={

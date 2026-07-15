@@ -11,6 +11,7 @@ import {
     DropdownMenu,
     DropdownTrailingIcon,
     dropdownInsetItemClass,
+    selectDropdownMenuClass,
     selectDropdownTriggerClass,
 } from '@/components/dropdown';
 import { ErrorMessage, Field, FieldGroup } from '@/components/fieldset';
@@ -96,7 +97,7 @@ function PlatformSelectDropdown({
                 </span>
                 <ChevronDownIcon data-slot="icon" className="shrink-0" />
             </DropdownButton>
-            <DropdownMenu anchor="bottom start" className="z-50 min-w-44 max-w-sm">
+            <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                 {options.map((key) => {
                     const selected = value === key;
 

@@ -94,6 +94,8 @@ When touching existing code: do not leave behind narrative comments; clean them 
 - Prefer class-based factories and `Model::factory()` over legacy `factory()` helpers.
 - **Taxonomy from the post editor:** **attach existing** tags/topics only, via Catalyst **Dropdown** menus (same pattern as the editor toolbar More menu — `cursor-pointer`, checkmarks for selection). No free-typed minting in the post settings drawer; Organize remains the place to create taxonomy deliberately.
 - **Author profile vs access:** Authors own bio, username, avatar, website, socials, **language** (BCP-47 `locale` on `canvas_users`), timezone, and digest via a **profile drawer** (avatar menu or self in Users) — not a standalone `/settings` page. Admins managing **other** users only change **role** and **revoke access**. API enforces the same: self may not set `role`; admin-on-other payloads are role-only. Language and timezone are Canvas-owned profile fields (host `app.*` config is fallback only).
+- **Avatar:** Absolute URL only (media library / Unsplash picker in the profile drawer). Empty avatar → `null` `avatar_url` → initials in UI. No Gravatar.
+- **Media grids:** Library and Unsplash use **justified rows** (variable aspect, flush rows), not uniform square tiles. Unsplash tiles are image-only (credit in alt/caption, not under-grid chrome).
 
 ### Artisan command naming
 
@@ -120,7 +122,7 @@ Durable patterns for list pages and media (set by the media library; reuse elsew
 - **Media empty splash** — `MediaEmptyVisual` + `MEDIA_EMPTY_STATE` is the gold-standard empty design; do not redesign it casually. Reuse the `EmptyState` shell pattern elsewhere.
 - **Taxonomy IA** — Tags and Topics share one **Organize** surface (`/organize?tab=topics|tags`); legacy `/tags` and `/topics` redirect. One sidebar item when `canManageTaxonomy`.
 - Do not clear list items the moment a filter request starts; replace when the response arrives.
-- Prefer layout-owned width (`SidebarLayout` max-w-6xl); avoid re-wrapping every page in `mx-auto max-w-6xl px-4 py-8`. Use `mx-auto max-w-2xl` only for narrow forms (integrations).
+- Prefer layout-owned width (`SidebarLayout` max-w-6xl); avoid re-wrapping every page in `mx-auto max-w-6xl px-4 py-8`. Use `mx-auto max-w-3xl` for integrations catalog rows; `max-w-2xl` only for truly narrow single-column forms.
 - **Side drawers** — Media, taxonomy, and user detail UIs share `SideDrawer` chrome; keep domain logic in feature drawers. User drawer is dual-mode: **self** = author profile fields; **other** = role dropdown + revoke (no Access/Role fieldset nesting, no admin-edited bios). Role/language pickers use Catalyst **Dropdown** menus with checkmarks — not native `<select>`. Language options come from the package catalog (labels + codes); timezone uses an IANA dropdown.
 - **No author settings page** — `/settings` redirects home. Avatar menu opens the self profile drawer. Site integrations stay on `/settings/integrations`.
 - **Danger text** — `text-red-600 dark:text-red-400` (not `red-500` in dark).

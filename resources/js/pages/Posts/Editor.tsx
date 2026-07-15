@@ -23,6 +23,7 @@ import {
     mergeTaxonomyOptions,
     postToFormState,
     publishFormState,
+    scheduleFormState,
     serializeFormState,
     slugify,
     unpublishFormState,
@@ -121,6 +122,25 @@ export default function PostsEditor() {
             toast.success(t('editor.published'));
         } else {
             toast.error(t('editor.publish_error'));
+        }
+    }
+
+    async function handleSchedule(datetimeLocal: string) {
+        const next = scheduleFormState(form, datetimeLocal);
+
+        if (next.publishedAt === null) {
+            toast.error(t('editor.schedule_error'));
+            return;
+        }
+
+        setForm(next);
+
+        const ok = await saveNow(next);
+
+        if (ok) {
+            toast.success(t('editor.scheduled'));
+        } else {
+            toast.error(t('editor.schedule_error'));
         }
     }
 
@@ -368,6 +388,7 @@ export default function PostsEditor() {
                         disabled={!autosaveEnabled}
                         deleting={deleting}
                         onPublish={handlePublish}
+                        onSchedule={handleSchedule}
                         onUnpublish={handleUnpublish}
                         onDelete={() => setPendingDelete(true)}
                     />

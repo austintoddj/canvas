@@ -1,11 +1,15 @@
 import { CheckIcon, PhotoIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 
 import { FadeInImage } from '@/components/FadeInImage';
+import { JustifiedMediaGrid } from '@/components/media/JustifiedMediaGrid';
 import { Link } from '@/components/link';
 import { Text } from '@/components/text';
-import { MEDIA_GRID_CLASS_NAME } from '@/lib/media/layout';
+import {
+    JUSTIFIED_TARGET_ROW_HEIGHT_DIALOG,
+    JUSTIFIED_TARGET_ROW_HEIGHT_PAGE,
+} from '@/lib/media/layout';
 import { mediaDisplayName, resolveMediaUrl } from '@/lib/media/list';
 import type { Media } from '@/types/api';
 
@@ -14,6 +18,7 @@ type MediaGridProps = {
     emptyMessage?: string;
     className?: string;
     showCaptions?: boolean;
+    compact?: boolean;
     hrefForItem?: (item: Media) => string;
     onOpen?: (item: Media) => void;
     onSelect?: (item: Media) => void;
@@ -77,6 +82,7 @@ export function MediaGrid({
     emptyMessage = 'No images found.',
     className,
     showCaptions = false,
+    compact = false,
     hrefForItem,
     onOpen,
     onSelect,
@@ -84,6 +90,26 @@ export function MediaGrid({
     onToggleSelect,
     selectionDisabled = false,
 }: MediaGridProps) {
+    const justifiedItems = useMemo(
+        () =>
+            items.map((item) => ({
+                id: item.id,
+                width: item.width,
+                height: item.height,
+            })),
+        [items]
+    );
+
+    const itemsById = useMemo(() => {
+        const map = new Map<string, Media>();
+
+        for (const item of items) {
+            map.set(item.id, item);
+        }
+
+        return map;
+    }, [items]);
+
     if (items.length === 0) {
         return (
             <div
@@ -105,13 +131,23 @@ export function MediaGrid({
     const selectionActive = selectable && (selectedIds?.size ?? 0) > 0;
 
     return (
-        <div className={clsx(className, MEDIA_GRID_CLASS_NAME)} data-media-grid="true">
-            {items.map((item) => {
+        <JustifiedMediaGrid
+            className={className}
+            items={justifiedItems}
+            targetRowHeight={compact ? JUSTIFIED_TARGET_ROW_HEIGHT_DIALOG : JUSTIFIED_TARGET_ROW_HEIGHT_PAGE}
+            data-media-grid="true"
+            renderTile={(tile) => {
+                const item = itemsById.get(tile.id);
+
+                if (item === undefined) {
+                    return null;
+                }
+
                 const label = mediaDisplayName(item);
                 const isSelected = selectedIds?.has(item.id) ?? false;
 
                 const shellClassName = clsx(
-                    'group/tile relative overflow-hidden rounded-xl border bg-white text-left shadow-sm shadow-zinc-950/5 transition duration-200 dark:bg-zinc-800/60 dark:shadow-none',
+                    'group/tile relative size-full overflow-hidden rounded-xl border bg-white text-left shadow-sm shadow-zinc-950/5 transition duration-200 dark:bg-zinc-800/60 dark:shadow-none',
                     isSelected
                         ? 'border-blue-600/40 ring-2 ring-blue-600/25 dark:border-blue-400/45 dark:ring-blue-400/25'
                         : 'border-zinc-950/10 hover:border-zinc-950/20 hover:shadow-md hover:shadow-zinc-950/10 dark:border-white/10 dark:ring-1 dark:ring-white/5 dark:hover:border-white/20 dark:hover:bg-zinc-800/80 dark:hover:ring-white/10'
@@ -120,7 +156,7 @@ export function MediaGrid({
                 const mediaSurface = (
                     <div
                         className={clsx(
-                            'relative aspect-square overflow-hidden bg-zinc-950/[0.03] transition duration-200 dark:bg-white/[0.03]',
+                            'relative size-full overflow-hidden bg-zinc-950/[0.03] transition duration-200 dark:bg-white/[0.03]',
                             isSelected && 'bg-blue-600/5 dark:bg-blue-400/10'
                         )}
                     >
@@ -128,8 +164,10 @@ export function MediaGrid({
                             src={resolveMediaUrl(item.url)}
                             alt={item.alt ?? label}
                             className={clsx(
-                                'size-full object-cover transition duration-200 ease-out',
-                                isSelected ? 'scale-[0.92] rounded-sm' : 'group-hover/tile:scale-[1.02]'
+                                'size-full object-cover transition-transform duration-300 ease-in-out motion-reduce:transition-none',
+                                isSelected
+                                    ? 'scale-[0.92] rounded-sm'
+                                    : 'group-hover/tile:scale-[1.02] motion-reduce:group-hover/tile:scale-100'
                             )}
                         />
                         {isSelected ? (
@@ -151,7 +189,7 @@ export function MediaGrid({
                 ) : null;
 
                 const openClassName =
-                    'block w-full text-left focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500';
+                    'block size-full text-left focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500';
 
                 let body: ReactNode;
 
@@ -196,7 +234,7 @@ export function MediaGrid({
                 }
 
                 return (
-                    <div key={item.id} className={shellClassName} data-selected={isSelected ? 'true' : undefined}>
+                    <div className={shellClassName} data-selected={isSelected ? 'true' : undefined}>
                         {body}
                         {selectable ? (
                             <MediaSelectCheck
@@ -209,7 +247,7 @@ export function MediaGrid({
                         ) : null}
                     </div>
                 );
-            })}
-        </div>
+            }}
+        />
     );
 }

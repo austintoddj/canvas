@@ -1,16 +1,11 @@
 <?php
 
 use Canvas\Models\CanvasUser;
-use Canvas\Support\Gravatar;
 use Canvas\Support\Localization;
 use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
-
-it('appends the default avatar to the model', function (): void {
-    expect(User::factory()->create()->toArray())->toHaveKey('default_avatar');
-});
 
 it('appends the default locale to the model', function (): void {
     expect(User::factory()->contributor()->create()->toArray())->toHaveKey('default_locale');
@@ -50,12 +45,6 @@ it('computes the editor attribute', function (): void {
 
 it('computes the admin attribute', function (): void {
     expect(User::factory()->admin()->create()->isAdmin)->toBeTrue();
-});
-
-it('computes the default avatar attribute', function (): void {
-    $user = User::factory()->create();
-
-    expect($user->defaultAvatar)->toBe(Gravatar::url($user->email));
 });
 
 it('computes profile attributes from canvas_users', function (): void {

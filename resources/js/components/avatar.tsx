@@ -1,6 +1,7 @@
 import * as Headless from '@headlessui/react';
 import clsx from 'clsx';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState } from 'react';
+import { resolveMediaUrl } from '@/lib/media/list';
 import { TouchTarget } from './button';
 import { Link } from './link';
 
@@ -12,6 +13,16 @@ type AvatarProps = {
     className?: string;
 };
 
+function AvatarImage({ src, alt }: { src: string; alt: string }) {
+    const [failed, setFailed] = useState(false);
+
+    if (failed) {
+        return null;
+    }
+
+    return <img className="size-full" src={src} alt={alt} onError={() => setFailed(true)} />;
+}
+
 export function Avatar({
     src = null,
     square = false,
@@ -20,6 +31,8 @@ export function Avatar({
     className,
     ...props
 }: AvatarProps & React.ComponentPropsWithoutRef<'span'>) {
+    const resolvedSrc = resolveMediaUrl(src);
+
     return (
         <span
             data-slot="avatar"
@@ -52,7 +65,7 @@ export function Avatar({
                     </text>
                 </svg>
             )}
-            {src && <img className="size-full" src={src} alt={alt} />}
+            {resolvedSrc !== '' ? <AvatarImage key={resolvedSrc} src={resolvedSrc} alt={alt} /> : null}
         </span>
     );
 }

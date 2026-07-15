@@ -26,6 +26,8 @@ class UnsplashController extends Controller
         }
 
         $page = max(1, (int) request()->query('page', 1));
+        $perPage = (int) request()->query('per_page', 30);
+        $perPage = max(1, min(30, $perPage));
 
         $response = Http::withHeaders([
             'Authorization' => 'Client-ID '.$accessKey,
@@ -33,7 +35,7 @@ class UnsplashController extends Controller
         ])->get('https://api.unsplash.com/search/photos', [
             'query' => $query,
             'page' => $page,
-            'per_page' => 30,
+            'per_page' => $perPage,
         ]);
 
         return response()->json($response->json(), $response->status());

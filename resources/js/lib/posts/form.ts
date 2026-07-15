@@ -17,6 +17,8 @@ export type PostFormState = {
 
 export type PostSaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 
+export type PostPublishStatus = 'draft' | 'scheduled' | 'published';
+
 export function saveStatusLabel(
     status: PostSaveStatus,
     labels?: { pending?: string; saving?: string; saved?: string; error?: string }
@@ -64,21 +66,99 @@ export function slugify(value: string): string {
     return slug === '' ? 'post' : slug;
 }
 
-export function toPublishDateString(date: Date = new Date()): string {
+/**
+ * Local calendar datetime with second fidelity for API payloads.
+ * Avoids UTC day-shift when evening local times serialize through ISO-Z alone.
+ */
+export function toPublishDateTimeString(date: Date = new Date()): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
 
-    return `${year}-${month}-${day}`;
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-function parseDateOnlyLocal(value: string): Date | null {
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+/** @deprecated Prefer toPublishDateTimeString — kept for callers that only need the day. */
+export function toPublishDateString(date: Date = new Date()): string {
+    return toPublishDateTimeString(date).slice(0, 10);
+}
 
-    if (match !== null) {
-        const year = Number(match[1]);
-        const month = Number(match[2]);
-        const day = Number(match[3]);
+/** Value for `<input type="datetime-local">` (YYYY-MM-DDTHH:mm). */
+export function toDatetimeLocalValue(value: string | Date | null | undefined): string {
+    if (value === null || value === undefined || value === '') {
+        return '';
+    }
+
+    const date = typeof value === 'string' ? parsePublishedAt(value) : value;
+
+    if (date === null || Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+/**
+ * Convert a datetime-local control value into an API-ready local datetime string.
+ * Returns null for empty or invalid input.
+ */
+export function fromDatetimeLocalValue(value: string): string | null {
+    const trimmed = value.trim();
+
+    if (trimmed === '') {
+        return null;
+    }
+
+    const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(trimmed);
+
+    if (match === null) {
+        return null;
+    }
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const hours = Number(match[4]);
+    const minutes = Number(match[5]);
+    const seconds = match[6] !== undefined ? Number(match[6]) : 0;
+    const local = new Date(year, month - 1, day, hours, minutes, seconds);
+
+    if (
+        local.getFullYear() !== year ||
+        local.getMonth() !== month - 1 ||
+        local.getDate() !== day ||
+        local.getHours() !== hours ||
+        local.getMinutes() !== minutes ||
+        local.getSeconds() !== seconds
+    ) {
+        return null;
+    }
+
+    return toPublishDateTimeString(local);
+}
+
+export function parsePublishedAt(value: string): Date | null {
+    const trimmed = value.trim();
+
+    if (trimmed === '') {
+        return null;
+    }
+
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+
+    if (dateOnly !== null) {
+        const year = Number(dateOnly[1]);
+        const month = Number(dateOnly[2]);
+        const day = Number(dateOnly[3]);
         const local = new Date(year, month - 1, day);
 
         if (local.getFullYear() === year && local.getMonth() === month - 1 && local.getDate() === day) {
@@ -88,7 +168,31 @@ function parseDateOnlyLocal(value: string): Date | null {
         return null;
     }
 
-    const parsed = new Date(value);
+    const localDateTime = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/.exec(trimmed);
+
+    if (localDateTime !== null && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(trimmed)) {
+        const year = Number(localDateTime[1]);
+        const month = Number(localDateTime[2]);
+        const day = Number(localDateTime[3]);
+        const hours = Number(localDateTime[4]);
+        const minutes = Number(localDateTime[5]);
+        const seconds = localDateTime[6] !== undefined ? Number(localDateTime[6]) : 0;
+        const local = new Date(year, month - 1, day, hours, minutes, seconds);
+
+        if (
+            local.getFullYear() === year &&
+            local.getMonth() === month - 1 &&
+            local.getDate() === day &&
+            local.getHours() === hours &&
+            local.getMinutes() === minutes
+        ) {
+            return local;
+        }
+
+        return null;
+    }
+
+    const parsed = new Date(trimmed);
 
     if (Number.isNaN(parsed.getTime())) {
         return null;
@@ -97,18 +201,26 @@ function parseDateOnlyLocal(value: string): Date | null {
     return parsed;
 }
 
-export function isPublished(form: PostFormState): boolean {
+export function publishStatus(form: PostFormState, now: Date = new Date()): PostPublishStatus {
     if (form.publishedAt === null || form.publishedAt === '') {
-        return false;
+        return 'draft';
     }
 
-    const published = parseDateOnlyLocal(form.publishedAt);
+    const published = parsePublishedAt(form.publishedAt);
 
     if (published === null) {
-        return false;
+        return 'draft';
     }
 
-    return published <= new Date();
+    return published <= now ? 'published' : 'scheduled';
+}
+
+export function isPublished(form: PostFormState, now: Date = new Date()): boolean {
+    return publishStatus(form, now) === 'published';
+}
+
+export function isScheduled(form: PostFormState, now: Date = new Date()): boolean {
+    return publishStatus(form, now) === 'scheduled';
 }
 
 export function postToFormState(post: Post): PostFormState {
@@ -161,10 +273,30 @@ export function serializeFormState(form: PostFormState): string {
     return JSON.stringify(toStorePayload(form));
 }
 
-export function publishFormState(form: PostFormState): PostFormState {
+export function publishFormState(form: PostFormState, at: Date = new Date()): PostFormState {
     return {
         ...form,
-        publishedAt: toPublishDateString(),
+        publishedAt: toPublishDateTimeString(at),
+    };
+}
+
+export function scheduleFormState(form: PostFormState, at: Date | string): PostFormState {
+    let publishedAt: string | null;
+
+    if (typeof at === 'string') {
+        publishedAt = fromDatetimeLocalValue(at);
+
+        if (publishedAt === null) {
+            const parsed = parsePublishedAt(at);
+            publishedAt = parsed !== null ? toPublishDateTimeString(parsed) : null;
+        }
+    } else {
+        publishedAt = toPublishDateTimeString(at);
+    }
+
+    return {
+        ...form,
+        publishedAt,
     };
 }
 

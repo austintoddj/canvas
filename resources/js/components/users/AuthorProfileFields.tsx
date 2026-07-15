@@ -10,14 +10,15 @@ import {
     DropdownMenu,
     DropdownTrailingIcon,
     dropdownInsetItemClass,
+    selectDropdownMenuClass,
     selectDropdownTriggerClass,
-    selectDropdownTriggerWideClass,
 } from '@/components/dropdown';
 import { Description, ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import { Switch, SwitchField } from '@/components/switch';
 import { Text } from '@/components/text';
 import { Textarea } from '@/components/textarea';
+import { AvatarImagePicker } from '@/components/users/AvatarImagePicker';
 import { SocialLinksEditor } from '@/components/users/SocialLinksEditor';
 import { useCanvas } from '@/hooks/useCanvas';
 import type { LaravelValidationErrors } from '@/lib/api';
@@ -31,6 +32,7 @@ type AuthorProfileFieldsProps = {
     languages: LanguageOption[];
     socialEditorKey?: string;
     localeSwitching?: boolean;
+    avatarInitials?: string;
     onPatch: (patch: Partial<ProfileFormState>) => void;
     onLocaleChange: (locale: string) => void;
     onClearFieldError: (key: string) => void;
@@ -68,7 +70,7 @@ function LanguageSelectDropdown({
                 <span className="min-w-0 truncate text-left">{selectedLabel || t('profile.select_language')}</span>
                 <ChevronDownIcon data-slot="icon" className="shrink-0" />
             </DropdownButton>
-            <DropdownMenu anchor="bottom start" className="z-50 min-w-40 max-w-sm">
+            <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                 {options.map((option) => {
                     const selected = value === option.code;
 
@@ -135,14 +137,14 @@ function TimezoneSelectDropdown({
                 data-invalid={invalid ? true : undefined}
                 aria-invalid={invalid || undefined}
                 className={clsx(
-                    selectDropdownTriggerWideClass,
+                    selectDropdownTriggerClass,
                     invalid && 'border-red-500 dark:border-red-600'
                 )}
             >
                 <span className="min-w-0 truncate text-left">{value || t('profile.select_timezone')}</span>
                 <ChevronDownIcon data-slot="icon" className="shrink-0" />
             </DropdownButton>
-            <DropdownMenu anchor="bottom start" className="z-50 min-w-56 max-w-sm">
+            <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                 <div className="sticky top-0 z-10 border-b border-zinc-950/5 bg-white p-2 dark:border-white/10 dark:bg-zinc-900">
                     <Input
                         name="timezone-filter"
@@ -190,6 +192,7 @@ export function AuthorProfileFields({
     languages,
     socialEditorKey,
     localeSwitching = false,
+    avatarInitials,
     onPatch,
     onLocaleChange,
     onClearFieldError,
@@ -242,22 +245,16 @@ export function AuthorProfileFields({
                         {fieldErrors.summary?.[0] ? <ErrorMessage>{fieldErrors.summary[0]}</ErrorMessage> : null}
                     </Field>
 
-                    <Field>
-                        <Label>{t('profile.avatar_url')}</Label>
-                        <Description>{t('profile.avatar_help')}</Description>
-                        <Input
-                            name="avatar"
-                            type="url"
-                            value={form.avatar}
-                            onChange={(event) => {
-                                onPatch({ avatar: event.target.value });
-                                onClearFieldError('avatar');
-                            }}
-                            invalid={Boolean(fieldErrors.avatar)}
-                            placeholder="https://"
-                        />
-                        {fieldErrors.avatar?.[0] ? <ErrorMessage>{fieldErrors.avatar[0]}</ErrorMessage> : null}
-                    </Field>
+                    <AvatarImagePicker
+                        value={form.avatar}
+                        initials={avatarInitials}
+                        invalid={Boolean(fieldErrors.avatar)}
+                        error={fieldErrors.avatar?.[0]}
+                        onChange={(avatar) => {
+                            onPatch({ avatar });
+                            onClearFieldError('avatar');
+                        }}
+                    />
 
                     <Field>
                         <Label>{t('profile.website')}</Label>

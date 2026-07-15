@@ -18,15 +18,6 @@ class CanvasUserResource extends JsonResource
 {
     public static $wrap = null;
 
-    private string $email = '';
-
-    public function withEmail(string $email): self
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
     /**
      * @return array<string, mixed>
      */
@@ -54,13 +45,13 @@ class CanvasUserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return self::toProfileArray($this->resource, $this->email);
+        return self::toProfileArray($this->resource);
     }
 
     /**
      * @return array<string, mixed>
      */
-    public static function toProfileArray(?CanvasUser $canvasUser, string $email = ''): array
+    public static function toProfileArray(?CanvasUser $canvasUser): array
     {
         if (! $canvasUser) {
             return self::defaults();
@@ -71,7 +62,7 @@ class CanvasUserResource extends JsonResource
             'username' => $canvasUser->username,
             'summary' => $canvasUser->summary,
             'avatar' => $canvasUser->avatar,
-            'avatar_url' => AuthorAvatar::url($canvasUser->avatar, $email),
+            'avatar_url' => AuthorAvatar::url($canvasUser->avatar),
             'website' => $canvasUser->website,
             'social' => $canvasUser->socialLinks(),
             'locale' => Localization::resolveLocale($canvasUser->locale),

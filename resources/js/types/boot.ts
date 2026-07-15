@@ -3,7 +3,7 @@ export type CanvasProfile = {
     username: string | null;
     summary: string | null;
     avatar: string | null;
-    avatar_url: string;
+    avatar_url: string | null;
     website: string | null;
     social: Record<string, string>;
     locale: string;
@@ -20,7 +20,7 @@ export type UserResource = {
     id: number;
     name: string;
     email: string;
-    avatar_url: string;
+    avatar_url: string | null;
     posts_count?: number;
     canvas?: CanvasProfile;
 };

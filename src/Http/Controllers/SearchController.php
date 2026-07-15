@@ -134,10 +134,7 @@ class SearchController extends Controller
                 'name' => data_get($canvasUser->user, 'name'),
                 'email' => data_get($canvasUser->user, 'email'),
                 'username' => $canvasUser->username,
-                'avatar_url' => AuthorAvatar::url(
-                    $canvasUser->avatar,
-                    (string) data_get($canvasUser->user, 'email', ''),
-                ),
+                'avatar_url' => AuthorAvatar::url($canvasUser->avatar),
                 'type' => 'User',
                 'route' => 'edit-user',
             ])

@@ -51,6 +51,34 @@ it('forwards the page parameter to the Unsplash API', function (): void {
     });
 });
 
+it('forwards a clamped per_page parameter to the Unsplash API', function (): void {
+    setUnsplashAccessKey('test-access-key');
+
+    Http::fake([
+        'api.unsplash.com/*' => Http::response([
+            'results' => [],
+            'total' => 0,
+            'total_pages' => 0,
+        ], 200),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/unsplash?query=mountains&per_page=18')
+        ->assertSuccessful();
+
+    Http::assertSent(function ($request): bool {
+        return str_contains($request->url(), 'per_page=18');
+    });
+
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/unsplash?query=mountains&per_page=99')
+        ->assertSuccessful();
+
+    Http::assertSent(function ($request): bool {
+        return str_contains($request->url(), 'per_page=30');
+    });
+});
+
 it('clamps invalid page values to page 1', function (): void {
     setUnsplashAccessKey('test-access-key');
 

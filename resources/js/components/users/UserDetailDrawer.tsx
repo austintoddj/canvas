@@ -388,7 +388,13 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
 
                             <div className="flex items-center gap-4 rounded-2xl border border-zinc-950/10 bg-zinc-950/[0.02] p-4 dark:border-white/10 dark:bg-white/[0.03]">
                                 <Avatar
-                                    src={isSelf ? user.avatar_url || profileForm?.avatar || null : user.avatar_url}
+                                    src={
+                                        isSelf && profileForm !== null
+                                            ? profileForm.avatar.trim() !== ''
+                                                ? profileForm.avatar.trim()
+                                                : null
+                                            : user.avatar_url
+                                    }
                                     initials={userInitials(user.name)}
                                     className="size-14"
                                     alt=""
@@ -416,6 +422,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                                     languages={boot.languages}
                                     socialEditorKey={baseline}
                                     localeSwitching={localeSwitching}
+                                    avatarInitials={userInitials(user.name)}
                                     onPatch={patchProfile}
                                     onLocaleChange={(locale) => {
                                         void handleLocaleChange(locale);

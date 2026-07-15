@@ -29,7 +29,7 @@ it('stores profile columns on canvas_users', function (): void {
         'user_id' => $user->id,
         'username' => 'writer',
         'summary' => 'Bio',
-        'avatar' => 'avatar-hash',
+        'avatar' => 'https://cdn.example.com/avatar.jpg',
         'website' => 'https://example.com',
         'social' => [
             'x' => 'writer',
@@ -40,7 +40,7 @@ it('stores profile columns on canvas_users', function (): void {
 
     expect($canvasUser->username)->toBe('writer');
     expect($canvasUser->summary)->toBe('Bio');
-    expect($canvasUser->avatar)->toBe('avatar-hash');
+    expect($canvasUser->avatar)->toBe('https://cdn.example.com/avatar.jpg');
     expect($canvasUser->website)->toBe('https://example.com');
     expect($canvasUser->social)->toBe([
         'x' => 'writer',

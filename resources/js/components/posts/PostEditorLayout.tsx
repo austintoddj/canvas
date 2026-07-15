@@ -7,7 +7,13 @@ import { Button } from '@/components/button';
 import { Heading } from '@/components/heading';
 import { Text, ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
-import { isPublished, navSaveStatusLabel, type PostFormState, type PostSaveStatus } from '@/lib/posts/form';
+import {
+    isPublished,
+    navSaveStatusLabel,
+    publishStatus,
+    type PostFormState,
+    type PostSaveStatus,
+} from '@/lib/posts/form';
 
 export type PostEditorFocusControls = {
     focusMode: boolean;
@@ -39,6 +45,14 @@ export default function PostEditorLayout({
 }: PostEditorLayoutProps) {
     const { t } = useCanvas();
     const published = isPublished(form);
+    const status = publishStatus(form);
+    const badgeColor = status === 'published' ? 'green' : status === 'scheduled' ? 'blue' : 'amber';
+    const badgeLabel =
+        status === 'published'
+            ? t('editor.published_badge')
+            : status === 'scheduled'
+              ? t('editor.scheduled_badge')
+              : t('editor.draft_badge');
     const statusLabel = navSaveStatusLabel(saveStatus, {
         saving: t('common.saving'),
         saved: t('common.saved'),
@@ -101,8 +115,8 @@ export default function PostEditorLayout({
                     <Heading level={2} className="truncate text-lg/7">
                         {form.title.trim() === '' ? t('editor.untitled_post') : form.title}
                     </Heading>
-                    <Badge color={published ? 'green' : 'amber'}>
-                        {published ? t('editor.published_badge') : t('editor.draft_badge')}
+                    <Badge color={badgeColor} data-publish-status={status}>
+                        {badgeLabel}
                     </Badge>
                 </div>
             </div>

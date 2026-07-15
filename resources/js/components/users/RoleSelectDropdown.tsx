@@ -9,6 +9,7 @@ import {
     DropdownMenu,
     DropdownTrailingIcon,
     dropdownInsetItemClass,
+    selectDropdownMenuClass,
     selectDropdownTriggerClass,
 } from '@/components/dropdown';
 import type { RoleValue } from '@/lib/permissions';
@@ -49,7 +50,7 @@ export function RoleSelectDropdown({
                 <span className="min-w-0 truncate text-left">{selectedLabel ?? emptyLabel}</span>
                 <ChevronDownIcon data-slot="icon" className="shrink-0" />
             </DropdownButton>
-            <DropdownMenu anchor="bottom start" className="z-50 min-w-56 max-w-sm">
+            <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                 {ROLE_OPTIONS.map((option) => {
                     const label = labels?.[option.value] ?? option.label;
                     const selected = value === option.value;

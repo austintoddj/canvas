@@ -6,7 +6,6 @@ namespace Canvas\Tests\Models;
 
 use Canvas\Concerns\HasCanvasAccess;
 use Canvas\Database\Factories\UserFactory;
-use Canvas\Support\Gravatar;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -30,17 +29,11 @@ class User extends Authenticatable
     ];
 
     protected $appends = [
-        'default_avatar',
         'default_locale',
     ];
 
     protected static function newFactory(): Factory
     {
         return UserFactory::new();
-    }
-
-    public function getDefaultAvatarAttribute(): string
-    {
-        return Gravatar::url($this->email ?? '');
     }
 }

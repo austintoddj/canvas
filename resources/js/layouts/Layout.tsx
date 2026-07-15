@@ -35,6 +35,7 @@ import { useRecentPosts } from '@/hooks/useRecentPosts';
 import { type ThemeMode, useTheme } from '@/hooks/useTheme';
 import { searchShortcutKeys } from '@/lib/platform';
 import { hostHomeUrl } from '@/lib/urls';
+import { userInitials } from '@/lib/users/roles';
 import {
     ArrowTopRightOnSquareIcon,
     BookOpenIcon,
@@ -108,7 +109,13 @@ function UserDropdownContent({
     return (
         <>
             <DropdownItem onClick={onOpenProfile} className={dropdownProfileItemClass}>
-                <Avatar src={user.avatar_url} className="size-8 shrink-0" square alt="" />
+                <Avatar
+                    src={user.avatar_url}
+                    initials={userInitials(user.name)}
+                    className="size-8 shrink-0"
+                    square
+                    alt=""
+                />
                 <div className="min-w-0 flex-1 text-left">
                     <span className="block truncate text-sm/5 font-medium text-zinc-950 dark:text-white">
                         {user.name}
@@ -222,7 +229,11 @@ export default function Layout() {
                             </NavbarItem>
                             <Dropdown>
                                 <DropdownButton as={NavbarItem}>
-                                    <Avatar src={user.avatar_url} square />
+                                    <Avatar
+                                        src={user.avatar_url}
+                                        initials={userInitials(user.name)}
+                                        square
+                                    />
                                 </DropdownButton>
                                 <DropdownMenu className="min-w-72" anchor="bottom end">
                                     <UserDropdownContent mode={mode} setMode={setMode} onOpenProfile={openProfile} />
@@ -318,7 +329,13 @@ export default function Layout() {
                             <Dropdown>
                                 <DropdownButton as={SidebarItem}>
                                     <span className="flex min-w-0 items-center gap-3">
-                                        <Avatar src={user.avatar_url} className="size-10" square alt="" />
+                                        <Avatar
+                                            src={user.avatar_url}
+                                            initials={userInitials(user.name)}
+                                            className="size-10"
+                                            square
+                                            alt=""
+                                        />
                                         <span className="min-w-0">
                                             <span className="block truncate text-sm/5 font-medium text-zinc-950 dark:text-white">
                                                 {user.name}

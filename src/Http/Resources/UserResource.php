@@ -50,14 +50,14 @@ class UserResource extends JsonResource
             'id' => $user->getKey(),
             'name' => data_get($user, 'name'),
             'email' => $email,
-            'avatar_url' => AuthorAvatar::url($canvasUser?->avatar, $email),
+            'avatar_url' => AuthorAvatar::url($canvasUser?->avatar),
             'posts_count' => $this->when(
                 array_key_exists('posts_count', $user->getAttributes()),
                 fn (): mixed => $user->getAttribute('posts_count'),
             ),
             'canvas' => $this->when(
                 $canvasUser !== null,
-                fn (): array => CanvasUserResource::toProfileArray($canvasUser, $email),
+                fn (): array => CanvasUserResource::toProfileArray($canvasUser),
             ),
         ];
     }

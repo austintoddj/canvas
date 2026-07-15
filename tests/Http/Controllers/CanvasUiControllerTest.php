@@ -206,40 +206,48 @@ it('returns 404 for an unknown author username', function (): void {
     $this->get('canvas-ui/@no-such-author')->assertNotFound();
 });
 
-it('renders author avatars on the index from canvas_users instead of host email gravatar', function (): void {
-    $avatarHash = 'custom-avatar-hash';
-    $this->admin->canvasUser->update(['avatar' => $avatarHash]);
+it('renders author avatars on the index from canvas_users avatar urls', function (): void {
+    $avatarUrl = 'https://cdn.example.com/authors/custom-avatar.jpg';
+    $this->admin->canvasUser->update(['avatar' => $avatarUrl]);
 
     Post::factory()->create([
         'user_id' => $this->admin->id,
         'published_at' => now()->subDay(),
     ]);
 
-    $emailGravatar = md5(strtolower(trim($this->admin->email)));
-
     $response = $this->get('canvas-ui')->assertSuccessful();
 
-    expect($response->getContent())
-        ->toContain($avatarHash)
-        ->not->toContain($emailGravatar);
+    expect($response->getContent())->toContain($avatarUrl);
 });
 
-it('renders author avatars on the post page from canvas_users instead of host email gravatar', function (): void {
-    $avatarHash = 'custom-avatar-hash';
-    $this->admin->canvasUser->update(['avatar' => $avatarHash]);
+it('renders author avatars on the post page from canvas_users avatar urls', function (): void {
+    $avatarUrl = 'https://cdn.example.com/authors/custom-avatar.jpg';
+    $this->admin->canvasUser->update(['avatar' => $avatarUrl]);
 
     $post = Post::factory()->create([
         'user_id' => $this->admin->id,
         'published_at' => now()->subDay(),
     ]);
 
-    $emailGravatar = md5(strtolower(trim($this->admin->email)));
-
     $response = $this->get("canvas-ui/{$post->slug}")->assertSuccessful();
 
+    expect($response->getContent())->toContain($avatarUrl);
+});
+
+it('renders initials when the author has no avatar url', function (): void {
+    $this->admin->canvasUser->update(['avatar' => null]);
+    $this->admin->update(['name' => 'Ada Lovelace']);
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $response = $this->get('canvas-ui')->assertSuccessful();
+
     expect($response->getContent())
-        ->toContain($avatarHash)
-        ->not->toContain($emailGravatar);
+        ->toContain('AL')
+        ->not->toContain('gravatar.com');
 });
 
 it('links author names to the author page when a username is set', function (): void {
@@ -339,7 +347,7 @@ it('renders the reader for bare host users without canvas relations', function (
         'user_id' => $host->id,
         'role' => Role::Contributor,
         'username' => 'bare-reader',
-        'avatar' => 'bare-avatar-hash',
+        'avatar' => 'https://cdn.example.com/bare-avatar.jpg',
         'summary' => 'Writes without a trait',
     ]);
 
@@ -353,7 +361,7 @@ it('renders the reader for bare host users without canvas relations', function (
         ->assertSuccessful()
         ->assertSee('Bare Host Post')
         ->assertSee('Bare Reader Author')
-        ->assertSee('bare-avatar-hash');
+        ->assertSee('https://cdn.example.com/bare-avatar.jpg');
 
     $this->get("canvas-ui/{$post->slug}")
         ->assertSuccessful()

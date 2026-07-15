@@ -22,6 +22,29 @@ it('computes the published attribute', function (): void {
     $this->assertTrue(Post::factory()->create([
         'published_at' => now()->subDay(),
     ])->published);
+
+    $this->assertFalse(Post::factory()->create([
+        'published_at' => now()->addDay(),
+    ])->published);
+
+    $this->assertFalse(Post::factory()->draft()->create()->published);
+});
+
+it('serializes published_at with time fidelity', function (): void {
+    $at = now()->addDays(2)->setTime(14, 30, 0);
+
+    $post = Post::factory()->create([
+        'published_at' => $at,
+    ]);
+
+    $json = $post->fresh()->toArray();
+
+    expect($json['published_at'])->not->toBeNull();
+
+    $parsed = Carbon::parse($json['published_at']);
+
+    expect($parsed->format('Y-m-d H:i'))->toBe($at->format('Y-m-d H:i'))
+        ->and($parsed->format('H:i'))->not->toBe('00:00');
 });
 it('allows a user to save a post slug', function (): void {
     $data = [

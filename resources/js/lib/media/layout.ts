@@ -1,3 +1,15 @@
-export const MEDIA_GRID_CLASS_NAME = 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4';
-
 export const MEDIA_GRID_SKELETON_COUNT = 8;
+
+export {
+    JUSTIFIED_GAP_PX,
+    JUSTIFIED_TARGET_ROW_HEIGHT_DIALOG,
+    JUSTIFIED_TARGET_ROW_HEIGHT_PAGE,
+    JUSTIFIED_TARGET_ROW_HEIGHT_UNSPLASH_LARGE,
+    JUSTIFIED_TARGET_ROW_HEIGHT_UNSPLASH_SMALL,
+    UNSPLASH_PER_PAGE_LARGE,
+    UNSPLASH_PER_PAGE_SMALL,
+    unsplashPerPage,
+    unsplashTargetRowHeight,
+    type UnsplashGridDensity,
+} from '@/lib/media/justified';
+

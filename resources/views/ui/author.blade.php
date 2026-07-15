@@ -2,16 +2,28 @@
 
 @php
     $canvasUser = $user->relationLoaded('canvasUser') ? $user->getRelation('canvasUser') : null;
-    $avatarUrl = \Canvas\Support\AuthorAvatar::url($canvasUser?->avatar, $user->email ?? '', 96);
+    $avatarUrl = \Canvas\Support\AuthorAvatar::url($canvasUser?->avatar);
+    $initials = collect(preg_split('/\s+/', trim((string) $user->name) ?: '') ?: [])
+        ->filter()
+        ->take(2)
+        ->map(fn (string $part) => mb_strtoupper(mb_substr($part, 0, 1)))
+        ->implode('');
+    if ($initials === '') {
+        $initials = '?';
+    }
 @endphp
 
 @section('title', $user->name . ' — ' . config('app.name'))
 
 @section('content')
     <header class="mb-10 flex items-start gap-5">
-        <img src="{{ $avatarUrl }}"
-             alt="{{ $user->name }}"
-             class="w-20 h-20 rounded-full shrink-0">
+        @if ($avatarUrl)
+            <img src="{{ $avatarUrl }}"
+                 alt="{{ $user->name }}"
+                 class="w-20 h-20 rounded-full object-cover shrink-0">
+        @else
+            <span class="inline-flex w-20 h-20 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xl font-medium shrink-0" aria-hidden="true">{{ $initials }}</span>
+        @endif
         <div>
             <h1 class="text-3xl font-bold">{{ $user->name }}</h1>
             @if ($canvasUser?->username)

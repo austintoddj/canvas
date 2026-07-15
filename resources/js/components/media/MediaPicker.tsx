@@ -168,7 +168,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
 
             {error ? <ErrorText className="mt-4">{error}</ErrorText> : null}
 
-            {showInitialSkeleton ? <MediaGridSkeleton className="mt-6" count={6} /> : null}
+            {showInitialSkeleton ? <MediaGridSkeleton className="mt-6" count={6} compact /> : null}
 
             {!showInitialSkeleton ? (
                 <div
@@ -181,6 +181,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                 >
                     <MediaGrid
                         items={media}
+                        compact
                         emptyMessage="No images found. Drop one above to get started."
                         onSelect={(item) => onSelect(item.url, item)}
                     />

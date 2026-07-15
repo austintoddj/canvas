@@ -31,8 +31,8 @@ import { postsApi } from '@/lib/api/posts';
 import { formatListDate } from '@/lib/format-list-date';
 import { paginationWindow, shouldGoToPreviousPageAfterDelete } from '@/lib/list-pagination';
 import {
-    isPostPublished,
     parsePostsListFilters,
+    postListStatus,
     postsIndexPath,
     postsIndexQueryParams,
     type PostsListFilters,
@@ -253,8 +253,16 @@ export default function PostsIndex() {
                     <Table striped>
                         <TableBody>
                             {posts.data.map((post) => {
-                                const published = isPostPublished(post.published_at);
+                                const status = postListStatus(post.published_at);
                                 const title = post.title.trim() === '' ? 'Untitled post' : post.title;
+                                const badgeColor =
+                                    status === 'published' ? 'green' : status === 'scheduled' ? 'blue' : 'amber';
+                                const badgeLabel =
+                                    status === 'published'
+                                        ? t('posts.type_published')
+                                        : status === 'scheduled'
+                                          ? t('posts.scheduled_badge')
+                                          : t('posts.draft_badge');
 
                                 return (
                                     <TableRow
@@ -276,8 +284,8 @@ export default function PostsIndex() {
                                                     <span className="truncate font-medium text-zinc-950 dark:text-white">
                                                         {title}
                                                     </span>
-                                                    <Badge color={published ? 'green' : 'amber'}>
-                                                        {published ? 'Published' : 'Draft'}
+                                                    <Badge color={badgeColor} data-publish-status={status}>
+                                                        {badgeLabel}
                                                     </Badge>
                                                 </div>
                                                 <Text className="mt-1 line-clamp-1 text-sm text-canvas-muted dark:text-canvas-muted-dark">
@@ -289,7 +297,7 @@ export default function PostsIndex() {
                                         </TableCell>
                                         <TableCell className="w-px whitespace-nowrap">
                                             <ListRowEnd date={formatListDate(post.updated_at)}>
-                                                {published ? (
+                                                {status === 'published' ? (
                                                     <ListRowActionLink
                                                         href={`/posts/${post.id}/stats`}
                                                         label={`View stats for ${title}`}

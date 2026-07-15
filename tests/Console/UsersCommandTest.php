@@ -64,7 +64,7 @@ it('shows the full canvas profile by email', function (): void {
         'email' => 'editor@example.com',
     ]);
 
-    expect($payload['avatar_url'])->toBeString();
+    expect($payload)->toHaveKey('avatar_url');
     expect($payload['canvas'])->toMatchArray([
         'role' => Role::Editor->value,
         'username' => 'editor-user',

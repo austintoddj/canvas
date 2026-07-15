@@ -81,7 +81,7 @@ class UserController extends Controller
             'id' => $user->getKey(),
             'name' => data_get($user, 'name'),
             'email' => $email,
-            'avatar_url' => AuthorAvatar::url($canvasUser?->avatar, $email),
+            'avatar_url' => AuthorAvatar::url($canvasUser?->avatar),
             'has_canvas_access' => $canvasUser !== null,
             'role' => $canvasUser?->role?->value,
         ]);
