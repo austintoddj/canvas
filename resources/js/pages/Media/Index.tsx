@@ -19,6 +19,7 @@ import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Select } from '@/components/select';
 import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
+import { useCanvas } from '@/hooks/useCanvas';
 import { usePermissions } from '@/hooks/usePermissions';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { ALLOWED_MEDIA_MIME_TYPES, mediaApi, uploadMedia } from '@/lib/api/media';
@@ -36,8 +37,7 @@ import {
 } from '@/lib/media/batch';
 import { isFileDragTypes, reducePageDrag } from '@/lib/media/drag';
 import {
-    MEDIA_EMPTY_STATE,
-    MEDIA_FILTERED_EMPTY_MESSAGE,
+    MEDIA_EMPTY_STATE_KEYS,
     MEDIA_MIME_FILTERS,
     MEDIA_SEARCH_DEBOUNCE_MS,
     MEDIA_SORT_OPTIONS,
@@ -110,6 +110,7 @@ function setDetailParam(current: URLSearchParams, mediaId: string | null): URLSe
 }
 
 export default function MediaIndex() {
+    const { t } = useCanvas();
     const { canViewAllMedia } = usePermissions();
     const [searchParams, setSearchParams] = useSearchParams();
     const filters = parseMediaListFilters(searchParams);
@@ -188,7 +189,7 @@ export default function MediaIndex() {
             })
             .catch(() => {
                 if (!cancelled) {
-                    setError('Unable to load media.');
+                    setError(t('media.load_error'));
                     setItems([]);
                     setPage(1);
                     setLastPage(1);
@@ -204,7 +205,7 @@ export default function MediaIndex() {
             cancelled = true;
             controller.abort();
         };
-    }, [filters.scope, filters.search, filters.mime, filters.sort]);
+    }, [filters.scope, filters.search, filters.mime, filters.sort, t]);
 
     useEffect(() => {
         function clearPageDrag() {
@@ -277,7 +278,7 @@ export default function MediaIndex() {
             setPage(data.current_page);
             setLastPage(data.last_page);
         } catch {
-            setError('Unable to load more media.');
+            setError(t('media.load_error'));
         } finally {
             setLoadingMore(false);
         }
@@ -305,7 +306,7 @@ export default function MediaIndex() {
             setPage(data.current_page);
             setLastPage(data.last_page);
         } catch {
-            setError('Unable to load media.');
+            setError(t('media.load_error'));
             setItems([]);
             setPage(1);
             setLastPage(1);
@@ -517,10 +518,13 @@ export default function MediaIndex() {
 
     const uploadLabel =
         uploading && uploadProgress !== null
-            ? `Uploading ${uploadProgress.current} of ${uploadProgress.total}…`
+            ? t('media.uploading_progress', {
+                  current: uploadProgress.current,
+                  total: uploadProgress.total,
+              })
             : uploading
-              ? 'Uploading…'
-              : 'Upload';
+              ? t('media.uploading')
+              : t('media.upload');
 
     return (
         <div
@@ -566,10 +570,10 @@ export default function MediaIndex() {
                                 <ArrowUpTrayIcon className="size-7" aria-hidden="true" />
                             </span>
                             <Text className="mt-5 text-lg font-semibold text-zinc-950 dark:text-white">
-                                Drop to upload
+                                {t('media.drop_to_upload')}
                             </Text>
                             <Text className="mt-2 text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                                Release to add images to your library
+                                {t('media.release_to_add')}
                             </Text>
                         </motion.div>
                     </motion.div>
@@ -578,12 +582,12 @@ export default function MediaIndex() {
 
             <div className="space-y-8">
                 <PageHeader
-                    title="Media Library"
+                    title={t('media.title')}
                     actions={
                         selectionCount > 0 ? (
                             <div className="flex flex-wrap items-center gap-2" data-media-selection-actions="true">
                                 <Text className="text-sm font-medium text-zinc-950 dark:text-white" aria-live="polite">
-                                    {selectionCount} selected
+                                    {t('media.selected_count', { count: selectionCount })}
                                 </Text>
                                 <Button
                                     type="button"
@@ -591,7 +595,7 @@ export default function MediaIndex() {
                                     disabled={bulkDeleting}
                                     onClick={() => setSelectedIds(new Set())}
                                 >
-                                    Clear
+                                    {t('media.clear_selection')}
                                 </Button>
                                 <Button
                                     type="button"
@@ -600,7 +604,7 @@ export default function MediaIndex() {
                                     onClick={openBulkDeleteConfirm}
                                 >
                                     <TrashIcon data-slot="icon" />
-                                    {bulkDeleting ? 'Deleting…' : 'Delete'}
+                                    {bulkDeleting ? t('common.deleting') : t('common.delete')}
                                 </Button>
                             </div>
                         ) : (
@@ -611,23 +615,23 @@ export default function MediaIndex() {
                         )
                     }
                 >
-                    <PageDescription>Images you can use in posts and featured media.</PageDescription>
+                    <PageDescription>{t('media.description')}</PageDescription>
                 </PageHeader>
 
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div className="flex min-w-0 flex-1 flex-wrap items-end gap-3">
                         <Field className="min-w-[12rem] flex-1 sm:max-w-xs">
-                            <Label className="sr-only">Search media</Label>
+                            <Label className="sr-only">{t('media.search_label')}</Label>
                             <Input
                                 name="media-search"
                                 value={searchDraft}
-                                placeholder="Search by name, alt, or caption…"
+                                placeholder={t('media.search_placeholder')}
                                 onChange={(event) => setSearchDraft(event.target.value)}
                             />
                         </Field>
 
                         <Field className="w-36">
-                            <Label className="sr-only">File type</Label>
+                            <Label className="sr-only">{t('media.file_type')}</Label>
                             <Select
                                 name="media-mime"
                                 value={filters.mime}
@@ -642,7 +646,7 @@ export default function MediaIndex() {
                         </Field>
 
                         <Field className="w-40">
-                            <Label className="sr-only">Sort media</Label>
+                            <Label className="sr-only">{t('media.sort_label')}</Label>
                             <Select
                                 name="media-sort"
                                 value={filters.sort}
@@ -661,10 +665,10 @@ export default function MediaIndex() {
                         <PillNav
                             value={filters.scope}
                             onChange={(scope) => setFilters({ scope })}
-                            aria-label="Media author scope"
+                            aria-label={t('media.scope_label')}
                         >
-                            <PillNavItem value="user">Mine</PillNavItem>
-                            <PillNavItem value="all">All authors</PillNavItem>
+                            <PillNavItem value="user">{t('media.scope_mine')}</PillNavItem>
+                            <PillNavItem value="all">{t('media.scope_all')}</PillNavItem>
                         </PillNav>
                     ) : null}
                 </div>
@@ -683,13 +687,13 @@ export default function MediaIndex() {
                 {showEmptyLibrary ? (
                     <EmptyStateReveal animate={animateEmpty}>
                         <EmptyState
-                            headline={MEDIA_EMPTY_STATE.headline}
-                            description={MEDIA_EMPTY_STATE.blurb}
+                            headline={t(MEDIA_EMPTY_STATE_KEYS.headline)}
+                            description={t(MEDIA_EMPTY_STATE_KEYS.blurb)}
                             visual={<MediaEmptyVisual />}
                             action={
                                 <Button type="button" color="dark/zinc" disabled={uploading} onClick={openBrowse}>
                                     <ArrowUpTrayIcon data-slot="icon" />
-                                    {uploading ? 'Uploading…' : MEDIA_EMPTY_STATE.cta}
+                                    {uploading ? t('common.loading') : t(MEDIA_EMPTY_STATE_KEYS.cta)}
                                 </Button>
                             }
                         />
@@ -698,7 +702,7 @@ export default function MediaIndex() {
 
                 {showFilteredEmpty ? (
                     <EmptyStateReveal animate={animateEmpty}>
-                        <MediaGrid items={[]} emptyMessage={MEDIA_FILTERED_EMPTY_MESSAGE} />
+                        <MediaGrid items={[]} emptyMessage={t('media.filtered_empty')} />
                     </EmptyStateReveal>
                 ) : null}
 

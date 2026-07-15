@@ -82,6 +82,7 @@ describe('command palette helpers', () => {
         expect(filterNavigationPages('dash', admin).map((page) => page.id)).toEqual(['dashboard']);
         expect(filterNavigationPages('integr', admin).map((page) => page.id)).toEqual(['integrations']);
         expect(filterNavigationPages('unsplash', admin).map((page) => page.id)).toEqual(['integrations']);
+        expect(filterNavigationPages('grok', admin).map((page) => page.id)).toEqual(['integrations']);
         expect(filterNavigationPages('authors', admin).map((page) => page.id)).toEqual(['users']);
         expect(filterNavigationPages('zzzz', admin)).toEqual([]);
     });

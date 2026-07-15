@@ -25,11 +25,14 @@ class UnsplashController extends Controller
             return response()->json(['error' => 'A search query is required.'], 422);
         }
 
+        $page = max(1, (int) request()->query('page', 1));
+
         $response = Http::withHeaders([
             'Authorization' => 'Client-ID '.$accessKey,
             'Accept-Version' => 'v1',
         ])->get('https://api.unsplash.com/search/photos', [
             'query' => $query,
+            'page' => $page,
             'per_page' => 30,
         ]);
 

@@ -1,9 +1,10 @@
-import { createContext, useMemo, type ReactNode } from 'react';
+import { createContext, useCallback, useMemo, useState, type ReactNode } from 'react';
 
 import { buildPermissions } from '@/lib/canvas-context-value';
 import { loadTranslations } from '@/lib/i18n';
-import type { CanvasContextValue, CanvasPermissions } from '@/lib/canvas-context-value';
-import type { CanvasBoot } from '@/types/boot';
+import { fetchLocaleBootUpdate, syncWindowCanvas, withUpdatedUser } from '@/lib/locale-switch';
+import type { CanvasContextValue, CanvasPermissions, Translate } from '@/lib/canvas-context-value';
+import type { CanvasBoot, UserResource } from '@/types/boot';
 
 export type { CanvasContextValue, CanvasPermissions };
 
@@ -16,17 +17,40 @@ type CanvasProviderProps = {
     boot?: CanvasBoot;
 };
 
-export function CanvasProvider({ children, boot = window.Canvas }: CanvasProviderProps) {
+export function CanvasProvider({ children, boot: initialBoot = window.Canvas }: CanvasProviderProps) {
+    const [boot, setBoot] = useState<CanvasBoot>(initialBoot);
+
+    const switchLocale = useCallback(
+        async (locale: string, signal?: AbortSignal) => {
+            const base = window.Canvas ?? initialBoot;
+            const next = await fetchLocaleBootUpdate(base, locale, signal);
+            setBoot(next);
+        },
+        [initialBoot]
+    );
+
+    const setUser = useCallback((user: UserResource) => {
+        setBoot((current) => {
+            const next = withUpdatedUser(current, user);
+            syncWindowCanvas(next);
+
+            return next;
+        });
+    }, []);
+
     const value = useMemo((): CanvasContextValue => {
         const translator = loadTranslations(boot.translations);
+        const t: Translate = translator.t.bind(translator);
 
         return {
             boot,
             user: boot.user,
-            t: translator.t,
+            t,
             permissions: buildPermissions(boot.user),
+            switchLocale,
+            setUser,
         };
-    }, [boot]);
+    }, [boot, setUser, switchLocale]);
 
     return <CanvasContext.Provider value={value}>{children}</CanvasContext.Provider>;
 }

@@ -1,10 +1,10 @@
 import * as Headless from '@headlessui/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import {
+    BuildingStorefrontIcon,
     DocumentTextIcon,
     HomeIcon,
     PhotoIcon,
-    PuzzlePieceIcon,
     RectangleStackIcon,
     TagIcon,
     UserCircleIcon,
@@ -15,6 +15,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Kbd, KbdGroup } from '@/components/kbd';
+import { useCanvas } from '@/hooks/useCanvas';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
 import {
@@ -54,19 +55,19 @@ const PAGE_ICONS: Record<string, React.ElementType> = {
     tags: TagIcon,
     topics: RectangleStackIcon,
     users: UsersIcon,
-    integrations: PuzzlePieceIcon,
-};
-
-const GROUP_LABELS: Record<SearchEntityType, string> = {
-    Post: 'Posts',
-    Tag: 'Tags',
-    Topic: 'Topics',
-    User: 'Users',
+    integrations: BuildingStorefrontIcon,
 };
 
 export function CommandPalette({ open, onClose }: Props) {
     const navigate = useNavigate();
+    const { t } = useCanvas();
     const permissions = usePermissions();
+    const groupLabels: Record<SearchEntityType, string> = {
+        Post: t('palette.posts'),
+        Tag: t('palette.tags'),
+        Topic: t('palette.topics'),
+        User: t('palette.users'),
+    };
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<SearchResult[]>([]);
     const { posts: recentPosts } = useRecentPosts(8);
@@ -166,7 +167,7 @@ export function CommandPalette({ open, onClose }: Props) {
 
     const hasResults = pageItems.length > 0 || entityItems.length > 0;
     const emptyStateLabel =
-        parsed.mode === 'search' && parsed.entityType !== null ? GROUP_LABELS[parsed.entityType] : 'results';
+        parsed.mode === 'search' && parsed.entityType !== null ? groupLabels[parsed.entityType] : 'results';
 
     return (
         <Headless.Dialog open={open} onClose={onClose} className="relative z-50">
@@ -190,9 +191,10 @@ export function CommandPalette({ open, onClose }: Props) {
                             <MagnifyingGlassIcon className="size-5 shrink-0 text-zinc-400" />
 
                             <Headless.ComboboxInput
+                                // eslint-disable-next-line jsx-a11y/no-autofocus -- keyboard-driven command palette
                                 autoFocus
                                 className="h-12 w-full border-0 bg-transparent pl-3 pr-4 text-zinc-900 placeholder:text-zinc-400 focus:outline-none sm:text-sm dark:text-white dark:placeholder:text-zinc-500"
-                                placeholder="Search pages, posts, tags, topics, and users…"
+                                placeholder={t('palette.placeholder')}
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Escape' && onClose()}
@@ -231,15 +233,13 @@ export function CommandPalette({ open, onClose }: Props) {
                                     Object.entries(groupedEntities).map(([type, items]) => (
                                         <li key={type}>
                                             <p className="px-4 pb-1 pt-2 text-xs font-semibold text-zinc-400 uppercase tracking-wide dark:text-zinc-500">
-                                                {GROUP_LABELS[type as SearchEntityType] ?? `${type}s`}
+                                                {groupLabels[type as SearchEntityType] ?? `${type}s`}
                                             </p>
                                             <ul>
                                                 {items.map((result) => {
                                                     const item: PaletteItem = { kind: 'entity', result };
 
-                                                    return (
-                                                        <ResultItem key={paletteItemKey(item)} item={item} />
-                                                    );
+                                                    return <ResultItem key={paletteItemKey(item)} item={item} />;
                                                 })}
                                             </ul>
                                         </li>
@@ -258,7 +258,7 @@ export function CommandPalette({ open, onClose }: Props) {
 
                         {parsed.mode === 'search' && !restrictedEntity && !hasResults && parsed.term !== '' && (
                             <div className="px-6 py-14 text-center text-sm sm:px-14">
-                                <p className="font-semibold text-zinc-900 dark:text-white">No results found</p>
+                                <p className="font-semibold text-zinc-900 dark:text-white">{t('palette.no_results')}</p>
                                 <p className="mt-2 text-canvas-muted dark:text-canvas-muted-dark">
                                     Nothing matched &ldquo;{parsed.term}&rdquo;. Try a different search term.
                                 </p>
@@ -290,9 +290,7 @@ export function CommandPalette({ open, onClose }: Props) {
 
 function ResultItem({ item }: { item: PaletteItem }) {
     const Icon =
-        item.kind === 'page'
-            ? (PAGE_ICONS[item.page.id] ?? MagnifyingGlassIcon)
-            : ENTITY_ICONS[item.result.type];
+        item.kind === 'page' ? (PAGE_ICONS[item.page.id] ?? MagnifyingGlassIcon) : ENTITY_ICONS[item.result.type];
     const meta = item.kind === 'page' ? 'Page' : item.result.type;
 
     return (

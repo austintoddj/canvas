@@ -1,5 +1,6 @@
 <?php
 
+use Canvas\Enums\AiProvider;
 use Canvas\Enums\Role;
 use Canvas\Http\Resources\UserResource;
 use Canvas\Models\CanvasUser;
@@ -14,13 +15,15 @@ it('builds the frontend boot payload', function (): void {
     $bootData = FrontendBootData::forUser($this->admin);
 
     expect($bootData)->toMatchArray([
-        'languageCodes' => Localization::availableLanguageCodes(),
+        'languages' => Localization::languageOptions(),
         'maxUpload' => config('canvas.upload_filesize'),
         'path' => Paths::basePath(),
         'roles' => Role::options(),
-        'timezone' => config('app.timezone'),
+        'appTimezone' => config('app.timezone'),
+        'defaultLocale' => Localization::resolveLocale(null),
         'translations' => Localization::availableTranslations($this->admin->locale),
         'unsplash' => true,
+        'ai' => false,
         'version' => Version::installed(),
     ]);
 
@@ -54,6 +57,14 @@ it('reports unsplash as false when no access key is stored', function (): void {
     $bootData = FrontendBootData::forUser($this->admin);
 
     expect($bootData['unsplash'])->toBeFalse();
+});
+
+it('reports ai as true when provider and key are stored', function (): void {
+    setAiIntegration(AiProvider::Xai, 'test-ai-key');
+
+    $bootData = FrontendBootData::forUser($this->admin);
+
+    expect($bootData['ai'])->toBeTrue();
 });
 
 it('includes nested canvas data when the relationship is set without a canvasUser method', function (): void {

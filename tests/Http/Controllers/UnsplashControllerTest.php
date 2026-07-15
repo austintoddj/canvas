@@ -21,7 +21,53 @@ it('returns results from the Unsplash API', function (): void {
 
     Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'unsplash.com/search/photos')
-            && str_contains($request->url(), 'mountains');
+            && str_contains($request->url(), 'mountains')
+            && str_contains($request->url(), 'page=1')
+            && str_contains($request->url(), 'per_page=30');
+    });
+});
+
+it('forwards the page parameter to the Unsplash API', function (): void {
+    setUnsplashAccessKey('test-access-key');
+
+    Http::fake([
+        'api.unsplash.com/*' => Http::response([
+            'results' => [
+                ['id' => 'def', 'description' => 'Another photo'],
+            ],
+            'total' => 60,
+            'total_pages' => 2,
+        ], 200),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/unsplash?query=mountains&page=2')
+        ->assertSuccessful();
+
+    Http::assertSent(function ($request): bool {
+        return str_contains($request->url(), 'unsplash.com/search/photos')
+            && str_contains($request->url(), 'mountains')
+            && str_contains($request->url(), 'page=2');
+    });
+});
+
+it('clamps invalid page values to page 1', function (): void {
+    setUnsplashAccessKey('test-access-key');
+
+    Http::fake([
+        'api.unsplash.com/*' => Http::response([
+            'results' => [],
+            'total' => 0,
+            'total_pages' => 0,
+        ], 200),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/unsplash?query=mountains&page=0')
+        ->assertSuccessful();
+
+    Http::assertSent(function ($request): bool {
+        return str_contains($request->url(), 'page=1');
     });
 });
 

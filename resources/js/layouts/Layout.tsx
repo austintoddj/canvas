@@ -38,6 +38,7 @@ import { hostHomeUrl } from '@/lib/urls';
 import {
     ArrowTopRightOnSquareIcon,
     BookOpenIcon,
+    BuildingStorefrontIcon,
     ComputerDesktopIcon,
     DocumentTextIcon,
     HomeIcon,
@@ -45,7 +46,6 @@ import {
     MagnifyingGlassIcon,
     MoonIcon,
     PhotoIcon,
-    PuzzlePieceIcon,
     RectangleStackIcon,
     RocketLaunchIcon,
     SunIcon,
@@ -56,19 +56,20 @@ import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 function ThemeToggle({ mode, setMode }: { mode: ThemeMode; setMode: (m: ThemeMode) => void }) {
+    const { t } = useCanvas();
     const options: { value: ThemeMode; label: string; Icon: typeof SunIcon }[] = [
-        { value: 'system', label: 'System theme', Icon: ComputerDesktopIcon },
-        { value: 'light', label: 'Light theme', Icon: SunIcon },
-        { value: 'dark', label: 'Dark theme', Icon: MoonIcon },
+        { value: 'system', label: t('nav.theme_system'), Icon: ComputerDesktopIcon },
+        { value: 'light', label: t('nav.theme_light'), Icon: SunIcon },
+        { value: 'dark', label: t('nav.theme_dark'), Icon: MoonIcon },
     ];
 
     return (
         <div className="col-span-full flex items-center justify-between px-3.5 py-2 sm:px-3 sm:py-1.5">
-            <span className="text-base/6 text-zinc-950 sm:text-sm/6 dark:text-white">Theme</span>
+            <span className="text-base/6 text-zinc-950 sm:text-sm/6 dark:text-white">{t('nav.theme')}</span>
             <div
                 className="flex rounded-lg bg-zinc-950/5 p-0.5 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/5"
                 role="group"
-                aria-label="Theme"
+                aria-label={t('nav.theme')}
             >
                 {options.map(({ value, label, Icon }) => (
                     <button
@@ -102,7 +103,7 @@ function UserDropdownContent({
     setMode: (m: ThemeMode) => void;
     onOpenProfile: () => void;
 }) {
-    const { user, boot } = useCanvas();
+    const { user, boot, t } = useCanvas();
 
     return (
         <>
@@ -120,7 +121,6 @@ function UserDropdownContent({
 
             <DropdownDivider />
 
-            {/* Theme toggle — plain div so it doesn't close the menu */}
             <ThemeToggle mode={mode} setMode={setMode} />
 
             <DropdownItem
@@ -129,7 +129,7 @@ function UserDropdownContent({
                 rel="noopener noreferrer"
                 className={dropdownInsetItemClass}
             >
-                <DropdownLabel inset>Home Page</DropdownLabel>
+                <DropdownLabel inset>{t('nav.home_page')}</DropdownLabel>
                 <DropdownTrailingIcon inset>
                     <ArrowTopRightOnSquareIcon />
                 </DropdownTrailingIcon>
@@ -140,7 +140,7 @@ function UserDropdownContent({
                 rel="noopener noreferrer"
                 className={dropdownInsetItemClass}
             >
-                <DropdownLabel inset>Changelog</DropdownLabel>
+                <DropdownLabel inset>{t('nav.changelog')}</DropdownLabel>
                 <DropdownTrailingIcon inset>
                     <RocketLaunchIcon />
                 </DropdownTrailingIcon>
@@ -151,7 +151,7 @@ function UserDropdownContent({
                 rel="noopener noreferrer"
                 className={dropdownInsetItemClass}
             >
-                <DropdownLabel inset>Help</DropdownLabel>
+                <DropdownLabel inset>{t('nav.help')}</DropdownLabel>
                 <DropdownTrailingIcon inset>
                     <LifebuoyIcon />
                 </DropdownTrailingIcon>
@@ -162,7 +162,7 @@ function UserDropdownContent({
                 rel="noopener noreferrer"
                 className={dropdownInsetItemClass}
             >
-                <DropdownLabel inset>Docs</DropdownLabel>
+                <DropdownLabel inset>{t('nav.docs')}</DropdownLabel>
                 <DropdownTrailingIcon inset>
                     <BookOpenIcon />
                 </DropdownTrailingIcon>
@@ -171,14 +171,16 @@ function UserDropdownContent({
             <DropdownDivider />
 
             <div className="col-span-full rounded-b-xl bg-zinc-50 px-3.5 py-2 dark:bg-white/[0.03] sm:px-3">
-                <p className="text-xs text-zinc-400 dark:text-zinc-500">Version {boot.version}</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500">
+                    {t('common.version', { version: boot.version })}
+                </p>
             </div>
         </>
     );
 }
 
 export default function Layout() {
-    const { user } = useCanvas();
+    const { user, t } = useCanvas();
     const { canManageTaxonomy, canManageUsers, canManageSettings } = usePermissions();
     const { pathname } = useLocation();
     const { posts: recentPosts } = useRecentPosts(5);
@@ -208,18 +210,14 @@ export default function Layout() {
         <>
             <CommandPalette key={String(paletteOpen)} open={paletteOpen} onClose={closePalette} />
             <Toaster />
-            <UserDetailDrawer
-                open={profileOpen}
-                userId={profileOpen ? String(user.id) : null}
-                onClose={closeProfile}
-            />
+            <UserDetailDrawer open={profileOpen} userId={profileOpen ? String(user.id) : null} onClose={closeProfile} />
 
             <SidebarLayout
                 navbar={
                     <Navbar>
                         <NavbarSpacer />
                         <NavbarSection>
-                            <NavbarItem onClick={openPalette} aria-label="Search">
+                            <NavbarItem onClick={openPalette} aria-label={t('nav.search')}>
                                 <MagnifyingGlassIcon />
                             </NavbarItem>
                             <Dropdown>
@@ -227,11 +225,7 @@ export default function Layout() {
                                     <Avatar src={user.avatar_url} square />
                                 </DropdownButton>
                                 <DropdownMenu className="min-w-72" anchor="bottom end">
-                                    <UserDropdownContent
-                                        mode={mode}
-                                        setMode={setMode}
-                                        onOpenProfile={openProfile}
-                                    />
+                                    <UserDropdownContent mode={mode} setMode={setMode} onOpenProfile={openProfile} />
                                 </DropdownMenu>
                             </Dropdown>
                         </NavbarSection>
@@ -246,12 +240,12 @@ export default function Layout() {
                                     className="bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
                                     square
                                 />
-                                <SidebarLabel>Canvas</SidebarLabel>
+                                <SidebarLabel>{t('nav.canvas')}</SidebarLabel>
                             </SidebarItem>
                             <SidebarSection className="max-lg:hidden">
                                 <SidebarItem onClick={openPalette}>
                                     <MagnifyingGlassIcon />
-                                    <SidebarLabel>Search</SidebarLabel>
+                                    <SidebarLabel>{t('nav.search')}</SidebarLabel>
                                     <SidebarShortcut>
                                         <KbdGroup keys={searchShortcutKeys()} />
                                     </SidebarShortcut>
@@ -263,15 +257,15 @@ export default function Layout() {
                             <SidebarSection>
                                 <SidebarItem href="/" current={pathname === '/'}>
                                     <HomeIcon />
-                                    <SidebarLabel>Dashboard</SidebarLabel>
+                                    <SidebarLabel>{t('nav.dashboard')}</SidebarLabel>
                                 </SidebarItem>
                                 <SidebarItem href="/posts" current={pathname.startsWith('/posts')}>
                                     <DocumentTextIcon />
-                                    <SidebarLabel>Posts</SidebarLabel>
+                                    <SidebarLabel>{t('nav.posts')}</SidebarLabel>
                                 </SidebarItem>
                                 <SidebarItem href="/media" current={pathname.startsWith('/media')}>
                                     <PhotoIcon />
-                                    <SidebarLabel>Media</SidebarLabel>
+                                    <SidebarLabel>{t('nav.media')}</SidebarLabel>
                                 </SidebarItem>
                                 {canManageTaxonomy ? (
                                     <SidebarItem
@@ -283,7 +277,7 @@ export default function Layout() {
                                         }
                                     >
                                         <RectangleStackIcon />
-                                        <SidebarLabel>Organize</SidebarLabel>
+                                        <SidebarLabel>{t('nav.organize')}</SidebarLabel>
                                     </SidebarItem>
                                 ) : null}
                                 {canManageUsers ? (
@@ -292,7 +286,7 @@ export default function Layout() {
                                         current={pathname.startsWith('/settings/users')}
                                     >
                                         <UsersIcon />
-                                        <SidebarLabel>Users</SidebarLabel>
+                                        <SidebarLabel>{t('nav.users')}</SidebarLabel>
                                     </SidebarItem>
                                 ) : null}
                                 {canManageSettings ? (
@@ -300,18 +294,18 @@ export default function Layout() {
                                         href="/settings/integrations"
                                         current={pathname.startsWith('/settings/integrations')}
                                     >
-                                        <PuzzlePieceIcon />
-                                        <SidebarLabel>Integrations</SidebarLabel>
+                                        <BuildingStorefrontIcon />
+                                        <SidebarLabel>{t('nav.integrations')}</SidebarLabel>
                                     </SidebarItem>
                                 ) : null}
                             </SidebarSection>
 
                             {recentPosts.length > 0 && (
                                 <SidebarSection className="max-lg:hidden">
-                                    <SidebarHeading>Recent Posts</SidebarHeading>
+                                    <SidebarHeading>{t('nav.recent_posts')}</SidebarHeading>
                                     {recentPosts.map((post) => (
                                         <SidebarItem key={post.id} href={`/posts/${post.id}`}>
-                                            {post.title ?? 'Untitled'}
+                                            {post.title ?? t('common.untitled')}
                                         </SidebarItem>
                                     ))}
                                 </SidebarSection>
@@ -336,11 +330,7 @@ export default function Layout() {
                                     </span>
                                 </DropdownButton>
                                 <DropdownMenu className="min-w-72" anchor="top start">
-                                    <UserDropdownContent
-                                        mode={mode}
-                                        setMode={setMode}
-                                        onOpenProfile={openProfile}
-                                    />
+                                    <UserDropdownContent mode={mode} setMode={setMode} onOpenProfile={openProfile} />
                                 </DropdownMenu>
                             </Dropdown>
                         </SidebarFooter>

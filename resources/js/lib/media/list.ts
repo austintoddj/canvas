@@ -31,13 +31,13 @@ export const MEDIA_SORT_OPTIONS: { value: MediaListSort; label: string }[] = [
 
 export const MEDIA_SEARCH_DEBOUNCE_MS = 300;
 
-export const MEDIA_EMPTY_STATE = {
-    headline: 'Start using Media',
-    blurb: 'Upload images once, then drop them into posts as featured art or inline figures. Keep alt text and captions in one place so your library stays useful as it grows.',
-    cta: 'Upload images',
+export const MEDIA_EMPTY_STATE_KEYS = {
+    headline: 'media.empty_headline',
+    blurb: 'media.empty_blurb',
+    cta: 'media.empty_cta',
 } as const;
 
-export const MEDIA_FILTERED_EMPTY_MESSAGE = 'No images match your filters.';
+export const MEDIA_FILTERED_EMPTY_MESSAGE = 'No media matches your filters.';
 
 const MIME_FILTER_VALUES = new Set<string>(MEDIA_MIME_FILTERS.map((filter) => filter.value));
 const SORT_VALUES = new Set<string>(MEDIA_SORT_OPTIONS.map((option) => option.value));

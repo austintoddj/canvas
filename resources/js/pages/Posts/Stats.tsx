@@ -9,14 +9,23 @@ import { DescriptionDetails, DescriptionList, DescriptionTerm } from '@/componen
 import { Divider } from '@/components/divider';
 import { Heading, Subheading } from '@/components/heading';
 import { Text, PageDescription, ErrorText } from '@/components/text';
+import { useCanvas } from '@/hooks/useCanvas';
 import { ApiError } from '@/lib/api';
 import { postsApi } from '@/lib/api/posts';
 import { parseDailyGraph, rankedEntries } from '@/lib/analytics';
 import type { PostStatsResponse } from '@/types/api';
 
-function RankedList({ entries, suffix }: { entries: [string, string][]; suffix?: string }) {
+function RankedList({
+    entries,
+    suffix,
+    emptyLabel,
+}: {
+    entries: [string, string][];
+    suffix?: string;
+    emptyLabel: string;
+}) {
     if (entries.length === 0) {
-        return <Text className="text-sm text-zinc-500">No data yet.</Text>;
+        return <Text className="text-sm text-zinc-500">{emptyLabel}</Text>;
     }
 
     return (
@@ -35,11 +44,12 @@ function RankedList({ entries, suffix }: { entries: [string, string][]; suffix?:
 }
 
 export default function PostsStats() {
+    const { t } = useCanvas();
     const { id } = useParams();
     const postId = id ?? null;
     const [stats, setStats] = useState<PostStatsResponse | null>(null);
     const [loading, setLoading] = useState(postId !== null);
-    const [error, setError] = useState<string | null>(postId === null ? 'Post not found.' : null);
+    const [error, setError] = useState<string | null>(postId === null ? t('stats.post_not_found') : null);
 
     useEffect(() => {
         if (postId === null) {
@@ -66,7 +76,7 @@ export default function PostsStats() {
             .catch((error: unknown) => {
                 if (!cancelled) {
                     const notFound = error instanceof ApiError && error.status === 404;
-                    setError(notFound ? 'Stats are available for published posts.' : 'Unable to load post stats.');
+                    setError(notFound ? t('stats.published_only') : t('stats.load_error'));
                     setStats(null);
                 }
             })
@@ -80,12 +90,12 @@ export default function PostsStats() {
             cancelled = true;
             controller.abort();
         };
-    }, [postId]);
+    }, [postId, t]);
 
     if (loading) {
         return (
             <div className="px-8 py-12">
-                <Text className="text-zinc-500">Loading stats…</Text>
+                <Text className="text-zinc-500">{t('stats.loading')}</Text>
             </div>
         );
     }
@@ -93,66 +103,72 @@ export default function PostsStats() {
     if (error !== null || stats === null) {
         return (
             <div className="space-y-4">
-                <ErrorText>{error ?? 'Post not found.'}</ErrorText>
+                <ErrorText>{error ?? t('stats.post_not_found')}</ErrorText>
             </div>
         );
     }
 
-    const title = stats.post.title.trim() === '' ? 'Untitled post' : stats.post.title;
+    const title = stats.post.title.trim() === '' ? t('editor.untitled_post') : stats.post.title;
     const viewsSeries = parseDailyGraph(stats.graph.views);
     const visitsSeries = parseDailyGraph(stats.graph.visits);
 
     return (
         <div className="space-y-8">
             <div className="flex flex-wrap items-center gap-3">
-                <Button href={`/posts/${stats.post.id}`} plain aria-label="Back to post">
+                <Button href={`/posts/${stats.post.id}`} plain aria-label={t('stats.back_to_post')}>
                     <ArrowLeftIcon data-slot="icon" />
                 </Button>
                 <div>
                     <Heading>{title}</Heading>
-                    <PageDescription>Views and visits for this post.</PageDescription>
+                    <PageDescription>{t('stats.description')}</PageDescription>
                 </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <StatCard label="Views this month" value={stats.monthlyViews} change={stats.monthOverMonthViews} />
-                <StatCard label="Visits this month" value={stats.monthlyVisits} change={stats.monthOverMonthVisits} />
-                <StatCard label="All-time views" value={stats.totalViews} />
+                <StatCard
+                    label={t('stats.views_month')}
+                    value={stats.monthlyViews}
+                    change={stats.monthOverMonthViews}
+                />
+                <StatCard
+                    label={t('stats.visits_month')}
+                    value={stats.monthlyVisits}
+                    change={stats.monthOverMonthVisits}
+                />
+                <StatCard label={t('stats.all_time_views')} value={stats.totalViews} />
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
-                <DailyBarChart title="Views (last 30 days)" data={viewsSeries} />
-                <DailyBarChart title="Visits (last 30 days)" data={visitsSeries} />
+                <DailyBarChart title={t('stats.views_30')} data={viewsSeries} />
+                <DailyBarChart title={t('stats.visits_30')} data={visitsSeries} />
             </div>
 
-            <Divider className="mt-10" />
+            <Divider />
 
-            <div className="mt-10 grid gap-10 lg:grid-cols-2">
-                <section>
-                    <Subheading>Top referers</Subheading>
-                    <div className="mt-4">
-                        <RankedList entries={rankedEntries(stats.topReferers)} />
+            <div className="grid gap-8 lg:grid-cols-3">
+                <div>
+                    <Subheading>{t('stats.reading_time')}</Subheading>
+                    <Text className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{stats.readTime}</Text>
+                    <Subheading className="mt-6">{t('stats.popular_times')}</Subheading>
+                    <div className="mt-3">
+                        <RankedList
+                            entries={rankedEntries(stats.popularReadingTimes)}
+                            emptyLabel={t('stats.no_data')}
+                        />
                     </div>
-                </section>
-
-                <section>
-                    <Subheading>Top browsers</Subheading>
-                    <div className="mt-4">
-                        <RankedList entries={rankedEntries(stats.topBrowsers)} />
+                </div>
+                <div>
+                    <Subheading>{t('stats.top_referers')}</Subheading>
+                    <div className="mt-3">
+                        <RankedList entries={rankedEntries(stats.topReferers)} emptyLabel={t('stats.no_data')} />
                     </div>
-                </section>
-
-                <section>
-                    <Subheading>Popular reading times</Subheading>
-                    <div className="mt-4">
-                        <RankedList entries={rankedEntries(stats.popularReadingTimes)} suffix="%" />
+                </div>
+                <div>
+                    <Subheading>{t('stats.top_browsers')}</Subheading>
+                    <div className="mt-3">
+                        <RankedList entries={rankedEntries(stats.topBrowsers)} emptyLabel={t('stats.no_data')} />
                     </div>
-                </section>
-
-                <section>
-                    <Subheading>Reading time</Subheading>
-                    <Text className="mt-4 text-sm text-zinc-700 dark:text-zinc-300">{stats.readTime}</Text>
-                </section>
+                </div>
             </div>
         </div>
     );

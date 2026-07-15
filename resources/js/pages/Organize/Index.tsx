@@ -27,6 +27,7 @@ import { TagsEmptyVisual } from '@/components/tags/TagsEmptyVisual';
 import { TaxonomyDetailDrawer } from '@/components/taxonomy/TaxonomyDetailDrawer';
 import { TopicsEmptyVisual } from '@/components/topics/TopicsEmptyVisual';
 import { Text, PageDescription, ErrorText } from '@/components/text';
+import { useCanvas } from '@/hooks/useCanvas';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { tagsApi } from '@/lib/api/tags';
@@ -84,41 +85,54 @@ function updateOrganizeFilters(
     return next;
 }
 
-const tabCopy = {
-    topics: {
-        singular: 'topic',
-        newLabel: 'New topic',
-        createLabel: 'Create a topic',
-        creatingLabel: 'Creating…',
-        emptyHeadline: 'No topics yet',
-        emptyDescription: 'Topics are broad categories — one per post. Add a few so authors can classify their work.',
-        filteredEmpty: 'No topics match your search.',
-        searchLabel: 'Search topics',
-        loadError: 'Unable to load topics.',
-        createError: 'Unable to create a new topic.',
-        untitled: 'Untitled topic',
-    },
-    tags: {
-        singular: 'tag',
-        newLabel: 'New tag',
-        createLabel: 'Create a tag',
-        creatingLabel: 'Creating…',
-        emptyHeadline: 'No tags yet',
-        emptyDescription: 'Tags group related posts. Authors can add as many as they need while writing.',
-        filteredEmpty: 'No tags match your search.',
-        searchLabel: 'Search tags',
-        loadError: 'Unable to load tags.',
-        createError: 'Unable to create a new tag.',
-        untitled: 'Untitled tag',
-    },
-} as const;
+type TabCopy = {
+    newLabel: string;
+    createLabel: string;
+    creatingLabel: string;
+    emptyHeadline: string;
+    emptyDescription: string;
+    filteredEmpty: string;
+    searchLabel: string;
+    loadError: string;
+    createError: string;
+    untitled: string;
+    deleteTitle: string;
+};
 
 export default function OrganizeIndex() {
+    const { t } = useCanvas();
     const [searchParams, setSearchParams] = useSearchParams();
     const filters = parseOrganizeListFilters(searchParams);
     const detailId = taxonomyDetailId(searchParams);
     const tab = filters.tab;
-    const copy = tabCopy[tab];
+    const copy: TabCopy =
+        tab === 'topics'
+            ? {
+                  newLabel: t('organize.new_topic'),
+                  createLabel: t('organize.create_topic'),
+                  creatingLabel: t('organize.creating'),
+                  emptyHeadline: t('organize.empty_topics_headline'),
+                  emptyDescription: t('organize.empty_topics_blurb'),
+                  filteredEmpty: t('organize.filtered_topics'),
+                  searchLabel: t('organize.search_topics'),
+                  loadError: t('organize.load_topics_error'),
+                  createError: t('organize.create_topic_error'),
+                  untitled: t('organize.untitled_topic'),
+                  deleteTitle: t('organize.delete_confirm_topic'),
+              }
+            : {
+                  newLabel: t('organize.new_tag'),
+                  createLabel: t('organize.create_tag'),
+                  creatingLabel: t('organize.creating'),
+                  emptyHeadline: t('organize.empty_tags_headline'),
+                  emptyDescription: t('organize.empty_tags_blurb'),
+                  filteredEmpty: t('organize.filtered_tags'),
+                  searchLabel: t('organize.search_tags'),
+                  loadError: t('organize.load_tags_error'),
+                  createError: t('organize.create_tag_error'),
+                  untitled: t('organize.untitled_tag'),
+                  deleteTitle: t('organize.delete_confirm_tag'),
+              };
 
     const [searchDraft, setSearchDraft] = useState(filters.search);
     const [syncedSearch, setSyncedSearch] = useState(filters.search);
@@ -324,7 +338,7 @@ export default function OrganizeIndex() {
     return (
         <div className="space-y-8">
             <PageHeader
-                title="Organize"
+                title={t('organize.title')}
                 actions={
                     <Button type="button" color="dark/zinc" disabled={creating} onClick={() => void handleCreate()}>
                         <PlusIcon data-slot="icon" />
@@ -332,12 +346,12 @@ export default function OrganizeIndex() {
                     </Button>
                 }
             >
-                <PageDescription>Topics and tags help readers browse related posts.</PageDescription>
+                <PageDescription>{t('organize.description')}</PageDescription>
             </PageHeader>
 
-            <PillNav value={tab} onChange={setTab} aria-label="Taxonomy type">
-                <PillNavItem value="topics">Topics</PillNavItem>
-                <PillNavItem value="tags">Tags</PillNavItem>
+            <PillNav value={tab} onChange={setTab} aria-label={t('organize.title')}>
+                <PillNavItem value="topics">{t('organize.topics')}</PillNavItem>
+                <PillNavItem value="tags">{t('organize.tags')}</PillNavItem>
             </PillNav>
 
             <div className="flex flex-wrap items-end gap-3">
@@ -530,7 +544,7 @@ export default function OrganizeIndex() {
             />
 
             <Alert open={pendingDelete !== null} onClose={closeDeleteConfirm} size="sm">
-                <AlertTitle>{tab === 'tags' ? 'Delete tag?' : 'Delete topic?'}</AlertTitle>
+                <AlertTitle>{copy.deleteTitle}</AlertTitle>
                 <AlertDescription>
                     Delete{' '}
                     {pendingDelete === null || pendingDelete.name.trim() === ''

@@ -1,4 +1,4 @@
-import { createTranslator, parseTranslations } from '@/lib/i18n';
+import { createTranslator, parseTranslations, type TranslationReplacements } from '@/lib/i18n';
 import {
     canManageSettings,
     canManageTaxonomy,
@@ -24,11 +24,19 @@ export type CanvasPermissions = {
     canViewAllMedia: boolean;
 };
 
+export type Translate = (
+    key: string,
+    replacementsOrFallback?: string | TranslationReplacements,
+    fallback?: string
+) => string;
+
 export type CanvasContextValue = {
     boot: CanvasBoot;
     user: UserResource;
-    t: (key: string, fallback?: string) => string;
+    t: Translate;
     permissions: CanvasPermissions;
+    switchLocale: (locale: string, signal?: AbortSignal) => Promise<void>;
+    setUser: (user: UserResource) => void;
 };
 
 export function buildPermissions(user: UserResource): CanvasPermissions {
@@ -54,5 +62,7 @@ export function buildCanvasContextValue(boot: CanvasBoot): CanvasContextValue {
         user: boot.user,
         t: translator.t,
         permissions: buildPermissions(boot.user),
+        switchLocale: async () => undefined,
+        setUser: () => undefined,
     };
 }

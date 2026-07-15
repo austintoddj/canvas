@@ -24,7 +24,7 @@ class CanvasUserFactory extends Factory
             'avatar' => md5(fake()->unique()->safeEmail()),
             'website' => fake()->optional()->url(),
             'social' => [
-                'twitter' => Str::slug(fake()->userName()),
+                'x' => Str::slug(fake()->userName()),
             ],
             'locale' => 'en',
             'timezone' => 'UTC',

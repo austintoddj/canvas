@@ -6,7 +6,7 @@ import {
     formatMediaBytes,
     formatMediaDimensions,
     isAllowedMediaFile,
-    MEDIA_EMPTY_STATE,
+    MEDIA_EMPTY_STATE_KEYS,
     MEDIA_FILTERED_EMPTY_MESSAGE,
     MEDIA_SEARCH_DEBOUNCE_MS,
     mediaDisplayName,
@@ -84,7 +84,7 @@ describe('media list helpers', () => {
         expect(isAllowedMediaFile(pdf)).toBe(false);
         expect(mediaFilesFromList([jpeg, pdf])).toEqual([jpeg]);
 
-        expect(MEDIA_EMPTY_STATE.cta.toLowerCase()).toContain('upload');
+        expect(MEDIA_EMPTY_STATE_KEYS.cta).toBe('media.empty_cta');
         expect(MEDIA_FILTERED_EMPTY_MESSAGE.toLowerCase()).toContain('match');
     });
 });

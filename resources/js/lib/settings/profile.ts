@@ -2,9 +2,18 @@ import { Role, type RoleValue } from '@/lib/permissions';
 import type { UserStorePayload } from '@/types/api';
 import type { CanvasProfile, UserResource } from '@/types/boot';
 
-export type SocialFieldKey = 'twitter' | 'github' | 'facebook' | 'instagram' | 'linkedin';
+export type SocialFieldKey = 'facebook' | 'instagram' | 'bluesky' | 'x' | 'github' | 'medium';
 
-export const SOCIAL_FIELD_KEYS: SocialFieldKey[] = ['twitter', 'github', 'facebook', 'instagram', 'linkedin'];
+export const SOCIAL_FIELD_KEYS: SocialFieldKey[] = ['facebook', 'instagram', 'bluesky', 'x', 'github', 'medium'];
+
+export const SOCIAL_LABELS: Record<SocialFieldKey, string> = {
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    bluesky: 'Bluesky',
+    x: 'X',
+    github: 'GitHub',
+    medium: 'Medium',
+};
 
 export type ProfileFormState = {
     username: string;
@@ -19,11 +28,12 @@ export type ProfileFormState = {
 
 export function emptySocial(): Record<SocialFieldKey, string> {
     return {
-        twitter: '',
-        github: '',
         facebook: '',
         instagram: '',
-        linkedin: '',
+        bluesky: '',
+        x: '',
+        github: '',
+        medium: '',
     };
 }
 
@@ -104,6 +114,21 @@ export function serializeProfileForm(form: ProfileFormState): string {
     return JSON.stringify(toProfileStorePayload(form));
 }
 
+/** Update only `locale` in a serialized profile payload (instant language switch baseline). */
+export function withSerializedProfileLocale(serialized: string, locale: string): string {
+    try {
+        const data: unknown = JSON.parse(serialized);
+
+        if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+            return serialized;
+        }
+
+        return JSON.stringify({ ...data, locale });
+    } catch {
+        return serialized;
+    }
+}
+
 export type AdminUserFormState = {
     role: RoleValue | null;
 };
@@ -112,10 +137,7 @@ export function adminUserFromResource(user: UserResource): AdminUserFormState {
     const role = user.canvas?.role;
 
     return {
-        role:
-            role === Role.Contributor || role === Role.Editor || role === Role.Admin
-                ? role
-                : null,
+        role: role === Role.Contributor || role === Role.Editor || role === Role.Admin ? role : null,
     };
 }
 

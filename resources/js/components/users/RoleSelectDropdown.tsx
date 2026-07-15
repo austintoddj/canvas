@@ -9,6 +9,7 @@ import {
     DropdownMenu,
     DropdownTrailingIcon,
     dropdownInsetItemClass,
+    selectDropdownTriggerClass,
 } from '@/components/dropdown';
 import type { RoleValue } from '@/lib/permissions';
 import { ROLE_OPTIONS, roleLabel } from '@/lib/users/roles';
@@ -40,7 +41,7 @@ export function RoleSelectDropdown({
                 data-invalid={invalid ? true : undefined}
                 aria-invalid={invalid || undefined}
                 className={clsx(
-                    'w-full cursor-pointer justify-between font-normal',
+                    selectDropdownTriggerClass,
                     selectedLabel === null && 'text-zinc-500 dark:text-zinc-400',
                     invalid && 'border-red-500 dark:border-red-600'
                 )}

@@ -33,7 +33,7 @@ it('allows wildcard rule keys for nested input', function (): void {
         [
             'name' => 'Canvas',
             'social' => [
-                'twitter' => 'canvas',
+                'x' => 'canvas',
             ],
         ],
         $this->admin,
@@ -148,7 +148,7 @@ it('filters rules for precognitive validation requests', function (): void {
         ExampleFormRequest::class,
         [
             'name' => 'Canvas',
-            'social' => ['twitter' => 'canvas'],
+            'social' => ['x' => 'canvas'],
         ],
         $this->admin,
     );

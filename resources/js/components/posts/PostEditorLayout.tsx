@@ -6,6 +6,7 @@ import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
 import { Heading } from '@/components/heading';
 import { Text, ErrorText } from '@/components/text';
+import { useCanvas } from '@/hooks/useCanvas';
 import { isPublished, navSaveStatusLabel, type PostFormState, type PostSaveStatus } from '@/lib/posts/form';
 
 export type PostEditorFocusControls = {
@@ -36,8 +37,13 @@ export default function PostEditorLayout({
     body,
     disabled = false,
 }: PostEditorLayoutProps) {
+    const { t } = useCanvas();
     const published = isPublished(form);
-    const statusLabel = navSaveStatusLabel(saveStatus);
+    const statusLabel = navSaveStatusLabel(saveStatus, {
+        saving: t('common.saving'),
+        saved: t('common.saved'),
+        error: t('editor.save_failed'),
+    });
     const [focusMode, setFocusMode] = useState(false);
 
     useEffect(() => {
@@ -87,15 +93,17 @@ export default function PostEditorLayout({
         >
             <div className="flex min-w-0 items-center gap-3">
                 {!focusMode ? (
-                    <Button href="/posts" plain aria-label="Back to posts">
+                    <Button href="/posts" plain aria-label={t('editor.back_to_posts')}>
                         <ArrowLeftIcon data-slot="icon" />
                     </Button>
                 ) : null}
                 <div className="flex min-w-0 items-center gap-2">
                     <Heading level={2} className="truncate text-lg/7">
-                        {form.title.trim() === '' ? 'Untitled post' : form.title}
+                        {form.title.trim() === '' ? t('editor.untitled_post') : form.title}
                     </Heading>
-                    <Badge color={published ? 'green' : 'amber'}>{published ? 'Published' : 'Draft'}</Badge>
+                    <Badge color={published ? 'green' : 'amber'}>
+                        {published ? t('editor.published_badge') : t('editor.draft_badge')}
+                    </Badge>
                 </div>
             </div>
 
@@ -114,9 +122,14 @@ export default function PostEditorLayout({
                     </Text>
                 ) : null}
                 {published && postId !== null && !focusMode ? (
-                    <Button href={`/posts/${postId}/stats`} plain aria-label="View post stats" title="Stats">
+                    <Button
+                        href={`/posts/${postId}/stats`}
+                        plain
+                        aria-label={t('editor.view_stats')}
+                        title={t('editor.stats')}
+                    >
                         <ChartBarIcon data-slot="icon" />
-                        Stats
+                        {t('editor.stats')}
                     </Button>
                 ) : null}
                 <Button
@@ -124,8 +137,8 @@ export default function PostEditorLayout({
                     outline
                     disabled={disabled}
                     onClick={onOpenSeo}
-                    aria-label="SEO"
-                    title="SEO"
+                    aria-label={t('editor.seo')}
+                    title={t('editor.seo')}
                     data-post-seo-trigger
                 >
                     <GlobeAltIcon data-slot="icon" />
@@ -135,8 +148,8 @@ export default function PostEditorLayout({
                     outline
                     disabled={disabled}
                     onClick={onOpenSettings}
-                    aria-label="Settings"
-                    title="Settings"
+                    aria-label={t('editor.settings')}
+                    title={t('editor.settings')}
                     data-post-settings-trigger
                 >
                     <Cog6ToothIcon data-slot="icon" />
@@ -149,14 +162,14 @@ export default function PostEditorLayout({
         <div className={clsx('mx-auto min-w-0 max-w-3xl space-y-6', focusMode && 'pt-2')}>
             <div>
                 <label htmlFor="post-title" className="sr-only">
-                    Title
+                    {t('editor.title_label')}
                 </label>
                 <input
                     id="post-title"
                     name="title"
                     value={form.title}
                     disabled={disabled}
-                    placeholder="Post title"
+                    placeholder={t('editor.title_placeholder')}
                     aria-invalid={titleError !== undefined}
                     className="block w-full border-0 bg-transparent px-0 py-3 text-3xl font-semibold leading-snug text-zinc-950 placeholder:text-zinc-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50 sm:py-4 sm:text-4xl sm:leading-snug dark:text-white dark:placeholder:text-zinc-500"
                     onChange={(event) => onTitleChange(event.target.value)}

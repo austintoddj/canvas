@@ -10,10 +10,12 @@
                     $href = filter_var($handle, FILTER_VALIDATE_URL)
                         ? $handle
                         : match ($platform) {
-                            'twitter', 'x' => "https://twitter.com/{$handle}",
-                            'github' => "https://github.com/{$handle}",
-                            'linkedin' => "https://linkedin.com/in/{$handle}",
+                            'x' => "https://x.com/{$handle}",
+                            'facebook' => "https://facebook.com/{$handle}",
                             'instagram' => "https://instagram.com/{$handle}",
+                            'bluesky' => "https://bsky.app/profile/{$handle}",
+                            'github' => "https://github.com/{$handle}",
+                            'medium' => "https://medium.com/@{$handle}",
                             default => null,
                         };
                 @endphp

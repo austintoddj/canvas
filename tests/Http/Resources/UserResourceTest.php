@@ -15,7 +15,7 @@ it('transforms a host user with nested canvas data', function (): void {
         'username' => 'writer',
         'summary' => 'Bio',
         'website' => 'https://example.com',
-        'social' => ['twitter' => 'writer'],
+        'social' => ['x' => 'writer'],
     ]);
 
     $payload = UserResource::make($user->load('canvasUser'))->resolve();
@@ -32,7 +32,7 @@ it('transforms a host user with nested canvas data', function (): void {
         'username' => 'writer',
         'summary' => 'Bio',
         'website' => 'https://example.com',
-        'social' => ['twitter' => 'writer'],
+        'social' => ['x' => 'writer'],
         'theme' => 'system',
         'digest' => true,
     ]);

@@ -1,5 +1,6 @@
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
+import { useMemo, useState } from 'react';
 
 import {
     Dropdown,
@@ -9,72 +10,76 @@ import {
     DropdownMenu,
     DropdownTrailingIcon,
     dropdownInsetItemClass,
+    selectDropdownTriggerClass,
+    selectDropdownTriggerWideClass,
 } from '@/components/dropdown';
 import { Description, ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import { Switch, SwitchField } from '@/components/switch';
 import { Text } from '@/components/text';
 import { Textarea } from '@/components/textarea';
+import { SocialLinksEditor } from '@/components/users/SocialLinksEditor';
+import { useCanvas } from '@/hooks/useCanvas';
 import type { LaravelValidationErrors } from '@/lib/api';
-import {
-    SOCIAL_FIELD_KEYS,
-    type ProfileFormState,
-    type SocialFieldKey,
-} from '@/lib/settings/profile';
-
-const SOCIAL_LABELS: Record<SocialFieldKey, string> = {
-    twitter: 'Twitter / X',
-    github: 'GitHub',
-    facebook: 'Facebook',
-    instagram: 'Instagram',
-    linkedin: 'LinkedIn',
-};
+import type { ProfileFormState, SocialFieldKey } from '@/lib/settings/profile';
+import { listTimezones } from '@/lib/timezones';
+import type { LanguageOption } from '@/types/boot';
 
 type AuthorProfileFieldsProps = {
     form: ProfileFormState;
     fieldErrors: LaravelValidationErrors;
-    languageCodes: string[];
+    languages: LanguageOption[];
+    socialEditorKey?: string;
+    localeSwitching?: boolean;
     onPatch: (patch: Partial<ProfileFormState>) => void;
-    onPatchSocial: (key: SocialFieldKey, value: string) => void;
+    onLocaleChange: (locale: string) => void;
     onClearFieldError: (key: string) => void;
 };
 
-function LocaleSelectDropdown({
+function LanguageSelectDropdown({
     value,
     options,
     onChange,
     invalid,
+    disabled,
 }: {
     value: string;
-    options: string[];
+    options: LanguageOption[];
     onChange: (locale: string) => void;
     invalid?: boolean;
+    disabled?: boolean;
 }) {
+    const { t } = useCanvas();
+    const selectedLabel = options.find((option) => option.code === value)?.label ?? value;
+
     return (
         <Dropdown>
             <DropdownButton
                 outline
+                disabled={disabled}
                 data-invalid={invalid ? true : undefined}
                 aria-invalid={invalid || undefined}
+                aria-busy={disabled || undefined}
                 className={clsx(
-                    'w-full cursor-pointer justify-between font-normal',
+                    selectDropdownTriggerClass,
                     invalid && 'border-red-500 dark:border-red-600'
                 )}
             >
-                <span className="min-w-0 truncate text-left">{value || 'Select locale'}</span>
+                <span className="min-w-0 truncate text-left">{selectedLabel || t('profile.select_language')}</span>
                 <ChevronDownIcon data-slot="icon" className="shrink-0" />
             </DropdownButton>
             <DropdownMenu anchor="bottom start" className="z-50 min-w-40 max-w-sm">
-                {options.map((code) => {
-                    const selected = value === code;
+                {options.map((option) => {
+                    const selected = value === option.code;
 
                     return (
                         <DropdownItem
-                            key={code}
-                            onClick={() => onChange(code)}
+                            key={option.code}
+                            onClick={() => onChange(option.code)}
                             className={dropdownInsetItemClass}
+                            disabled={disabled}
                         >
-                            <DropdownLabel inset>{code}</DropdownLabel>
+                            <DropdownLabel inset>{option.label}</DropdownLabel>
                             {selected ? (
                                 <DropdownTrailingIcon inset>
                                     <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
@@ -88,23 +93,127 @@ function LocaleSelectDropdown({
     );
 }
 
+function TimezoneSelectDropdown({
+    value,
+    onChange,
+    invalid,
+}: {
+    value: string;
+    onChange: (timezone: string) => void;
+    invalid?: boolean;
+}) {
+    const { t } = useCanvas();
+    const timezones = useMemo(() => listTimezones(), []);
+    const [query, setQuery] = useState('');
+
+    const filtered = useMemo(() => {
+        const needle = query.trim().toLowerCase();
+
+        if (needle === '') {
+            return timezones;
+        }
+
+        return timezones.filter((zone) => zone.toLowerCase().includes(needle));
+    }, [query, timezones]);
+
+    const options = useMemo(() => {
+        if (value !== '' && !filtered.includes(value) && !timezones.includes(value)) {
+            return [value, ...filtered];
+        }
+
+        if (value !== '' && !filtered.includes(value) && timezones.includes(value)) {
+            return [value, ...filtered.filter((zone) => zone !== value)];
+        }
+
+        return filtered;
+    }, [filtered, timezones, value]);
+
+    return (
+        <Dropdown>
+            <DropdownButton
+                outline
+                data-invalid={invalid ? true : undefined}
+                aria-invalid={invalid || undefined}
+                className={clsx(
+                    selectDropdownTriggerWideClass,
+                    invalid && 'border-red-500 dark:border-red-600'
+                )}
+            >
+                <span className="min-w-0 truncate text-left">{value || t('profile.select_timezone')}</span>
+                <ChevronDownIcon data-slot="icon" className="shrink-0" />
+            </DropdownButton>
+            <DropdownMenu anchor="bottom start" className="z-50 min-w-56 max-w-sm">
+                <div className="sticky top-0 z-10 border-b border-zinc-950/5 bg-white p-2 dark:border-white/10 dark:bg-zinc-900">
+                    <Input
+                        name="timezone-filter"
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder={t('profile.search_timezones')}
+                        autoComplete="off"
+                    />
+                </div>
+                {options.length === 0 ? (
+                    <div className="px-3.5 py-2.5 text-sm text-zinc-500 dark:text-zinc-400">
+                        {t('common.no_matches')}
+                    </div>
+                ) : (
+                    options.slice(0, 100).map((zone) => {
+                        const selected = value === zone;
+
+                        return (
+                            <DropdownItem
+                                key={zone}
+                                onClick={() => {
+                                    onChange(zone);
+                                    setQuery('');
+                                }}
+                                className={dropdownInsetItemClass}
+                            >
+                                <DropdownLabel inset>{zone}</DropdownLabel>
+                                {selected ? (
+                                    <DropdownTrailingIcon inset>
+                                        <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
+                                    </DropdownTrailingIcon>
+                                ) : null}
+                            </DropdownItem>
+                        );
+                    })
+                )}
+            </DropdownMenu>
+        </Dropdown>
+    );
+}
+
 export function AuthorProfileFields({
     form,
     fieldErrors,
-    languageCodes,
+    languages,
+    socialEditorKey,
+    localeSwitching = false,
     onPatch,
-    onPatchSocial,
+    onLocaleChange,
     onClearFieldError,
 }: AuthorProfileFieldsProps) {
+    const { t } = useCanvas();
+
+    function handleSocialChange(social: Record<SocialFieldKey, string>) {
+        onPatch({ social });
+        onClearFieldError('social');
+
+        for (const key of Object.keys(social) as SocialFieldKey[]) {
+            onClearFieldError(`social.${key}`);
+        }
+    }
+
     return (
         <div className="space-y-8">
             <Fieldset>
-                <Legend>Profile</Legend>
-                <Text className="mt-1">Shown on your public author page.</Text>
+                <Legend>{t('profile.legend')}</Legend>
+                <Text className="mt-1">{t('profile.public_help')}</Text>
                 <FieldGroup>
                     <Field>
-                        <Label>Username</Label>
-                        <Description>Your public handle. Letters, numbers, and dashes work best.</Description>
+                        <Label>{t('profile.username')}</Label>
+                        <Description>{t('profile.username_help')}</Description>
                         <Input
                             name="username"
                             value={form.username}
@@ -118,8 +227,8 @@ export function AuthorProfileFields({
                     </Field>
 
                     <Field>
-                        <Label>Bio</Label>
-                        <Description>A short intro shown with your posts.</Description>
+                        <Label>{t('profile.bio')}</Label>
+                        <Description>{t('profile.bio_help')}</Description>
                         <Textarea
                             name="summary"
                             rows={3}
@@ -134,8 +243,8 @@ export function AuthorProfileFields({
                     </Field>
 
                     <Field>
-                        <Label>Avatar URL</Label>
-                        <Description>Leave blank to use your host avatar.</Description>
+                        <Label>{t('profile.avatar_url')}</Label>
+                        <Description>{t('profile.avatar_help')}</Description>
                         <Input
                             name="avatar"
                             type="url"
@@ -151,7 +260,7 @@ export function AuthorProfileFields({
                     </Field>
 
                     <Field>
-                        <Label>Website</Label>
+                        <Label>{t('profile.website')}</Label>
                         <Input
                             name="website"
                             type="url"
@@ -169,65 +278,53 @@ export function AuthorProfileFields({
             </Fieldset>
 
             <Fieldset>
-                <Legend>Social links</Legend>
-                <Text className="mt-1">Optional. Shown on your author page when set.</Text>
-                <FieldGroup>
-                    {SOCIAL_FIELD_KEYS.map((key) => (
-                        <Field key={key}>
-                            <Label>{SOCIAL_LABELS[key]}</Label>
-                            <Input
-                                name={`social.${key}`}
-                                type="url"
-                                value={form.social[key]}
-                                onChange={(event) => onPatchSocial(key, event.target.value)}
-                                invalid={Boolean(fieldErrors[`social.${key}`] || fieldErrors.social)}
-                                placeholder="https://"
-                            />
-                            {fieldErrors[`social.${key}`]?.[0] ? (
-                                <ErrorMessage>{fieldErrors[`social.${key}`][0]}</ErrorMessage>
-                            ) : null}
-                        </Field>
-                    ))}
-                </FieldGroup>
+                <Legend>{t('profile.social_legend')}</Legend>
+                <Text className="mt-1">{t('profile.social_help')}</Text>
+                <SocialLinksEditor
+                    key={socialEditorKey}
+                    social={form.social}
+                    fieldErrors={fieldErrors}
+                    onChange={handleSocialChange}
+                />
             </Fieldset>
 
             <Fieldset>
-                <Legend>Preferences</Legend>
+                <Legend>{t('profile.preferences')}</Legend>
                 <FieldGroup>
                     <Field>
-                        <Label>Locale</Label>
+                        <Label>{t('profile.language')}</Label>
+                        <Description>{t('profile.language_help')}</Description>
                         <div className="mt-3">
-                            <LocaleSelectDropdown
+                            <LanguageSelectDropdown
                                 value={form.locale}
-                                options={languageCodes}
-                                onChange={(locale) => {
-                                    onPatch({ locale });
-                                    onClearFieldError('locale');
-                                }}
+                                options={languages}
+                                onChange={onLocaleChange}
                                 invalid={Boolean(fieldErrors.locale)}
+                                disabled={localeSwitching}
                             />
                         </div>
                         {fieldErrors.locale?.[0] ? <ErrorMessage>{fieldErrors.locale[0]}</ErrorMessage> : null}
                     </Field>
 
                     <Field>
-                        <Label>Timezone</Label>
-                        <Input
-                            name="timezone"
-                            value={form.timezone}
-                            onChange={(event) => {
-                                onPatch({ timezone: event.target.value });
-                                onClearFieldError('timezone');
-                            }}
-                            invalid={Boolean(fieldErrors.timezone)}
-                            placeholder="UTC"
-                        />
+                        <Label>{t('profile.timezone')}</Label>
+                        <Description>{t('profile.timezone_help')}</Description>
+                        <div className="mt-3">
+                            <TimezoneSelectDropdown
+                                value={form.timezone}
+                                onChange={(timezone) => {
+                                    onPatch({ timezone });
+                                    onClearFieldError('timezone');
+                                }}
+                                invalid={Boolean(fieldErrors.timezone)}
+                            />
+                        </div>
                         {fieldErrors.timezone?.[0] ? <ErrorMessage>{fieldErrors.timezone[0]}</ErrorMessage> : null}
                     </Field>
 
                     <SwitchField>
-                        <Label>Weekly digest</Label>
-                        <Description>Get a weekly email of views and new posts.</Description>
+                        <Label>{t('profile.digest')}</Label>
+                        <Description>{t('profile.digest_help')}</Description>
                         <Switch
                             name="digest"
                             checked={form.digest}

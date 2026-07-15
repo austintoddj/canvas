@@ -1,5 +1,6 @@
 <?php
 
+use Canvas\Enums\AiProvider;
 use Canvas\Enums\SettingKey;
 use Canvas\Models\Post;
 use Canvas\Policies\UserPolicy;
@@ -72,4 +73,13 @@ function createPublishedPosts(int|string $userId, int $count = 2): void
 function setUnsplashAccessKey(?string $key): void
 {
     app(SettingsRepository::class)->set(SettingKey::UnsplashAccessKey, $key);
+}
+
+function setAiIntegration(?AiProvider $provider, ?string $key = null, ?string $model = null): void
+{
+    $settings = app(SettingsRepository::class);
+
+    $settings->set(SettingKey::AiProvider, $provider?->value);
+    $settings->set(SettingKey::AiApiKey, $key);
+    $settings->set(SettingKey::AiModel, $model);
 }

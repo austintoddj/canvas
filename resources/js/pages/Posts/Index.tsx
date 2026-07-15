@@ -24,6 +24,7 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/table';
 import { TableListSkeleton } from '@/components/TableListSkeleton';
 import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
+import { useCanvas } from '@/hooks/useCanvas';
 import { usePermissions } from '@/hooks/usePermissions';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { postsApi } from '@/lib/api/posts';
@@ -73,6 +74,7 @@ function updateFilters(current: URLSearchParams, patch: Partial<PostsListFilters
 
 export default function PostsIndex() {
     const navigate = useNavigate();
+    const { t } = useCanvas();
     const { canViewAllPosts } = usePermissions();
     const [searchParams, setSearchParams] = useSearchParams();
     const filters = parsePostsListFilters(searchParams);
@@ -105,7 +107,7 @@ export default function PostsIndex() {
             })
             .catch(() => {
                 if (!cancelled) {
-                    setError('Unable to load posts.');
+                    setError(t('posts.load_error'));
                     setResponse(null);
                 }
             })
@@ -119,7 +121,7 @@ export default function PostsIndex() {
             cancelled = true;
             controller.abort();
         };
-    }, [queryKey, searchParams]);
+    }, [queryKey, searchParams, t]);
 
     function setFilters(patch: Partial<PostsListFilters>, resetPage = false) {
         setSearchParams(updateFilters(searchParams, patch, resetPage));
@@ -146,7 +148,7 @@ export default function PostsIndex() {
         try {
             await postsApi.destroy(postId);
             setPendingDelete(null);
-            toast.success('Post deleted.');
+            toast.success(t('editor.deleted'));
 
             setResponse((current) => {
                 if (current === null) {
@@ -166,7 +168,7 @@ export default function PostsIndex() {
                 setSearchParams(updateFilters(searchParams, { page: filters.page - 1 }));
             }
         } catch {
-            toast.error('Unable to delete this post.');
+            toast.error(t('editor.delete_error'));
         } finally {
             setDeleting(false);
         }
@@ -178,36 +180,40 @@ export default function PostsIndex() {
     const refreshing = isRefreshing(loading, itemCount);
     const isEmpty = shouldShowEmpty(loading, itemCount);
     const { animateEmpty, animateContent } = useAsyncReveal(loading, itemCount);
-    const emptyHeadline = filters.tab === 'draft' ? 'No drafts yet' : 'No published posts yet';
-    const emptyDescription =
-        filters.tab === 'draft'
-            ? 'Drafts stay private until you publish them.'
-            : 'Nothing published yet. Drafts live on the other tab.';
+    const emptyHeadline =
+        filters.tab === 'draft' ? t('posts.empty_drafts_headline') : t('posts.empty_published_headline');
+    const emptyDescription = filters.tab === 'draft' ? t('posts.empty_drafts_blurb') : t('posts.empty_published_blurb');
     const deleteLabel =
-        pendingDelete === null || pendingDelete.title.trim() === '' ? 'this post' : `“${pendingDelete.title.trim()}”`;
+        pendingDelete === null || pendingDelete.title.trim() === ''
+            ? t('posts.this_post')
+            : `“${pendingDelete.title.trim()}”`;
 
     return (
         <div className="space-y-8">
             <PageHeader
-                title="Posts"
+                title={t('posts.title')}
                 actions={
                     <Button href="/posts/new" color="dark/zinc">
                         <PlusIcon data-slot="icon" />
-                        New post
+                        {t('posts.new')}
                     </Button>
                 }
             >
-                <PageDescription>All your drafts and published posts.</PageDescription>
+                <PageDescription>{t('posts.description')}</PageDescription>
             </PageHeader>
 
             <div className="flex flex-wrap items-center justify-between gap-4">
-                <PillNav value={filters.tab} onChange={(tab) => setFilters({ tab }, true)} aria-label="Post status">
+                <PillNav
+                    value={filters.tab}
+                    onChange={(tab) => setFilters({ tab }, true)}
+                    aria-label={t('posts.type_label')}
+                >
                     <PillNavItem value="published">
-                        Published
+                        {t('posts.type_published')}
                         {response ? <Badge color="zinc">{response.publishedCount}</Badge> : null}
                     </PillNavItem>
                     <PillNavItem value="draft">
-                        Drafts
+                        {t('posts.type_drafts')}
                         {response ? <Badge color="zinc">{response.draftCount}</Badge> : null}
                     </PillNavItem>
                 </PillNav>
@@ -216,10 +222,10 @@ export default function PostsIndex() {
                     <PillNav
                         value={filters.scope}
                         onChange={(scope) => setFilters({ scope }, true)}
-                        aria-label="Post author scope"
+                        aria-label={t('posts.scope_label')}
                     >
-                        <PillNavItem value="user">Mine</PillNavItem>
-                        <PillNavItem value="all">All authors</PillNavItem>
+                        <PillNavItem value="user">{t('posts.scope_mine')}</PillNavItem>
+                        <PillNavItem value="all">{t('posts.scope_all')}</PillNavItem>
                     </PillNav>
                 ) : null}
             </div>
@@ -237,7 +243,7 @@ export default function PostsIndex() {
                         action={
                             <Button href="/posts/new" color="dark/zinc">
                                 <PlusIcon data-slot="icon" />
-                                Create a post
+                                {t('posts.empty_cta')}
                             </Button>
                         }
                     />
@@ -343,7 +349,7 @@ export default function PostsIndex() {
             ) : null}
 
             <Alert open={pendingDelete !== null} onClose={closeDeleteConfirm} size="sm">
-                <AlertTitle>Delete post?</AlertTitle>
+                <AlertTitle>{t('editor.delete_title')}</AlertTitle>
                 <AlertDescription>Delete {deleteLabel}? This cannot be undone.</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>

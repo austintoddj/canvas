@@ -32,7 +32,7 @@ it('stores profile columns on canvas_users', function (): void {
         'avatar' => 'avatar-hash',
         'website' => 'https://example.com',
         'social' => [
-            'twitter' => 'writer',
+            'x' => 'writer',
         ],
         'locale' => 'en',
         'timezone' => 'America/Chicago',
@@ -43,7 +43,7 @@ it('stores profile columns on canvas_users', function (): void {
     expect($canvasUser->avatar)->toBe('avatar-hash');
     expect($canvasUser->website)->toBe('https://example.com');
     expect($canvasUser->social)->toBe([
-        'twitter' => 'writer',
+        'x' => 'writer',
     ]);
     expect($canvasUser->locale)->toBe('en');
     expect($canvasUser->timezone)->toBe('America/Chicago');

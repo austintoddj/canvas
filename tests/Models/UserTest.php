@@ -2,6 +2,7 @@
 
 use Canvas\Models\CanvasUser;
 use Canvas\Support\Gravatar;
+use Canvas\Support\Localization;
 use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -73,5 +74,5 @@ it('computes the default locale attribute from canvas_users', function (): void 
 
     $user->refresh();
 
-    expect($user->defaultLocale)->toBe(config('app.locale'));
+    expect($user->defaultLocale)->toBe(Localization::resolveLocale(null));
 });

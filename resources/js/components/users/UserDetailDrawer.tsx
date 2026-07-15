@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
 import { Avatar } from '@/components/avatar';
@@ -20,11 +20,12 @@ import {
     serializeProfileForm,
     toAdminUserStorePayload,
     toProfileStorePayload,
+    withSerializedProfileLocale,
     type AdminUserFormState,
     type ProfileFormState,
-    type SocialFieldKey,
 } from '@/lib/settings/profile';
 import { toast } from '@/lib/toast';
+import { defaultTimezone } from '@/lib/timezones';
 import { roleLabel, userInitials } from '@/lib/users/roles';
 import type { UserResource } from '@/types/boot';
 
@@ -37,7 +38,7 @@ type UserDetailDrawerProps = {
 };
 
 export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: UserDetailDrawerProps) {
-    const { boot, user: currentUser } = useCanvas();
+    const { boot, user: currentUser, t, switchLocale, setUser: setBootUser } = useCanvas();
 
     const [user, setUser] = useState<UserResource | null>(null);
     const [accessForm, setAccessForm] = useState<AdminUserFormState | null>(null);
@@ -49,6 +50,9 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
     const [revoking, setRevoking] = useState(false);
     const [confirmRevokeOpen, setConfirmRevokeOpen] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<LaravelValidationErrors>({});
+    const [localeSwitching, setLocaleSwitching] = useState(false);
+    const localeAbortRef = useRef<AbortController | null>(null);
+    const persistedLocaleRef = useRef<string | null>(null);
 
     const isSelf = user !== null && user.id === currentUser.id;
 
@@ -74,6 +78,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
             setAccessForm(null);
             setProfileForm(null);
             setBaseline('');
+            setLocaleSwitching(false);
         });
 
         usersApi
@@ -88,12 +93,13 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
 
                 if (self) {
                     const nextProfile = profileFromUser(fresh, {
-                        locale: boot.languageCodes[0] ?? 'en',
-                        timezone: boot.timezone,
+                        locale: boot.defaultLocale,
+                        timezone: defaultTimezone(boot.appTimezone),
                     });
                     setProfileForm(nextProfile);
                     setAccessForm(null);
                     setBaseline(serializeProfileForm(nextProfile));
+                    persistedLocaleRef.current = nextProfile.locale;
                 } else {
                     const nextAccess = adminUserFromResource(fresh);
                     setAccessForm(nextAccess);
@@ -103,7 +109,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
             })
             .catch(() => {
                 if (!cancelled) {
-                    setError('Unable to load this user.');
+                    setError(t('users.load_user_error'));
                 }
             })
             .finally(() => {
@@ -116,7 +122,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
             cancelled = true;
             controller.abort();
         };
-    }, [boot.languageCodes, boot.timezone, currentUser.id, open, userId]);
+    }, [boot.appTimezone, boot.defaultLocale, currentUser.id, open, t, userId]);
 
     const isDirty =
         isSelf && profileForm !== null
@@ -126,16 +132,12 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
               : false;
 
     const showForm =
-        !loading &&
-        error === null &&
-        user !== null &&
-        (isSelf ? profileForm !== null : accessForm !== null);
+        !loading && error === null && user !== null && (isSelf ? profileForm !== null : accessForm !== null);
 
-    const title = loading ? 'User' : (user?.name ?? 'User');
+    const title = loading ? t('users.user_heading') : (user?.name ?? t('users.user_heading'));
     const postsCount = user?.posts_count ?? 0;
     const postsLabel = `${postsCount.toLocaleString()} ${postsCount === 1 ? 'post' : 'posts'}`;
-    const roleDisplay =
-        user !== null ? roleLabel(user.canvas?.role ?? null, boot.roles) : null;
+    const roleDisplay = user !== null ? roleLabel(user.canvas?.role ?? null, boot.roles) : null;
 
     function setRole(role: RoleValue) {
         setAccessForm((current) => (current === null ? current : { ...current, role }));
@@ -154,25 +156,6 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
         setProfileForm((current) => (current === null ? current : { ...current, ...patch }));
     }
 
-    function patchSocial(key: SocialFieldKey, value: string) {
-        setProfileForm((current) => {
-            if (current === null) {
-                return current;
-            }
-
-            return {
-                ...current,
-                social: { ...current.social, [key]: value },
-            };
-        });
-        setFieldErrors((current) => {
-            const next = { ...current };
-            delete next[`social.${key}`];
-            delete next.social;
-            return next;
-        });
-    }
-
     function clearFieldError(key: string) {
         setFieldErrors((current) => {
             if (current[key] === undefined) {
@@ -185,8 +168,73 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
         });
     }
 
+    async function handleLocaleChange(locale: string) {
+        if (userId === null || profileForm === null || !isSelf || saving) {
+            return;
+        }
+
+        if (locale === profileForm.locale) {
+            return;
+        }
+
+        const fallbackLocale = persistedLocaleRef.current ?? profileForm.locale;
+        const previousBaseline = baseline;
+
+        patchProfile({ locale });
+        clearFieldError('locale');
+        setBaseline((current) => withSerializedProfileLocale(current, locale));
+
+        localeAbortRef.current?.abort();
+        const controller = new AbortController();
+        localeAbortRef.current = controller;
+        setLocaleSwitching(true);
+
+        try {
+            await switchLocale(locale, controller.signal);
+
+            if (controller.signal.aborted) {
+                return;
+            }
+
+            const response = await usersApi.store(userId, { locale }, controller.signal);
+
+            if (controller.signal.aborted) {
+                return;
+            }
+
+            persistedLocaleRef.current = locale;
+            setUser(response.user);
+            setBootUser(response.user);
+            onSaved?.(response.user);
+        } catch (localeError) {
+            if (controller.signal.aborted) {
+                return;
+            }
+
+            patchProfile({ locale: fallbackLocale });
+            setBaseline(withSerializedProfileLocale(previousBaseline, fallbackLocale));
+
+            if (localeError instanceof ValidationError) {
+                setFieldErrors(localeError.errors);
+            }
+
+            try {
+                await switchLocale(fallbackLocale);
+            } catch {
+                // UI may stay on the attempted locale until the next successful switch or reload.
+            }
+
+            toast.error(t('users.save_profile_error'));
+        } finally {
+            if (localeAbortRef.current === controller) {
+                localeAbortRef.current = null;
+                setLocaleSwitching(false);
+            }
+        }
+    }
+
     async function handleSave() {
-        if (userId === null || saving || loading || !showForm) {
+        if (userId === null || saving || loading || localeSwitching || !showForm) {
             return;
         }
 
@@ -198,13 +246,15 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
             if (isSelf && profileForm !== null) {
                 const response = await usersApi.store(userId, toProfileStorePayload(profileForm));
                 const nextProfile = profileFromUser(response.user, {
-                    locale: boot.languageCodes[0] ?? 'en',
-                    timezone: boot.timezone,
+                    locale: boot.defaultLocale,
+                    timezone: defaultTimezone(boot.appTimezone),
                 });
                 setUser(response.user);
+                setBootUser(response.user);
                 setProfileForm(nextProfile);
                 setBaseline(serializeProfileForm(nextProfile));
-                toast.success('Profile saved.');
+                persistedLocaleRef.current = nextProfile.locale;
+                toast.success(t('users.profile_saved'));
                 onSaved?.(response.user);
             } else if (!isSelf && accessForm !== null) {
                 const response = await usersApi.store(userId, toAdminUserStorePayload(accessForm));
@@ -212,16 +262,16 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                 setUser(response.user);
                 setAccessForm(nextAccess);
                 setBaseline(serializeAdminUserForm(nextAccess));
-                toast.success('Access updated.');
+                toast.success(t('users.access_updated'));
                 onSaved?.(response.user);
             }
         } catch (saveError) {
             if (saveError instanceof ValidationError) {
                 setFieldErrors(saveError.errors);
-                toast.error('Please fix the highlighted fields.');
+                toast.error(t('common.please_fix_fields'));
             } else {
-                setError(isSelf ? 'Unable to save your profile.' : 'Unable to save this user.');
-                toast.error(isSelf ? 'Unable to save your profile.' : 'Unable to save this user.');
+                setError(isSelf ? t('users.save_profile_error') : t('users.save_user_error'));
+                toast.error(isSelf ? t('users.save_profile_error') : t('users.save_user_error'));
             }
         } finally {
             setSaving(false);
@@ -258,7 +308,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
             onRevoked?.(user.id);
             onClose();
         } catch {
-            toast.error('Unable to revoke access.');
+            toast.error(t('users.revoke_error'));
             setRevoking(false);
             setConfirmRevokeOpen(false);
         }
@@ -289,13 +339,13 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                                 <span />
                             )}
                             <div className="flex flex-wrap items-center gap-2">
-                                <Button type="button" plain disabled={saving || revoking} onClick={onClose}>
+                                <Button type="button" plain disabled={saving || revoking || localeSwitching} onClick={onClose}>
                                     Cancel
                                 </Button>
                                 <Button
                                     type="button"
                                     color="dark/zinc"
-                                    disabled={loading || saving || revoking || !isDirty || !showForm}
+                                    disabled={loading || saving || revoking || localeSwitching || !isDirty || !showForm}
                                     onClick={() => void handleSave()}
                                 >
                                     {saving ? 'Saving…' : isSelf ? 'Save profile' : 'Save'}
@@ -338,11 +388,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
 
                             <div className="flex items-center gap-4 rounded-2xl border border-zinc-950/10 bg-zinc-950/[0.02] p-4 dark:border-white/10 dark:bg-white/[0.03]">
                                 <Avatar
-                                    src={
-                                        isSelf
-                                            ? user.avatar_url || profileForm?.avatar || null
-                                            : user.avatar_url
-                                    }
+                                    src={isSelf ? user.avatar_url || profileForm?.avatar || null : user.avatar_url}
                                     initials={userInitials(user.name)}
                                     className="size-14"
                                     alt=""
@@ -367,9 +413,13 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                                 <AuthorProfileFields
                                     form={profileForm}
                                     fieldErrors={fieldErrors}
-                                    languageCodes={boot.languageCodes}
+                                    languages={boot.languages}
+                                    socialEditorKey={baseline}
+                                    localeSwitching={localeSwitching}
                                     onPatch={patchProfile}
-                                    onPatchSocial={patchSocial}
+                                    onLocaleChange={(locale) => {
+                                        void handleLocaleChange(locale);
+                                    }}
                                     onClearFieldError={clearFieldError}
                                 />
                             ) : null}
@@ -383,9 +433,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                                         labels={boot.roles}
                                         invalid={Boolean(fieldErrors.role)}
                                     />
-                                    {fieldErrors.role?.[0] ? (
-                                        <ErrorMessage>{fieldErrors.role[0]}</ErrorMessage>
-                                    ) : null}
+                                    {fieldErrors.role?.[0] ? <ErrorMessage>{fieldErrors.role[0]}</ErrorMessage> : null}
                                 </div>
                             ) : null}
                         </div>

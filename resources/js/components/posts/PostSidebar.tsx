@@ -10,10 +10,12 @@ import {
     DropdownMenu,
     DropdownTrailingIcon,
     dropdownInsetItemClass,
+    selectDropdownTriggerClass,
 } from '@/components/dropdown';
 import { Description, ErrorMessage, Field, Fieldset, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import { Textarea } from '@/components/textarea';
+import { useCanvas } from '@/hooks/useCanvas';
 import { isExistingTaxonomy, type PostFormState } from '@/lib/posts/form';
 import type { LaravelValidationErrors } from '@/lib/api';
 import type { TaxonomyOption } from '@/types/api';
@@ -46,7 +48,8 @@ function TaxonomySelectButton({
             outline
             disabled={disabled}
             className={clsx(
-                'mt-3 w-full cursor-pointer justify-between font-normal',
+                selectDropdownTriggerClass,
+                'mt-3',
                 label === null && 'text-zinc-500 dark:text-zinc-400'
             )}
         >
@@ -88,6 +91,7 @@ export default function PostSidebar({
     fieldErrors,
     disabled = false,
 }: PostSidebarProps) {
+    const { t } = useCanvas();
     const canvasPath = (window.Canvas?.path ?? '/canvas').replace(/\/$/, '');
     const slugPreview = form.slug === '' ? '…' : form.slug;
 
@@ -112,7 +116,7 @@ export default function PostSidebar({
     return (
         <Fieldset className="space-y-6">
             <Field className="min-w-0">
-                <Label>Slug</Label>
+                <Label>{t('editor.slug')}</Label>
                 <Description className="break-all">{`${canvasPath}/posts/${slugPreview}`}</Description>
                 <Input
                     name="slug"
@@ -130,8 +134,8 @@ export default function PostSidebar({
             </Field>
 
             <Field>
-                <Label>Summary</Label>
-                <Description>A short excerpt shown in lists and previews.</Description>
+                <Label>{t('editor.summary')}</Label>
+                <Description>{t('editor.summary_help')}</Description>
                 <Textarea
                     name="summary"
                     rows={3}
@@ -147,22 +151,22 @@ export default function PostSidebar({
             </Field>
 
             <Field className="min-w-0">
-                <Label>Topic</Label>
-                <Description>One category for this post. Create topics in Organize.</Description>
+                <Label>{t('editor.topic')}</Label>
+                <Description>{t('editor.topic_help')}</Description>
                 <Dropdown>
                     <TaxonomySelectButton
                         label={form.topic?.name ?? null}
-                        emptyLabel="Select a topic"
+                        emptyLabel={t('editor.select_topic')}
                         disabled={disabled}
                     />
                     <DropdownMenu anchor="bottom start" className="z-50 min-w-56 max-w-sm">
                         <TaxonomyMenuItem
-                            label="No topic"
+                            label={t('editor.no_topic')}
                             selected={form.topic === null}
                             onClick={() => setTopic(null)}
                         />
                         {availableTopics.length === 0 ? (
-                            <TaxonomyMenuItem label="No topics yet" disabled onClick={() => undefined} />
+                            <TaxonomyMenuItem label={t('editor.no_topics_yet')} disabled onClick={() => undefined} />
                         ) : (
                             availableTopics.map((topic) => (
                                 <TaxonomyMenuItem
@@ -178,8 +182,8 @@ export default function PostSidebar({
             </Field>
 
             <Field className="min-w-0">
-                <Label>Tags</Label>
-                <Description>Attach existing tags. Create tags in Organize.</Description>
+                <Label>{t('editor.tags')}</Label>
+                <Description>{t('editor.tags_help')}</Description>
                 {form.tags.length > 0 ? (
                     <div className="mt-3 flex flex-wrap gap-2">
                         {form.tags.map((tag) => {
@@ -191,13 +195,13 @@ export default function PostSidebar({
                                     color={isNew ? 'amber' : 'zinc'}
                                     disabled={disabled}
                                     onClick={() => removeTag(tag.slug)}
-                                    title={isNew ? 'Unknown tag — remove or manage in Organize' : 'Remove tag'}
+                                    title={isNew ? t('editor.unknown_tag') : t('editor.remove_tag')}
                                     data-pending-taxonomy={isNew ? 'tag' : undefined}
                                 >
                                     {tag.name}
                                     {isNew ? (
                                         <span className="ml-1 text-[0.65rem] font-medium uppercase tracking-wide opacity-80">
-                                            new
+                                            {t('editor.new_badge')}
                                         </span>
                                     ) : null}
                                     <span aria-hidden="true" className="ml-1 text-zinc-400">
@@ -211,13 +215,15 @@ export default function PostSidebar({
                 <Dropdown>
                     <TaxonomySelectButton
                         label={null}
-                        emptyLabel="Add a tag"
+                        emptyLabel={t('editor.add_tag')}
                         disabled={disabled || tagChoices.length === 0}
                     />
                     <DropdownMenu anchor="bottom start" className="z-50 min-w-56 max-w-sm">
                         {tagChoices.length === 0 ? (
                             <TaxonomyMenuItem
-                                label={availableTags.length === 0 ? 'No tags yet' : 'All tags attached'}
+                                label={
+                                    availableTags.length === 0 ? t('editor.no_tags_yet') : t('editor.all_tags_attached')
+                                }
                                 disabled
                                 onClick={() => undefined}
                             />

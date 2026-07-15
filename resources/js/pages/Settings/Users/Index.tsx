@@ -60,7 +60,7 @@ function roleBadgeColor(role: number | null | undefined): 'zinc' | 'blue' | 'amb
 }
 
 export default function SettingsUsersIndex() {
-    const { boot } = useCanvas();
+    const { boot, t } = useCanvas();
     const currentUserId = boot.user.id;
     const [searchParams, setSearchParams] = useSearchParams();
     const filters = parseUsersListFilters(searchParams);
@@ -93,7 +93,7 @@ export default function SettingsUsersIndex() {
             })
             .catch(() => {
                 if (!cancelled) {
-                    setError('Unable to load users.');
+                    setError(t('users.load_error'));
                     setResponse(null);
                 }
             })
@@ -107,7 +107,7 @@ export default function SettingsUsersIndex() {
             cancelled = true;
             controller.abort();
         };
-    }, [filters.page]);
+    }, [filters.page, t]);
 
     async function reloadUsers() {
         try {
@@ -115,7 +115,7 @@ export default function SettingsUsersIndex() {
             setResponse(data);
             setError(null);
         } catch {
-            setError('Unable to load users.');
+            setError(t('users.load_error'));
             setResponse(null);
         }
     }
@@ -181,7 +181,7 @@ export default function SettingsUsersIndex() {
                 void reloadUsers();
             }
         } catch {
-            toast.error('Unable to revoke access.');
+            toast.error(t('users.revoke_error'));
         } finally {
             setRevoking(false);
         }
@@ -196,15 +196,15 @@ export default function SettingsUsersIndex() {
     return (
         <div className="space-y-8">
             <PageHeader
-                title="Users"
+                title={t('users.title')}
                 actions={
                     <Button type="button" color="dark/zinc" onClick={() => setGrantOpen(true)}>
                         <PlusIcon data-slot="icon" />
-                        Invite
+                        {t('users.invite')}
                     </Button>
                 }
             >
-                <PageDescription>People with access to Canvas and their roles.</PageDescription>
+                <PageDescription>{t('users.description')}</PageDescription>
             </PageHeader>
 
             {error ? <ErrorText>{error}</ErrorText> : null}
@@ -214,13 +214,13 @@ export default function SettingsUsersIndex() {
             ) : isEmpty ? (
                 <EmptyStateReveal animate={animateEmpty}>
                     <EmptyState
-                        headline="No Canvas users"
-                        description="Users show up here once they have a Canvas role. Look up an existing host account by email or ID to invite them."
+                        headline={t('users.empty_headline')}
+                        description={t('users.empty_blurb')}
                         visual={<UsersEmptyVisual />}
                         action={
                             <Button type="button" color="dark/zinc" onClick={() => setGrantOpen(true)}>
                                 <PlusIcon data-slot="icon" />
-                                Invite
+                                {t('users.invite')}
                             </Button>
                         }
                     />
@@ -382,7 +382,7 @@ export default function SettingsUsersIndex() {
             />
 
             <Alert open={pendingRevoke !== null} onClose={closeRevokeConfirm} size="sm">
-                <AlertTitle>Revoke access?</AlertTitle>
+                <AlertTitle>{t('users.revoke_title')}</AlertTitle>
                 <AlertDescription>
                     Revoke Canvas access for {pendingRevoke?.name ?? 'this user'}? They will no longer be able to use
                     Canvas until invited again.

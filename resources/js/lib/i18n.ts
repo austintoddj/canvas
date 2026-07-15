@@ -1,7 +1,9 @@
 export type TranslationDictionary = Record<string, string>;
 
+export type TranslationReplacements = Record<string, string | number>;
+
 export type Translator = {
-    t: (key: string, fallback?: string) => string;
+    t: (key: string, replacementsOrFallback?: string | TranslationReplacements, fallback?: string) => string;
     dictionary: TranslationDictionary;
 };
 
@@ -25,17 +27,38 @@ export function parseTranslations(json: string): TranslationDictionary {
     }
 }
 
+export function interpolate(template: string, replacements?: TranslationReplacements): string {
+    if (replacements === undefined) {
+        return template;
+    }
+
+    return template.replace(/:([A-Za-z_][A-Za-z0-9_]*)/g, (match, name: string) => {
+        if (Object.prototype.hasOwnProperty.call(replacements, name)) {
+            return String(replacements[name]);
+        }
+
+        return match;
+    });
+}
+
 export function createTranslator(dictionary: TranslationDictionary): Translator {
     return {
         dictionary,
-        t(key: string, fallback?: string) {
+        t(key: string, replacementsOrFallback?: string | TranslationReplacements, fallback?: string) {
             const value = dictionary[key];
+            let resolved: string;
+            let replacements: TranslationReplacements | undefined;
 
-            if (value !== undefined && value !== '') {
-                return value;
+            if (typeof replacementsOrFallback === 'string') {
+                resolved = value !== undefined && value !== '' ? value : replacementsOrFallback;
+            } else if (replacementsOrFallback !== undefined) {
+                replacements = replacementsOrFallback;
+                resolved = value !== undefined && value !== '' ? value : (fallback ?? key);
+            } else {
+                resolved = value !== undefined && value !== '' ? value : (fallback ?? key);
             }
 
-            return fallback ?? key;
+            return interpolate(resolved, replacements);
         },
     };
 }
@@ -54,6 +77,6 @@ export function getTranslator(): Translator {
     return activeTranslator;
 }
 
-export function t(key: string, fallback?: string): string {
-    return getTranslator().t(key, fallback);
+export function t(key: string, replacementsOrFallback?: string | TranslationReplacements, fallback?: string): string {
+    return getTranslator().t(key, replacementsOrFallback, fallback);
 }

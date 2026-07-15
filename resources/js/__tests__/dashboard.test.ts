@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-    DASHBOARD_EMPTY_STATE,
+    DASHBOARD_EMPTY_STATE_KEYS,
     dashboardStatsParams,
     isZeroActivity,
     mapDashboardInsights,
@@ -24,7 +24,10 @@ describe('dashboard helpers', () => {
                 visits: JSON.stringify({ '2026-07-01': 2, '2026-07-02': 3 }),
             },
         };
-        const presentation = mapDashboardInsights(insights);
+        const presentation = mapDashboardInsights(insights, {
+            views: 'Views (last 30 days)',
+            visits: 'Visits (last 30 days)',
+        });
 
         expect(presentation.totalActivity).toBe(17);
         expect(presentation.cards).toEqual([
@@ -40,6 +43,6 @@ describe('dashboard helpers', () => {
         });
         expect(isZeroActivity(empty)).toBe(true);
         expect(isZeroActivity(presentation)).toBe(false);
-        expect(DASHBOARD_EMPTY_STATE.cta.toLowerCase()).toContain('post');
+        expect(DASHBOARD_EMPTY_STATE_KEYS.cta).toBe('dashboard.empty_cta');
     });
 });

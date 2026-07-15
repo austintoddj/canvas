@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 import type { Media } from '@/types/api';
 
 export type MediaUploadSuccess = {
@@ -38,7 +39,7 @@ export async function uploadMediaFiles(files: File[], upload: MediaUploadFn): Pr
             results.push({
                 status: 'error',
                 file,
-                message: error instanceof Error ? error.message : 'Upload failed.',
+                message: error instanceof Error ? error.message : t('media.upload_failed'),
             });
         }
     }
@@ -64,12 +65,11 @@ export function summarizeMediaUploads(results: MediaUploadResult[]): MediaUpload
 
     if (failed.length === 0) {
         const count = succeeded.length;
-        const noun = count === 1 ? 'image' : 'images';
 
         return {
             succeeded,
             failed,
-            message: `${count} ${noun} uploaded.`,
+            message: count === 1 ? t('media.uploaded_count', { count }) : t('media.uploaded_count_other', { count }),
             tone: 'success',
         };
     }
@@ -79,12 +79,13 @@ export function summarizeMediaUploads(results: MediaUploadResult[]): MediaUpload
         .map((item) => `${item.name}: ${item.message}`)
         .join('; ');
     const extra = failed.length > 3 ? ` (+${failed.length - 3} more)` : '';
+    const detail = `${failureDetail}${extra}`;
 
     if (succeeded.length === 0) {
         return {
             succeeded,
             failed,
-            message: `Upload failed. ${failureDetail}${extra}`,
+            message: t('media.upload_failed_detail', { detail }),
             tone: 'error',
         };
     }
@@ -92,7 +93,11 @@ export function summarizeMediaUploads(results: MediaUploadResult[]): MediaUpload
     return {
         succeeded,
         failed,
-        message: `${succeeded.length} uploaded, ${failed.length} failed. ${failureDetail}${extra}`,
+        message: t('media.upload_partial', {
+            succeeded: succeeded.length,
+            failed: failed.length,
+            detail,
+        }),
         tone: 'warning',
     };
 }
@@ -159,7 +164,7 @@ export async function destroyMediaItems(ids: string[], destroy: MediaDestroyFn):
             results.push({
                 status: 'error',
                 id,
-                message: error instanceof Error ? error.message : 'Delete failed.',
+                message: error instanceof Error ? error.message : t('media.delete_error'),
             });
         }
     }
@@ -179,12 +184,11 @@ export function summarizeMediaDestroys(results: MediaDestroyResult[]): MediaDest
 
     if (failed.length === 0) {
         const count = succeeded.length;
-        const noun = count === 1 ? 'image' : 'images';
 
         return {
             succeeded,
             failed,
-            message: `${count} ${noun} deleted.`,
+            message: count === 1 ? t('media.deleted_count', { count }) : t('media.deleted_count_other', { count }),
             tone: 'success',
         };
     }
@@ -193,7 +197,10 @@ export function summarizeMediaDestroys(results: MediaDestroyResult[]): MediaDest
         return {
             succeeded,
             failed,
-            message: `Unable to delete ${failed.length === 1 ? 'this image' : `${failed.length} images`}.`,
+            message:
+                failed.length === 1
+                    ? t('media.delete_failed')
+                    : t('media.delete_failed_other', { count: failed.length }),
             tone: 'error',
         };
     }
@@ -201,7 +208,10 @@ export function summarizeMediaDestroys(results: MediaDestroyResult[]): MediaDest
     return {
         succeeded,
         failed,
-        message: `${succeeded.length} deleted, ${failed.length} failed.`,
+        message: t('media.delete_partial', {
+            succeeded: succeeded.length,
+            failed: failed.length,
+        }),
         tone: 'warning',
     };
 }

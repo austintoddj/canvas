@@ -1,5 +1,6 @@
 <?php
 
+use Canvas\Http\Controllers\AiRewriteController;
 use Canvas\Http\Controllers\IntegrationSettingsController;
 use Canvas\Http\Controllers\MediaController;
 use Canvas\Http\Controllers\PostController;
@@ -29,6 +30,9 @@ Route::middleware([
 
         // Unsplash routes...
         Route::get('unsplash', UnsplashController::class);
+
+        // AI writing (any Canvas user)...
+        Route::post('ai/rewrite', AiRewriteController::class)->middleware('throttle:30,1');
 
         // Integration settings (admin)...
         Route::prefix('settings/integrations')->middleware(['can:manage-settings'])->group(function (): void {

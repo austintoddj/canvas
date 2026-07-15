@@ -5,13 +5,28 @@ export type UnsplashIntegrationStatus = {
     masked_key: string | null;
 };
 
+export type AiProviderValue = 'xai' | 'openai' | 'anthropic';
+
+export type AiIntegrationStatus = {
+    configured: boolean;
+    provider: AiProviderValue | null;
+    masked_key: string | null;
+    model: string | null;
+};
+
 export type IntegrationsStatus = {
     unsplash: UnsplashIntegrationStatus;
+    ai: AiIntegrationStatus;
 };
 
 export type UpdateIntegrationsPayload = {
-    unsplash: {
+    unsplash?: {
         access_key: string | null;
+    };
+    ai?: {
+        provider?: AiProviderValue | null;
+        api_key?: string | null;
+        model?: string | null;
     };
 };
 

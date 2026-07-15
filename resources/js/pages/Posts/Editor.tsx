@@ -14,6 +14,7 @@ import { Heading } from '@/components/heading';
 import { SideDrawer } from '@/components/SideDrawer';
 import { Skeleton } from '@/components/Skeleton';
 import { PageDescription, ErrorText } from '@/components/text';
+import { useCanvas } from '@/hooks/useCanvas';
 import { useMarkOnboardingComplete } from '@/hooks/useMarkOnboardingComplete';
 import { usePostAutosave } from '@/hooks/usePostAutosave';
 import { postsApi } from '@/lib/api/posts';
@@ -44,6 +45,7 @@ const emptyForm = (): PostFormState => ({
 });
 
 export default function PostsEditor() {
+    const { t } = useCanvas();
     const { id } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
@@ -116,9 +118,9 @@ export default function PostsEditor() {
         const ok = await saveNow(next);
 
         if (ok) {
-            toast.success('Post published.');
+            toast.success(t('editor.published'));
         } else {
-            toast.error('Unable to publish this post.');
+            toast.error(t('editor.publish_error'));
         }
     }
 
@@ -129,9 +131,9 @@ export default function PostsEditor() {
         const ok = await saveNow(next);
 
         if (ok) {
-            toast.success('Post unpublished.');
+            toast.success(t('editor.unpublished'));
         } else {
-            toast.error('Unable to unpublish this post.');
+            toast.error(t('editor.unpublish_error'));
         }
     }
 
@@ -194,7 +196,7 @@ export default function PostsEditor() {
                 }
 
                 if (!id) {
-                    setLoadError('Post not found.');
+                    setLoadError(t('stats.post_not_found'));
                     setLoading(false);
                     return;
                 }
@@ -203,7 +205,7 @@ export default function PostsEditor() {
                 hydrateEditor(postToFormState(response.post), response.tags, response.topics, response.post.id);
             } catch {
                 if (!controller.signal.aborted) {
-                    setLoadError('Unable to load this post.');
+                    setLoadError(t('editor.load_error'));
                     setLoading(false);
                 }
             }
@@ -212,7 +214,7 @@ export default function PostsEditor() {
         void initialize();
 
         return () => controller.abort();
-    }, [hydrateEditor, id, isNewRoute, navigate]);
+    }, [hydrateEditor, id, isNewRoute, navigate, t]);
 
     function handleTitleChange(title: string) {
         setForm((current) => ({
@@ -254,10 +256,10 @@ export default function PostsEditor() {
             resetBaseline(serializeFormState(form));
             setPendingDelete(false);
             setSettingsOpen(false);
-            toast.success('Post deleted.');
+            toast.success(t('editor.deleted'));
             navigate('/posts', { replace: true });
         } catch {
-            toast.error('Unable to delete this post.');
+            toast.error(t('editor.delete_error'));
             setDeleting(false);
         }
     }
@@ -292,7 +294,7 @@ export default function PostsEditor() {
         );
     }
 
-    const deleteTitle = form.title.trim() === '' ? 'this post' : `“${form.title}”`;
+    const deleteTitle = form.title.trim() === '' ? t('posts.this_post') : `“${form.title}”`;
 
     return (
         <>
@@ -325,15 +327,15 @@ export default function PostsEditor() {
             <SideDrawer
                 open={settingsOpen}
                 onClose={() => setSettingsOpen(false)}
-                title="Post settings"
-                description="URL, summary, taxonomy, image, and publish"
+                title={t('editor.post_settings')}
+                description={t('editor.settings_description')}
             >
                 <div className="min-w-0 space-y-6 overflow-x-hidden px-5 py-5">
                     <div className="min-w-0">
                         <Heading level={3} className="text-base/7">
-                            Details
+                            {t('editor.details')}
                         </Heading>
-                        <PageDescription>Slug, excerpt, topic, and tags</PageDescription>
+                        <PageDescription>{t('editor.details_help')}</PageDescription>
                         <div className="mt-4 min-w-0">
                             <PostSidebar
                                 form={form}
@@ -351,9 +353,9 @@ export default function PostsEditor() {
 
                     <div className="min-w-0">
                         <Heading level={3} className="text-base/7">
-                            Featured image
+                            {t('editor.featured_image')}
                         </Heading>
-                        <PageDescription>Shown at the top of the post and in social previews.</PageDescription>
+                        <PageDescription>{t('editor.featured_image_help')}</PageDescription>
                         <div className="mt-4 min-w-0">
                             <FeaturedImagePicker form={form} disabled={!autosaveEnabled} onChange={handleFormChange} />
                         </div>
@@ -375,8 +377,8 @@ export default function PostsEditor() {
             <SideDrawer
                 open={seoOpen}
                 onClose={() => setSeoOpen(false)}
-                title="SEO"
-                description="Title, description, and canonical URL for search"
+                title={t('editor.seo')}
+                description={t('editor.seo_description')}
             >
                 <div className="min-w-0 overflow-x-hidden px-5 py-5">
                     <PostSeoPanel
@@ -389,27 +391,27 @@ export default function PostsEditor() {
             </SideDrawer>
 
             <Alert open={pendingDelete} onClose={closeDeleteConfirm} size="sm">
-                <AlertTitle>Delete post?</AlertTitle>
-                <AlertDescription>Delete {deleteTitle}? This cannot be undone.</AlertDescription>
+                <AlertTitle>{t('editor.delete_title')}</AlertTitle>
+                <AlertDescription>{t('editor.delete_confirm_body', { title: deleteTitle })}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                     <Button type="button" color="red" disabled={deleting} onClick={() => void confirmDelete()}>
-                        {deleting ? 'Deleting…' : 'Delete'}
+                        {deleting ? t('common.deleting') : t('common.delete')}
                     </Button>
                 </AlertActions>
             </Alert>
 
             <Alert open={leaveConfirmOpen} onClose={cancelLeave} size="sm">
-                <AlertTitle>Leave without saving?</AlertTitle>
-                <AlertDescription>You have unsaved changes. Leave this post without saving?</AlertDescription>
+                <AlertTitle>{t('common.leave_without_saving')}</AlertTitle>
+                <AlertDescription>{t('common.unsaved_changes')}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain onClick={cancelLeave}>
-                        Stay
+                        {t('editor.stay')}
                     </Button>
                     <Button type="button" color="red" onClick={confirmLeave}>
-                        Leave
+                        {t('editor.leave')}
                     </Button>
                 </AlertActions>
             </Alert>

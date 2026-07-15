@@ -20,6 +20,7 @@ import {
     MinusIcon,
     NumberedListIcon,
     PhotoIcon,
+    SparklesIcon,
     SwatchIcon,
     StrikethroughIcon,
     TableCellsIcon,
@@ -42,10 +43,15 @@ import {
 } from '@/components/dropdown';
 import { Field, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
+import { Textarea } from '@/components/textarea';
 import ImageSourcePicker from '@/components/media/ImageSourcePicker';
+import { useCanvas } from '@/hooks/useCanvas';
+import { aiApi, type AiRewriteAction } from '@/lib/api/ai';
 import { resolveMediaUrl } from '@/lib/media/list';
+import { AI_WRITING_ACTIONS, rewriteErrorMessage, selectionText } from '@/lib/posts/ai-writing';
 import { bodyFromEditorHtml, bodyHtmlForEditor } from '@/lib/posts/body';
 import { CODE_BLOCK_LANGUAGES, createPostEditorExtensions } from '@/lib/posts/editor-extensions';
+import { toast } from '@/lib/toast';
 
 type PostBodyEditorProps = {
     body: string | null;
@@ -96,10 +102,12 @@ function ToolbarDivider() {
 }
 
 function MarkButtons({ editor, disabled, onOpenLink }: { editor: Editor; disabled?: boolean; onOpenLink: () => void }) {
+    const { t } = useCanvas();
+
     return (
         <>
             <ToolbarButton
-                label="Bold"
+                label={t('editor.bold')}
                 active={editor.isActive('bold')}
                 disabled={disabled}
                 onClick={() => editor.chain().focus().toggleBold().run()}
@@ -107,7 +115,7 @@ function MarkButtons({ editor, disabled, onOpenLink }: { editor: Editor; disable
                 <BoldIcon className="size-4" />
             </ToolbarButton>
             <ToolbarButton
-                label="Italic"
+                label={t('editor.italic')}
                 active={editor.isActive('italic')}
                 disabled={disabled}
                 onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -115,14 +123,19 @@ function MarkButtons({ editor, disabled, onOpenLink }: { editor: Editor; disable
                 <ItalicIcon className="size-4" />
             </ToolbarButton>
             <ToolbarButton
-                label="Underline"
+                label={t('editor.underline')}
                 active={editor.isActive('underline')}
                 disabled={disabled}
                 onClick={() => editor.chain().focus().toggleUnderline().run()}
             >
                 <UnderlineIcon className="size-4" />
             </ToolbarButton>
-            <ToolbarButton label="Link" active={editor.isActive('link')} disabled={disabled} onClick={onOpenLink}>
+            <ToolbarButton
+                label={t('editor.link')}
+                active={editor.isActive('link')}
+                disabled={disabled}
+                onClick={onOpenLink}
+            >
                 <LinkIcon className="size-4" />
             </ToolbarButton>
         </>
@@ -159,20 +172,30 @@ function EditorToolbar({
     editor,
     disabled,
     focusMode = false,
+    aiEnabled = false,
+    aiBusy = false,
     onOpenLink,
     onOpenMedia,
+    onAiAction,
+    onOpenAiCustom,
     onToggleFocusMode,
 }: {
     editor: Editor;
     disabled?: boolean;
     focusMode?: boolean;
+    aiEnabled?: boolean;
+    aiBusy?: boolean;
     onOpenLink: () => void;
     onOpenMedia: () => void;
+    onAiAction: (action: Exclude<AiRewriteAction, 'custom'>) => void;
+    onOpenAiCustom: () => void;
     onToggleFocusMode?: () => void;
 }) {
+    const { t } = useCanvas();
     const inTable = editor.isActive('table');
     const inCodeBlock = editor.isActive('codeBlock');
     const codeLanguage = (editor.getAttributes('codeBlock').language as string | null | undefined) ?? '';
+    const toolbarDisabled = disabled || aiBusy;
     const moreActive =
         editor.isActive('strike') ||
         editor.isActive('highlight') ||
@@ -185,32 +208,32 @@ function EditorToolbar({
             className="flex flex-nowrap items-center gap-0.5 overflow-x-auto border-b border-zinc-950/10 px-2 py-1.5 dark:border-white/10"
             data-post-body-toolbar="true"
             role="toolbar"
-            aria-label="Formatting"
+            aria-label={t('editor.formatting')}
         >
-            <MarkButtons editor={editor} disabled={disabled} onOpenLink={onOpenLink} />
+            <MarkButtons editor={editor} disabled={toolbarDisabled} onOpenLink={onOpenLink} />
 
             <ToolbarDivider />
 
             <ToolbarButton
-                label="Heading 1"
+                label={t('editor.heading_1')}
                 active={editor.isActive('heading', { level: 1 })}
-                disabled={disabled}
+                disabled={toolbarDisabled}
                 onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             >
                 <H1Icon className="size-4" />
             </ToolbarButton>
             <ToolbarButton
-                label="Heading 2"
+                label={t('editor.heading_2')}
                 active={editor.isActive('heading', { level: 2 })}
-                disabled={disabled}
+                disabled={toolbarDisabled}
                 onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             >
                 <H2Icon className="size-4" />
             </ToolbarButton>
             <ToolbarButton
-                label="Heading 3"
+                label={t('editor.heading_3')}
                 active={editor.isActive('heading', { level: 3 })}
-                disabled={disabled}
+                disabled={toolbarDisabled}
                 onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             >
                 <H3Icon className="size-4" />
@@ -219,41 +242,41 @@ function EditorToolbar({
             <ToolbarDivider />
 
             <ToolbarButton
-                label="Bullet list"
+                label={t('editor.bullet_list')}
                 active={editor.isActive('bulletList')}
-                disabled={disabled}
+                disabled={toolbarDisabled}
                 onClick={() => editor.chain().focus().toggleBulletList().run()}
             >
                 <ListBulletIcon className="size-4" />
             </ToolbarButton>
             <ToolbarButton
-                label="Numbered list"
+                label={t('editor.numbered_list')}
                 active={editor.isActive('orderedList')}
-                disabled={disabled}
+                disabled={toolbarDisabled}
                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
             >
                 <NumberedListIcon className="size-4" />
             </ToolbarButton>
             <ToolbarButton
-                label="Checklist"
+                label={t('editor.checklist')}
                 active={editor.isActive('taskList')}
-                disabled={disabled}
+                disabled={toolbarDisabled}
                 onClick={() => editor.chain().focus().toggleTaskList().run()}
             >
                 <CheckCircleIcon className="size-4" />
             </ToolbarButton>
             <ToolbarButton
-                label="Quote"
+                label={t('editor.quote')}
                 active={editor.isActive('blockquote')}
-                disabled={disabled}
+                disabled={toolbarDisabled}
                 onClick={() => editor.chain().focus().toggleBlockquote().run()}
             >
                 <ChatBubbleBottomCenterTextIcon className="size-4" />
             </ToolbarButton>
             <ToolbarButton
-                label="Code block"
+                label={t('editor.code_block')}
                 active={inCodeBlock}
-                disabled={disabled}
+                disabled={toolbarDisabled}
                 onClick={() => editor.chain().focus().toggleCodeBlock().run()}
             >
                 <CodeBracketIcon className="size-4" />
@@ -261,9 +284,53 @@ function EditorToolbar({
 
             <ToolbarDivider />
 
-            <ToolbarButton label="Image" active={editor.isActive('image')} disabled={disabled} onClick={onOpenMedia}>
+            <ToolbarButton
+                label={t('editor.image')}
+                active={editor.isActive('image')}
+                disabled={toolbarDisabled}
+                onClick={onOpenMedia}
+            >
                 <PhotoIcon className="size-4" />
             </ToolbarButton>
+
+            {aiEnabled ? (
+                <>
+                    <ToolbarDivider />
+                    <Dropdown>
+                        <DropdownButton
+                            as="button"
+                            type="button"
+                            disabled={toolbarDisabled}
+                            aria-label={aiBusy ? t('editor.rewriting') : t('editor.ai_writing')}
+                            title={aiBusy ? t('editor.rewriting') : t('editor.ai_writing')}
+                            data-post-body-toolbar-ai="true"
+                            className={clsx(
+                                'inline-flex size-8 items-center justify-center rounded-md text-zinc-600 transition dark:text-zinc-300',
+                                'hover:bg-zinc-950/5 hover:text-zinc-950 disabled:pointer-events-none disabled:opacity-40 dark:hover:bg-white/10 dark:hover:text-white',
+                                'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
+                                aiBusy && 'bg-zinc-950/10 text-zinc-950 dark:bg-white/15 dark:text-white'
+                            )}
+                        >
+                            <SparklesIcon className="size-4" />
+                        </DropdownButton>
+                        <DropdownMenu anchor="bottom end" className="min-w-52">
+                            {AI_WRITING_ACTIONS.map((item) => (
+                                <DropdownItem
+                                    key={item.action}
+                                    disabled={toolbarDisabled}
+                                    onClick={() => onAiAction(item.action)}
+                                >
+                                    <DropdownLabel>{t(item.labelKey)}</DropdownLabel>
+                                </DropdownItem>
+                            ))}
+                            <DropdownDivider />
+                            <DropdownItem disabled={toolbarDisabled} onClick={onOpenAiCustom}>
+                                <DropdownLabel>{t('editor.custom_prompt_label')}</DropdownLabel>
+                            </DropdownItem>
+                        </DropdownMenu>
+                    </Dropdown>
+                </>
+            ) : null}
 
             <ToolbarDivider />
 
@@ -271,9 +338,9 @@ function EditorToolbar({
                 <DropdownButton
                     as="button"
                     type="button"
-                    disabled={disabled}
-                    aria-label="More formatting"
-                    title="More formatting"
+                    disabled={toolbarDisabled}
+                    aria-label={t('editor.more_formatting')}
+                    title={t('editor.more_formatting')}
                     data-post-body-toolbar-more="true"
                     className={clsx(
                         'inline-flex size-8 items-center justify-center rounded-md text-zinc-600 transition dark:text-zinc-300',
@@ -286,33 +353,33 @@ function EditorToolbar({
                 </DropdownButton>
                 <DropdownMenu anchor="bottom end" className="min-w-52">
                     <ToolbarMenuItem
-                        label="Strikethrough"
+                        label={t('editor.strikethrough')}
                         active={editor.isActive('strike')}
-                        disabled={disabled}
+                        disabled={toolbarDisabled}
                         onClick={() => editor.chain().focus().toggleStrike().run()}
                     >
                         <StrikethroughIcon data-slot="icon" />
                     </ToolbarMenuItem>
                     <ToolbarMenuItem
-                        label="Highlight"
+                        label={t('editor.highlight')}
                         active={editor.isActive('highlight')}
-                        disabled={disabled}
+                        disabled={toolbarDisabled}
                         onClick={() => editor.chain().focus().toggleHighlight().run()}
                     >
                         <SwatchIcon data-slot="icon" />
                     </ToolbarMenuItem>
                     <DropdownDivider />
                     <ToolbarMenuItem
-                        label="Horizontal rule"
-                        disabled={disabled}
+                        label={t('editor.horizontal_rule')}
+                        disabled={toolbarDisabled}
                         onClick={() => editor.chain().focus().setHorizontalRule().run()}
                     >
                         <MinusIcon data-slot="icon" />
                     </ToolbarMenuItem>
                     <ToolbarMenuItem
-                        label="Insert table"
+                        label={t('editor.insert_table')}
                         active={inTable}
-                        disabled={disabled}
+                        disabled={toolbarDisabled}
                         onClick={() =>
                             editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
                         }
@@ -321,25 +388,25 @@ function EditorToolbar({
                     </ToolbarMenuItem>
                     <DropdownDivider />
                     <ToolbarMenuItem
-                        label="Align left"
+                        label={t('editor.align_left')}
                         active={editor.isActive({ textAlign: 'left' })}
-                        disabled={disabled}
+                        disabled={toolbarDisabled}
                         onClick={() => editor.chain().focus().setTextAlign('left').run()}
                     >
                         <Bars3BottomLeftIcon data-slot="icon" />
                     </ToolbarMenuItem>
                     <ToolbarMenuItem
-                        label="Align center"
+                        label={t('editor.align_center')}
                         active={editor.isActive({ textAlign: 'center' })}
-                        disabled={disabled}
+                        disabled={toolbarDisabled}
                         onClick={() => editor.chain().focus().setTextAlign('center').run()}
                     >
                         <Bars3Icon data-slot="icon" />
                     </ToolbarMenuItem>
                     <ToolbarMenuItem
-                        label="Align right"
+                        label={t('editor.align_right')}
                         active={editor.isActive({ textAlign: 'right' })}
-                        disabled={disabled}
+                        disabled={toolbarDisabled}
                         onClick={() => editor.chain().focus().setTextAlign('right').run()}
                     >
                         <Bars3BottomRightIcon data-slot="icon" />
@@ -355,7 +422,7 @@ function EditorToolbar({
                         <select
                             className="max-w-[9rem] rounded-md border border-zinc-950/10 bg-transparent px-1.5 py-1 text-xs text-zinc-700 dark:border-white/10 dark:text-zinc-200"
                             value={codeLanguage}
-                            disabled={disabled}
+                            disabled={toolbarDisabled}
                             onChange={(event) => {
                                 const language = event.target.value;
                                 editor
@@ -380,22 +447,22 @@ function EditorToolbar({
                 <>
                     <ToolbarDivider />
                     <ToolbarButton
-                        label="Add column"
-                        disabled={disabled}
+                        label={t('editor.add_column')}
+                        disabled={toolbarDisabled}
                         onClick={() => editor.chain().focus().addColumnAfter().run()}
                     >
                         <span className="text-[10px] font-semibold">+Col</span>
                     </ToolbarButton>
                     <ToolbarButton
-                        label="Add row"
-                        disabled={disabled}
+                        label={t('editor.add_row')}
+                        disabled={toolbarDisabled}
                         onClick={() => editor.chain().focus().addRowAfter().run()}
                     >
                         <span className="text-[10px] font-semibold">+Row</span>
                     </ToolbarButton>
                     <ToolbarButton
-                        label="Delete table"
-                        disabled={disabled}
+                        label={t('editor.delete_table')}
+                        disabled={toolbarDisabled}
                         onClick={() => editor.chain().focus().deleteTable().run()}
                     >
                         <TrashIcon className="size-4" />
@@ -406,11 +473,11 @@ function EditorToolbar({
             {onToggleFocusMode !== undefined ? (
                 <>
                     <ToolbarDivider />
-                    <div className="ml-auto shrink-0">
+                    <div className="ms-auto shrink-0">
                         <ToolbarButton
-                            label={focusMode ? 'Exit focus mode' : 'Focus mode'}
+                            label={focusMode ? t('editor.exit_focus') : t('editor.focus')}
                             active={focusMode}
-                            disabled={disabled}
+                            disabled={toolbarDisabled}
                             onClick={onToggleFocusMode}
                             data-post-focus-toggle="true"
                         >
@@ -446,14 +513,16 @@ function LinkDialog({
     onRemoveLink: () => void;
     inputRef: RefObject<HTMLInputElement | null>;
 }) {
+    const { t } = useCanvas();
+
     return (
         <Dialog open={open} onClose={onClose} size="sm" data-post-link-dialog="true">
             <form onSubmit={onApply}>
-                <DialogTitle>Link URL</DialogTitle>
-                <DialogDescription>Add a URL for the selected text, or remove an existing link.</DialogDescription>
+                <DialogTitle>{t('editor.link_url')}</DialogTitle>
+                <DialogDescription>{t('editor.link_help')}</DialogDescription>
                 <DialogBody>
                     <Field>
-                        <Label>URL</Label>
+                        <Label>{t('editor.url')}</Label>
                         <Input
                             ref={inputRef}
                             name="href"
@@ -468,14 +537,65 @@ function LinkDialog({
                 <DialogActions>
                     {hasExistingLink ? (
                         <Button type="button" plain onClick={onRemoveLink}>
-                            Remove link
+                            {t('editor.remove_link')}
                         </Button>
                     ) : null}
                     <Button type="button" plain onClick={onClose}>
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                     <Button type="submit" color="dark/zinc">
-                        Apply
+                        {t('editor.apply')}
+                    </Button>
+                </DialogActions>
+            </form>
+        </Dialog>
+    );
+}
+
+function AiCustomDialog({
+    open,
+    value,
+    busy,
+    onChange,
+    onClose,
+    onApply,
+    inputRef,
+}: {
+    open: boolean;
+    value: string;
+    busy: boolean;
+    onChange: (value: string) => void;
+    onClose: () => void;
+    onApply: (event?: FormEvent) => void;
+    inputRef: RefObject<HTMLTextAreaElement | null>;
+}) {
+    const { t } = useCanvas();
+
+    return (
+        <Dialog open={open} onClose={busy ? () => undefined : onClose} size="sm" data-post-ai-dialog="true">
+            <form onSubmit={onApply}>
+                <DialogTitle>{t('editor.ai_custom_prompt')}</DialogTitle>
+                <DialogDescription>{t('editor.ai_custom_help')}</DialogDescription>
+                <DialogBody>
+                    <Field>
+                        <Label>{t('editor.ai_instruction')}</Label>
+                        <Textarea
+                            ref={inputRef}
+                            name="instruction"
+                            rows={4}
+                            value={value}
+                            disabled={busy}
+                            onChange={(event) => onChange(event.target.value)}
+                            placeholder={t('editor.ai_custom_instruction_placeholder')}
+                        />
+                    </Field>
+                </DialogBody>
+                <DialogActions>
+                    <Button type="button" plain disabled={busy} onClick={onClose}>
+                        {t('common.cancel')}
+                    </Button>
+                    <Button type="submit" color="dark/zinc" disabled={busy || value.trim() === ''}>
+                        {busy ? t('editor.rewriting') : t('editor.rewrite')}
                     </Button>
                 </DialogActions>
             </form>
@@ -490,10 +610,16 @@ export default function PostBodyEditor({
     onToggleFocusMode,
     onChange,
 }: PostBodyEditorProps) {
+    const { boot, t } = useCanvas();
     const [linkDialogOpen, setLinkDialogOpen] = useState(false);
     const [dialogValue, setDialogValue] = useState('https://');
     const [mediaOpen, setMediaOpen] = useState(false);
+    const [aiBusy, setAiBusy] = useState(false);
+    const [aiCustomOpen, setAiCustomOpen] = useState(false);
+    const [aiInstruction, setAiInstruction] = useState('');
     const dialogInputRef = useRef<HTMLInputElement>(null);
+    const aiInstructionRef = useRef<HTMLTextAreaElement>(null);
+    const aiSelectionRef = useRef<{ from: number; to: number; text: string } | null>(null);
 
     const editor = useEditor({
         extensions: createPostEditorExtensions(),
@@ -546,6 +672,18 @@ export default function PostBodyEditor({
         return () => window.clearTimeout(timer);
     }, [linkDialogOpen]);
 
+    useEffect(() => {
+        if (!aiCustomOpen) {
+            return;
+        }
+
+        const timer = window.setTimeout(() => {
+            aiInstructionRef.current?.focus();
+        }, 50);
+
+        return () => window.clearTimeout(timer);
+    }, [aiCustomOpen]);
+
     function openLinkDialog() {
         if (disabled || editor === null) {
             return;
@@ -587,9 +725,108 @@ export default function PostBodyEditor({
         setLinkDialogOpen(false);
     }
 
+    function captureAiSelection(): { from: number; to: number; text: string } | null {
+        if (editor === null || disabled || aiBusy) {
+            return null;
+        }
+
+        const { from, to } = editor.state.selection;
+        const text = selectionText(from, to, (a, b) => editor.state.doc.textBetween(a, b, '\n'));
+
+        if (text === '') {
+            toast.error(t('editor.ai_select_text'));
+
+            return null;
+        }
+
+        return { from, to, text };
+    }
+
+    async function runAiRewrite(action: AiRewriteAction, instruction?: string | null) {
+        if (editor === null) {
+            return;
+        }
+
+        const selection = action === 'custom' ? aiSelectionRef.current : captureAiSelection();
+
+        if (selection === null) {
+            return;
+        }
+
+        setAiBusy(true);
+
+        try {
+            const response = await aiApi.rewrite({
+                action,
+                text: selection.text,
+                instruction: instruction ?? null,
+            });
+
+            const next = response.text.trim();
+
+            if (next === '') {
+                toast.error(t('editor.ai_empty_result'));
+
+                return;
+            }
+
+            editor
+                .chain()
+                .focus()
+                .setTextSelection({ from: selection.from, to: selection.to })
+                .insertContent(next)
+                .run();
+
+            if (action === 'custom') {
+                setAiCustomOpen(false);
+                setAiInstruction('');
+                aiSelectionRef.current = null;
+            }
+        } catch (error) {
+            toast.error(rewriteErrorMessage(error, t('editor.ai_rewrite_error')));
+        } finally {
+            setAiBusy(false);
+        }
+    }
+
+    function openAiCustomDialog() {
+        const selection = captureAiSelection();
+
+        if (selection === null) {
+            return;
+        }
+
+        aiSelectionRef.current = selection;
+        setAiInstruction('');
+        setAiCustomOpen(true);
+    }
+
+    function closeAiCustomDialog() {
+        if (aiBusy) {
+            return;
+        }
+
+        setAiCustomOpen(false);
+        setAiInstruction('');
+        aiSelectionRef.current = null;
+    }
+
+    function applyAiCustomDialog(event?: FormEvent) {
+        event?.preventDefault();
+
+        const instruction = aiInstruction.trim();
+
+        if (instruction === '') {
+            return;
+        }
+
+        void runAiRewrite('custom', instruction);
+    }
+
     const characters = editor?.storage.characterCount.characters() ?? 0;
     const words = editor?.storage.characterCount.words() ?? 0;
     const hasExistingLink = editor?.isActive('link') ?? false;
+    const aiEnabled = boot.ai === true;
 
     return (
         <div
@@ -601,12 +838,18 @@ export default function PostBodyEditor({
                     editor={editor}
                     disabled={disabled}
                     focusMode={focusMode}
+                    aiEnabled={aiEnabled}
+                    aiBusy={aiBusy}
                     onOpenLink={openLinkDialog}
                     onOpenMedia={() => {
-                        if (!disabled) {
+                        if (!disabled && !aiBusy) {
                             setMediaOpen(true);
                         }
                     }}
+                    onAiAction={(action) => {
+                        void runAiRewrite(action);
+                    }}
+                    onOpenAiCustom={openAiCustomDialog}
                     onToggleFocusMode={onToggleFocusMode}
                 />
             ) : null}
@@ -618,10 +861,14 @@ export default function PostBodyEditor({
                     aria-live="polite"
                 >
                     <span>
-                        {words.toLocaleString()} {words === 1 ? 'word' : 'words'}
+                        {words === 1
+                            ? t('common.words_one', { count: words.toLocaleString() })
+                            : t('common.words_other', { count: words.toLocaleString() })}
                     </span>
                     <span>
-                        {characters.toLocaleString()} {characters === 1 ? 'character' : 'characters'}
+                        {characters === 1
+                            ? t('common.characters_one', { count: characters.toLocaleString() })
+                            : t('common.characters_other', { count: characters.toLocaleString() })}
                     </span>
                 </div>
             ) : null}
@@ -635,6 +882,16 @@ export default function PostBodyEditor({
                 onApply={applyLinkDialog}
                 onRemoveLink={removeLink}
                 inputRef={dialogInputRef}
+            />
+
+            <AiCustomDialog
+                open={aiCustomOpen}
+                value={aiInstruction}
+                busy={aiBusy}
+                onChange={setAiInstruction}
+                onClose={closeAiCustomDialog}
+                onApply={applyAiCustomDialog}
+                inputRef={aiInstructionRef}
             />
 
             <ImageSourcePicker

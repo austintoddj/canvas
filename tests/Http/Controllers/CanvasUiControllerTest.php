@@ -303,12 +303,12 @@ it('shows a topics index with published post counts', function (): void {
 
 it('shows social links on the author page', function (): void {
     $this->admin->canvasUser->update([
-        'social' => ['twitter' => 'canvaswriter'],
+        'social' => ['x' => 'canvaswriter'],
     ]);
 
     $this->get('canvas-ui/@'.$this->admin->canvasUser->username)
         ->assertSuccessful()
-        ->assertSee('https://twitter.com/canvaswriter', false);
+        ->assertSee('https://x.com/canvaswriter', false);
 });
 
 it('shows authors on tag listing pages', function (): void {

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Canvas\Http\Controllers;
 
+use Canvas\Enums\AiProvider;
 use Canvas\Enums\SettingKey;
 use Canvas\Http\Requests\UpdateIntegrationsRequest;
+use Canvas\Support\Ai;
 use Canvas\Support\SettingsRepository;
 use Canvas\Support\Unsplash;
 use Illuminate\Http\JsonResponse;
@@ -22,30 +24,68 @@ class IntegrationSettingsController extends Controller
     {
         Gate::forUser(request()->user(config('canvas.guard')))->authorize('manage-settings');
 
-        $accessKey = Unsplash::accessKey();
-
-        return response()->json([
-            'unsplash' => [
-                'configured' => filled($accessKey),
-                'masked_key' => SettingsRepository::mask($accessKey),
-            ],
-        ]);
+        return response()->json($this->statusPayload());
     }
 
     public function update(UpdateIntegrationsRequest $request): JsonResponse
     {
-        /** @var string|null $accessKey */
-        $accessKey = $request->input('unsplash.access_key');
+        if ($request->has('unsplash')) {
+            /** @var string|null $accessKey */
+            $accessKey = $request->input('unsplash.access_key');
+            $this->settings->set(SettingKey::UnsplashAccessKey, $accessKey);
+        }
 
-        $this->settings->set(SettingKey::UnsplashAccessKey, $accessKey);
+        if ($request->has('ai')) {
+            $this->updateAiSettings($request);
+        }
 
-        $resolved = Unsplash::accessKey();
+        return response()->json($this->statusPayload());
+    }
 
-        return response()->json([
+    private function updateAiSettings(UpdateIntegrationsRequest $request): void
+    {
+        if ($request->exists('ai.provider')) {
+            /** @var string|null $provider */
+            $provider = $request->input('ai.provider');
+            $this->settings->set(SettingKey::AiProvider, $provider);
+        }
+
+        if ($request->exists('ai.api_key')) {
+            /** @var string|null $apiKey */
+            $apiKey = $request->input('ai.api_key');
+            $this->settings->set(SettingKey::AiApiKey, $apiKey);
+        }
+
+        if ($request->exists('ai.model')) {
+            /** @var string|null $model */
+            $model = $request->input('ai.model');
+            $this->settings->set(SettingKey::AiModel, $model);
+        }
+    }
+
+    /**
+     * @return array{
+     *     unsplash: array{configured: bool, masked_key: string|null},
+     *     ai: array{configured: bool, provider: string|null, masked_key: string|null, model: string|null}
+     * }
+     */
+    private function statusPayload(): array
+    {
+        $accessKey = Unsplash::accessKey();
+        $aiKey = Ai::apiKey();
+        $provider = Ai::provider();
+
+        return [
             'unsplash' => [
-                'configured' => filled($resolved),
-                'masked_key' => SettingsRepository::mask($resolved),
+                'configured' => filled($accessKey),
+                'masked_key' => SettingsRepository::mask($accessKey),
             ],
-        ]);
+            'ai' => [
+                'configured' => Ai::configured(),
+                'provider' => $provider instanceof AiProvider ? $provider->value : null,
+                'masked_key' => SettingsRepository::mask($aiKey),
+                'model' => Ai::modelOverride(),
+            ],
+        ];
     }
 }

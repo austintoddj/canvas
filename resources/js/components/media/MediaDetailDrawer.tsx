@@ -10,6 +10,7 @@ import { Input } from '@/components/input';
 import { SideDrawer } from '@/components/SideDrawer';
 import { Text, ErrorText } from '@/components/text';
 import { Textarea } from '@/components/textarea';
+import { useCanvas } from '@/hooks/useCanvas';
 import { ValidationError } from '@/lib/api';
 import { mediaApi } from '@/lib/api/media';
 import {
@@ -54,6 +55,7 @@ function formToPayload(form: MediaFormState): MediaUpdatePayload {
 }
 
 export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted }: MediaDetailDrawerProps) {
+    const { t } = useCanvas();
     const [media, setMedia] = useState<Media | null>(null);
     const [form, setForm] = useState<MediaFormState>({ original_name: '', alt: '', caption: '' });
     const [baseline, setBaseline] = useState('');
@@ -102,7 +104,7 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
             })
             .catch(() => {
                 if (!cancelled) {
-                    setError('Unable to load this media item.');
+                    setError(t('media.load_item_error'));
                     setMedia(null);
                 }
             })
@@ -116,7 +118,7 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
             cancelled = true;
             controller.abort();
         };
-    }, [open, mediaId]);
+    }, [open, mediaId, t]);
 
     async function handleSave() {
         if (mediaId === null || media === null) {
@@ -134,14 +136,14 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
             setMedia(updated);
             setForm(nextForm);
             setBaseline(JSON.stringify(formToPayload(nextForm)));
-            setSaveMessage('Saved');
+            setSaveMessage(t('common.saved'));
             onUpdated?.(updated);
         } catch (saveError) {
             if (saveError instanceof ValidationError) {
                 setFieldErrors(saveError.errors);
-                setError('Please fix the highlighted fields.');
+                setError(t('common.please_fix_fields'));
             } else {
-                setError('Unable to save changes.');
+                setError(t('media.save_changes_error'));
             }
         } finally {
             setSaving(false);
@@ -175,17 +177,17 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
         try {
             await mediaApi.destroy(mediaId);
             setConfirmDeleteOpen(false);
-            toast.success('Image deleted.');
+            toast.success(t('media.deleted'));
             onDeleted?.(mediaId);
             onClose();
         } catch {
             setDeleting(false);
             setConfirmDeleteOpen(false);
-            toast.error('Unable to delete this media item.');
+            toast.error(t('media.delete_error'));
         }
     }
 
-    const mediaName = media ? mediaDisplayName(media) : 'this image';
+    const mediaName = media ? mediaDisplayName(media) : t('media.this_image');
     const showFooter = media !== null && !loading;
 
     return (
@@ -193,14 +195,14 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
             <SideDrawer
                 open={open}
                 onClose={onClose}
-                title={media ? mediaDisplayName(media) : 'Media details'}
-                description="Edit metadata or remove from the library"
-                closeLabel="Close media details"
+                title={media ? mediaDisplayName(media) : t('media.details_title')}
+                description={t('media.details_description')}
+                closeLabel={t('media.close_details')}
                 footer={
                     showFooter ? (
                         <>
                             <Button type="button" outline color="red" disabled={deleting} onClick={openDeleteConfirm}>
-                                Delete
+                                {t('common.delete')}
                             </Button>
                             <div className="flex flex-wrap items-center gap-2">
                                 {saveMessage && !isDirty ? (
@@ -214,7 +216,7 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                                     disabled={!isDirty || saving || deleting}
                                     onClick={() => void handleSave()}
                                 >
-                                    {saving ? 'Saving…' : 'Save'}
+                                    {saving ? t('common.saving') : t('common.save')}
                                 </Button>
                             </div>
                         </>
@@ -223,7 +225,7 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
             >
                 {loading ? (
                     <div className="px-5 py-8">
-                        <Text className="text-sm text-zinc-500">Loading media…</Text>
+                        <Text className="text-sm text-zinc-500">{t('media.loading')}</Text>
                     </div>
                 ) : null}
 
@@ -247,19 +249,19 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                             {error ? <ErrorText>{error}</ErrorText> : null}
 
                             <div>
-                                <Subheading>Details</Subheading>
+                                <Subheading>{t('common.details')}</Subheading>
                                 <DescriptionList className="mt-3">
-                                    <DescriptionTerm>Type</DescriptionTerm>
+                                    <DescriptionTerm>{t('common.type')}</DescriptionTerm>
                                     <DescriptionDetails>{mediaMimeLabel(media.mime_type)}</DescriptionDetails>
-                                    <DescriptionTerm>Size</DescriptionTerm>
+                                    <DescriptionTerm>{t('media.size')}</DescriptionTerm>
                                     <DescriptionDetails>{formatMediaBytes(media.size)}</DescriptionDetails>
-                                    <DescriptionTerm>Dimensions</DescriptionTerm>
+                                    <DescriptionTerm>{t('media.dimensions')}</DescriptionTerm>
                                     <DescriptionDetails>
                                         {formatMediaDimensions(media.width, media.height)}
                                     </DescriptionDetails>
-                                    <DescriptionTerm>Uploaded</DescriptionTerm>
+                                    <DescriptionTerm>{t('media.uploaded')}</DescriptionTerm>
                                     <DescriptionDetails>{formatMediaDate(media.created_at)}</DescriptionDetails>
-                                    <DescriptionTerm>Filename</DescriptionTerm>
+                                    <DescriptionTerm>{t('media.filename')}</DescriptionTerm>
                                     <DescriptionDetails className="break-all">{media.filename}</DescriptionDetails>
                                 </DescriptionList>
                             </div>
@@ -272,10 +274,10 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                                     void handleSave();
                                 }}
                             >
-                                <Subheading>Metadata</Subheading>
+                                <Subheading>{t('media.metadata')}</Subheading>
                                 <FieldGroup className="mt-3">
                                     <Field>
-                                        <Label>Display name</Label>
+                                        <Label>{t('media.display_name')}</Label>
                                         <Input
                                             name="original_name"
                                             value={form.original_name}
@@ -293,7 +295,7 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                                         ) : null}
                                     </Field>
                                     <Field>
-                                        <Label>Alt text</Label>
+                                        <Label>{t('media.alt_text')}</Label>
                                         <Input
                                             name="alt"
                                             value={form.alt}
@@ -311,7 +313,7 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                                         ) : null}
                                     </Field>
                                     <Field>
-                                        <Label>Caption</Label>
+                                        <Label>{t('media.caption')}</Label>
                                         <Textarea
                                             name="caption"
                                             rows={3}
@@ -337,14 +339,14 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
             </SideDrawer>
 
             <Alert open={confirmDeleteOpen} onClose={closeDeleteConfirm} size="sm">
-                <AlertTitle>Delete image?</AlertTitle>
-                <AlertDescription>Delete “{mediaName}”? This cannot be undone.</AlertDescription>
+                <AlertTitle>{t('media.delete_title')}</AlertTitle>
+                <AlertDescription>{t('media.delete_confirm_body', { name: mediaName })}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                     <Button type="button" color="red" disabled={deleting} onClick={() => void confirmDelete()}>
-                        {deleting ? 'Deleting…' : 'Delete'}
+                        {deleting ? t('common.deleting') : t('common.delete')}
                     </Button>
                 </AlertActions>
             </Alert>

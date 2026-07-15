@@ -26,13 +26,15 @@ final class FrontendBootData
         $locale = Localization::resolveLocale($canvasUser?->locale);
 
         return [
-            'languageCodes' => Localization::availableLanguageCodes(),
+            'languages' => Localization::languageOptions(),
             'maxUpload' => config('canvas.upload_filesize'),
             'path' => Paths::basePath(),
             'roles' => Role::options(),
-            'timezone' => config('app.timezone'),
+            'appTimezone' => config('app.timezone'),
+            'defaultLocale' => Localization::resolveLocale(null),
             'translations' => Localization::availableTranslations($locale),
             'unsplash' => Unsplash::configured(),
+            'ai' => Ai::configured(),
             'user' => UserResource::make($user)->resolve(),
             'version' => Version::installed(),
         ];

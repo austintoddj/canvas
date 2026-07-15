@@ -25,14 +25,22 @@ export type UserResource = {
     canvas?: CanvasProfile;
 };
 
+export type LanguageOption = {
+    code: string;
+    label: string;
+    rtl: boolean;
+};
+
 export type CanvasBoot = {
     path: string;
-    languageCodes: string[];
+    languages: LanguageOption[];
     maxUpload: number;
     roles: Record<number, string>;
-    timezone: string;
+    appTimezone: string;
+    defaultLocale: string;
     translations: string;
     unsplash: boolean;
+    ai: boolean;
     version: string;
     user: UserResource;
 };

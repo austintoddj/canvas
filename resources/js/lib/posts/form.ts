@@ -17,30 +17,36 @@ export type PostFormState = {
 
 export type PostSaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 
-export function saveStatusLabel(status: PostSaveStatus): string | null {
+export function saveStatusLabel(
+    status: PostSaveStatus,
+    labels?: { pending?: string; saving?: string; saved?: string; error?: string }
+): string | null {
     switch (status) {
         case 'pending':
-            return 'Unsaved changes';
+            return labels?.pending ?? 'Unsaved changes';
         case 'saving':
-            return 'Saving…';
+            return labels?.saving ?? 'Saving…';
         case 'saved':
-            return 'Saved';
+            return labels?.saved ?? 'Saved';
         case 'error':
-            return 'Save failed';
+            return labels?.error ?? 'Save failed';
         default:
             return null;
     }
 }
 
 /** Navbar-only: show activity, not steady “idle/pending/saved forever” chrome. */
-export function navSaveStatusLabel(status: PostSaveStatus): string | null {
+export function navSaveStatusLabel(
+    status: PostSaveStatus,
+    labels?: { saving?: string; saved?: string; error?: string }
+): string | null {
     switch (status) {
         case 'saving':
-            return 'Saving…';
+            return labels?.saving ?? 'Saving…';
         case 'saved':
-            return 'Saved';
+            return labels?.saved ?? 'Saved';
         case 'error':
-            return 'Save failed';
+            return labels?.error ?? 'Save failed';
         default:
             return null;
     }

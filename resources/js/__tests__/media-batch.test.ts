@@ -14,6 +14,7 @@ import {
     type MediaDestroyResult,
     type MediaUploadResult,
 } from '@/lib/media/batch';
+import { loadTranslations } from '@/lib/i18n';
 import type { Media } from '@/types/api';
 
 function media(id: string, name = `${id}.jpg`): Media {
@@ -38,6 +39,22 @@ function media(id: string, name = `${id}.jpg`): Media {
 
 describe('media batch helpers', () => {
     it('uploads and deletes with continue-on-error and useful summaries', async () => {
+        loadTranslations(
+            JSON.stringify({
+                'media.uploaded_count': ':count image uploaded.',
+                'media.uploaded_count_other': ':count images uploaded.',
+                'media.upload_partial': ':succeeded uploaded, :failed failed. :detail',
+                'media.deleted_count': ':count image deleted.',
+                'media.deleted_count_other': ':count images deleted.',
+                'media.delete_partial': ':succeeded deleted, :failed failed.',
+                'media.delete_failed': 'Unable to delete this image.',
+                'media.delete_failed_other': 'Unable to delete :count images.',
+                'media.upload_failed': 'Upload failed.',
+                'media.upload_failed_detail': 'Upload failed. :detail',
+                'media.delete_error': 'Unable to delete this media item.',
+            })
+        );
+
         const a = new File([new Uint8Array(4)], 'a.jpg', { type: 'image/jpeg' });
         const b = new File([new Uint8Array(4)], 'b.jpg', { type: 'image/jpeg' });
         const c = new File([new Uint8Array(4)], 'c.jpg', { type: 'image/jpeg' });

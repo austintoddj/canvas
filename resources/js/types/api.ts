@@ -339,6 +339,7 @@ export type UnsplashErrorResponse = {
 
 export type UnsplashParams = {
     query?: string;
+    page?: number;
 };
 
 export function searchResultLabel(result: SearchResult): string {

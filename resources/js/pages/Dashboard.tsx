@@ -14,11 +14,12 @@ import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Skeleton } from '@/components/Skeleton';
 import { PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
+import { useCanvas } from '@/hooks/useCanvas';
 import { usePermissions } from '@/hooks/usePermissions';
 import { isInitialLoading, isRefreshing } from '@/lib/async-ui';
 import { statsApi } from '@/lib/api/stats';
 import {
-    DASHBOARD_EMPTY_STATE,
+    DASHBOARD_EMPTY_STATE_KEYS,
     dashboardStatsParams,
     isZeroActivity,
     mapDashboardInsights,
@@ -43,6 +44,7 @@ function DashboardSkeleton() {
 }
 
 export default function Dashboard() {
+    const { t } = useCanvas();
     const { canViewAllPosts } = usePermissions();
     const [searchParams, setSearchParams] = useSearchParams();
     const scope = parseDashboardScope(searchParams.get('scope'));
@@ -67,12 +69,17 @@ export default function Dashboard() {
             .index(dashboardStatsParams(effectiveScope), controller.signal)
             .then((insights) => {
                 if (!cancelled) {
-                    setPresentation(mapDashboardInsights(insights));
+                    setPresentation(
+                        mapDashboardInsights(insights, {
+                            views: t('dashboard.views_30'),
+                            visits: t('dashboard.visits_30'),
+                        })
+                    );
                 }
             })
             .catch(() => {
                 if (!cancelled) {
-                    setError('Unable to load dashboard stats.');
+                    setError(t('dashboard.load_error'));
                     setPresentation(null);
                 }
             })
@@ -86,7 +93,7 @@ export default function Dashboard() {
             cancelled = true;
             controller.abort();
         };
-    }, [effectiveScope]);
+    }, [effectiveScope, t]);
 
     function setScope(next: DashboardScope) {
         const params = new URLSearchParams(searchParams);
@@ -108,14 +115,14 @@ export default function Dashboard() {
 
     return (
         <div className="space-y-8">
-            <PageHeader title="Dashboard">
-                <PageDescription>Traffic across your posts for the last 30 days.</PageDescription>
+            <PageHeader title={t('dashboard.title')}>
+                <PageDescription>{t('dashboard.description')}</PageDescription>
             </PageHeader>
 
             {canViewAllPosts ? (
-                <PillNav value={effectiveScope} onChange={setScope} aria-label="Dashboard author scope">
-                    <PillNavItem value="user">Mine</PillNavItem>
-                    <PillNavItem value="all">All authors</PillNavItem>
+                <PillNav value={effectiveScope} onChange={setScope} aria-label={t('dashboard.scope_label')}>
+                    <PillNavItem value="user">{t('dashboard.scope_mine')}</PillNavItem>
+                    <PillNavItem value="all">{t('dashboard.scope_all')}</PillNavItem>
                 </PillNav>
             ) : null}
 
@@ -134,13 +141,13 @@ export default function Dashboard() {
                     {zeroActivity ? (
                         <EmptyStateReveal animate={animateEmpty}>
                             <EmptyState
-                                headline={DASHBOARD_EMPTY_STATE.headline}
-                                description={DASHBOARD_EMPTY_STATE.blurb}
+                                headline={t(DASHBOARD_EMPTY_STATE_KEYS.headline)}
+                                description={t(DASHBOARD_EMPTY_STATE_KEYS.blurb)}
                                 visual={<DashboardEmptyVisual />}
                                 action={
                                     <Button href="/posts/new" color="dark/zinc">
                                         <PlusIcon data-slot="icon" />
-                                        {DASHBOARD_EMPTY_STATE.cta}
+                                        {t(DASHBOARD_EMPTY_STATE_KEYS.cta)}
                                     </Button>
                                 }
                             />

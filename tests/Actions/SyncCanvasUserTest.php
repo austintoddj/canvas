@@ -14,7 +14,7 @@ it('creates a canvas user when an admin assigns a role', function (): void {
         'summary' => 'Writer bio',
         'website' => 'https://example.com',
         'social' => [
-            'twitter' => 'writer',
+            'x' => 'writer',
         ],
         'locale' => 'en',
         'timezone' => 'America/Chicago',
@@ -32,7 +32,7 @@ it('creates a canvas user when an admin assigns a role', function (): void {
     ]);
 
     expect(CanvasUser::find($user->id)->social)->toBe([
-        'twitter' => 'writer',
+        'x' => 'writer',
     ]);
 });
 
@@ -97,7 +97,7 @@ it('normalizes empty social links to null', function (): void {
 
     $syncCanvasUser($user->id, [
         'social' => [
-            'twitter' => '',
+            'x' => '',
             'github' => 'canvas',
         ],
     ], false);
@@ -108,7 +108,7 @@ it('normalizes empty social links to null', function (): void {
 
     $syncCanvasUser($user->id, [
         'social' => [
-            'twitter' => '',
+            'x' => '',
         ],
     ], false);
 

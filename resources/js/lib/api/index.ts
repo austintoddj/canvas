@@ -14,7 +14,16 @@ export { tagsApi } from '@/lib/api/tags';
 export { topicsApi } from '@/lib/api/topics';
 export { unsplashApi } from '@/lib/api/unsplash';
 export { integrationsApi } from '@/lib/api/integrations';
-export type { IntegrationsStatus, UnsplashIntegrationStatus, UpdateIntegrationsPayload } from '@/lib/api/integrations';
+export { aiApi } from '@/lib/api/ai';
+export { translationsApi } from '@/lib/api/translations';
+export type {
+    IntegrationsStatus,
+    UnsplashIntegrationStatus,
+    AiIntegrationStatus,
+    UpdateIntegrationsPayload,
+} from '@/lib/api/integrations';
+export type { AiRewriteAction, AiRewritePayload, AiRewriteResponse } from '@/lib/api/ai';
+export type { TranslationsDictionary } from '@/lib/api/translations';
 
 export { buildQueryString } from '@/lib/api/query';
 

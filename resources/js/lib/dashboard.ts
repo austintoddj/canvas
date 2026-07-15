@@ -29,18 +29,23 @@ export function dashboardStatsParams(scope: DashboardScope): StatsIndexParams {
     return scope === 'all' ? { scope: 'all' } : { scope: 'user' };
 }
 
-export function mapDashboardInsights(insights: DashboardInsights): DashboardPresentation {
+export function mapDashboardInsights(
+    insights: DashboardInsights,
+    labels?: { views: string; visits: string }
+): DashboardPresentation {
     const viewsSeries = parseDailyGraph(insights.graph.views);
     const visitsSeries = parseDailyGraph(insights.graph.visits);
+    const viewsLabel = labels?.views ?? 'Views (last 30 days)';
+    const visitsLabel = labels?.visits ?? 'Visits (last 30 days)';
 
     return {
         cards: [
-            { key: 'views', label: 'Views (last 30 days)', value: insights.views },
-            { key: 'visits', label: 'Visits (last 30 days)', value: insights.visits },
+            { key: 'views', label: viewsLabel, value: insights.views },
+            { key: 'visits', label: visitsLabel, value: insights.visits },
         ],
         charts: [
-            { key: 'views', title: 'Views (last 30 days)', data: viewsSeries },
-            { key: 'visits', title: 'Visits (last 30 days)', data: visitsSeries },
+            { key: 'views', title: viewsLabel, data: viewsSeries },
+            { key: 'visits', title: visitsLabel, data: visitsSeries },
         ],
         totalActivity: insights.views + insights.visits,
     };
@@ -50,8 +55,8 @@ export function isZeroActivity(presentation: DashboardPresentation): boolean {
     return presentation.totalActivity === 0;
 }
 
-export const DASHBOARD_EMPTY_STATE = {
-    headline: 'No traffic yet',
-    blurb: 'Publish a post and send readers its way — views and visits for the last 30 days will show up here.',
-    cta: 'Write a post',
+export const DASHBOARD_EMPTY_STATE_KEYS = {
+    headline: 'dashboard.empty_headline',
+    blurb: 'dashboard.empty_blurb',
+    cta: 'dashboard.empty_cta',
 } as const;

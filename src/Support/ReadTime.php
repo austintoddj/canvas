@@ -11,12 +11,13 @@ final class ReadTime
     public static function calculate(?string $text, ?string $locale = null): string
     {
         $minutes = (int) ceil(str_word_count(strip_tags((string) $text)) / 250);
+        $translationLocale = Localization::resolveTranslationLocale($locale);
 
         return sprintf(
             '%d %s %s',
             $minutes,
-            Str::plural(trans('canvas::app.min', [], $locale), $minutes),
-            trans('canvas::app.read', [], $locale)
+            Str::plural(trans('canvas::app.min', [], $translationLocale), $minutes),
+            trans('canvas::app.read', [], $translationLocale)
         );
     }
 }

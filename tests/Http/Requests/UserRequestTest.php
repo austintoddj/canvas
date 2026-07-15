@@ -110,7 +110,7 @@ it('accepts a valid canvas profile payload', function (): void {
             'summary' => 'Writer bio',
             'website' => 'https://example.com',
             'social' => [
-                'twitter' => 'writer',
+                'x' => 'writer',
             ],
             'locale' => 'en',
             'timezone' => 'America/Chicago',

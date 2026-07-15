@@ -84,7 +84,7 @@ class DigestCommand extends Command
                 ->get();
 
             Mail::to($email)
-                ->locale(Localization::resolveLocale($canvasUser->locale))
+                ->locale(Localization::resolveTranslationLocale($canvasUser->locale))
                 ->send(new WeeklyDigest(
                     userName: $name,
                     posts: $posts->toArray(),

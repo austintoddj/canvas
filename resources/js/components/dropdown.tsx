@@ -143,6 +143,14 @@ export const dropdownProfileItemClass = '!flex items-center gap-3';
 export const dropdownInsetItemClass =
     'grid-cols-[1fr_auto] supports-[grid-template-columns:subgrid]:grid-cols-[1fr_auto] *:data-[slot=trailing-icon]:col-start-2';
 
+/** Form select triggers for short discrete values (role, language, platform). */
+export const selectDropdownTriggerClass =
+    'w-auto min-w-40 max-w-full cursor-pointer justify-between font-normal';
+
+/** Form select triggers for longer values (timezones) — capped, not full drawer width. */
+export const selectDropdownTriggerWideClass =
+    'w-full max-w-sm cursor-pointer justify-between font-normal';
+
 export function DropdownLabel({
     className,
     inset = false,

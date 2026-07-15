@@ -7,6 +7,7 @@ namespace Canvas\Analytics;
 use Canvas\Models\Post;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
+use Canvas\Support\Localization;
 use Canvas\Support\ReadTime;
 use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
@@ -210,7 +211,7 @@ final readonly class PostInsights implements JsonSerializable
      */
     private static function topReferers(Builder|HasMany $views, ?string $locale): array
     {
-        $other = trans('canvas::app.other', [], $locale);
+        $other = trans('canvas::app.other', [], Localization::resolveTranslationLocale($locale));
 
         $rows = $views
             ->toBase()
@@ -252,8 +253,10 @@ final readonly class PostInsights implements JsonSerializable
 
     private static function parseBrowser(?string $agent, ?string $locale): string
     {
+        $translationLocale = Localization::resolveTranslationLocale($locale);
+
         if (! $agent) {
-            return trans('canvas::app.other', [], $locale);
+            return trans('canvas::app.other', [], $translationLocale);
         }
 
         $lower = strtolower($agent);
@@ -264,7 +267,7 @@ final readonly class PostInsights implements JsonSerializable
             str_contains($lower, 'firefox') => 'Firefox',
             str_contains($lower, 'safari') => 'Safari',
             str_contains($lower, 'opr') || str_contains($lower, 'opera') => 'Opera',
-            default => trans('canvas::app.other', [], $locale),
+            default => trans('canvas::app.other', [], $translationLocale),
         };
     }
 }

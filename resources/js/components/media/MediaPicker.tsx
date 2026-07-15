@@ -60,8 +60,12 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
         const controller = new AbortController();
         let cancelled = false;
 
-        setLoading(true);
-        setError(null);
+        queueMicrotask(() => {
+            if (!cancelled) {
+                setLoading(true);
+                setError(null);
+            }
+        });
 
         void fetchMediaPage({ scope, search: debouncedSearch, page: 1 }, controller.signal)
             .then((response) => {
@@ -147,11 +151,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                 </Field>
 
                 {canViewAllMedia ? (
-                    <PillNav
-                        value={scope}
-                        onChange={(next) => setScope(next)}
-                        aria-label="Media author scope"
-                    >
+                    <PillNav value={scope} onChange={(next) => setScope(next)} aria-label="Media author scope">
                         <PillNavItem value="user">Mine</PillNavItem>
                         <PillNavItem value="all">All</PillNavItem>
                     </PillNav>

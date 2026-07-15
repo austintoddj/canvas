@@ -30,6 +30,15 @@
     --duration-canvas-empty: 200ms;
 }
 
+/* RTL: keep body editor stats and utility rows readable without full logical-class migration. */
+[dir='rtl'] [data-post-body-stats='true'] {
+    flex-direction: row-reverse;
+}
+
+[dir='rtl'] [data-post-body-toolbar='true'] {
+    flex-direction: row-reverse;
+}
+
 /* Pointer on clickables (Vercel-style affordance); component classes can still override when needed. */
 @layer base {
     a[href],

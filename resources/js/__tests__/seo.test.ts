@@ -16,12 +16,14 @@ import type { CanvasBoot } from '@/types/boot';
 function bootFixture(website: string | null = null): CanvasBoot {
     return {
         path: '/canvas',
-        languageCodes: ['en'],
+        languages: [{ code: 'en', label: 'English', rtl: false }],
+        defaultLocale: 'en',
         maxUpload: 3_145_728,
         roles: { 1: 'Contributor', 2: 'Editor', 3: 'Admin' },
-        timezone: 'UTC',
+        appTimezone: 'UTC',
         translations: '{}',
         unsplash: false,
+        ai: false,
         version: '7.0.0',
         user: {
             id: 1,

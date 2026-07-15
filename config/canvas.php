@@ -56,14 +56,13 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Locales
+    | Languages
     |--------------------------------------------------------------------------
     |
-    | Canvas only allows users to select locales that the admin UI can
-    | translate. Locales are discovered from the package language directories
-    | and any published files in lang/vendor/canvas. Set CANVAS_LOCALES to a
-    | comma-separated list to restrict that discovered set — codes without
-    | translation files are ignored automatically.
+    | Authors pick a language (stored as BCP-47 locale on canvas_users) from
+    | the package catalog. Set CANVAS_LOCALES to a comma-separated subset of
+    | catalog codes to restrict the picker (e.g. "en,es-MX,pt-BR"). Unknown
+    | codes are ignored; an empty list uses the full catalog.
     |
     */
 

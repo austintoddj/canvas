@@ -3,6 +3,7 @@ import { Description, ErrorMessage, Field, Fieldset, Label } from '@/components/
 import { Input } from '@/components/input';
 import { Textarea } from '@/components/textarea';
 import SeoPreview from '@/components/posts/SeoPreview';
+import { useCanvas } from '@/hooks/useCanvas';
 import { hasMetaOverrides, isValidUrl, updatePostMeta, type PostSeoInput } from '@/lib/seo';
 import type { PostFormState } from '@/lib/posts/form';
 import type { LaravelValidationErrors } from '@/lib/api';
@@ -31,6 +32,7 @@ function seoInputFromForm(form: PostFormState): PostSeoInput {
 }
 
 export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = false }: PostSeoPanelProps) {
+    const { t } = useCanvas();
     const seoTitle = form.meta?.title ?? '';
     const metaDescription = form.meta?.description ?? '';
     const canonicalLink = form.meta?.canonical_link ?? '';
@@ -53,19 +55,20 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
             <SeoPreview post={seoInputFromForm(form)} />
 
             <Field>
-                <Label>SEO title</Label>
-                <Description>Defaults to the post title. Keep it under ~60 characters.</Description>
+                <Label>{t('editor.seo_title')}</Label>
+                <Description>{t('editor.seo_title_help')}</Description>
                 <Input
                     name="meta.title"
                     value={seoTitle}
                     disabled={disabled}
-                    placeholder={form.title.trim() === '' ? 'Untitled post' : form.title}
+                    placeholder={form.title.trim() === '' ? t('editor.untitled_post') : form.title}
                     invalid={fieldError(fieldErrors, 'meta.title') !== undefined}
                     onChange={(event) => updateMetaField('title', event.target.value)}
                 />
                 <Description>
-                    {seoTitle.length} / 60
-                    {seoTitle.length > 60 ? ' — may be truncated in search results' : ''}
+                    {seoTitle.length > 60
+                        ? t('editor.seo_title_truncated', { count: seoTitle.length })
+                        : t('editor.seo_title_count', { count: seoTitle.length })}
                 </Description>
                 {fieldError(fieldErrors, 'meta.title') ? (
                     <ErrorMessage>{fieldError(fieldErrors, 'meta.title')}</ErrorMessage>
@@ -73,21 +76,22 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
             </Field>
 
             <Field>
-                <Label>Meta description</Label>
-                <Description>Defaults to the summary. Aim for ~160 characters.</Description>
+                <Label>{t('editor.meta_description')}</Label>
+                <Description>{t('editor.meta_description_help')}</Description>
                 <Textarea
                     name="meta.description"
                     rows={3}
                     resizable={false}
                     value={metaDescription}
                     disabled={disabled}
-                    placeholder={form.summary.trim() === '' ? 'Uses summary or body excerpt when empty' : form.summary}
+                    placeholder={form.summary.trim() === '' ? t('editor.seo_desc_placeholder') : form.summary}
                     invalid={fieldError(fieldErrors, 'meta.description') !== undefined}
                     onChange={(event) => updateMetaField('description', event.target.value)}
                 />
                 <Description>
-                    {metaDescription.length} / 160
-                    {metaDescription.length > 160 ? ' — may be truncated in search results' : ''}
+                    {metaDescription.length > 160
+                        ? t('editor.meta_desc_truncated', { count: metaDescription.length })
+                        : t('editor.meta_desc_count', { count: metaDescription.length })}
                 </Description>
                 {fieldError(fieldErrors, 'meta.description') ? (
                     <ErrorMessage>{fieldError(fieldErrors, 'meta.description')}</ErrorMessage>
@@ -95,8 +99,8 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
             </Field>
 
             <Field>
-                <Label>Canonical URL</Label>
-                <Description>Optional. Leave blank to use this post’s public URL.</Description>
+                <Label>{t('editor.canonical_url')}</Label>
+                <Description>{t('editor.canonical_help')}</Description>
                 <Input
                     name="meta.canonical_link"
                     value={canonicalLink}
@@ -105,7 +109,7 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
                     invalid={canonicalInvalid || fieldError(fieldErrors, 'meta.canonical_link') !== undefined}
                     onChange={(event) => updateMetaField('canonical_link', event.target.value)}
                 />
-                {canonicalInvalid ? <ErrorMessage>Enter a valid http or https URL.</ErrorMessage> : null}
+                {canonicalInvalid ? <ErrorMessage>{t('editor.link_invalid')}</ErrorMessage> : null}
                 {fieldError(fieldErrors, 'meta.canonical_link') ? (
                     <ErrorMessage>{fieldError(fieldErrors, 'meta.canonical_link')}</ErrorMessage>
                 ) : null}
@@ -113,7 +117,7 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
 
             {hasOverrides ? (
                 <Button type="button" plain disabled={disabled} onClick={resetOverrides}>
-                    Reset to defaults
+                    {t('editor.reset_seo')}
                 </Button>
             ) : null}
         </Fieldset>

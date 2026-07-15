@@ -42,7 +42,7 @@ class UsersCommand extends Command
             ->values()
             ->all();
 
-        $this->table(['Name', 'Email', 'Username', 'Role', 'Locale', 'Timezone'], $rows);
+        $this->table(['Name', 'Email', 'Username', 'Role', 'Language', 'Timezone'], $rows);
 
         return self::SUCCESS;
     }

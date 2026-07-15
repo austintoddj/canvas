@@ -83,7 +83,7 @@ export const NAVIGATION_PAGES: NavigationPage[] = [
         id: 'integrations',
         label: 'Integrations',
         path: '/settings/integrations',
-        keywords: ['settings', 'unsplash', 'api', 'connections'],
+        keywords: ['settings', 'unsplash', 'api', 'connections', 'ai', 'grok', 'openai', 'claude', 'chatgpt'],
         requires: 'settings',
     },
 ];
@@ -139,10 +139,7 @@ export function searchFilterHints(options: SearchPermissionOptions): SearchFilte
     return hints;
 }
 
-export function canSearchEntityType(
-    entityType: SearchEntityType,
-    options: SearchPermissionOptions
-): boolean {
+export function canSearchEntityType(entityType: SearchEntityType, options: SearchPermissionOptions): boolean {
     switch (entityType) {
         case 'Post':
             return true;
@@ -161,10 +158,7 @@ export function filterSearchResultsByPermissions(
     return results.filter((result) => canSearchEntityType(result.type, options));
 }
 
-export function canAccessNavigationPage(
-    page: NavigationPage,
-    options: SearchPermissionOptions
-): boolean {
+export function canAccessNavigationPage(page: NavigationPage, options: SearchPermissionOptions): boolean {
     switch (page.requires) {
         case 'taxonomy':
             return options.canManageTaxonomy;
@@ -198,9 +192,7 @@ export function filterNavigationPages(
     });
 }
 
-export type PaletteItem =
-    | { kind: 'page'; page: NavigationPage }
-    | { kind: 'entity'; result: SearchResult };
+export type PaletteItem = { kind: 'page'; page: NavigationPage } | { kind: 'entity'; result: SearchResult };
 
 export function paletteItemKey(item: PaletteItem): string {
     return item.kind === 'page' ? `page-${item.page.id}` : `entity-${item.result.type}-${item.result.id}`;

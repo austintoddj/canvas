@@ -370,7 +370,7 @@ describe('when saving preferences', function (): void {
             ->postJson("canvas/api/users/{$this->contributor->id}", [
                 'website' => 'https://example.com',
                 'social' => [
-                    'twitter' => 'writer',
+                    'x' => 'writer',
                 ],
                 'timezone' => 'America/Chicago',
                 'preferences' => [
@@ -384,7 +384,7 @@ describe('when saving preferences', function (): void {
         $canvasUser = CanvasUser::find($this->contributor->id);
 
         expect($canvasUser->website)->toBe('https://example.com');
-        expect($canvasUser->social)->toBe(['twitter' => 'writer']);
+        expect($canvasUser->social)->toBe(['x' => 'writer']);
         expect($canvasUser->timezone)->toBe('America/Chicago');
         expect($canvasUser->preferences)->toBe([
             'onboarding' => [

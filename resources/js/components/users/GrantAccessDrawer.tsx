@@ -33,7 +33,7 @@ type GrantAccessDrawerProps = {
 };
 
 export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: GrantAccessDrawerProps) {
-    const { boot } = useCanvas();
+    const { boot, t } = useCanvas();
 
     const [identifier, setIdentifier] = useState('');
     const [role, setRole] = useState<RoleValue>(Role.Contributor);
@@ -81,9 +81,9 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
                 setFieldErrors(lookupError.errors);
                 setError(null);
             } else if (lookupError instanceof ApiError && lookupError.status === 404) {
-                setError('No host user found with that email or ID. They must already have an account in your app.');
+                setError(t('users.lookup_not_found'));
             } else {
-                setError('Unable to look up that host user.');
+                setError(t('users.lookup_error'));
             }
         } finally {
             setLookingUp(false);
@@ -101,16 +101,18 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
 
         try {
             const response = await usersApi.store(String(host.id), grantAccessPayload(role));
-            toast.success(`Invited ${response.user.name} as ${boot.roles[role] ?? 'a member'}.`);
+            toast.success(
+                t('users.invited', { name: response.user.name, role: boot.roles[role] ?? t('users.member_fallback') })
+            );
             onGranted?.(response.user);
             onClose();
         } catch (grantError) {
             if (grantError instanceof ValidationError) {
                 setFieldErrors(grantError.errors);
-                toast.error('Please fix the highlighted fields.');
+                toast.error(t('common.please_fix_fields'));
             } else {
-                setError('Unable to invite this user.');
-                toast.error('Unable to invite this user.');
+                setError(t('users.invite_error'));
+                toast.error(t('users.invite_error'));
             }
         } finally {
             setGranting(false);
@@ -132,15 +134,15 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
         <SideDrawer
             open={open}
             onClose={onClose}
-            title="Invite"
-            description="Invite an existing host account into Canvas with a role"
+            title={t('users.invite_title')}
+            description={t('users.invite_description')}
             footer={
                 open ? (
                     <>
                         <span />
                         <div className="flex flex-wrap items-center gap-2">
                             <Button type="button" plain disabled={lookingUp || granting} onClick={onClose}>
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                             {showHost && host.has_canvas_access ? (
                                 <Button
@@ -149,7 +151,7 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
                                     disabled={lookingUp || granting}
                                     onClick={handleOpenExisting}
                                 >
-                                    Open user
+                                    {t('users.open_existing')}
                                 </Button>
                             ) : (
                                 <Button
@@ -158,7 +160,7 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
                                     disabled={!canGrantAccess(host, granting) || lookingUp}
                                     onClick={() => void handleGrant()}
                                 >
-                                    {granting ? 'Inviting…' : 'Invite'}
+                                    {granting ? t('users.granting') : t('users.invite')}
                                 </Button>
                             )}
                         </div>
@@ -181,13 +183,11 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
                     {error ? <ErrorText>{error}</ErrorText> : null}
 
                     <Fieldset>
-                        <Legend>Host account</Legend>
+                        <Legend>{t('users.host_account')}</Legend>
                         <FieldGroup>
                             <Field>
-                                <Label>Email or user ID</Label>
-                                <Description>
-                                    Canvas does not create logins. The person must already exist in your application.
-                                </Description>
+                                <Label>{t('users.email_or_id')}</Label>
+                                <Description>{t('users.email_or_id_help_long')}</Description>
                                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
                                     <div className="min-w-0 flex-1">
                                         <Input
@@ -219,7 +219,7 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
                                         disabled={!canSubmitLookup(identifier) || lookingUp || granting}
                                         onClick={() => void handleLookup()}
                                     >
-                                        {lookingUp ? 'Looking up…' : 'Look up'}
+                                        {lookingUp ? t('users.looking_up') : t('users.lookup')}
                                     </Button>
                                 </div>
                                 {fieldErrors.q?.[0] ? <ErrorMessage>{fieldErrors.q[0]}</ErrorMessage> : null}
@@ -246,10 +246,12 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
                                     <div className="mt-2">
                                         {host.has_canvas_access ? (
                                             <Badge color="blue">
-                                                Already has access · {roleLabelFromHost(host, boot.roles)}
+                                                {t('users.already_has_access', {
+                                                    role: roleLabelFromHost(host, boot.roles),
+                                                })}
                                             </Badge>
                                         ) : (
-                                            <Badge color="zinc">No Canvas access yet</Badge>
+                                            <Badge color="zinc">{t('users.empty_headline')}</Badge>
                                         )}
                                     </div>
                                 </div>
@@ -257,12 +259,12 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
 
                             {host.has_canvas_access ? (
                                 <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                                    This person already has Canvas access. Open them to change role or revoke access.
+                                    {t('users.already_access_help')}
                                 </Text>
                             ) : (
                                 <Field>
-                                    <Label>Role</Label>
-                                    <Description>What this person can manage in Canvas.</Description>
+                                    <Label>{t('users.role')}</Label>
+                                    <Description>{t('users.role_help')}</Description>
                                     <div className="mt-3">
                                         <RoleSelectDropdown
                                             value={role}
@@ -272,9 +274,7 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
                                             invalid={Boolean(fieldErrors.role)}
                                         />
                                     </div>
-                                    {fieldErrors.role?.[0] ? (
-                                        <ErrorMessage>{fieldErrors.role[0]}</ErrorMessage>
-                                    ) : null}
+                                    {fieldErrors.role?.[0] ? <ErrorMessage>{fieldErrors.role[0]}</ErrorMessage> : null}
                                 </Field>
                             )}
                         </div>

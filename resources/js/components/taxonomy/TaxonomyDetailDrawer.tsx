@@ -6,6 +6,7 @@ import { Description, ErrorMessage, Field, FieldGroup, Label } from '@/component
 import { Input } from '@/components/input';
 import { SideDrawer } from '@/components/SideDrawer';
 import { ErrorText } from '@/components/text';
+import { useCanvas } from '@/hooks/useCanvas';
 import { ValidationError, type LaravelValidationErrors } from '@/lib/api';
 import { tagsApi } from '@/lib/api/tags';
 import { topicsApi } from '@/lib/api/topics';
@@ -35,40 +36,21 @@ type TaxonomyDetailDrawerProps = {
     onDeleted?: (itemId: string) => void;
 };
 
-const copy = {
-    tag: {
-        singular: 'tag',
-        titleNew: 'New tag',
-        titleEdit: 'Edit tag',
-        subtitle: 'Labels for grouping related posts',
-        nameDescription: 'What authors see when tagging a post.',
-        loadError: 'Unable to load this tag.',
-        saveError: 'Unable to save this tag.',
-        deleteError: 'Unable to delete this tag.',
-        created: 'Tag created.',
-        saved: 'Tag saved.',
-        deleted: 'Tag deleted.',
-        deleteTitle: 'Delete tag?',
-        createLabel: 'Create tag',
-        saveLabel: 'Save',
-    },
-    topic: {
-        singular: 'topic',
-        titleNew: 'New topic',
-        titleEdit: 'Edit topic',
-        subtitle: 'Main categories for your posts',
-        nameDescription: 'What authors see when choosing a topic.',
-        loadError: 'Unable to load this topic.',
-        saveError: 'Unable to save this topic.',
-        deleteError: 'Unable to delete this topic.',
-        created: 'Topic created.',
-        saved: 'Topic saved.',
-        deleted: 'Topic deleted.',
-        deleteTitle: 'Delete topic?',
-        createLabel: 'Create topic',
-        saveLabel: 'Save',
-    },
-} as const;
+type TaxonomyCopy = {
+    titleNew: string;
+    titleEdit: string;
+    subtitle: string;
+    nameDescription: string;
+    loadError: string;
+    saveError: string;
+    deleteError: string;
+    created: string;
+    saved: string;
+    deleted: string;
+    deleteTitle: string;
+    createLabel: string;
+    saveLabel: string;
+};
 
 function apiFor(kind: TaxonomyKind) {
     return kind === 'tag' ? tagsApi : topicsApi;
@@ -83,7 +65,39 @@ export function TaxonomyDetailDrawer({
     onSaved,
     onDeleted,
 }: TaxonomyDetailDrawerProps) {
-    const labels = copy[kind];
+    const { t } = useCanvas();
+    const labels: TaxonomyCopy =
+        kind === 'tag'
+            ? {
+                  titleNew: t('taxonomy.tag_new'),
+                  titleEdit: t('taxonomy.tag_edit'),
+                  subtitle: t('taxonomy.tag_subtitle'),
+                  nameDescription: t('taxonomy.tag_name_help'),
+                  loadError: t('taxonomy.tag_load_error'),
+                  saveError: t('taxonomy.tag_save_error'),
+                  deleteError: t('taxonomy.tag_delete_error'),
+                  created: t('taxonomy.tag_created'),
+                  saved: t('taxonomy.tag_saved'),
+                  deleted: t('taxonomy.tag_deleted'),
+                  deleteTitle: t('taxonomy.tag_delete_title'),
+                  createLabel: t('taxonomy.tag_create'),
+                  saveLabel: t('common.save'),
+              }
+            : {
+                  titleNew: t('taxonomy.topic_new'),
+                  titleEdit: t('taxonomy.topic_edit'),
+                  subtitle: t('taxonomy.topic_subtitle'),
+                  nameDescription: t('taxonomy.topic_name_help'),
+                  loadError: t('taxonomy.topic_load_error'),
+                  saveError: t('taxonomy.topic_save_error'),
+                  deleteError: t('taxonomy.topic_delete_error'),
+                  created: t('taxonomy.topic_created'),
+                  saved: t('taxonomy.topic_saved'),
+                  deleted: t('taxonomy.topic_deleted'),
+                  deleteTitle: t('taxonomy.topic_delete_title'),
+                  createLabel: t('taxonomy.topic_create'),
+                  saveLabel: t('common.save'),
+              };
     const [form, setForm] = useState<TaxonomyFormState>(emptyTaxonomyForm);
     const [baseline, setBaseline] = useState(() => serializeTaxonomyForm(emptyTaxonomyForm()));
     const [loading, setLoading] = useState(false);
@@ -190,7 +204,12 @@ export function TaxonomyDetailDrawer({
     }, [open, ready, loading, itemId]);
 
     const isDirty = serializeTaxonomyForm(form) !== baseline;
-    const displayName = form.name.trim() === '' ? `this ${labels.singular}` : `“${form.name}”`;
+    const displayName =
+        form.name.trim() === ''
+            ? kind === 'tag'
+                ? t('taxonomy.this_tag')
+                : t('taxonomy.this_topic')
+            : `“${form.name}”`;
     const title = isNew ? labels.titleNew : form.name.trim() === '' ? labels.titleEdit : form.name;
     const showForm = ready && error === null;
     const showFooter = open && itemId !== null && (showForm || loading);
@@ -225,8 +244,8 @@ export function TaxonomyDetailDrawer({
 
         if (!isTaxonomyFormValid(form)) {
             setFieldErrors({
-                ...(form.name.trim() === '' ? { name: ['The name field is required.'] } : {}),
-                ...(form.slug.trim() === '' ? { slug: ['The slug field is required.'] } : {}),
+                ...(form.name.trim() === '' ? { name: [t('taxonomy.name_required')] } : {}),
+                ...(form.slug.trim() === '' ? { slug: [t('taxonomy.slug_required')] } : {}),
             });
             return;
         }
@@ -252,7 +271,7 @@ export function TaxonomyDetailDrawer({
         } catch (saveError) {
             if (saveError instanceof ValidationError) {
                 setFieldErrors(saveError.errors);
-                toast.error('Please fix the highlighted fields.');
+                toast.error(t('common.please_fix_fields'));
             } else {
                 setError(labels.saveError);
                 toast.error(labels.saveError);
@@ -318,14 +337,14 @@ export function TaxonomyDetailDrawer({
                                     disabled={deleting || saving || loading}
                                     onClick={openDeleteConfirm}
                                 >
-                                    Delete
+                                    {t('common.delete')}
                                 </Button>
                             ) : (
                                 <span />
                             )}
                             <div className="flex flex-wrap items-center gap-2">
                                 <Button type="button" plain disabled={saving || deleting} onClick={onClose}>
-                                    Cancel
+                                    {t('common.cancel')}
                                 </Button>
                                 <Button
                                     type="button"
@@ -333,7 +352,7 @@ export function TaxonomyDetailDrawer({
                                     disabled={loading || saving || deleting || (!isDirty && !isNew) || !showForm}
                                     onClick={() => void handleSave()}
                                 >
-                                    {saving ? 'Saving…' : isNew ? labels.createLabel : labels.saveLabel}
+                                    {saving ? t('common.saving') : isNew ? labels.createLabel : labels.saveLabel}
                                 </Button>
                             </div>
                         </>
@@ -368,7 +387,7 @@ export function TaxonomyDetailDrawer({
 
                             <FieldGroup>
                                 <Field>
-                                    <Label>Name</Label>
+                                    <Label>{t('taxonomy.name')}</Label>
                                     <Description>{labels.nameDescription}</Description>
                                     <Input
                                         ref={nameInputRef}
@@ -381,8 +400,8 @@ export function TaxonomyDetailDrawer({
                                 </Field>
 
                                 <Field>
-                                    <Label>Slug</Label>
-                                    <Description>Used in URLs. Fills in from the name until you edit it.</Description>
+                                    <Label>{t('taxonomy.slug')}</Label>
+                                    <Description>{t('taxonomy.slug_help')}</Description>
                                     <Input
                                         value={form.slug}
                                         onChange={(event) => handleSlugChange(event.target.value)}
@@ -399,13 +418,13 @@ export function TaxonomyDetailDrawer({
 
             <Alert open={confirmDeleteOpen} onClose={closeDeleteConfirm} size="sm">
                 <AlertTitle>{labels.deleteTitle}</AlertTitle>
-                <AlertDescription>Delete {displayName}? This cannot be undone.</AlertDescription>
+                <AlertDescription>{t('taxonomy.delete_confirm', { name: displayName })}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                     <Button type="button" color="red" disabled={deleting} onClick={() => void confirmDelete()}>
-                        {deleting ? 'Deleting…' : 'Delete'}
+                        {deleting ? t('common.deleting') : t('common.delete')}
                     </Button>
                 </AlertActions>
             </Alert>
