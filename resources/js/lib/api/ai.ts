@@ -1,6 +1,7 @@
 import { api } from '@/lib/api';
 
-export type AiRewriteAction = 'improve' | 'fix_grammar' | 'shorten' | 'expand' | 'custom';
+export type AiRewriteAction =
+    'improve' | 'fix_grammar' | 'shorten' | 'expand' | 'custom' | 'seo_title' | 'seo_description';
 
 export type AiRewritePayload = {
     action: AiRewriteAction;

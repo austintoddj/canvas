@@ -1,4 +1,5 @@
 import type { PostMeta } from '@/types/api';
+import { hostOrigin } from '@/lib/urls';
 
 export type ResolvedSeo = {
     title: string;
@@ -74,19 +75,7 @@ export function isValidUrl(value: string): boolean {
 }
 
 export function getPublicBaseUrl(): string {
-    const website = window.Canvas?.user?.canvas?.website?.trim();
-
-    if (website) {
-        try {
-            const url = new URL(website);
-
-            return url.origin;
-        } catch {
-            // Fall through to origin when website is not a valid absolute URL.
-        }
-    }
-
-    return window.location.origin;
+    return hostOrigin();
 }
 
 export function resolvePostSeo(input: PostSeoInput, publicBaseUrl: string = getPublicBaseUrl()): ResolvedSeo {
@@ -130,4 +119,35 @@ export function updatePostMeta(meta: PostMeta | null, patch: Partial<PostMeta>):
     }
 
     return hasMetaOverrides(next) ? next : null;
+}
+
+const SEO_SOURCE_BODY_MAX = 6000;
+
+/**
+ * Pack post fields into a plain-text context string for SEO AI generation.
+ * Returns null when there is nothing useful for the model to read.
+ */
+export function seoSourceText(input: Pick<PostSeoInput, 'title' | 'summary' | 'body'>): string | null {
+    const title = input.title.trim();
+    const summary = input.summary.trim();
+    const body = truncate(stripHtml(input.body), SEO_SOURCE_BODY_MAX);
+    const parts: string[] = [];
+
+    if (title !== '') {
+        parts.push(`Title: ${title}`);
+    }
+
+    if (summary !== '') {
+        parts.push(`Summary: ${summary}`);
+    }
+
+    if (body !== '') {
+        parts.push(`Body:\n${body}`);
+    }
+
+    if (parts.length === 0) {
+        return null;
+    }
+
+    return parts.join('\n\n');
 }

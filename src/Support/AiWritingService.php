@@ -35,7 +35,9 @@ final class AiWritingService
         }
 
         $system = $this->systemPrompt($action, $instruction, $title);
-        $user = "Rewrite the following text:\n\n".$text;
+        $user = $action->isGeneration()
+            ? "Generate from the following post content:\n\n".$text
+            : "Rewrite the following text:\n\n".$text;
 
         return match ($provider) {
             AiProvider::Xai, AiProvider::OpenAi => $this->chatCompletions($provider, $apiKey, $model, $system, $user),
@@ -47,7 +49,9 @@ final class AiWritingService
     {
         $parts = [
             'You are a writing assistant embedded in a blog editor.',
-            'Return only the rewritten text as plain text.',
+            $action->isGeneration()
+                ? 'Return only the generated text as plain text.'
+                : 'Return only the rewritten text as plain text.',
             'Do not wrap the result in quotes or markdown code fences.',
             'Do not add a preamble or explanation.',
             $action->instruction(),
@@ -57,7 +61,7 @@ final class AiWritingService
             $parts[] = 'User instruction: '.$instruction;
         }
 
-        if (filled($title)) {
+        if (filled($title) && ! $action->isGeneration()) {
             $parts[] = 'Post title for context: '.$title;
         }
 
@@ -159,16 +163,70 @@ final class AiWritingService
         }
 
         $status = $response->status();
+        $providerHint = $this->providerErrorHint($response);
 
-        if ($status === 401 || $status === 403) {
-            throw new RuntimeException('The AI API key was rejected. Check Integrations settings.');
+        if ($status === 401) {
+            throw new RuntimeException(
+                'The AI API key was rejected. Re-paste the key in Integrations (without a “Bearer ” prefix).'
+            );
+        }
+
+        if ($status === 403) {
+            throw new RuntimeException(
+                'The AI provider denied access. Confirm API credits, region/team permissions, and model access'
+                .' in the provider console, or set a different model in Integrations.'
+                .($providerHint !== null ? ' '.$providerHint : '')
+            );
+        }
+
+        if ($status === 404) {
+            throw new RuntimeException(
+                'The AI model was not found. Set a valid model id in Integrations settings.'
+                .($providerHint !== null ? ' '.$providerHint : '')
+            );
         }
 
         if ($status === 429) {
             throw new RuntimeException('The AI provider rate limit was exceeded. Try again shortly.');
         }
 
-        throw new RuntimeException('The AI provider request failed.');
+        throw new RuntimeException(
+            'The AI provider request failed.'
+            .($providerHint !== null ? ' '.$providerHint : '')
+        );
+    }
+
+    private function providerErrorHint(Response $response): ?string
+    {
+        $payload = $response->json();
+
+        if (! is_array($payload)) {
+            return null;
+        }
+
+        $message = data_get($payload, 'error.message')
+            ?? data_get($payload, 'error')
+            ?? data_get($payload, 'message');
+
+        if (is_array($message)) {
+            $message = data_get($message, 'message') ?? data_get($message, 'type');
+        }
+
+        if (! is_string($message)) {
+            return null;
+        }
+
+        $message = trim($message);
+
+        if ($message === '' || strlen($message) > 200) {
+            return null;
+        }
+
+        if (preg_match('/bearer|api[_ -]?key|sk-[a-z0-9]|xai-[a-z0-9]/i', $message) === 1) {
+            return null;
+        }
+
+        return '('.$message.')';
     }
 
     private function normalizeOutput(string $content): string

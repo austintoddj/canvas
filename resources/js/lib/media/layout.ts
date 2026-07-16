@@ -12,4 +12,3 @@ export {
     unsplashTargetRowHeight,
     type UnsplashGridDensity,
 } from '@/lib/media/justified';
-

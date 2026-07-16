@@ -1,6 +1,6 @@
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import {
     Dropdown,
@@ -11,7 +11,7 @@ import {
     DropdownTrailingIcon,
     dropdownInsetItemClass,
     selectDropdownMenuClass,
-    selectDropdownTriggerClass,
+    selectDropdownTriggerCompactClass,
 } from '@/components/dropdown';
 import { Description, ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/fieldset';
 import { Input } from '@/components/input';
@@ -23,7 +23,7 @@ import { SocialLinksEditor } from '@/components/users/SocialLinksEditor';
 import { useCanvas } from '@/hooks/useCanvas';
 import type { LaravelValidationErrors } from '@/lib/api';
 import type { ProfileFormState, SocialFieldKey } from '@/lib/settings/profile';
-import { listTimezones } from '@/lib/timezones';
+import { listTimezoneOptions, timezoneLabel, type TimezoneOption } from '@/lib/timezones';
 import type { LanguageOption } from '@/types/boot';
 
 type AuthorProfileFieldsProps = {
@@ -62,10 +62,7 @@ function LanguageSelectDropdown({
                 data-invalid={invalid ? true : undefined}
                 aria-invalid={invalid || undefined}
                 aria-busy={disabled || undefined}
-                className={clsx(
-                    selectDropdownTriggerClass,
-                    invalid && 'border-red-500 dark:border-red-600'
-                )}
+                className={clsx(selectDropdownTriggerCompactClass, invalid && 'border-red-500 dark:border-red-600')}
             >
                 <span className="min-w-0 truncate text-left">{selectedLabel || t('profile.select_language')}</span>
                 <ChevronDownIcon data-slot="icon" className="shrink-0" />
@@ -105,30 +102,15 @@ function TimezoneSelectDropdown({
     invalid?: boolean;
 }) {
     const { t } = useCanvas();
-    const timezones = useMemo(() => listTimezones(), []);
-    const [query, setQuery] = useState('');
+    const catalog = useMemo(() => listTimezoneOptions(), []);
 
-    const filtered = useMemo(() => {
-        const needle = query.trim().toLowerCase();
-
-        if (needle === '') {
-            return timezones;
+    const options = useMemo((): TimezoneOption[] => {
+        if (value !== '' && !catalog.some((zone) => zone.value === value)) {
+            return [{ value, label: value }, ...catalog];
         }
 
-        return timezones.filter((zone) => zone.toLowerCase().includes(needle));
-    }, [query, timezones]);
-
-    const options = useMemo(() => {
-        if (value !== '' && !filtered.includes(value) && !timezones.includes(value)) {
-            return [value, ...filtered];
-        }
-
-        if (value !== '' && !filtered.includes(value) && timezones.includes(value)) {
-            return [value, ...filtered.filter((zone) => zone !== value)];
-        }
-
-        return filtered;
-    }, [filtered, timezones, value]);
+        return catalog;
+    }, [catalog, value]);
 
     return (
         <Dropdown>
@@ -136,51 +118,32 @@ function TimezoneSelectDropdown({
                 outline
                 data-invalid={invalid ? true : undefined}
                 aria-invalid={invalid || undefined}
-                className={clsx(
-                    selectDropdownTriggerClass,
-                    invalid && 'border-red-500 dark:border-red-600'
-                )}
+                className={clsx(selectDropdownTriggerCompactClass, invalid && 'border-red-500 dark:border-red-600')}
             >
-                <span className="min-w-0 truncate text-left">{value || t('profile.select_timezone')}</span>
+                <span className="min-w-0 truncate text-left">
+                    {value ? timezoneLabel(value) : t('profile.select_timezone')}
+                </span>
                 <ChevronDownIcon data-slot="icon" className="shrink-0" />
             </DropdownButton>
             <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
-                <div className="sticky top-0 z-10 border-b border-zinc-950/5 bg-white p-2 dark:border-white/10 dark:bg-zinc-900">
-                    <Input
-                        name="timezone-filter"
-                        value={query}
-                        onChange={(event) => setQuery(event.target.value)}
-                        placeholder={t('profile.search_timezones')}
-                        autoComplete="off"
-                    />
-                </div>
-                {options.length === 0 ? (
-                    <div className="px-3.5 py-2.5 text-sm text-zinc-500 dark:text-zinc-400">
-                        {t('common.no_matches')}
-                    </div>
-                ) : (
-                    options.slice(0, 100).map((zone) => {
-                        const selected = value === zone;
+                {options.map((zone) => {
+                    const selected = value === zone.value;
 
-                        return (
-                            <DropdownItem
-                                key={zone}
-                                onClick={() => {
-                                    onChange(zone);
-                                    setQuery('');
-                                }}
-                                className={dropdownInsetItemClass}
-                            >
-                                <DropdownLabel inset>{zone}</DropdownLabel>
-                                {selected ? (
-                                    <DropdownTrailingIcon inset>
-                                        <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
-                                    </DropdownTrailingIcon>
-                                ) : null}
-                            </DropdownItem>
-                        );
-                    })
-                )}
+                    return (
+                        <DropdownItem
+                            key={zone.value}
+                            onClick={() => onChange(zone.value)}
+                            className={dropdownInsetItemClass}
+                        >
+                            <DropdownLabel inset>{zone.label}</DropdownLabel>
+                            {selected ? (
+                                <DropdownTrailingIcon inset>
+                                    <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
+                                </DropdownTrailingIcon>
+                            ) : null}
+                        </DropdownItem>
+                    );
+                })}
             </DropdownMenu>
         </Dropdown>
     );
@@ -326,7 +289,7 @@ export function AuthorProfileFields({
                             name="digest"
                             checked={form.digest}
                             onChange={(checked) => onPatch({ digest: checked })}
-                            color="dark/zinc"
+                            color="green"
                         />
                     </SwitchField>
                 </FieldGroup>

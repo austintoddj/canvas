@@ -10,7 +10,7 @@ import {
     DropdownTrailingIcon,
     dropdownInsetItemClass,
     selectDropdownMenuClass,
-    selectDropdownTriggerClass,
+    selectDropdownTriggerCompactClass,
 } from '@/components/dropdown';
 import type { AiProviderValue } from '@/lib/api/integrations';
 import { AI_PROVIDER_OPTIONS, aiProviderOption } from '@/lib/integrations/ai-providers';
@@ -40,7 +40,7 @@ export function AiProviderDropdown({
                 data-invalid={invalid ? true : undefined}
                 aria-invalid={invalid || undefined}
                 className={clsx(
-                    selectDropdownTriggerClass,
+                    selectDropdownTriggerCompactClass,
                     selectedLabel === null && 'text-zinc-500 dark:text-zinc-400',
                     invalid && 'border-red-500 dark:border-red-600'
                 )}

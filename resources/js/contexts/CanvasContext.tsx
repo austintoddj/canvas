@@ -3,7 +3,12 @@ import { createContext, useCallback, useMemo, useState, type ReactNode } from 'r
 import { buildPermissions } from '@/lib/canvas-context-value';
 import { loadTranslations } from '@/lib/i18n';
 import { fetchLocaleBootUpdate, syncWindowCanvas, withUpdatedUser } from '@/lib/locale-switch';
-import type { CanvasContextValue, CanvasPermissions, Translate } from '@/lib/canvas-context-value';
+import type {
+    CanvasBootIntegrationFlags,
+    CanvasContextValue,
+    CanvasPermissions,
+    Translate,
+} from '@/lib/canvas-context-value';
 import type { CanvasBoot, UserResource } from '@/types/boot';
 
 export type { CanvasContextValue, CanvasPermissions };
@@ -38,6 +43,18 @@ export function CanvasProvider({ children, boot: initialBoot = window.Canvas }: 
         });
     }, []);
 
+    const setIntegrationFlags = useCallback((flags: Partial<CanvasBootIntegrationFlags>) => {
+        setBoot((current) => {
+            const next = {
+                ...current,
+                ...flags,
+            };
+            syncWindowCanvas(next);
+
+            return next;
+        });
+    }, []);
+
     const value = useMemo((): CanvasContextValue => {
         const translator = loadTranslations(boot.translations);
         const t: Translate = translator.t.bind(translator);
@@ -49,8 +66,9 @@ export function CanvasProvider({ children, boot: initialBoot = window.Canvas }: 
             permissions: buildPermissions(boot.user),
             switchLocale,
             setUser,
+            setIntegrationFlags,
         };
-    }, [boot, setUser, switchLocale]);
+    }, [boot, setIntegrationFlags, setUser, switchLocale]);
 
     return <CanvasContext.Provider value={value}>{children}</CanvasContext.Provider>;
 }

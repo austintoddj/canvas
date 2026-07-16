@@ -48,6 +48,7 @@ import ImageSourcePicker from '@/components/media/ImageSourcePicker';
 import { useCanvas } from '@/hooks/useCanvas';
 import { aiApi, type AiRewriteAction } from '@/lib/api/ai';
 import { resolveMediaUrl } from '@/lib/media/list';
+import { AI_REWRITE_SETTLE_MS, rangeAfterPlainTextReplace } from '@/lib/posts/ai-rewrite-decoration';
 import { AI_WRITING_ACTIONS, rewriteErrorMessage, selectionText } from '@/lib/posts/ai-writing';
 import { bodyFromEditorHtml, bodyHtmlForEditor } from '@/lib/posts/body';
 import { CODE_BLOCK_LANGUAGES, createPostEditorExtensions } from '@/lib/posts/editor-extensions';
@@ -55,6 +56,7 @@ import { toast } from '@/lib/toast';
 
 type PostBodyEditorProps = {
     body: string | null;
+    title?: string;
     disabled?: boolean;
     focusMode?: boolean;
     onToggleFocusMode?: () => void;
@@ -417,29 +419,55 @@ function EditorToolbar({
             {inCodeBlock ? (
                 <>
                     <ToolbarDivider />
-                    <label className="ml-1 flex shrink-0 items-center gap-1.5 text-xs text-canvas-muted dark:text-canvas-muted-dark">
-                        <span className="sr-only">Code language</span>
-                        <select
-                            className="max-w-[9rem] rounded-md border border-zinc-950/10 bg-transparent px-1.5 py-1 text-xs text-zinc-700 dark:border-white/10 dark:text-zinc-200"
-                            value={codeLanguage}
+                    <Dropdown>
+                        <DropdownButton
+                            as="button"
+                            type="button"
                             disabled={toolbarDisabled}
-                            onChange={(event) => {
-                                const language = event.target.value;
-                                editor
-                                    .chain()
-                                    .focus()
-                                    .updateAttributes('codeBlock', { language: language === '' ? null : language })
-                                    .run();
-                            }}
+                            aria-label={t('editor.code_language')}
+                            title={t('editor.code_language')}
                             data-post-code-language="true"
+                            className={clsx(
+                                'inline-flex h-8 max-w-[9.5rem] shrink-0 items-center gap-1 rounded-md px-2 text-xs font-medium text-zinc-600 transition dark:text-zinc-300',
+                                'hover:bg-zinc-950/5 hover:text-zinc-950 disabled:pointer-events-none disabled:opacity-40 dark:hover:bg-white/10 dark:hover:text-white',
+                                'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
+                                'bg-zinc-950/5 dark:bg-white/10'
+                            )}
                         >
-                            {CODE_BLOCK_LANGUAGES.map((option) => (
-                                <option key={option.label} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                            <span className="truncate">
+                                {CODE_BLOCK_LANGUAGES.find((option) => option.value === codeLanguage)?.label ??
+                                    CODE_BLOCK_LANGUAGES[0].label}
+                            </span>
+                        </DropdownButton>
+                        <DropdownMenu anchor="bottom start" className="min-w-44 max-h-72 overflow-y-auto">
+                            {CODE_BLOCK_LANGUAGES.map((option) => {
+                                const active = option.value === codeLanguage;
+
+                                return (
+                                    <DropdownItem
+                                        key={option.label}
+                                        disabled={toolbarDisabled}
+                                        onClick={() => {
+                                            editor
+                                                .chain()
+                                                .focus()
+                                                .updateAttributes('codeBlock', {
+                                                    language: option.value === '' ? null : option.value,
+                                                })
+                                                .run();
+                                        }}
+                                    >
+                                        <DropdownLabel>{option.label}</DropdownLabel>
+                                        {active ? (
+                                            <DropdownTrailingIcon>
+                                                <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
+                                            </DropdownTrailingIcon>
+                                        ) : null}
+                                    </DropdownItem>
+                                );
+                            })}
+                        </DropdownMenu>
+                    </Dropdown>
                 </>
             ) : null}
 
@@ -605,6 +633,7 @@ function AiCustomDialog({
 
 export default function PostBodyEditor({
     body,
+    title = '',
     disabled = false,
     focusMode = false,
     onToggleFocusMode,
@@ -620,11 +649,16 @@ export default function PostBodyEditor({
     const dialogInputRef = useRef<HTMLInputElement>(null);
     const aiInstructionRef = useRef<HTMLTextAreaElement>(null);
     const aiSelectionRef = useRef<{ from: number; to: number; text: string } | null>(null);
+    const aiAbortRef = useRef<AbortController | null>(null);
+    const aiSettleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const editor = useEditor({
         extensions: createPostEditorExtensions(),
         content: bodyHtmlForEditor(body),
         editable: !disabled,
+        // Toolbar reads isActive() / getAttributes(); re-render on selection so
+        // code-language (and mark toggles) stay in sync when the caret moves.
+        shouldRerenderOnTransaction: true,
         editorProps: {
             attributes: {
                 class: 'canvas-post-body min-h-[28rem] px-4 py-4 focus:outline-none',
@@ -683,6 +717,15 @@ export default function PostBodyEditor({
 
         return () => window.clearTimeout(timer);
     }, [aiCustomOpen]);
+
+    useEffect(() => {
+        return () => {
+            aiAbortRef.current?.abort();
+            if (aiSettleTimerRef.current !== null) {
+                clearTimeout(aiSettleTimerRef.current);
+            }
+        };
+    }, []);
 
     function openLinkDialog() {
         if (disabled || editor === null) {
@@ -753,18 +796,33 @@ export default function PostBodyEditor({
             return;
         }
 
+        if (aiSettleTimerRef.current !== null) {
+            clearTimeout(aiSettleTimerRef.current);
+            aiSettleTimerRef.current = null;
+        }
+
+        aiAbortRef.current?.abort();
+        const controller = new AbortController();
+        aiAbortRef.current = controller;
+
         setAiBusy(true);
+        editor.commands.setAiRewriteDecoration(selection.from, selection.to, 'pending');
 
         try {
-            const response = await aiApi.rewrite({
-                action,
-                text: selection.text,
-                instruction: instruction ?? null,
-            });
+            const response = await aiApi.rewrite(
+                {
+                    action,
+                    text: selection.text,
+                    instruction: instruction ?? null,
+                    title: title.trim() === '' ? null : title.trim(),
+                },
+                controller.signal
+            );
 
             const next = response.text.trim();
 
             if (next === '') {
+                editor.commands.clearAiRewriteDecoration();
                 toast.error(t('editor.ai_empty_result'));
 
                 return;
@@ -777,15 +835,39 @@ export default function PostBodyEditor({
                 .insertContent(next)
                 .run();
 
+            // Prefer live selection end after insert; plain-text length is a fallback.
+            const settleFrom = selection.from;
+            const settleTo = Math.max(settleFrom, editor.state.selection.to);
+            const fallback = rangeAfterPlainTextReplace(selection.from, next);
+            const to = settleTo > settleFrom ? settleTo : fallback.to;
+
+            editor.commands.setAiRewriteDecoration(settleFrom, to, 'settled');
+
+            aiSettleTimerRef.current = setTimeout(() => {
+                aiSettleTimerRef.current = null;
+                if (!editor.isDestroyed) {
+                    editor.commands.clearAiRewriteDecoration();
+                }
+            }, AI_REWRITE_SETTLE_MS);
+
             if (action === 'custom') {
                 setAiCustomOpen(false);
                 setAiInstruction('');
                 aiSelectionRef.current = null;
             }
         } catch (error) {
+            // A newer rewrite owns decorations / busy state when this request was aborted.
+            if (controller.signal.aborted || aiAbortRef.current !== controller) {
+                return;
+            }
+
+            editor.commands.clearAiRewriteDecoration();
             toast.error(rewriteErrorMessage(error, t('editor.ai_rewrite_error')));
         } finally {
-            setAiBusy(false);
+            if (aiAbortRef.current === controller) {
+                aiAbortRef.current = null;
+                setAiBusy(false);
+            }
         }
     }
 

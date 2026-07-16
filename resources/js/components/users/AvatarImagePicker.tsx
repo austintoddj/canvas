@@ -34,12 +34,7 @@ export function AvatarImagePicker({
             <Description>{t('profile.avatar_help')}</Description>
 
             <div className="mt-3 flex items-center gap-4">
-                <Avatar
-                    src={hasAvatar ? value.trim() : null}
-                    initials={initials}
-                    className="size-16"
-                    alt=""
-                />
+                <Avatar src={hasAvatar ? value.trim() : null} initials={initials} className="size-16" alt="" />
                 <div className="flex min-w-0 flex-wrap gap-2">
                     <Button type="button" outline disabled={disabled} onClick={() => setPickerOpen(true)}>
                         {hasAvatar ? t('editor.change_image') : t('editor.choose_image')}

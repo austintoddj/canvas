@@ -38,6 +38,7 @@ final class SettingsRepository
             return;
         }
 
+        $value = trim($value);
         $stored = $key->isSecret() ? Crypt::encryptString($value) : $value;
 
         Setting::query()->updateOrCreate(

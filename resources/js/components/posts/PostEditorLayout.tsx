@@ -1,12 +1,14 @@
 import { ArrowLeftIcon, ChartBarIcon, Cog6ToothIcon, GlobeAltIcon } from '@heroicons/react/20/solid';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
 import { Heading } from '@/components/heading';
-import { Text, ErrorText } from '@/components/text';
+import { ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
+import { CONTENT_REVEAL_MS, shouldAnimateReveal } from '@/lib/async-ui';
 import {
     isPublished,
     navSaveStatusLabel,
@@ -44,6 +46,8 @@ export default function PostEditorLayout({
     disabled = false,
 }: PostEditorLayoutProps) {
     const { t } = useCanvas();
+    const reducedMotion = useReducedMotion();
+    const animateStatus = shouldAnimateReveal({ reducedMotion: reducedMotion === true, animate: true });
     const published = isPublished(form);
     const status = publishStatus(form);
     const badgeColor = status === 'published' ? 'green' : status === 'scheduled' ? 'blue' : 'amber';
@@ -113,7 +117,7 @@ export default function PostEditorLayout({
                 ) : null}
                 <div className="flex min-w-0 items-center gap-2">
                     <Heading level={2} className="truncate text-lg/7">
-                        {form.title.trim() === '' ? t('editor.untitled_post') : form.title}
+                        {(form.title ?? '').trim() === '' ? t('editor.untitled_post') : form.title}
                     </Heading>
                     <Badge color={badgeColor} data-publish-status={status}>
                         {badgeLabel}
@@ -122,19 +126,31 @@ export default function PostEditorLayout({
             </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                {statusLabel ? (
-                    <Text
-                        className={
-                            saveStatus === 'error'
-                                ? 'text-sm text-canvas-danger dark:text-canvas-danger-dark'
-                                : 'text-sm text-canvas-muted dark:text-canvas-muted-dark'
-                        }
-                        data-post-save-status="true"
-                        aria-live="polite"
-                    >
-                        {statusLabel}
-                    </Text>
-                ) : null}
+                <div className="relative flex min-h-5 min-w-[4.5rem] items-center justify-end" aria-live="polite">
+                    <AnimatePresence mode="wait" initial={false}>
+                        {statusLabel ? (
+                            <motion.p
+                                key={`${saveStatus}-${statusLabel}`}
+                                data-slot="text"
+                                data-post-save-status="true"
+                                className={
+                                    saveStatus === 'error'
+                                        ? 'text-sm text-canvas-danger dark:text-canvas-danger-dark'
+                                        : 'text-sm text-canvas-muted dark:text-canvas-muted-dark'
+                                }
+                                initial={animateStatus ? { opacity: 0 } : false}
+                                animate={{ opacity: 1 }}
+                                exit={animateStatus ? { opacity: 0 } : undefined}
+                                transition={{
+                                    duration: animateStatus ? CONTENT_REVEAL_MS / 1000 : 0,
+                                    ease: 'easeOut',
+                                }}
+                            >
+                                {statusLabel}
+                            </motion.p>
+                        ) : null}
+                    </AnimatePresence>
+                </div>
                 {published && postId !== null && !focusMode ? (
                     <Button
                         href={`/posts/${postId}/stats`}

@@ -1,52 +1,35 @@
-const FALLBACK_TIMEZONES = [
-    'UTC',
-    'America/New_York',
-    'America/Chicago',
-    'America/Denver',
-    'America/Los_Angeles',
-    'America/Sao_Paulo',
-    'America/Mexico_City',
-    'Europe/London',
-    'Europe/Paris',
-    'Europe/Berlin',
-    'Europe/Madrid',
-    'Europe/Moscow',
-    'Africa/Cairo',
-    'Asia/Dubai',
-    'Asia/Riyadh',
-    'Asia/Kolkata',
-    'Asia/Dhaka',
-    'Asia/Bangkok',
-    'Asia/Shanghai',
-    'Asia/Tokyo',
-    'Asia/Seoul',
-    'Asia/Jakarta',
-    'Australia/Sydney',
-    'Pacific/Auckland',
-] as const;
-
-type IntlWithSupportedValues = typeof Intl & {
-    supportedValuesOf?: (key: string) => string[];
+export type TimezoneOption = {
+    value: string;
+    label: string;
 };
 
+export const ESSENTIAL_TIMEZONES = [
+    { value: 'UTC', label: 'UTC (Coordinated Universal Time)' },
+    { value: 'America/New_York', label: 'Eastern Time (EST/EDT)' },
+    { value: 'America/Chicago', label: 'Central Time (CST/CDT)' },
+    { value: 'America/Los_Angeles', label: 'Pacific Time (PST/PDT)' },
+    { value: 'Europe/London', label: 'London (GMT/BST)' },
+    { value: 'Europe/Paris', label: 'Central European (CET/CEST)' },
+    { value: 'Asia/Kolkata', label: 'India (IST)' },
+    { value: 'Asia/Tokyo', label: 'Japan (JST)' },
+] as const satisfies readonly TimezoneOption[];
+
+const ESSENTIAL_VALUES = new Set<string>(ESSENTIAL_TIMEZONES.map((zone) => zone.value));
+
+export function listTimezoneOptions(): TimezoneOption[] {
+    return ESSENTIAL_TIMEZONES.map((zone) => ({ ...zone }));
+}
+
 export function listTimezones(): string[] {
-    try {
-        const supported = (Intl as IntlWithSupportedValues).supportedValuesOf?.('timeZone');
+    return ESSENTIAL_TIMEZONES.map((zone) => zone.value);
+}
 
-        if (Array.isArray(supported) && supported.length > 0) {
-            const zones = [...supported];
+export function timezoneLabel(value: string): string {
+    return ESSENTIAL_TIMEZONES.find((zone) => zone.value === value)?.label ?? value;
+}
 
-            if (!zones.includes('UTC')) {
-                zones.unshift('UTC');
-            }
-
-            return zones;
-        }
-    } catch {
-        // Fall through to the static list.
-    }
-
-    return [...FALLBACK_TIMEZONES];
+export function isEssentialTimezone(value: string): boolean {
+    return ESSENTIAL_VALUES.has(value);
 }
 
 export function detectBrowserTimezone(): string | null {
@@ -60,5 +43,15 @@ export function detectBrowserTimezone(): string | null {
 }
 
 export function defaultTimezone(appTimezone?: string): string {
-    return detectBrowserTimezone() ?? appTimezone ?? 'UTC';
+    const browser = detectBrowserTimezone();
+
+    if (browser !== null && isEssentialTimezone(browser)) {
+        return browser;
+    }
+
+    if (typeof appTimezone === 'string' && appTimezone !== '' && isEssentialTimezone(appTimezone)) {
+        return appTimezone;
+    }
+
+    return 'UTC';
 }

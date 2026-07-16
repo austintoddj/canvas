@@ -7,6 +7,12 @@ import type { Post } from '@/types/api';
 
 export type SaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 
+/** Minimum time the nav shows “Saving…” so fast local responses still register. */
+export const SAVE_STATUS_MIN_SAVING_MS = 350;
+
+/** How long “Saved” stays visible before returning to idle. */
+export const SAVE_STATUS_SAVED_MS = 2500;
+
 type UsePostAutosaveOptions = {
     postId: string | null;
     form: PostFormState;
@@ -29,6 +35,7 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
     const inFlightPromise = useRef<Promise<boolean> | null>(null);
     const mountedRef = useRef(true);
     const performSaveRef = useRef<() => Promise<boolean>>(async () => false);
+    const savingStartedAt = useRef<number | null>(null);
 
     useEffect(() => {
         formRef.current = form;
@@ -66,6 +73,16 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
         setFieldErrors({});
     }, []);
 
+    /**
+     * Rebase the clean snapshot without changing status (e.g. API published_at
+     * echo after a successful save). Keeps “Saved” visible.
+     */
+    const syncBaseline = useCallback((snapshot: string) => {
+        lastSavedSnapshot.current = snapshot;
+        setIsDirty(false);
+        setFieldErrors({});
+    }, []);
+
     const resetBaseline = useCallback((snapshot: string) => {
         lastSavedSnapshot.current = snapshot;
         setIsDirty(false);
@@ -91,7 +108,14 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
             if (snapshot === lastSavedSnapshot.current) {
                 if (mountedRef.current) {
                     setIsDirty(false);
-                    setSaveStatus((status) => (status === 'saving' ? status : 'idle'));
+                    // Preserve an in-progress “Saved” window; do not force idle over it.
+                    setSaveStatus((status) => {
+                        if (status === 'saving' || status === 'saved') {
+                            return status;
+                        }
+
+                        return 'idle';
+                    });
                 }
 
                 return true;
@@ -104,11 +128,32 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
             inFlightPromise.current = gate;
 
             if (mountedRef.current) {
+                savingStartedAt.current = Date.now();
                 setSaveStatus('saving');
             }
 
             try {
                 const post = await postsApi.store(id, toStorePayload(formSnapshot));
+
+                if (!mountedRef.current) {
+                    lastSavedSnapshot.current = snapshot;
+                    resolveInFlight(true);
+                    inFlightPromise.current = null;
+
+                    return true;
+                }
+
+                const started = savingStartedAt.current;
+                if (started !== null) {
+                    const elapsed = Date.now() - started;
+                    const remaining = SAVE_STATUS_MIN_SAVING_MS - elapsed;
+
+                    if (remaining > 0) {
+                        await new Promise((resolve) => window.setTimeout(resolve, remaining));
+                    }
+
+                    savingStartedAt.current = null;
+                }
 
                 if (!mountedRef.current) {
                     lastSavedSnapshot.current = snapshot;
@@ -139,6 +184,8 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
 
                 return true;
             } catch (error) {
+                savingStartedAt.current = null;
+
                 if (mountedRef.current) {
                     if (error instanceof ValidationError) {
                         setFieldErrors(error.errors);
@@ -224,7 +271,7 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
             }
 
             setSaveStatus((status) => (status === 'saved' ? 'idle' : status));
-        }, 2500);
+        }, SAVE_STATUS_SAVED_MS);
 
         return () => window.clearTimeout(timer);
     }, [saveStatus]);
@@ -236,5 +283,6 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
         saveNow,
         resetBaseline,
         markSaved,
+        syncBaseline,
     };
 }

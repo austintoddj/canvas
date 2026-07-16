@@ -81,6 +81,20 @@ it('stores an encrypted ai api key and provider', function (): void {
         ->and(Ai::model())->toBe(AiProvider::Xai->defaultModel());
 });
 
+it('strips a bearer prefix and whitespace from ai api keys', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/settings/integrations', [
+            'ai' => [
+                'provider' => AiProvider::Xai->value,
+                'api_key' => '  Bearer xai-secret-key  ',
+            ],
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('ai.configured', true);
+
+    expect(Ai::apiKey())->toBe('xai-secret-key');
+});
+
 it('stores an optional ai model override', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->putJson('canvas/api/settings/integrations', [

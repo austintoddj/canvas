@@ -74,8 +74,7 @@ export function UnsplashIntegrationDrawer({
             onClose();
         } catch (error) {
             if (error instanceof ValidationError) {
-                const message =
-                    error.errors['unsplash.access_key']?.[0] ?? t('common.please_fix_fields');
+                const message = error.errors['unsplash.access_key']?.[0] ?? t('common.please_fix_fields');
                 setFieldError(message);
                 toast.error(t('common.please_fix_fields'));
             } else {
@@ -117,9 +116,12 @@ export function UnsplashIntegrationDrawer({
             onClose={onClose}
             closeLabel={t('common.close')}
             title={
-                <span className="flex items-center gap-3">
+                <span className="flex min-w-0 items-center gap-3">
                     <IntegrationIcon kind="unsplash" size="md" />
-                    <span className="min-w-0">{t('integrations.unsplash')}</span>
+                    <span className="min-w-0 truncate">{t('integrations.unsplash')}</span>
+                    <Badge color={configured ? 'green' : 'zinc'} className="shrink-0">
+                        {configured ? t('integrations.configured') : t('integrations.not_configured')}
+                    </Badge>
                 </span>
             }
             description={t('integrations.unsplash_help')}
@@ -159,12 +161,6 @@ export function UnsplashIntegrationDrawer({
             }
         >
             <div className="space-y-6 px-5 py-5">
-                <div className="flex items-center gap-2">
-                    <Badge color={configured ? 'green' : 'zinc'}>
-                        {configured ? t('integrations.configured') : t('integrations.not_configured')}
-                    </Badge>
-                </div>
-
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
@@ -199,10 +195,7 @@ export function UnsplashIntegrationDrawer({
                                                   'integrations.placeholder_access_key_replace',
                                                   'Paste a new key to replace the current one'
                                               )
-                                            : t(
-                                                  'integrations.placeholder_access_key',
-                                                  'Paste your Unsplash access key'
-                                              )
+                                            : t('integrations.placeholder_access_key', 'Paste your Unsplash access key')
                                     }
                                     onChange={(event) => {
                                         setAccessKey(event.target.value);
@@ -219,11 +212,11 @@ export function UnsplashIntegrationDrawer({
                     {availableInEditor
                         ? t(
                               'integrations.available_in_editor',
-                              'Available in the post editor. Reload after connecting if tools do not appear yet.'
+                              'Unsplash is available in the post editor image picker.'
                           )
                         : t(
-                              'integrations.reload_after_connect',
-                              'After connecting, reload Canvas so the editor can show the Unsplash tab.'
+                              'integrations.unsplash_appears_after_connect',
+                              'After connecting, Unsplash appears in the post editor image picker.'
                           )}
                 </Text>
             </div>

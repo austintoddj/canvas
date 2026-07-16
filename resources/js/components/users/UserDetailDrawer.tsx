@@ -339,7 +339,12 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                                 <span />
                             )}
                             <div className="flex flex-wrap items-center gap-2">
-                                <Button type="button" plain disabled={saving || revoking || localeSwitching} onClick={onClose}>
+                                <Button
+                                    type="button"
+                                    plain
+                                    disabled={saving || revoking || localeSwitching}
+                                    onClick={onClose}
+                                >
                                     Cancel
                                 </Button>
                                 <Button

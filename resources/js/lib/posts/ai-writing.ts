@@ -1,6 +1,6 @@
 import type { AiRewriteAction } from '@/lib/api/ai';
 
-export type AiWritingMenuAction = Exclude<AiRewriteAction, 'custom'>;
+export type AiWritingMenuAction = Exclude<AiRewriteAction, 'custom' | 'seo_title' | 'seo_description'>;
 
 export const AI_WRITING_ACTIONS: { action: AiWritingMenuAction; labelKey: string }[] = [
     { action: 'improve', labelKey: 'editor.ai_improve' },

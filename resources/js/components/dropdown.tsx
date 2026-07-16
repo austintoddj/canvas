@@ -143,9 +143,12 @@ export const dropdownProfileItemClass = '!flex items-center gap-3';
 export const dropdownInsetItemClass =
     'grid-cols-[1fr_auto] supports-[grid-template-columns:subgrid]:grid-cols-[1fr_auto] *:data-[slot=trailing-icon]:col-start-2';
 
-/** Form select trigger — full field width so every drawer/page select matches Input. */
-export const selectDropdownTriggerClass =
-    'w-full cursor-pointer justify-between font-normal';
+/** Form select trigger — full field width when a select must span its field. */
+export const selectDropdownTriggerClass = 'w-full cursor-pointer justify-between font-normal';
+
+/** Form select trigger — content-sized (language, role, timezone, platform, provider, taxonomy). */
+export const selectDropdownTriggerCompactClass =
+    'w-auto max-w-full min-w-[8rem] cursor-pointer justify-between font-normal';
 
 /** Form select menu — above drawers (z-50) / dialogs (z-60); at least as wide as its trigger. */
 export const selectDropdownMenuClass = 'z-[65] min-w-[var(--button-width)]';

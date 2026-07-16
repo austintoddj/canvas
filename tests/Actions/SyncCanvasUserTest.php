@@ -115,6 +115,28 @@ it('normalizes empty social links to null', function (): void {
     expect(CanvasUser::find($user->id)->social)->toBeNull();
 });
 
+it('normalizes social profile URLs to bare handles', function (): void {
+    $user = User::factory()->contributor()->create();
+    $syncCanvasUser = new SyncCanvasUser;
+
+    $syncCanvasUser($user->id, [
+        'social' => [
+            'x' => 'https://x.com/ada',
+            'github' => 'https://github.com/canvas/',
+            'medium' => 'https://medium.com/@writer',
+            'bluesky' => 'https://bsky.app/profile/ada.bsky.social',
+            'unknown' => 'https://example.com/skip',
+        ],
+    ], false);
+
+    expect(CanvasUser::find($user->id)->social)->toBe([
+        'x' => 'ada',
+        'github' => 'canvas',
+        'medium' => 'writer',
+        'bluesky' => 'ada.bsky.social',
+    ]);
+});
+
 it('allows an admin to change role on an existing canvas user', function (): void {
     $user = User::factory()->contributor()->create();
     $syncCanvasUser = new SyncCanvasUser;

@@ -139,7 +139,51 @@ it('maps rejected api keys to a clear error', function (): void {
             'text' => 'Hello',
         ])
         ->assertStatus(422)
-        ->assertJsonPath('error', 'The AI API key was rejected. Check Integrations settings.');
+        ->assertJsonPath(
+            'error',
+            'The AI API key was rejected. Re-paste the key in Integrations (without a “Bearer ” prefix).'
+        );
+});
+
+it('maps forbidden responses to a permission-oriented error', function (): void {
+    setAiIntegration(AiProvider::Xai, 'xai-test-key');
+
+    Http::fake([
+        'api.x.ai/*' => Http::response([
+            'error' => ['message' => 'Model access denied for this team.'],
+        ], 403),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'improve',
+            'text' => 'Hello',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath(
+            'error',
+            'The AI provider denied access. Confirm API credits, region/team permissions, and model access'
+            .' in the provider console, or set a different model in Integrations. (Model access denied for this team.)'
+        );
+});
+
+it('maps missing models to a clear error', function (): void {
+    setAiIntegration(AiProvider::Xai, 'xai-test-key', 'not-a-real-model');
+
+    Http::fake([
+        'api.x.ai/*' => Http::response(['error' => ['message' => 'Model not found']], 404),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'improve',
+            'text' => 'Hello',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath(
+            'error',
+            'The AI model was not found. Set a valid model id in Integrations settings. (Model not found)'
+        );
 });
 
 it('strips surrounding markdown fences from provider output', function (): void {
@@ -172,6 +216,57 @@ it('validates rewrite payload', function (): void {
         ])
         ->assertStatus(422)
         ->assertJsonValidationErrors(['action', 'text']);
+});
+
+it('generates an seo title from post content', function (): void {
+    setAiIntegration(AiProvider::Xai, 'xai-test-key');
+
+    Http::fake([
+        'api.x.ai/*' => Http::response([
+            'choices' => [
+                ['message' => ['content' => 'How to Ship Better SEO Titles']],
+            ],
+        ]),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'seo_title',
+            'text' => "Title: Shipping posts\n\nBody:\nA guide to publishing.",
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('text', 'How to Ship Better SEO Titles');
+
+    Http::assertSent(function ($request): bool {
+        $system = $request['messages'][0]['content'] ?? '';
+        $user = $request['messages'][1]['content'] ?? '';
+
+        return is_string($system)
+            && is_string($user)
+            && str_contains($system, 'SEO title')
+            && str_contains($user, 'Generate from the following post content')
+            && str_contains($user, 'Shipping posts');
+    });
+});
+
+it('generates a meta description from post content', function (): void {
+    setAiIntegration(AiProvider::Xai, 'xai-test-key');
+
+    Http::fake([
+        'api.x.ai/*' => Http::response([
+            'choices' => [
+                ['message' => ['content' => 'A practical guide to writing meta descriptions that convert clicks.']],
+            ],
+        ]),
+    ]);
+
+    $this->actingAs($this->contributor, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'seo_description',
+            'text' => "Title: Meta tips\n\nSummary: Click-worthy descriptions.",
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('text', 'A practical guide to writing meta descriptions that convert clicks.');
 });
 
 it('requires authentication for rewrite', function (): void {

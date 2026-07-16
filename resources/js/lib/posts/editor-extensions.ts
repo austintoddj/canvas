@@ -14,24 +14,36 @@ import Youtube from '@tiptap/extension-youtube';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 
+import { AiRewriteDecoration } from '@/lib/posts/ai-rewrite-decoration';
 import { CanvasEmbed } from '@/lib/posts/embed-extension';
 
 const lowlight = createLowlight(common);
 
+/** Default language for newly inserted code blocks (Auto remains available). */
+export const DEFAULT_CODE_BLOCK_LANGUAGE = 'javascript';
+
 export const CODE_BLOCK_LANGUAGES = [
     { value: '', label: 'Auto' },
     { value: 'bash', label: 'Bash' },
+    { value: 'c', label: 'C' },
+    { value: 'cpp', label: 'C++' },
+    { value: 'csharp', label: 'C#' },
     { value: 'css', label: 'CSS' },
+    { value: 'diff', label: 'Diff' },
     { value: 'go', label: 'Go' },
+    { value: 'graphql', label: 'GraphQL' },
     { value: 'java', label: 'Java' },
     { value: 'javascript', label: 'JavaScript' },
     { value: 'json', label: 'JSON' },
+    { value: 'kotlin', label: 'Kotlin' },
     { value: 'markdown', label: 'Markdown' },
     { value: 'php', label: 'PHP' },
     { value: 'python', label: 'Python' },
     { value: 'ruby', label: 'Ruby' },
     { value: 'rust', label: 'Rust' },
+    { value: 'scss', label: 'SCSS' },
     { value: 'sql', label: 'SQL' },
+    { value: 'swift', label: 'Swift' },
     { value: 'typescript', label: 'TypeScript' },
     { value: 'xml', label: 'HTML / XML' },
     { value: 'yaml', label: 'YAML' },
@@ -45,7 +57,7 @@ export function createPostEditorExtensions() {
         }),
         CodeBlockLowlight.configure({
             lowlight,
-            defaultLanguage: null,
+            defaultLanguage: DEFAULT_CODE_BLOCK_LANGUAGE,
             HTMLAttributes: {
                 class: 'canvas-post-body-code',
             },
@@ -96,5 +108,6 @@ export function createPostEditorExtensions() {
             },
         }),
         CharacterCount,
+        AiRewriteDecoration,
     ];
 }

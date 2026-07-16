@@ -45,16 +45,42 @@ class UpdateIntegrationsRequest extends FormRequest
         });
     }
 
+    private function normalizeApiKey(string $value): ?string
+    {
+        $key = trim($value);
+
+        if ($key === '') {
+            return null;
+        }
+
+        if (preg_match('/^Bearer\s+/i', $key) === 1) {
+            $key = trim((string) preg_replace('/^Bearer\s+/i', '', $key));
+        }
+
+        return $key === '' ? null : $key;
+    }
+
     protected function prepareForValidation(): void
     {
         if ($this->has('unsplash')) {
             $accessKey = data_get($this->all(), 'unsplash.access_key');
 
-            if ($accessKey === '') {
+            if (is_string($accessKey)) {
+                $accessKey = trim($accessKey);
+            }
+
+            if ($accessKey === '' || $accessKey === null) {
                 $this->merge([
                     'unsplash' => array_merge(
                         (array) $this->input('unsplash', []),
                         ['access_key' => null],
+                    ),
+                ]);
+            } elseif (is_string($accessKey)) {
+                $this->merge([
+                    'unsplash' => array_merge(
+                        (array) $this->input('unsplash', []),
+                        ['access_key' => $accessKey],
                     ),
                 ]);
             }
@@ -63,11 +89,16 @@ class UpdateIntegrationsRequest extends FormRequest
         if ($this->has('ai')) {
             $ai = (array) $this->input('ai', []);
 
-            if (($ai['api_key'] ?? null) === '') {
+            if (array_key_exists('api_key', $ai) && is_string($ai['api_key'])) {
+                $ai['api_key'] = $this->normalizeApiKey($ai['api_key']);
+            } elseif (($ai['api_key'] ?? null) === '') {
                 $ai['api_key'] = null;
             }
 
-            if (($ai['model'] ?? null) === '') {
+            if (array_key_exists('model', $ai) && is_string($ai['model'])) {
+                $model = trim($ai['model']);
+                $ai['model'] = $model === '' ? null : $model;
+            } elseif (($ai['model'] ?? null) === '') {
                 $ai['model'] = null;
             }
 

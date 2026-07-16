@@ -13,11 +13,19 @@ import { aiProviderOption } from '@/lib/integrations/ai-providers';
 type OpenDrawer = 'unsplash' | 'ai' | null;
 
 export default function SettingsIntegrations() {
-    const { boot, t } = useCanvas();
+    const { boot, t, setIntegrationFlags } = useCanvas();
     const [status, setStatus] = useState<IntegrationsStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [openDrawer, setOpenDrawer] = useState<OpenDrawer>(null);
+
+    function handleStatusChange(next: IntegrationsStatus) {
+        setStatus(next);
+        setIntegrationFlags({
+            ai: next.ai.configured === true,
+            unsplash: next.unsplash.configured === true,
+        });
+    }
 
     useEffect(() => {
         const controller = new AbortController();
@@ -89,9 +97,7 @@ export default function SettingsIntegrations() {
                         configuredLabel={t('integrations.configured')}
                         notConfiguredLabel={t('integrations.not_configured')}
                         actionLabel={
-                            aiConfigured
-                                ? t('integrations.manage', 'Manage')
-                                : t('integrations.configure', 'Configure')
+                            aiConfigured ? t('integrations.manage', 'Manage') : t('integrations.configure', 'Configure')
                         }
                         meta={
                             aiConfigured
@@ -108,7 +114,7 @@ export default function SettingsIntegrations() {
                 configured={unsplashConfigured}
                 availableInEditor={boot.unsplash === true}
                 onClose={() => setOpenDrawer(null)}
-                onStatusChange={setStatus}
+                onStatusChange={handleStatusChange}
             />
 
             <AiIntegrationDrawer
@@ -118,7 +124,7 @@ export default function SettingsIntegrations() {
                 model={status?.ai.model ?? null}
                 availableInEditor={boot.ai === true}
                 onClose={() => setOpenDrawer(null)}
-                onStatusChange={setStatus}
+                onStatusChange={handleStatusChange}
             />
         </div>
     );

@@ -68,6 +68,7 @@ export default function PostsEditor() {
     /** create() only mints a UUID — skip show() after redirect to /posts/:id. */
     const bootstrappedPostId = useRef<string | null>(null);
     const allowLeaveRef = useRef(false);
+    const syncBaselineRef = useRef<(snapshot: string) => void>(() => {});
     const markOnboardingComplete = useMarkOnboardingComplete();
 
     useEffect(() => {
@@ -77,9 +78,11 @@ export default function PostsEditor() {
     const autosaveEnabled = postId !== null && !loading && loadError === null;
 
     const handleSaved = useCallback(
-        (post: { published_at: string | null }) => {
+        (post: { published_at?: string | null }) => {
             setForm((current) => {
-                if (post.published_at !== null) {
+                const nextPublishedAt = post.published_at ?? null;
+
+                if (nextPublishedAt !== null) {
                     const nextTags = current.tags;
                     const nextTopic = current.topic;
 
@@ -91,26 +94,36 @@ export default function PostsEditor() {
                     });
                 }
 
-                if (current.publishedAt === post.published_at) {
+                if (current.publishedAt === nextPublishedAt) {
                     return current;
                 }
 
-                return {
+                const next = {
                     ...current,
-                    publishedAt: post.published_at,
+                    publishedAt: nextPublishedAt,
                 };
+
+                // Rebase before the form effect runs so API datetime echo does not
+                // clobber “Saved” with a false dirty/pending state.
+                syncBaselineRef.current(serializeFormState(next));
+
+                return next;
             });
             markOnboardingComplete();
         },
         [markOnboardingComplete]
     );
 
-    const { saveStatus, fieldErrors, isDirty, resetBaseline, saveNow } = usePostAutosave({
+    const { saveStatus, fieldErrors, isDirty, resetBaseline, saveNow, syncBaseline } = usePostAutosave({
         postId,
         form,
         enabled: autosaveEnabled,
         onSaved: handleSaved,
     });
+
+    useEffect(() => {
+        syncBaselineRef.current = syncBaseline;
+    }, [syncBaseline]);
 
     async function handlePublish() {
         const next = publishFormState(form);
@@ -336,6 +349,7 @@ export default function PostsEditor() {
                 body={({ focusMode, onToggleFocusMode }) => (
                     <PostBodyEditor
                         body={form.body}
+                        title={form.title}
                         disabled={!autosaveEnabled}
                         focusMode={focusMode}
                         onToggleFocusMode={onToggleFocusMode}

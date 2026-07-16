@@ -229,11 +229,7 @@ export default function Layout() {
                             </NavbarItem>
                             <Dropdown>
                                 <DropdownButton as={NavbarItem}>
-                                    <Avatar
-                                        src={user.avatar_url}
-                                        initials={userInitials(user.name)}
-                                        square
-                                    />
+                                    <Avatar src={user.avatar_url} initials={userInitials(user.name)} square />
                                 </DropdownButton>
                                 <DropdownMenu className="min-w-72" anchor="bottom end">
                                     <UserDropdownContent mode={mode} setMode={setMode} onOpenProfile={openProfile} />

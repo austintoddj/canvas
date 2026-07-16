@@ -12,12 +12,18 @@ import {
     DropdownTrailingIcon,
     dropdownInsetItemClass,
     selectDropdownMenuClass,
-    selectDropdownTriggerClass,
+    selectDropdownTriggerCompactClass,
 } from '@/components/dropdown';
 import { ErrorMessage, Field, FieldGroup } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import type { LaravelValidationErrors } from '@/lib/api';
-import { SOCIAL_FIELD_KEYS, SOCIAL_LABELS, emptySocial, type SocialFieldKey } from '@/lib/settings/profile';
+import {
+    SOCIAL_FIELD_KEYS,
+    SOCIAL_LABELS,
+    SOCIAL_PLACEHOLDERS,
+    emptySocial,
+    type SocialFieldKey,
+} from '@/lib/settings/profile';
 
 type SocialLinkRow = {
     id: string;
@@ -87,7 +93,7 @@ function PlatformSelectDropdown({
                 data-invalid={invalid ? true : undefined}
                 aria-invalid={invalid || undefined}
                 className={clsx(
-                    selectDropdownTriggerClass,
+                    selectDropdownTriggerCompactClass,
                     value === null && 'text-zinc-500 dark:text-zinc-400',
                     invalid && 'border-red-500 dark:border-red-600'
                 )}
@@ -170,7 +176,7 @@ export function SocialLinksEditor({ social, fieldErrors, onChange }: SocialLinks
                 return (
                     <Field key={row.id}>
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-                            <div className="w-full sm:w-40 sm:shrink-0">
+                            <div className="w-full sm:w-auto sm:shrink-0">
                                 <PlatformSelectDropdown
                                     value={row.platform}
                                     usedPlatforms={usedPlatforms}
@@ -182,15 +188,16 @@ export function SocialLinksEditor({ social, fieldErrors, onChange }: SocialLinks
                                 <Input
                                     id={`${baseId}-${row.id}`}
                                     name={row.platform === null ? `social-row-${row.id}` : `social.${row.platform}`}
-                                    type="url"
+                                    type="text"
+                                    autoComplete="username"
                                     value={row.value}
                                     onChange={(event) => updateRow(row.id, { value: event.target.value })}
                                     invalid={rowInvalid}
-                                    placeholder="https://"
+                                    placeholder={row.platform === null ? 'username' : SOCIAL_PLACEHOLDERS[row.platform]}
                                     aria-label={
                                         row.platform === null
-                                            ? 'Social profile URL'
-                                            : `${SOCIAL_LABELS[row.platform]} profile URL`
+                                            ? 'Social profile username'
+                                            : `${SOCIAL_LABELS[row.platform]} username`
                                     }
                                 />
                             </div>

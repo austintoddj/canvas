@@ -10,11 +10,7 @@ import { SideDrawer } from '@/components/SideDrawer';
 import { Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { ValidationError } from '@/lib/api';
-import {
-    integrationsApi,
-    type AiProviderValue,
-    type IntegrationsStatus,
-} from '@/lib/api/integrations';
+import { integrationsApi, type AiProviderValue, type IntegrationsStatus } from '@/lib/api/integrations';
 import { aiProviderOption } from '@/lib/integrations/ai-providers';
 import { toast } from '@/lib/toast';
 
@@ -168,10 +164,7 @@ export function AiIntegrationDrawer({
     const saveDisabled =
         busy ||
         (apiKey.trim() === '' && !configured) ||
-        (apiKey.trim() === '' &&
-            configured &&
-            provider === initialProvider &&
-            model.trim() === (initialModel ?? ''));
+        (apiKey.trim() === '' && configured && provider === initialProvider && model.trim() === (initialModel ?? ''));
 
     return (
         <SideDrawer
@@ -179,9 +172,12 @@ export function AiIntegrationDrawer({
             onClose={onClose}
             closeLabel={t('common.close')}
             title={
-                <span className="flex items-center gap-3">
+                <span className="flex min-w-0 items-center gap-3">
                     <IntegrationIcon kind="ai" size="md" />
-                    <span className="min-w-0">{t('integrations.ai')}</span>
+                    <span className="min-w-0 truncate">{t('integrations.ai')}</span>
+                    <Badge color={configured ? 'green' : 'zinc'} className="shrink-0">
+                        {configured ? t('integrations.configured') : t('integrations.not_configured')}
+                    </Badge>
                 </span>
             }
             description={t(
@@ -224,17 +220,12 @@ export function AiIntegrationDrawer({
             }
         >
             <div className="space-y-6 px-5 py-5">
-                <div className="flex items-center gap-2">
-                    <Badge color={configured ? 'green' : 'zinc'}>
-                        {configured ? t('integrations.configured') : t('integrations.not_configured')}
-                    </Badge>
-                    {configured && selectedOption ? (
-                        <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                            {selectedOption.label}
-                            {initialModel ? ` · ${initialModel}` : ''}
-                        </Text>
-                    ) : null}
-                </div>
+                {configured && selectedOption ? (
+                    <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                        {selectedOption.label}
+                        {initialModel ? ` · ${initialModel}` : ''}
+                    </Text>
+                ) : null}
 
                 <form
                     onSubmit={(event) => {
@@ -259,9 +250,7 @@ export function AiIntegrationDrawer({
                                         emptyLabel={t('integrations.select_provider', 'Select a provider')}
                                     />
                                 </div>
-                                {fieldErrors.provider ? (
-                                    <ErrorMessage>{fieldErrors.provider}</ErrorMessage>
-                                ) : null}
+                                {fieldErrors.provider ? <ErrorMessage>{fieldErrors.provider}</ErrorMessage> : null}
                             </Field>
 
                             <Field>
@@ -300,9 +289,7 @@ export function AiIntegrationDrawer({
                                         setFieldErrors((current) => ({ ...current, api_key: undefined }));
                                     }}
                                 />
-                                {fieldErrors.api_key ? (
-                                    <ErrorMessage>{fieldErrors.api_key}</ErrorMessage>
-                                ) : null}
+                                {fieldErrors.api_key ? <ErrorMessage>{fieldErrors.api_key}</ErrorMessage> : null}
                             </Field>
 
                             <Field>
@@ -324,7 +311,10 @@ export function AiIntegrationDrawer({
                                     name="ai_model"
                                     autoComplete="off"
                                     value={model}
-                                    placeholder={selectedOption?.defaultModel ?? t('integrations.provider_default', 'Provider default')}
+                                    placeholder={
+                                        selectedOption?.defaultModel ??
+                                        t('integrations.provider_default', 'Provider default')
+                                    }
                                     onChange={(event) => {
                                         setModel(event.target.value);
                                         setFieldErrors((current) => ({ ...current, model: undefined }));
@@ -340,11 +330,11 @@ export function AiIntegrationDrawer({
                     {availableInEditor
                         ? t(
                               'integrations.ai_available_in_editor',
-                              'AI rewrite tools are available on the post editor toolbar. Reload after connecting if they do not appear yet.'
+                              'AI rewrite tools are available on the post editor toolbar (sparkle icon).'
                           )
                         : t(
-                              'integrations.ai_reload_after_connect',
-                              'After connecting, reload Canvas so the post editor can show AI tools.'
+                              'integrations.ai_appears_after_connect',
+                              'After connecting, the sparkle icon appears on the post editor toolbar for selected text.'
                           )}
                 </Text>
             </div>

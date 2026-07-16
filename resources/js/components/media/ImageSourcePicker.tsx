@@ -11,11 +11,7 @@ import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { ErrorText, Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { unsplashApi } from '@/lib/api/unsplash';
-import {
-    unsplashPerPage,
-    unsplashTargetRowHeight,
-    type UnsplashGridDensity,
-} from '@/lib/media/layout';
+import { unsplashPerPage, unsplashTargetRowHeight, type UnsplashGridDensity } from '@/lib/media/layout';
 import { MEDIA_SEARCH_DEBOUNCE_MS } from '@/lib/media/list';
 import type { Media, UnsplashPhoto } from '@/types/api';
 
@@ -203,11 +199,7 @@ export default function ImageSourcePicker({ open, onClose, onSelect, title, desc
     }
 
     function unsplashCredit(photo: UnsplashPhoto): string {
-        return (
-            photo.alt_description ??
-            photo.description ??
-            t('unsplash.photo_by', { name: photo.user.name })
-        );
+        return photo.alt_description ?? photo.description ?? t('unsplash.photo_by', { name: photo.user.name });
     }
 
     function selectUnsplash(photo: UnsplashPhoto) {
@@ -261,8 +253,7 @@ export default function ImageSourcePicker({ open, onClose, onSelect, title, desc
         unsplashResults.length > 0 &&
         unsplashPage < unsplashTotalPages;
 
-    const thumbUrl = (photo: UnsplashPhoto) =>
-        unsplashDensity === 'large' ? photo.urls.regular : photo.urls.small;
+    const thumbUrl = (photo: UnsplashPhoto) => (unsplashDensity === 'large' ? photo.urls.regular : photo.urls.small);
 
     return (
         <Dialog open={open} onClose={handleClose} size="4xl">

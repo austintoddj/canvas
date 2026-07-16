@@ -7,6 +7,7 @@ import {
     getPublicBaseUrl,
     hasMetaOverrides,
     resolvePostSeo,
+    seoSourceText,
     stripHtml,
     truncate,
     updatePostMeta,
@@ -72,7 +73,7 @@ describe('seo helpers', () => {
 
     it('resolves public base URL and post SEO with overrides and fallbacks', () => {
         window.Canvas = bootFixture('https://blog.example.com/about');
-        expect(getPublicBaseUrl()).toBe('https://blog.example.com');
+        expect(getPublicBaseUrl()).toBe(window.location.origin);
         window.Canvas = bootFixture(null);
         expect(getPublicBaseUrl()).toBe(window.location.origin);
 
@@ -126,5 +127,15 @@ describe('seo helpers', () => {
             description: 'Desc',
         });
         expect(updatePostMeta({ title: 'Custom title' }, { title: '' })).toBeNull();
+    });
+
+    it('packs post content for SEO AI generation', () => {
+        expect(seoSourceText({ title: '', summary: '', body: null })).toBeNull();
+        expect(seoSourceText({ title: '  ', summary: '', body: '<p></p>' })).toBeNull();
+        expect(seoSourceText({ title: 'Hello', summary: '', body: null })).toBe('Title: Hello');
+        expect(seoSourceText(baseInput)).toContain('Title: Hello World');
+        expect(seoSourceText(baseInput)).toContain('Summary: A short summary');
+        expect(seoSourceText(baseInput)).toContain('Body:');
+        expect(seoSourceText(baseInput)).toContain('Body copy with formatting');
     });
 });

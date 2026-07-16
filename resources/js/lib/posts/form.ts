@@ -146,7 +146,11 @@ export function fromDatetimeLocalValue(value: string): string | null {
     return toPublishDateTimeString(local);
 }
 
-export function parsePublishedAt(value: string): Date | null {
+export function parsePublishedAt(value: string | null | undefined): Date | null {
+    if (value === null || value === undefined) {
+        return null;
+    }
+
     const trimmed = value.trim();
 
     if (trimmed === '') {
@@ -202,7 +206,7 @@ export function parsePublishedAt(value: string): Date | null {
 }
 
 export function publishStatus(form: PostFormState, now: Date = new Date()): PostPublishStatus {
-    if (form.publishedAt === null || form.publishedAt === '') {
+    if (form.publishedAt === null || form.publishedAt === undefined || form.publishedAt === '') {
         return 'draft';
     }
 
@@ -229,10 +233,10 @@ export function postToFormState(post: Post): PostFormState {
         slug: post.slug ?? '',
         summary: post.summary ?? '',
         body: normalizeBodyHtml(post.body),
-        publishedAt: post.published_at,
-        featuredImage: post.featured_image,
-        featuredImageCaption: post.featured_image_caption,
-        meta: post.meta,
+        publishedAt: post.published_at ?? null,
+        featuredImage: post.featured_image ?? null,
+        featuredImageCaption: post.featured_image_caption ?? null,
+        meta: post.meta ?? null,
         tags: post.tags ?? [],
         topic: post.topic ? { name: post.topic.name, slug: post.topic.slug } : null,
     };

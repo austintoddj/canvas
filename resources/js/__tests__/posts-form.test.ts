@@ -10,6 +10,7 @@ import {
     isScheduled,
     mergeTaxonomyOptions,
     navSaveStatusLabel,
+    parsePublishedAt,
     postToFormState,
     publishFormState,
     publishStatus,
@@ -94,6 +95,17 @@ describe('post form helpers', () => {
         expect(isScheduled(draft)).toBe(false);
         expect(publishStatus(draft)).toBe('draft');
         expect(isPublished(postToFormState(samplePost))).toBe(true);
+
+        // Create-shaped payloads omit published_at; never throw when status is read during render.
+        const createShaped = postToFormState({
+            id: 'new-2',
+            slug: 'post-new-2',
+        } as Post);
+        expect(createShaped.publishedAt).toBeNull();
+        expect(publishStatus(createShaped)).toBe('draft');
+        expect(publishStatus({ ...draft, publishedAt: undefined as unknown as string | null })).toBe('draft');
+        expect(parsePublishedAt(undefined)).toBeNull();
+        expect(parsePublishedAt(null)).toBeNull();
 
         expect(toPublishDateTimeString(new Date(2026, 0, 5, 15, 30, 0))).toBe('2026-01-05 15:30:00');
         expect(toPublishDateTimeString(new Date(2026, 6, 11, 20, 0, 45))).toBe('2026-07-11 20:00:45');

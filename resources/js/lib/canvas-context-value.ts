@@ -30,6 +30,8 @@ export type Translate = (
     fallback?: string
 ) => string;
 
+export type CanvasBootIntegrationFlags = Pick<CanvasBoot, 'ai' | 'unsplash'>;
+
 export type CanvasContextValue = {
     boot: CanvasBoot;
     user: UserResource;
@@ -37,6 +39,7 @@ export type CanvasContextValue = {
     permissions: CanvasPermissions;
     switchLocale: (locale: string, signal?: AbortSignal) => Promise<void>;
     setUser: (user: UserResource) => void;
+    setIntegrationFlags: (flags: Partial<CanvasBootIntegrationFlags>) => void;
 };
 
 export function buildPermissions(user: UserResource): CanvasPermissions {
@@ -64,5 +67,6 @@ export function buildCanvasContextValue(boot: CanvasBoot): CanvasContextValue {
         permissions: buildPermissions(boot.user),
         switchLocale: async () => undefined,
         setUser: () => undefined,
+        setIntegrationFlags: () => undefined,
     };
 }

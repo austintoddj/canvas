@@ -10,8 +10,8 @@ export type PostsListFilters = {
     page: number;
 };
 
-export function postListStatus(publishedAt: string | null, now: Date = new Date()): PostPublishStatus {
-    if (publishedAt === null || publishedAt === '') {
+export function postListStatus(publishedAt: string | null | undefined, now: Date = new Date()): PostPublishStatus {
+    if (publishedAt === null || publishedAt === undefined || publishedAt === '') {
         return 'draft';
     }
 

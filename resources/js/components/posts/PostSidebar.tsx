@@ -11,7 +11,7 @@ import {
     DropdownTrailingIcon,
     dropdownInsetItemClass,
     selectDropdownMenuClass,
-    selectDropdownTriggerClass,
+    selectDropdownTriggerCompactClass,
 } from '@/components/dropdown';
 import { Description, ErrorMessage, Field, Fieldset, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
@@ -49,7 +49,7 @@ function TaxonomySelectButton({
             outline
             disabled={disabled}
             className={clsx(
-                selectDropdownTriggerClass,
+                selectDropdownTriggerCompactClass,
                 'mt-3',
                 label === null && 'text-zinc-500 dark:text-zinc-400'
             )}

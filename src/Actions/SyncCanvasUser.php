@@ -8,6 +8,7 @@ use Canvas\Data\UserPreferences;
 use Canvas\Enums\Role;
 use Canvas\Models\CanvasUser;
 use Canvas\Support\CanvasUserAttributes;
+use Canvas\Support\SocialProfiles;
 use Illuminate\Support\Arr;
 
 final readonly class SyncCanvasUser
@@ -85,10 +86,6 @@ final readonly class SyncCanvasUser
             return null;
         }
 
-        $links = collect($social)
-            ->filter(static fn (mixed $value): bool => is_string($value) && $value !== '')
-            ->all();
-
-        return $links === [] ? null : $links;
+        return SocialProfiles::normalizeMap($social);
     }
 }
