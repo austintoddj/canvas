@@ -55,6 +55,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
     const persistedLocaleRef = useRef<string | null>(null);
 
     const isSelf = user !== null && user.id === currentUser.id;
+    const isSelfTarget = userId !== null && userId === String(currentUser.id);
 
     useEffect(() => {
         if (!open || userId === null) {
@@ -134,7 +135,12 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
     const showForm =
         !loading && error === null && user !== null && (isSelf ? profileForm !== null : accessForm !== null);
 
-    const title = loading ? t('users.user_heading') : (user?.name ?? t('users.user_heading'));
+    const title =
+        isSelf || isSelfTarget
+            ? t('users.profile_title', 'Profile')
+            : loading
+              ? t('users.user_heading')
+              : (user?.name ?? t('users.user_heading'));
     const postsCount = user?.posts_count ?? 0;
     const postsLabel = `${postsCount.toLocaleString()} ${postsCount === 1 ? 'post' : 'posts'}`;
     const roleDisplay = user !== null ? roleLabel(user.canvas?.role ?? null, boot.roles) : null;
@@ -320,7 +326,6 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                 open={open}
                 onClose={onClose}
                 title={title}
-                description={isSelf ? 'Your author profile' : undefined}
                 titleClassName="truncate"
                 footer={
                     open && userId !== null ? (

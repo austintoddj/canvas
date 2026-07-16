@@ -135,7 +135,31 @@ describe('seo helpers', () => {
         expect(seoSourceText({ title: 'Hello', summary: '', body: null })).toBe('Title: Hello');
         expect(seoSourceText(baseInput)).toContain('Title: Hello World');
         expect(seoSourceText(baseInput)).toContain('Summary: A short summary');
-        expect(seoSourceText(baseInput)).toContain('Body:');
-        expect(seoSourceText(baseInput)).toContain('Body copy with formatting');
+        expect(seoSourceText(baseInput)).not.toContain('Body:');
+    });
+
+    it('includes a body lede only when summary is empty', () => {
+        const packed = seoSourceText({
+            title: 'Hello',
+            summary: '',
+            body: '<p>Body copy with <strong>formatting</strong>.</p>',
+        });
+
+        expect(packed).toContain('Title: Hello');
+        expect(packed).toContain('Body:');
+        expect(packed).toContain('Body copy with formatting');
+        expect(packed).not.toContain('Summary:');
+    });
+
+    it('keeps SEO AI source under the API text limit and prefers summary over body', () => {
+        const longSummary = 's'.repeat(3000);
+        const longBody = `<p>${'word '.repeat(2500)}</p>`;
+        const packed = seoSourceText({ title: 'T'.repeat(200), summary: longSummary, body: longBody });
+
+        expect(packed).not.toBeNull();
+        expect(packed!.length).toBeLessThanOrEqual(3000);
+        expect(packed).toContain('Title:');
+        expect(packed).toContain('Summary:');
+        expect(packed).not.toContain('Body:');
     });
 });

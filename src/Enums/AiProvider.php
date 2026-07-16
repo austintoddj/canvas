@@ -28,10 +28,14 @@ enum AiProvider: string
         };
     }
 
+    /**
+     * Fast, non-reasoning defaults for editor rewrite/SEO latency.
+     * Prefer mini/haiku/fast-non-reasoning SKUs over flagship thinking models.
+     */
     public function defaultModel(): string
     {
         return match ($this) {
-            self::Xai => 'grok-4.5',
+            self::Xai => 'grok-4-fast-non-reasoning',
             self::OpenAi => 'gpt-4o-mini',
             self::Anthropic => 'claude-haiku-4-5',
         };

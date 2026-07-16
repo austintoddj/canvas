@@ -13,7 +13,7 @@ import { aiProviderOption } from '@/lib/integrations/ai-providers';
 type OpenDrawer = 'unsplash' | 'ai' | null;
 
 export default function SettingsIntegrations() {
-    const { boot, t, setIntegrationFlags } = useCanvas();
+    const { t, setIntegrationFlags } = useCanvas();
     const [status, setStatus] = useState<IntegrationsStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -112,7 +112,6 @@ export default function SettingsIntegrations() {
             <UnsplashIntegrationDrawer
                 open={openDrawer === 'unsplash'}
                 configured={unsplashConfigured}
-                availableInEditor={boot.unsplash === true}
                 onClose={() => setOpenDrawer(null)}
                 onStatusChange={handleStatusChange}
             />
@@ -122,7 +121,6 @@ export default function SettingsIntegrations() {
                 configured={aiConfigured}
                 provider={status?.ai.provider ?? null}
                 model={status?.ai.model ?? null}
-                availableInEditor={boot.ai === true}
                 onClose={() => setOpenDrawer(null)}
                 onStatusChange={handleStatusChange}
             />

@@ -15,7 +15,6 @@ import { toast } from '@/lib/toast';
 type UnsplashIntegrationDrawerProps = {
     open: boolean;
     configured: boolean;
-    availableInEditor: boolean;
     onClose: () => void;
     onStatusChange: (status: IntegrationsStatus) => void;
 };
@@ -23,7 +22,6 @@ type UnsplashIntegrationDrawerProps = {
 export function UnsplashIntegrationDrawer({
     open,
     configured,
-    availableInEditor,
     onClose,
     onStatusChange,
 }: UnsplashIntegrationDrawerProps) {
@@ -115,16 +113,7 @@ export function UnsplashIntegrationDrawer({
             open={open}
             onClose={onClose}
             closeLabel={t('common.close')}
-            title={
-                <span className="flex min-w-0 items-center gap-3">
-                    <IntegrationIcon kind="unsplash" size="md" />
-                    <span className="min-w-0 truncate">{t('integrations.unsplash')}</span>
-                    <Badge color={configured ? 'green' : 'zinc'} className="shrink-0">
-                        {configured ? t('integrations.configured') : t('integrations.not_configured')}
-                    </Badge>
-                </span>
-            }
-            description={t('integrations.unsplash_help')}
+            title={t('integrations.unsplash')}
             footer={
                 <>
                     <div className="flex flex-wrap gap-2">
@@ -148,8 +137,8 @@ export function UnsplashIntegrationDrawer({
                         <Button
                             type="button"
                             outline
+                            color="red"
                             disabled={busy}
-                            className="text-red-600 dark:text-red-400"
                             onClick={() => void handleClear()}
                         >
                             {clearing
@@ -160,7 +149,19 @@ export function UnsplashIntegrationDrawer({
                 </>
             }
         >
-            <div className="space-y-6 px-5 py-5">
+            <div className="space-y-8 px-5 py-5">
+                <div className="flex flex-col items-center gap-4 text-center">
+                    <IntegrationIcon kind="unsplash" size="lg" />
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                        <Text className="text-base font-semibold text-zinc-950 dark:text-white">
+                            {t('integrations.unsplash')}
+                        </Text>
+                        <Badge color={configured ? 'green' : 'zinc'}>
+                            {configured ? t('integrations.configured') : t('integrations.not_configured')}
+                        </Badge>
+                    </div>
+                </div>
+
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
@@ -207,18 +208,6 @@ export function UnsplashIntegrationDrawer({
                         </FieldGroup>
                     </Fieldset>
                 </form>
-
-                <Text className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {availableInEditor
-                        ? t(
-                              'integrations.available_in_editor',
-                              'Unsplash is available in the post editor image picker.'
-                          )
-                        : t(
-                              'integrations.unsplash_appears_after_connect',
-                              'After connecting, Unsplash appears in the post editor image picker.'
-                          )}
-                </Text>
             </div>
         </SideDrawer>
     );

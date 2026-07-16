@@ -240,7 +240,7 @@ export default function Layout() {
                 }
                 sidebar={
                     <Sidebar>
-                        <SidebarHeader>
+                        <SidebarHeader className="max-lg:pr-12">
                             <SidebarItem href="/" className="lg:mb-2.5">
                                 <Avatar
                                     initials="C"

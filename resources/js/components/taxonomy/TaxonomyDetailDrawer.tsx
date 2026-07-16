@@ -324,7 +324,6 @@ export function TaxonomyDetailDrawer({
                 open={open}
                 onClose={onClose}
                 title={loading ? labels.titleEdit : title}
-                description={labels.subtitle}
                 titleClassName="truncate"
                 footer={
                     showFooter ? (

@@ -23,8 +23,20 @@ const iconByKind: Record<IntegrationKind, ComponentType<SVGProps<SVGSVGElement>>
 
 type IntegrationIconProps = {
     kind: IntegrationKind;
-    size?: 'sm' | 'md';
+    size?: 'sm' | 'md' | 'lg';
     className?: string;
+};
+
+const tileSizeClass: Record<NonNullable<IntegrationIconProps['size']>, string> = {
+    sm: 'size-11 rounded-xl',
+    md: 'size-12 rounded-xl',
+    lg: 'size-20 rounded-2xl',
+};
+
+const iconSizeClass: Record<NonNullable<IntegrationIconProps['size']>, string> = {
+    sm: 'size-6',
+    md: 'size-7',
+    lg: 'size-10',
 };
 
 export function IntegrationIcon({ kind, size = 'sm', className }: IntegrationIconProps) {
@@ -33,15 +45,15 @@ export function IntegrationIcon({ kind, size = 'sm', className }: IntegrationIco
     return (
         <span
             className={cn(
-                'inline-flex shrink-0 items-center justify-center rounded-xl ring-1 ring-inset',
-                size === 'sm' ? 'size-11' : 'size-12',
+                'inline-flex shrink-0 items-center justify-center ring-1 ring-inset',
+                tileSizeClass[size],
                 tileStyles[kind],
                 className
             )}
             aria-hidden="true"
             data-integration-icon={kind}
         >
-            <Icon className={cn(size === 'sm' ? 'size-6' : 'size-7', iconStyles[kind])} />
+            <Icon className={cn(iconSizeClass[size], iconStyles[kind])} />
         </span>
     );
 }

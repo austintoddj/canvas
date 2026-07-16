@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    AI_FIELD_PENDING_CLASS,
+    AI_FIELD_SETTLED_CLASS,
     AI_REWRITE_PENDING_CLASS,
     AI_REWRITE_SETTLED_CLASS,
     rangeAfterPlainTextReplace,
@@ -15,5 +17,7 @@ describe('ai rewrite decorations', () => {
     it('exports decoration class names for CSS', () => {
         expect(AI_REWRITE_PENDING_CLASS).toBe('canvas-ai-rewrite-pending');
         expect(AI_REWRITE_SETTLED_CLASS).toBe('canvas-ai-rewrite-settled');
+        expect(AI_FIELD_PENDING_CLASS).toBe('canvas-ai-field-pending');
+        expect(AI_FIELD_SETTLED_CLASS).toBe('canvas-ai-field-settled');
     });
 });

@@ -94,6 +94,7 @@ function PlatformSelectDropdown({
                 aria-invalid={invalid || undefined}
                 className={clsx(
                     selectDropdownTriggerCompactClass,
+                    'w-full min-w-0',
                     value === null && 'text-zinc-500 dark:text-zinc-400',
                     invalid && 'border-red-500 dark:border-red-600'
                 )}
@@ -175,8 +176,8 @@ export function SocialLinksEditor({ social, fieldErrors, onChange }: SocialLinks
 
                 return (
                     <Field key={row.id}>
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-                            <div className="w-full sm:w-auto sm:shrink-0">
+                        <div className="flex flex-row items-center gap-2">
+                            <div className="w-[8rem] shrink-0 sm:w-36">
                                 <PlatformSelectDropdown
                                     value={row.platform}
                                     usedPlatforms={usedPlatforms}
@@ -206,7 +207,7 @@ export function SocialLinksEditor({ social, fieldErrors, onChange }: SocialLinks
                                     type="button"
                                     plain
                                     aria-label="Remove social link"
-                                    className="self-start sm:mt-0.5"
+                                    className="shrink-0"
                                     onClick={() => removeRow(row.id)}
                                 >
                                     <XMarkIcon data-slot="icon" />

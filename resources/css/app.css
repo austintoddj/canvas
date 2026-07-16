@@ -41,6 +41,15 @@
 
 /* Pointer on clickables (Vercel-style affordance); component classes can still override when needed. */
 @layer base {
+    html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
+    body {
+        touch-action: manipulation;
+    }
+
     a[href],
     button:not(:disabled),
     [role='button']:not([aria-disabled='true']),
@@ -52,6 +61,13 @@
     button:disabled,
     [aria-disabled='true'] {
         cursor: not-allowed;
+    }
+
+    /* Floor for bare controls; utility classes (text-3xl, sm:text-sm, …) still win. */
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+    textarea,
+    select {
+        font-size: 1rem;
     }
 }
 
@@ -189,23 +205,62 @@
     box-shadow: none;
 }
 
-/* AI rewrite decorations (ProseMirror inline classes) */
-.canvas-post-body .canvas-ai-rewrite-pending {
-    border-radius: 0.2em;
-    background: linear-gradient(
-        90deg,
-        color-mix(in oklab, var(--color-violet-500) 12%, transparent) 0%,
-        color-mix(in oklab, var(--color-violet-400) 28%, transparent) 50%,
-        color-mix(in oklab, var(--color-violet-500) 12%, transparent) 100%
-    );
-    background-size: 200% 100%;
-    animation: canvas-ai-rewrite-shimmer 1.1s ease-in-out infinite;
-}
-
+/* AI rewrite / field decorations (body ProseMirror + SEO form fields) */
+.canvas-post-body .canvas-ai-rewrite-pending,
 .canvas-post-body .canvas-ai-rewrite-settled {
     border-radius: 0.2em;
-    background-color: color-mix(in oklab, var(--color-violet-400) 32%, transparent);
-    animation: canvas-ai-rewrite-settle 0.55s ease-out forwards;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.canvas-post-body .canvas-ai-rewrite-pending,
+.canvas-ai-field-pending {
+    color: color-mix(in oklab, var(--color-zinc-950) 72%, var(--color-violet-700));
+    background: linear-gradient(
+        105deg,
+        color-mix(in oklab, var(--color-violet-500) 8%, transparent) 0%,
+        color-mix(in oklab, var(--color-violet-400) 22%, transparent) 42%,
+        color-mix(in oklab, var(--color-fuchsia-400) 18%, transparent) 58%,
+        color-mix(in oklab, var(--color-violet-500) 8%, transparent) 100%
+    );
+    background-size: 220% 100%;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-violet-500) 12%, transparent);
+    animation: canvas-ai-rewrite-shimmer 1.4s ease-in-out infinite;
+}
+
+.dark .canvas-post-body .canvas-ai-rewrite-pending,
+.dark .canvas-ai-field-pending {
+    color: color-mix(in oklab, white 82%, var(--color-violet-300));
+    background: linear-gradient(
+        105deg,
+        color-mix(in oklab, var(--color-violet-400) 14%, transparent) 0%,
+        color-mix(in oklab, var(--color-violet-300) 28%, transparent) 42%,
+        color-mix(in oklab, var(--color-fuchsia-300) 22%, transparent) 58%,
+        color-mix(in oklab, var(--color-violet-400) 14%, transparent) 100%
+    );
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-violet-300) 18%, transparent);
+}
+
+/* Form control wrappers use before: pseudo for white fill — hide while AI is working */
+.canvas-ai-field-pending::before,
+.canvas-ai-field-settled::before {
+    opacity: 0;
+}
+
+.canvas-ai-field-pending,
+.canvas-ai-field-settled {
+    border-radius: 0.5rem;
+}
+
+.canvas-post-body .canvas-ai-rewrite-settled,
+.canvas-ai-field-settled {
+    background-color: color-mix(in oklab, var(--color-violet-400) 28%, transparent);
+    animation: canvas-ai-rewrite-settle 0.75s ease-out forwards;
+}
+
+.dark .canvas-post-body .canvas-ai-rewrite-settled,
+.dark .canvas-ai-field-settled {
+    background-color: color-mix(in oklab, var(--color-violet-300) 26%, transparent);
 }
 
 @keyframes canvas-ai-rewrite-shimmer {
@@ -219,7 +274,7 @@
 
 @keyframes canvas-ai-rewrite-settle {
     0% {
-        background-color: color-mix(in oklab, var(--color-violet-400) 36%, transparent);
+        background-color: color-mix(in oklab, var(--color-violet-400) 32%, transparent);
     }
     100% {
         background-color: transparent;
@@ -227,14 +282,33 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .canvas-post-body .canvas-ai-rewrite-pending {
+    .canvas-post-body .canvas-ai-rewrite-pending,
+    .canvas-ai-field-pending {
         animation: none;
-        background: color-mix(in oklab, var(--color-violet-500) 18%, transparent);
+        background: color-mix(in oklab, var(--color-violet-500) 16%, transparent);
+        box-shadow: none;
     }
 
-    .canvas-post-body .canvas-ai-rewrite-settled {
+    .dark .canvas-post-body .canvas-ai-rewrite-pending,
+    .dark .canvas-ai-field-pending {
+        background: color-mix(in oklab, var(--color-violet-400) 22%, transparent);
+    }
+
+    .canvas-post-body .canvas-ai-rewrite-settled,
+    .canvas-ai-field-settled {
         animation: none;
         background-color: transparent;
+    }
+}
+
+/* Body toolbar: soft fade when primary tools may overflow (below md) */
+@media (max-width: 767px) {
+    [data-post-body-toolbar-scroll='true'] {
+        mask-image: linear-gradient(to right, #000 0%, #000 calc(100% - 1.25rem), transparent 100%);
+    }
+
+    [dir='rtl'] [data-post-body-toolbar-scroll='true'] {
+        mask-image: linear-gradient(to left, #000 0%, #000 calc(100% - 1.25rem), transparent 100%);
     }
 }
 

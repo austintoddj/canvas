@@ -121,16 +121,19 @@ export function updatePostMeta(meta: PostMeta | null, patch: Partial<PostMeta>):
     return hasMetaOverrides(next) ? next : null;
 }
 
-const SEO_SOURCE_BODY_MAX = 6000;
+/** Must stay under AiRewriteRequest SEO text max (3000). */
+export const SEO_SOURCE_MAX = 3000;
+const SEO_SOURCE_BODY_MAX = 2000;
+const SEO_SOURCE_SUMMARY_MAX = 1200;
 
 /**
- * Pack post fields into a plain-text context string for SEO AI generation.
- * Returns null when there is nothing useful for the model to read.
+ * Pack post fields for SEO AI. Prefer title + summary; include a short body lede
+ * only when summary is empty. Caps total length so the API never rejects the payload.
  */
 export function seoSourceText(input: Pick<PostSeoInput, 'title' | 'summary' | 'body'>): string | null {
     const title = input.title.trim();
     const summary = input.summary.trim();
-    const body = truncate(stripHtml(input.body), SEO_SOURCE_BODY_MAX);
+    const bodyPlain = stripHtml(input.body);
     const parts: string[] = [];
 
     if (title !== '') {
@@ -138,16 +141,33 @@ export function seoSourceText(input: Pick<PostSeoInput, 'title' | 'summary' | 'b
     }
 
     if (summary !== '') {
-        parts.push(`Summary: ${summary}`);
-    }
+        const cappedSummary = truncate(summary, SEO_SOURCE_SUMMARY_MAX);
+        parts.push(`Summary: ${cappedSummary}`);
+    } else if (bodyPlain !== '') {
+        const prefix = parts.join('\n\n');
+        const bodyBudget = Math.min(
+            SEO_SOURCE_BODY_MAX,
+            SEO_SOURCE_MAX - (prefix === '' ? 0 : prefix.length + 2) - 'Body:\n'.length
+        );
 
-    if (body !== '') {
-        parts.push(`Body:\n${body}`);
+        if (bodyBudget > 0) {
+            const body = truncate(bodyPlain, bodyBudget);
+
+            if (body !== '') {
+                parts.push(`Body:\n${body}`);
+            }
+        }
     }
 
     if (parts.length === 0) {
         return null;
     }
 
-    return parts.join('\n\n');
+    const packed = parts.join('\n\n');
+
+    if (packed.length <= SEO_SOURCE_MAX) {
+        return packed;
+    }
+
+    return packed.slice(0, SEO_SOURCE_MAX).trimEnd();
 }

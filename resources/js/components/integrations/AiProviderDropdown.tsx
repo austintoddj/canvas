@@ -30,7 +30,7 @@ export function AiProviderDropdown({
     invalid = false,
     emptyLabel = 'Select a provider',
 }: AiProviderDropdownProps) {
-    const selectedLabel = aiProviderOption(value)?.label ?? null;
+    const selected = aiProviderOption(value);
 
     return (
         <Dropdown>
@@ -41,16 +41,16 @@ export function AiProviderDropdown({
                 aria-invalid={invalid || undefined}
                 className={clsx(
                     selectDropdownTriggerCompactClass,
-                    selectedLabel === null && 'text-zinc-500 dark:text-zinc-400',
+                    selected === null && 'text-zinc-500 dark:text-zinc-400',
                     invalid && 'border-red-500 dark:border-red-600'
                 )}
             >
-                <span className="min-w-0 truncate text-left">{selectedLabel ?? emptyLabel}</span>
+                <span className="min-w-0 truncate text-left">{selected?.label ?? emptyLabel}</span>
                 <ChevronDownIcon data-slot="icon" className="shrink-0" />
             </DropdownButton>
             <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                 {AI_PROVIDER_OPTIONS.map((option) => {
-                    const selected = value === option.value;
+                    const isSelected = value === option.value;
 
                     return (
                         <DropdownItem
@@ -59,9 +59,9 @@ export function AiProviderDropdown({
                             onClick={() => onChange(option.value)}
                             className={dropdownInsetItemClass}
                         >
-                            <DropdownLabel inset>{option.label}</DropdownLabel>
-                            {selected ? (
-                                <DropdownTrailingIcon inset>
+                            <DropdownLabel>{option.label}</DropdownLabel>
+                            {isSelected ? (
+                                <DropdownTrailingIcon>
                                     <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
                                 </DropdownTrailingIcon>
                             ) : null}

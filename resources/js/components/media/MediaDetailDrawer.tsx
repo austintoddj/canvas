@@ -196,7 +196,6 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                 open={open}
                 onClose={onClose}
                 title={media ? mediaDisplayName(media) : t('media.details_title')}
-                description={t('media.details_description')}
                 closeLabel={t('media.close_details')}
                 footer={
                     showFooter ? (

@@ -13,7 +13,11 @@ export type AiRewriteDecorationState = {
 
 export const AI_REWRITE_PENDING_CLASS = 'canvas-ai-rewrite-pending';
 export const AI_REWRITE_SETTLED_CLASS = 'canvas-ai-rewrite-settled';
-export const AI_REWRITE_SETTLE_MS = 550;
+export const AI_REWRITE_SETTLE_MS = 750;
+
+/** SEO / form field shimmer — same tokens as body rewrite, applied to control wrappers. */
+export const AI_FIELD_PENDING_CLASS = 'canvas-ai-field-pending';
+export const AI_FIELD_SETTLED_CLASS = 'canvas-ai-field-settled';
 
 export const aiRewriteDecorationKey = new PluginKey<AiRewriteDecorationState | null>('canvasAiRewriteDecoration');
 

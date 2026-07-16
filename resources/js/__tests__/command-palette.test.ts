@@ -71,19 +71,28 @@ describe('command palette helpers', () => {
         expect(contributorPages).not.toContain('users');
         expect(contributorPages).not.toContain('integrations');
         expect(contributorPages).not.toContain('tags');
+        expect(contributorPages).not.toContain('topics');
 
         const adminIds = filterNavigationPages('', admin).map((page) => page.id);
-        expect(adminIds).toContain('dashboard');
-        expect(adminIds).toContain('tags');
-        expect(adminIds).toContain('topics');
-        expect(adminIds).toContain('users');
-        expect(adminIds).toContain('integrations');
+        expect(adminIds).toEqual([
+            'dashboard',
+            'posts',
+            'new-post',
+            'media',
+            'organize',
+            'users',
+            'integrations',
+        ]);
+        expect(adminIds).not.toContain('tags');
+        expect(adminIds).not.toContain('topics');
 
         expect(filterNavigationPages('dash', admin).map((page) => page.id)).toEqual(['dashboard']);
         expect(filterNavigationPages('integr', admin).map((page) => page.id)).toEqual(['integrations']);
         expect(filterNavigationPages('unsplash', admin).map((page) => page.id)).toEqual(['integrations']);
         expect(filterNavigationPages('grok', admin).map((page) => page.id)).toEqual(['integrations']);
         expect(filterNavigationPages('authors', admin).map((page) => page.id)).toEqual(['users']);
+        expect(filterNavigationPages('tags', admin).map((page) => page.id)).toEqual(['tags']);
+        expect(filterNavigationPages('topics', admin).map((page) => page.id)).toEqual(['topics']);
         expect(filterNavigationPages('zzzz', admin)).toEqual([]);
     });
 

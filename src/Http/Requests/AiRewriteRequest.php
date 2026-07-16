@@ -9,6 +9,10 @@ use Illuminate\Validation\Rule;
 
 class AiRewriteRequest extends FormRequest
 {
+    public const int MaxRewriteText = 8000;
+
+    public const int MaxSeoText = 3000;
+
     public function authorize(): bool
     {
         return $this->user(config('canvas.guard')) !== null;
@@ -19,9 +23,16 @@ class AiRewriteRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isSeo = $this->input('action') === AiWritingAction::SuggestSeo->value;
+
         return [
             'action' => ['required', 'string', Rule::in(AiWritingAction::values())],
-            'text' => ['required', 'string', 'min:1', 'max:8000'],
+            'text' => [
+                'required',
+                'string',
+                'min:1',
+                'max:'.($isSeo ? self::MaxSeoText : self::MaxRewriteText),
+            ],
             'instruction' => [
                 'nullable',
                 'string',

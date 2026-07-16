@@ -135,7 +135,6 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
             open={open}
             onClose={onClose}
             title={t('users.invite_title')}
-            description={t('users.invite_description')}
             footer={
                 open ? (
                     <>

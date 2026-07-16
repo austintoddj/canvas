@@ -17,6 +17,8 @@ export type NavigationPage = {
     path: string;
     keywords: string[];
     requires?: 'taxonomy' | 'users' | 'settings';
+    /** When true, shown in the empty-query palette. Search still finds every page. */
+    defaultVisible?: boolean;
 };
 
 const ENTITY_PREFIXES: Record<string, SearchEntityType> = {
@@ -32,24 +34,28 @@ export const NAVIGATION_PAGES: NavigationPage[] = [
         label: 'Dashboard',
         path: '/',
         keywords: ['home', 'stats', 'overview'],
+        defaultVisible: true,
     },
     {
         id: 'posts',
         label: 'Posts',
         path: '/posts',
         keywords: ['articles', 'writing', 'blog'],
+        defaultVisible: true,
     },
     {
         id: 'new-post',
         label: 'New post',
         path: '/posts/new',
         keywords: ['create', 'write', 'compose'],
+        defaultVisible: true,
     },
     {
         id: 'media',
         label: 'Media',
         path: '/media',
         keywords: ['images', 'photos', 'library', 'uploads'],
+        defaultVisible: true,
     },
     {
         id: 'organize',
@@ -57,6 +63,7 @@ export const NAVIGATION_PAGES: NavigationPage[] = [
         path: '/organize',
         keywords: ['taxonomy'],
         requires: 'taxonomy',
+        defaultVisible: true,
     },
     {
         id: 'tags',
@@ -78,6 +85,7 @@ export const NAVIGATION_PAGES: NavigationPage[] = [
         path: '/settings/users',
         keywords: ['authors', 'people', 'team', 'access'],
         requires: 'users',
+        defaultVisible: true,
     },
     {
         id: 'integrations',
@@ -85,6 +93,7 @@ export const NAVIGATION_PAGES: NavigationPage[] = [
         path: '/settings/integrations',
         keywords: ['settings', 'unsplash', 'api', 'connections', 'ai', 'grok', 'openai', 'claude', 'chatgpt'],
         requires: 'settings',
+        defaultVisible: true,
     },
 ];
 
@@ -180,7 +189,7 @@ export function filterNavigationPages(
     const normalized = term.trim().toLowerCase();
 
     if (normalized === '') {
-        return allowed;
+        return allowed.filter((page) => page.defaultVisible === true);
     }
 
     return allowed.filter((page) => {

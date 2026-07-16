@@ -105,18 +105,21 @@ export default function PostEditorLayout({
     const chrome = (
         <div
             className={clsx(
-                'flex flex-wrap items-center justify-between gap-4 border-b border-zinc-950/10 dark:border-white/10',
-                focusMode ? 'shrink-0 bg-white px-4 py-4 sm:px-6 lg:px-10 dark:bg-zinc-900' : 'pb-4'
+                'flex items-center justify-between gap-2 border-b border-zinc-950/10 sm:gap-4 dark:border-white/10',
+                focusMode ? 'shrink-0 bg-white px-4 py-3 sm:px-6 sm:py-4 lg:px-10 dark:bg-zinc-900' : 'pb-3 sm:pb-4'
             )}
         >
-            <div className="flex min-w-0 items-center gap-3">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
                 {!focusMode ? (
                     <Button href="/posts" plain aria-label={t('editor.back_to_posts')}>
                         <ArrowLeftIcon data-slot="icon" />
                     </Button>
                 ) : null}
                 <div className="flex min-w-0 items-center gap-2">
-                    <Heading level={2} className="truncate text-lg/7">
+                    <Heading
+                        level={2}
+                        className={clsx('truncate text-lg/7', focusMode ? 'block' : 'hidden sm:block')}
+                    >
                         {(form.title ?? '').trim() === '' ? t('editor.untitled_post') : form.title}
                     </Heading>
                     <Badge color={badgeColor} data-publish-status={status}>
@@ -125,8 +128,8 @@ export default function PostEditorLayout({
                 </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                <div className="relative flex min-h-5 min-w-[4.5rem] items-center justify-end" aria-live="polite">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+                <div className="relative flex min-h-5 items-center justify-end" aria-live="polite">
                     <AnimatePresence mode="wait" initial={false}>
                         {statusLabel ? (
                             <motion.p
@@ -135,8 +138,8 @@ export default function PostEditorLayout({
                                 data-post-save-status="true"
                                 className={
                                     saveStatus === 'error'
-                                        ? 'text-sm text-canvas-danger dark:text-canvas-danger-dark'
-                                        : 'text-sm text-canvas-muted dark:text-canvas-muted-dark'
+                                        ? 'me-1 whitespace-nowrap text-xs text-canvas-danger sm:me-0 sm:text-sm dark:text-canvas-danger-dark'
+                                        : 'me-1 whitespace-nowrap text-xs text-canvas-muted sm:me-0 sm:text-sm dark:text-canvas-muted-dark'
                                 }
                                 initial={animateStatus ? { opacity: 0 } : false}
                                 animate={{ opacity: 1 }}
@@ -159,7 +162,7 @@ export default function PostEditorLayout({
                         title={t('editor.stats')}
                     >
                         <ChartBarIcon data-slot="icon" />
-                        {t('editor.stats')}
+                        <span className="hidden sm:inline">{t('editor.stats')}</span>
                     </Button>
                 ) : null}
                 <Button
@@ -189,7 +192,7 @@ export default function PostEditorLayout({
     );
 
     const writing = (
-        <div className={clsx('mx-auto min-w-0 max-w-3xl space-y-6', focusMode && 'pt-2')}>
+        <div className={clsx('mx-auto min-w-0 max-w-3xl space-y-4 sm:space-y-6', focusMode && 'pt-2')}>
             <div>
                 <label htmlFor="post-title" className="sr-only">
                     {t('editor.title_label')}
@@ -201,7 +204,7 @@ export default function PostEditorLayout({
                     disabled={disabled}
                     placeholder={t('editor.title_placeholder')}
                     aria-invalid={titleError !== undefined}
-                    className="block w-full border-0 bg-transparent px-0 py-3 text-3xl font-semibold leading-snug text-zinc-950 placeholder:text-zinc-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50 sm:py-4 sm:text-4xl sm:leading-snug dark:text-white dark:placeholder:text-zinc-500"
+                    className="block w-full border-0 bg-transparent px-0 py-2 text-3xl font-semibold leading-snug text-zinc-950 placeholder:text-zinc-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50 sm:py-4 sm:text-4xl sm:leading-snug dark:text-white dark:placeholder:text-zinc-500"
                     onChange={(event) => onTitleChange(event.target.value)}
                 />
                 {titleError ? <ErrorText className="mt-2">{titleError}</ErrorText> : null}
@@ -221,7 +224,7 @@ export default function PostEditorLayout({
     }
 
     return (
-        <div className="space-y-8" data-post-editor-focus="false">
+        <div className="space-y-4 sm:space-y-8" data-post-editor-focus="false">
             {chrome}
             {writing}
         </div>

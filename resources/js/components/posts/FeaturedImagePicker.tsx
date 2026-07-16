@@ -1,4 +1,4 @@
-import { PhotoIcon, XMarkIcon } from '@heroicons/react/20/solid';
+import { PhotoIcon } from '@heroicons/react/20/solid';
 import { useState } from 'react';
 
 import ImageSourcePicker from '@/components/media/ImageSourcePicker';
@@ -46,20 +46,6 @@ export default function FeaturedImagePicker({ form, onChange, disabled = false }
                         alt={form.featuredImageCaption ?? t('editor.featured_image')}
                         className="aspect-[1.91/1] w-full max-w-full object-cover"
                     />
-                    <div className="flex items-center justify-between gap-2 p-3 dark:bg-white/[0.02]">
-                        <Text className="truncate text-sm text-zinc-600 dark:text-zinc-300">
-                            {t('editor.featured_image')}
-                        </Text>
-                        <Button
-                            type="button"
-                            plain
-                            disabled={disabled}
-                            onClick={removeImage}
-                            aria-label={t('editor.remove_featured_image')}
-                        >
-                            <XMarkIcon data-slot="icon" />
-                        </Button>
-                    </div>
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-950/10 bg-zinc-950/[0.01] px-4 py-8 text-center dark:border-white/10 dark:bg-white/[0.02]">

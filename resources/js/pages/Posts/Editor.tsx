@@ -299,20 +299,20 @@ export default function PostsEditor() {
 
     if (loading) {
         return (
-            <div className="space-y-8" aria-busy="true" data-post-editor-skeleton="true">
-                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-950/10 pb-4 dark:border-white/10">
-                    <div className="flex items-center gap-3">
+            <div className="space-y-4 sm:space-y-8" aria-busy="true" data-post-editor-skeleton="true">
+                <div className="flex items-center justify-between gap-2 border-b border-zinc-950/10 pb-3 sm:gap-4 sm:pb-4 dark:border-white/10">
+                    <div className="flex items-center gap-1.5 sm:gap-3">
                         <Skeleton className="size-9 rounded-lg" />
-                        <Skeleton className="h-7 w-48 rounded-lg" />
+                        <Skeleton className="hidden h-7 w-48 rounded-lg sm:block" />
                         <Skeleton className="h-6 w-16 rounded-full" />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex shrink-0 gap-1 sm:gap-2">
                         <Skeleton className="size-9 rounded-lg" />
                         <Skeleton className="size-9 rounded-lg" />
                     </div>
                 </div>
-                <div className="mx-auto max-w-3xl space-y-6">
-                    <Skeleton className="h-14 w-3/4 max-w-xl rounded-lg" />
+                <div className="mx-auto max-w-3xl space-y-4 sm:space-y-6">
+                    <Skeleton className="h-10 w-3/4 max-w-xl rounded-lg sm:h-14" />
                     <Skeleton className="h-64 w-full rounded-lg" />
                 </div>
             </div>
@@ -362,7 +362,6 @@ export default function PostsEditor() {
                 open={settingsOpen}
                 onClose={() => setSettingsOpen(false)}
                 title={t('editor.post_settings')}
-                description={t('editor.settings_description')}
             >
                 <div className="min-w-0 space-y-6 overflow-x-hidden px-5 py-5">
                     <div className="min-w-0">
@@ -413,7 +412,6 @@ export default function PostsEditor() {
                 open={seoOpen}
                 onClose={() => setSeoOpen(false)}
                 title={t('editor.seo')}
-                description={t('editor.seo_description')}
             >
                 <div className="min-w-0 overflow-x-hidden px-5 py-5">
                     <PostSeoPanel

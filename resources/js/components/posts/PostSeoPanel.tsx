@@ -1,5 +1,5 @@
 import { SparklesIcon } from '@heroicons/react/20/solid';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 
 import { Button } from '@/components/button';
@@ -9,6 +9,11 @@ import { Textarea } from '@/components/textarea';
 import SeoPreview from '@/components/posts/SeoPreview';
 import { useCanvas } from '@/hooks/useCanvas';
 import { aiApi } from '@/lib/api/ai';
+import {
+    AI_FIELD_PENDING_CLASS,
+    AI_FIELD_SETTLED_CLASS,
+    AI_REWRITE_SETTLE_MS,
+} from '@/lib/posts/ai-rewrite-decoration';
 import { rewriteErrorMessage } from '@/lib/posts/ai-writing';
 import type { PostFormState } from '@/lib/posts/form';
 import { hasMetaOverrides, isValidUrl, seoSourceText, updatePostMeta, type PostSeoInput } from '@/lib/seo';
@@ -40,37 +45,6 @@ function seoInputFromForm(form: PostFormState): PostSeoInput {
     };
 }
 
-function AiGenerateButton({
-    label,
-    busy,
-    disabled,
-    onClick,
-}: {
-    label: string;
-    busy: boolean;
-    disabled: boolean;
-    onClick: () => void;
-}) {
-    return (
-        <button
-            type="button"
-            aria-label={label}
-            title={label}
-            disabled={disabled || busy}
-            onClick={onClick}
-            data-post-seo-ai="true"
-            className={clsx(
-                'inline-flex size-6 shrink-0 items-center justify-center rounded-md text-zinc-500 transition dark:text-zinc-400',
-                'hover:bg-zinc-950/5 hover:text-zinc-950 disabled:pointer-events-none disabled:opacity-40 dark:hover:bg-white/10 dark:hover:text-white',
-                'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
-                busy && 'bg-zinc-950/10 text-zinc-950 dark:bg-white/15 dark:text-white'
-            )}
-        >
-            <SparklesIcon className={clsx('size-3.5', busy && 'animate-pulse')} />
-        </button>
-    );
-}
-
 export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = false }: PostSeoPanelProps) {
     const { boot, t } = useCanvas();
     const seoTitle = form.meta?.title ?? '';
@@ -79,8 +53,19 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
     const canonicalInvalid = canonicalLink.trim() !== '' && !isValidUrl(canonicalLink);
     const hasOverrides = hasMetaOverrides(form.meta);
     const aiEnabled = boot.ai === true;
-    const [aiField, setAiField] = useState<SeoAiField | null>(null);
+    const [aiBusy, setAiBusy] = useState(false);
+    const [settledFields, setSettledFields] = useState<Set<SeoAiField>>(new Set());
     const abortRef = useRef<AbortController | null>(null);
+    const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        return () => {
+            abortRef.current?.abort();
+            if (settleTimerRef.current !== null) {
+                clearTimeout(settleTimerRef.current);
+            }
+        };
+    }, []);
 
     function updateMetaField(field: 'title' | 'description' | 'canonical_link', value: string) {
         onChange({
@@ -93,8 +78,32 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
         onChange({ ...form, meta: null });
     }
 
-    async function generateSeoField(field: SeoAiField) {
-        if (disabled || aiField !== null) {
+    function markSettled(fields: SeoAiField[]) {
+        if (settleTimerRef.current !== null) {
+            clearTimeout(settleTimerRef.current);
+        }
+
+        setSettledFields(new Set(fields));
+        settleTimerRef.current = setTimeout(() => {
+            setSettledFields(new Set());
+            settleTimerRef.current = null;
+        }, AI_REWRITE_SETTLE_MS);
+    }
+
+    function fieldClassName(field: SeoAiField): string | undefined {
+        if (aiBusy) {
+            return AI_FIELD_PENDING_CLASS;
+        }
+
+        if (settledFields.has(field)) {
+            return AI_FIELD_SETTLED_CLASS;
+        }
+
+        return undefined;
+    }
+
+    async function suggestSeo() {
+        if (disabled || aiBusy) {
             return;
         }
 
@@ -113,37 +122,47 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
         abortRef.current?.abort();
         const controller = new AbortController();
         abortRef.current = controller;
-        setAiField(field);
+        setAiBusy(true);
+        setSettledFields(new Set());
 
         try {
-            const response = await aiApi.rewrite(
+            const response = await aiApi.suggestSeo(
                 {
-                    action: field === 'title' ? 'seo_title' : 'seo_description',
                     text: source,
                     title: form.title.trim() === '' ? null : form.title.trim(),
                 },
                 controller.signal
             );
 
-            const next = response.text.trim();
+            const nextTitle = response.title.trim();
+            const nextDescription = response.description.trim();
 
-            if (next === '') {
+            if (nextTitle === '' || nextDescription === '') {
                 toast.error(t('editor.ai_empty_result'));
 
                 return;
             }
 
-            updateMetaField(field, next);
+            onChange({
+                ...form,
+                meta: updatePostMeta(form.meta, {
+                    title: nextTitle,
+                    description: nextDescription,
+                }),
+            });
+            markSettled(['title', 'description']);
         } catch (error) {
             if (controller.signal.aborted || abortRef.current !== controller) {
                 return;
             }
 
-            toast.error(rewriteErrorMessage(error, t('editor.ai_seo_error')));
+            toast.error(
+                rewriteErrorMessage(error, t('editor.ai_seo_error'), (key, fallback) => t(key, fallback ?? key))
+            );
         } finally {
             if (abortRef.current === controller) {
                 abortRef.current = null;
-                setAiField(null);
+                setAiBusy(false);
             }
         }
     }
@@ -152,25 +171,38 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
         <Fieldset className="space-y-6" data-post-seo-panel="true">
             <SeoPreview post={seoInputFromForm(form)} />
 
-            <Field>
-                <div className="flex items-center gap-1.5">
-                    <Label>{t('editor.seo_title')}</Label>
-                    {aiEnabled ? (
-                        <AiGenerateButton
-                            label={aiField === 'title' ? t('editor.ai_generating') : t('editor.ai_generate_seo_title')}
-                            busy={aiField === 'title'}
-                            disabled={disabled || aiField === 'description'}
-                            onClick={() => void generateSeoField('title')}
-                        />
-                    ) : null}
+            {aiEnabled ? (
+                <div className="space-y-1.5">
+                    <button
+                        type="button"
+                        data-post-seo-ai="true"
+                        disabled={disabled || aiBusy}
+                        onClick={() => void suggestSeo()}
+                        className={clsx(
+                            'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition',
+                            'text-zinc-700 dark:text-zinc-200',
+                            'hover:bg-zinc-950/5 disabled:pointer-events-none disabled:opacity-40 dark:hover:bg-white/10',
+                            'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
+                            aiBusy && 'bg-zinc-950/10 dark:bg-white/15'
+                        )}
+                    >
+                        <SparklesIcon className={clsx('size-3.5', aiBusy && 'animate-pulse')} />
+                        {aiBusy ? t('editor.ai_generating') : t('editor.ai_suggest_seo')}
+                    </button>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">{t('editor.ai_suggest_seo_help')}</p>
                 </div>
+            ) : null}
+
+            <Field>
+                <Label>{t('editor.seo_title')}</Label>
                 <Description>{t('editor.seo_title_help')}</Description>
                 <Input
                     name="meta.title"
                     value={seoTitle}
-                    disabled={disabled || aiField === 'title'}
+                    disabled={disabled || aiBusy}
                     placeholder={form.title.trim() === '' ? t('editor.untitled_post') : form.title}
                     invalid={fieldError(fieldErrors, 'meta.title') !== undefined}
+                    className={fieldClassName('title')}
                     onChange={(event) => updateMetaField('title', event.target.value)}
                 />
                 <Description>
@@ -184,30 +216,17 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
             </Field>
 
             <Field>
-                <div className="flex items-center gap-1.5">
-                    <Label>{t('editor.meta_description')}</Label>
-                    {aiEnabled ? (
-                        <AiGenerateButton
-                            label={
-                                aiField === 'description'
-                                    ? t('editor.ai_generating')
-                                    : t('editor.ai_generate_meta_description')
-                            }
-                            busy={aiField === 'description'}
-                            disabled={disabled || aiField === 'title'}
-                            onClick={() => void generateSeoField('description')}
-                        />
-                    ) : null}
-                </div>
+                <Label>{t('editor.meta_description')}</Label>
                 <Description>{t('editor.meta_description_help')}</Description>
                 <Textarea
                     name="meta.description"
                     rows={3}
                     resizable={false}
                     value={metaDescription}
-                    disabled={disabled || aiField === 'description'}
+                    disabled={disabled || aiBusy}
                     placeholder={form.summary.trim() === '' ? t('editor.seo_desc_placeholder') : form.summary}
                     invalid={fieldError(fieldErrors, 'meta.description') !== undefined}
+                    className={fieldClassName('description')}
                     onChange={(event) => updateMetaField('description', event.target.value)}
                 />
                 <Description>

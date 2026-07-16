@@ -580,97 +580,81 @@ export default function MediaIndex() {
                 ) : null}
             </AnimatePresence>
 
-            <div className="space-y-8">
+            <div
+                className={
+                    selectionCount > 0
+                        ? 'space-y-8 pb-[calc(5.5rem+env(safe-area-inset-bottom))]'
+                        : 'space-y-8'
+                }
+            >
                 <PageHeader
                     title={t('media.title')}
                     actions={
-                        selectionCount > 0 ? (
-                            <div className="flex flex-wrap items-center gap-2" data-media-selection-actions="true">
-                                <Text className="text-sm font-medium text-zinc-950 dark:text-white" aria-live="polite">
-                                    {t('media.selected_count', { count: selectionCount })}
-                                </Text>
-                                <Button
-                                    type="button"
-                                    plain
-                                    disabled={bulkDeleting}
-                                    onClick={() => setSelectedIds(new Set())}
-                                >
-                                    {t('media.clear_selection')}
-                                </Button>
-                                <Button
-                                    type="button"
-                                    color="red"
-                                    disabled={bulkDeleting || uploading}
-                                    onClick={openBulkDeleteConfirm}
-                                >
-                                    <TrashIcon data-slot="icon" />
-                                    {bulkDeleting ? t('common.deleting') : t('common.delete')}
-                                </Button>
-                            </div>
-                        ) : (
-                            <Button type="button" color="dark/zinc" disabled={uploading} onClick={openBrowse}>
-                                <ArrowUpTrayIcon data-slot="icon" />
-                                {uploadLabel}
-                            </Button>
-                        )
+                        <Button type="button" color="dark/zinc" disabled={uploading} onClick={openBrowse}>
+                            <ArrowUpTrayIcon data-slot="icon" />
+                            {uploadLabel}
+                        </Button>
                     }
                 >
                     <PageDescription>{t('media.description')}</PageDescription>
                 </PageHeader>
 
-                <div className="flex flex-wrap items-end justify-between gap-4">
-                    <div className="flex min-w-0 flex-1 flex-wrap items-end gap-3">
-                        <Field className="min-w-[12rem] flex-1 sm:max-w-xs">
-                            <Label className="sr-only">{t('media.search_label')}</Label>
-                            <Input
-                                name="media-search"
-                                value={searchDraft}
-                                placeholder={t('media.search_placeholder')}
-                                onChange={(event) => setSearchDraft(event.target.value)}
-                            />
-                        </Field>
+                <div className="space-y-3">
+                    <Field className="w-full">
+                        <Label className="sr-only">{t('media.search_label')}</Label>
+                        <Input
+                            name="media-search"
+                            value={searchDraft}
+                            placeholder={t('media.search_placeholder')}
+                            onChange={(event) => setSearchDraft(event.target.value)}
+                        />
+                    </Field>
 
-                        <Field className="w-36">
-                            <Label className="sr-only">{t('media.file_type')}</Label>
-                            <Select
-                                name="media-mime"
-                                value={filters.mime}
-                                onChange={(event) => setFilters({ mime: event.target.value as MediaMimeFilter })}
-                            >
-                                {MEDIA_MIME_FILTERS.map((option) => (
-                                    <option key={option.value || 'all'} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </Select>
-                        </Field>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <div className="flex min-w-0 flex-1 gap-2 sm:max-w-md">
+                            <Field className="min-w-0 flex-1">
+                                <Label className="sr-only">{t('media.file_type')}</Label>
+                                <Select
+                                    name="media-mime"
+                                    value={filters.mime}
+                                    onChange={(event) => setFilters({ mime: event.target.value as MediaMimeFilter })}
+                                >
+                                    {MEDIA_MIME_FILTERS.map((option) => (
+                                        <option key={option.value || 'all'} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </Field>
 
-                        <Field className="w-40">
-                            <Label className="sr-only">{t('media.sort_label')}</Label>
-                            <Select
-                                name="media-sort"
-                                value={filters.sort}
-                                onChange={(event) => setFilters({ sort: event.target.value as MediaListSort })}
+                            <Field className="min-w-0 flex-1">
+                                <Label className="sr-only">{t('media.sort_label')}</Label>
+                                <Select
+                                    name="media-sort"
+                                    value={filters.sort}
+                                    onChange={(event) => setFilters({ sort: event.target.value as MediaListSort })}
+                                >
+                                    {MEDIA_SORT_OPTIONS.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </Field>
+                        </div>
+
+                        {canViewAllMedia ? (
+                            <PillNav
+                                value={filters.scope}
+                                onChange={(scope) => setFilters({ scope })}
+                                aria-label={t('media.scope_label')}
+                                className="shrink-0"
                             >
-                                {MEDIA_SORT_OPTIONS.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </Select>
-                        </Field>
+                                <PillNavItem value="user">{t('media.scope_mine')}</PillNavItem>
+                                <PillNavItem value="all">{t('media.scope_all')}</PillNavItem>
+                            </PillNav>
+                        ) : null}
                     </div>
-
-                    {canViewAllMedia ? (
-                        <PillNav
-                            value={filters.scope}
-                            onChange={(scope) => setFilters({ scope })}
-                            aria-label={t('media.scope_label')}
-                        >
-                            <PillNavItem value="user">{t('media.scope_mine')}</PillNavItem>
-                            <PillNavItem value="all">{t('media.scope_all')}</PillNavItem>
-                        </PillNav>
-                    ) : null}
                 </div>
 
                 {error ? (
@@ -771,6 +755,48 @@ export default function MediaIndex() {
                     </Button>
                 </AlertActions>
             </Alert>
+
+            <AnimatePresence>
+                {selectionCount > 0 ? (
+                    <motion.div
+                        key="media-selection-bar"
+                        data-media-selection-actions="true"
+                        className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 pointer-events-none"
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 12 }}
+                        transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.75 }}
+                    >
+                        <div className="pointer-events-auto flex w-full max-w-lg flex-wrap items-center justify-between gap-3 rounded-2xl border border-canvas-border bg-canvas-panel px-4 py-3 shadow-lg ring-1 ring-zinc-950/5 dark:border-canvas-border-dark dark:bg-canvas-panel-dark dark:shadow-black/40 dark:ring-white/10">
+                            <Text
+                                className="text-sm font-medium text-zinc-950 dark:text-white"
+                                aria-live="polite"
+                            >
+                                {t('media.selected_count', { count: selectionCount })}
+                            </Text>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button
+                                    type="button"
+                                    plain
+                                    disabled={bulkDeleting}
+                                    onClick={() => setSelectedIds(new Set())}
+                                >
+                                    {t('media.clear_selection')}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    color="red"
+                                    disabled={bulkDeleting || uploading}
+                                    onClick={openBulkDeleteConfirm}
+                                >
+                                    <TrashIcon data-slot="icon" />
+                                    {bulkDeleting ? t('common.deleting') : t('common.delete')}
+                                </Button>
+                            </div>
+                        </div>
+                    </motion.div>
+                ) : null}
+            </AnimatePresence>
         </div>
     );
 }
