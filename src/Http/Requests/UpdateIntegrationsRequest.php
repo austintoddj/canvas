@@ -89,21 +89,30 @@ class UpdateIntegrationsRequest extends FormRequest
         if ($this->has('ai')) {
             $ai = (array) $this->input('ai', []);
 
-            if (array_key_exists('api_key', $ai) && is_string($ai['api_key'])) {
-                $ai['api_key'] = $this->normalizeApiKey($ai['api_key']);
-            } elseif (($ai['api_key'] ?? null) === '') {
-                $ai['api_key'] = null;
+            if (array_key_exists('api_key', $ai)) {
+                $apiKey = $ai['api_key'];
+                if (is_string($apiKey)) {
+                    $ai['api_key'] = $this->normalizeApiKey($apiKey);
+                } elseif ($apiKey === null) {
+                    $ai['api_key'] = null;
+                }
             }
 
-            if (array_key_exists('model', $ai) && is_string($ai['model'])) {
-                $model = trim($ai['model']);
-                $ai['model'] = $model === '' ? null : $model;
-            } elseif (($ai['model'] ?? null) === '') {
-                $ai['model'] = null;
+            if (array_key_exists('model', $ai)) {
+                $model = $ai['model'];
+                if (is_string($model)) {
+                    $trimmed = trim($model);
+                    $ai['model'] = $trimmed === '' ? null : $trimmed;
+                } elseif ($model === null) {
+                    $ai['model'] = null;
+                }
             }
 
-            if (($ai['provider'] ?? null) === '') {
-                $ai['provider'] = null;
+            if (array_key_exists('provider', $ai)) {
+                $provider = $ai['provider'];
+                if (is_string($provider) && trim($provider) === '') {
+                    $ai['provider'] = null;
+                }
             }
 
             $this->merge(['ai' => $ai]);

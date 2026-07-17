@@ -14,14 +14,16 @@ it('returns unconfigured integrations status for admins', function (): void {
         ->assertSuccessful()
         ->assertJsonPath('unsplash.configured', false)
         ->assertJsonPath('unsplash.masked_key', null)
+        ->assertJsonPath('unsplash.enabled_at', null)
         ->assertJsonPath('ai.configured', false)
         ->assertJsonPath('ai.provider', null)
         ->assertJsonPath('ai.masked_key', null)
-        ->assertJsonPath('ai.model', null);
+        ->assertJsonPath('ai.model', null)
+        ->assertJsonPath('ai.enabled_at', null);
 });
 
 it('stores an encrypted unsplash access key', function (): void {
-    $this->actingAs($this->admin, 'canvas')
+    $response = $this->actingAs($this->admin, 'canvas')
         ->putJson('canvas/api/settings/integrations', [
             'unsplash' => ['access_key' => 'secret-unsplash-key'],
         ])
@@ -29,6 +31,11 @@ it('stores an encrypted unsplash access key', function (): void {
         ->assertJsonPath('unsplash.configured', true)
         ->assertJsonPath('unsplash.masked_key', SettingsRepository::mask('secret-unsplash-key'))
         ->assertJsonMissing(['secret-unsplash-key']);
+
+    $enabledAt = $response->json('unsplash.enabled_at');
+
+    expect($enabledAt)->toBeString()
+        ->and(strtotime((string) $enabledAt))->not->toBeFalse();
 
     $row = Setting::query()->find(SettingKey::UnsplashAccessKey->value);
 
@@ -48,14 +55,15 @@ it('clears the unsplash access key when null is sent', function (): void {
         ])
         ->assertSuccessful()
         ->assertJsonPath('unsplash.configured', false)
-        ->assertJsonPath('unsplash.masked_key', null);
+        ->assertJsonPath('unsplash.masked_key', null)
+        ->assertJsonPath('unsplash.enabled_at', null);
 
     expect(Unsplash::configured())->toBeFalse()
         ->and(Setting::query()->find(SettingKey::UnsplashAccessKey->value))->toBeNull();
 });
 
 it('stores an encrypted ai api key and provider', function (): void {
-    $this->actingAs($this->admin, 'canvas')
+    $response = $this->actingAs($this->admin, 'canvas')
         ->putJson('canvas/api/settings/integrations', [
             'ai' => [
                 'provider' => AiProvider::Xai->value,
@@ -69,6 +77,11 @@ it('stores an encrypted ai api key and provider', function (): void {
         ->assertJsonPath('ai.masked_key', SettingsRepository::mask('secret-xai-key'))
         ->assertJsonPath('ai.model', null)
         ->assertJsonMissing(['secret-xai-key']);
+
+    $enabledAt = $response->json('ai.enabled_at');
+
+    expect($enabledAt)->toBeString()
+        ->and(strtotime((string) $enabledAt))->not->toBeFalse();
 
     $row = Setting::query()->find(SettingKey::AiApiKey->value);
 
@@ -123,6 +136,7 @@ it('clears the ai api key when null is sent', function (): void {
         ->assertSuccessful()
         ->assertJsonPath('ai.configured', false)
         ->assertJsonPath('ai.masked_key', null)
+        ->assertJsonPath('ai.enabled_at', null)
         ->assertJsonPath('ai.provider', 'anthropic');
 
     expect(Ai::configured())->toBeFalse()

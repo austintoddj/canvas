@@ -57,6 +57,16 @@ final class SettingsRepository
         return filled($this->get($key));
     }
 
+    /**
+     * ISO-8601 created_at for a settings row without decrypting the value.
+     */
+    public function createdAt(SettingKey $key): ?string
+    {
+        $row = Setting::query()->find($key->value);
+
+        return $row?->created_at?->toIso8601String();
+    }
+
     public static function mask(?string $value): ?string
     {
         if ($value === null || $value === '') {
@@ -69,6 +79,6 @@ final class SettingsRepository
             return str_repeat('•', $length);
         }
 
-        return str_repeat('•', max(4, $length - 4)).substr($value, -4);
+        return str_repeat('•', 8).substr($value, -4);
     }
 }

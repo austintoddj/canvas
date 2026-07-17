@@ -74,15 +74,7 @@ describe('command palette helpers', () => {
         expect(contributorPages).not.toContain('topics');
 
         const adminIds = filterNavigationPages('', admin).map((page) => page.id);
-        expect(adminIds).toEqual([
-            'dashboard',
-            'posts',
-            'new-post',
-            'media',
-            'organize',
-            'users',
-            'integrations',
-        ]);
+        expect(adminIds).toEqual(['dashboard', 'posts', 'new-post', 'media', 'organize', 'users', 'integrations']);
         expect(adminIds).not.toContain('tags');
         expect(adminIds).not.toContain('topics');
 

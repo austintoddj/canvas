@@ -65,8 +65,8 @@ class IntegrationSettingsController extends Controller
 
     /**
      * @return array{
-     *     unsplash: array{configured: bool, masked_key: string|null},
-     *     ai: array{configured: bool, provider: string|null, masked_key: string|null, model: string|null}
+     *     unsplash: array{configured: bool, masked_key: string|null, enabled_at: string|null},
+     *     ai: array{configured: bool, provider: string|null, masked_key: string|null, model: string|null, enabled_at: string|null}
      * }
      */
     private function statusPayload(): array
@@ -74,17 +74,25 @@ class IntegrationSettingsController extends Controller
         $accessKey = Unsplash::accessKey();
         $aiKey = Ai::apiKey();
         $provider = Ai::provider();
+        $unsplashConfigured = filled($accessKey);
+        $aiConfigured = Ai::configured();
 
         return [
             'unsplash' => [
-                'configured' => filled($accessKey),
+                'configured' => $unsplashConfigured,
                 'masked_key' => SettingsRepository::mask($accessKey),
+                'enabled_at' => $unsplashConfigured
+                    ? $this->settings->createdAt(SettingKey::UnsplashAccessKey)
+                    : null,
             ],
             'ai' => [
-                'configured' => Ai::configured(),
+                'configured' => $aiConfigured,
                 'provider' => $provider instanceof AiProvider ? $provider->value : null,
                 'masked_key' => SettingsRepository::mask($aiKey),
                 'model' => Ai::modelOverride(),
+                'enabled_at' => $aiConfigured
+                    ? $this->settings->createdAt(SettingKey::AiApiKey)
+                    : null,
             ],
         ];
     }

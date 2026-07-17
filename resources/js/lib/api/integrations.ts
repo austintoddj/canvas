@@ -3,6 +3,7 @@ import { api } from '@/lib/api';
 export type UnsplashIntegrationStatus = {
     configured: boolean;
     masked_key: string | null;
+    enabled_at: string | null;
 };
 
 export type AiProviderValue = 'xai' | 'openai' | 'anthropic';
@@ -12,6 +13,7 @@ export type AiIntegrationStatus = {
     provider: AiProviderValue | null;
     masked_key: string | null;
     model: string | null;
+    enabled_at: string | null;
 };
 
 export type IntegrationsStatus = {

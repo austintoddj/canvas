@@ -44,11 +44,7 @@ const icons: Record<AiProviderValue, ComponentType<IconProps>> = {
     anthropic: ClaudeIcon,
 };
 
-export function AiProviderIcon({
-    provider,
-    className,
-    ...props
-}: IconProps & { provider: AiProviderValue }) {
+export function AiProviderIcon({ provider, className, ...props }: IconProps & { provider: AiProviderValue }) {
     const Icon = icons[provider];
 
     return <Icon className={cn('size-4 shrink-0', className)} {...props} />;

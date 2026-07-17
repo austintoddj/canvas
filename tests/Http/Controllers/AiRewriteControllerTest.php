@@ -29,7 +29,7 @@ it('rewrites text with the xai openai-compatible api', function (): void {
         return $request->url() === 'https://api.x.ai/v1/chat/completions'
             && $request->hasHeader('Authorization', 'Bearer xai-test-key')
             && $request['model'] === AiProvider::Xai->defaultModel()
-            && $request['model'] === 'grok-4-fast-non-reasoning'
+            && $request['model'] === 'grok-4.3'
             && $request['max_tokens'] === 2048
             && str_contains($request['messages'][1]['content'], 'bad sentence');
     });

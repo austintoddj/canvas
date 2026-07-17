@@ -581,11 +581,7 @@ export default function MediaIndex() {
             </AnimatePresence>
 
             <div
-                className={
-                    selectionCount > 0
-                        ? 'space-y-8 pb-[calc(5.5rem+env(safe-area-inset-bottom))]'
-                        : 'space-y-8'
-                }
+                className={selectionCount > 0 ? 'space-y-8 pb-[calc(5.5rem+env(safe-area-inset-bottom))]' : 'space-y-8'}
             >
                 <PageHeader
                     title={t('media.title')}
@@ -768,10 +764,7 @@ export default function MediaIndex() {
                         transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.75 }}
                     >
                         <div className="pointer-events-auto flex w-full max-w-lg flex-wrap items-center justify-between gap-3 rounded-2xl border border-canvas-border bg-canvas-panel px-4 py-3 shadow-lg ring-1 ring-zinc-950/5 dark:border-canvas-border-dark dark:bg-canvas-panel-dark dark:shadow-black/40 dark:ring-white/10">
-                            <Text
-                                className="text-sm font-medium text-zinc-950 dark:text-white"
-                                aria-live="polite"
-                            >
+                            <Text className="text-sm font-medium text-zinc-950 dark:text-white" aria-live="polite">
                                 {t('media.selected_count', { count: selectionCount })}
                             </Text>
                             <div className="flex flex-wrap items-center gap-2">

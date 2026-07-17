@@ -358,11 +358,7 @@ export default function PostsEditor() {
                 )}
             />
 
-            <SideDrawer
-                open={settingsOpen}
-                onClose={() => setSettingsOpen(false)}
-                title={t('editor.post_settings')}
-            >
+            <SideDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} title={t('editor.post_settings')}>
                 <div className="min-w-0 space-y-6 overflow-x-hidden px-5 py-5">
                     <div className="min-w-0">
                         <Heading level={3} className="text-base/7">
@@ -408,11 +404,7 @@ export default function PostsEditor() {
                 </div>
             </SideDrawer>
 
-            <SideDrawer
-                open={seoOpen}
-                onClose={() => setSeoOpen(false)}
-                title={t('editor.seo')}
-            >
+            <SideDrawer open={seoOpen} onClose={() => setSeoOpen(false)} title={t('editor.seo')}>
                 <div className="min-w-0 overflow-x-hidden px-5 py-5">
                     <PostSeoPanel
                         form={form}

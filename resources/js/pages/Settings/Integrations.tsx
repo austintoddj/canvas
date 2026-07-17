@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { PageDescription, ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { integrationsApi, type IntegrationsStatus } from '@/lib/api/integrations';
-import { aiProviderOption } from '@/lib/integrations/ai-providers';
+import { integrationsAiMeta } from '@/lib/integrations/ai-providers';
 
 type OpenDrawer = 'unsplash' | 'ai' | null;
 
@@ -53,7 +53,15 @@ export default function SettingsIntegrations() {
 
     const unsplashConfigured = status?.unsplash.configured === true;
     const aiConfigured = status?.ai.configured === true;
-    const aiProviderLabel = aiProviderOption(status?.ai.provider)?.label ?? null;
+    const aiMeta = integrationsAiMeta(status?.ai.provider, status?.ai.model, {
+        auto: t('integrations.model_tier_auto', 'Auto'),
+        fast: t('integrations.model_tier_fast', 'Fast'),
+        expert: t('integrations.model_tier_expert', 'Expert'),
+        custom: t('integrations.model_tier_custom', 'Custom'),
+    });
+    const configureLabel = t('integrations.configure', 'Configure');
+    const enabledLabel = t('integrations.enabled', 'Enabled');
+    const notEnabledLabel = t('integrations.not_enabled', 'Not enabled');
 
     return (
         <div className="mx-auto max-w-3xl space-y-8">
@@ -77,13 +85,9 @@ export default function SettingsIntegrations() {
                         title={t('integrations.unsplash')}
                         description={t('integrations.unsplash_help')}
                         configured={unsplashConfigured}
-                        configuredLabel={t('integrations.configured')}
-                        notConfiguredLabel={t('integrations.not_configured')}
-                        actionLabel={
-                            unsplashConfigured
-                                ? t('integrations.manage', 'Manage')
-                                : t('integrations.configure', 'Configure')
-                        }
+                        configuredLabel={enabledLabel}
+                        notConfiguredLabel={notEnabledLabel}
+                        actionLabel={configureLabel}
                         onConfigure={() => setOpenDrawer('unsplash')}
                     />
                     <IntegrationRow
@@ -91,19 +95,13 @@ export default function SettingsIntegrations() {
                         title={t('integrations.ai')}
                         description={t(
                             'integrations.ai_help',
-                            'Bring your own API key for Grok, ChatGPT, or Claude rewrite tools in the post editor.'
+                            'Rewrite and SEO tools with Grok, ChatGPT, or Claude.'
                         )}
                         configured={aiConfigured}
-                        configuredLabel={t('integrations.configured')}
-                        notConfiguredLabel={t('integrations.not_configured')}
-                        actionLabel={
-                            aiConfigured ? t('integrations.manage', 'Manage') : t('integrations.configure', 'Configure')
-                        }
-                        meta={
-                            aiConfigured
-                                ? [aiProviderLabel, status?.ai.model].filter(Boolean).join(' · ') || undefined
-                                : undefined
-                        }
+                        configuredLabel={enabledLabel}
+                        notConfiguredLabel={notEnabledLabel}
+                        actionLabel={configureLabel}
+                        meta={aiConfigured ? aiMeta : undefined}
                         onConfigure={() => setOpenDrawer('ai')}
                     />
                 </div>
@@ -112,6 +110,8 @@ export default function SettingsIntegrations() {
             <UnsplashIntegrationDrawer
                 open={openDrawer === 'unsplash'}
                 configured={unsplashConfigured}
+                maskedKey={status?.unsplash.masked_key ?? null}
+                enabledAt={status?.unsplash.enabled_at ?? null}
                 onClose={() => setOpenDrawer(null)}
                 onStatusChange={handleStatusChange}
             />
@@ -121,6 +121,8 @@ export default function SettingsIntegrations() {
                 configured={aiConfigured}
                 provider={status?.ai.provider ?? null}
                 model={status?.ai.model ?? null}
+                maskedKey={status?.ai.masked_key ?? null}
+                enabledAt={status?.ai.enabled_at ?? null}
                 onClose={() => setOpenDrawer(null)}
                 onStatusChange={handleStatusChange}
             />

@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/lib/api';
-import {
-    AI_WRITING_ACTIONS,
-    rewriteErrorCode,
-    rewriteErrorMessage,
-    selectionText,
-} from '@/lib/posts/ai-writing';
+import { AI_WRITING_ACTIONS, rewriteErrorCode, rewriteErrorMessage, selectionText } from '@/lib/posts/ai-writing';
 
 describe('ai writing helpers', () => {
     it('lists the preset rewrite actions', () => {

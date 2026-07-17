@@ -116,10 +116,7 @@ export default function PostEditorLayout({
                     </Button>
                 ) : null}
                 <div className="flex min-w-0 items-center gap-2">
-                    <Heading
-                        level={2}
-                        className={clsx('truncate text-lg/7', focusMode ? 'block' : 'hidden sm:block')}
-                    >
+                    <Heading level={2} className={clsx('truncate text-lg/7', focusMode ? 'block' : 'hidden sm:block')}>
                         {(form.title ?? '').trim() === '' ? t('editor.untitled_post') : form.title}
                     </Heading>
                     <Badge color={badgeColor} data-publish-status={status}>

@@ -2,6 +2,8 @@ import * as Headless from '@headlessui/react';
 import clsx from 'clsx';
 import type React from 'react';
 
+import { cn } from '@/lib/utils';
+
 export function Fieldset({
     className,
     ...props
@@ -31,7 +33,7 @@ export function Legend({
 }
 
 export function FieldGroup({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
-    return <div data-slot="control" {...props} className={clsx(className, 'space-y-8')} />;
+    return <div data-slot="control" {...props} className={cn('space-y-8', className)} />;
 }
 
 export function Field({ className, ...props }: { className?: string } & Omit<Headless.FieldProps, 'as' | 'className'>) {

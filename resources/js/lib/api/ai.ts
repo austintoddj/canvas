@@ -24,10 +24,6 @@ export const aiApi = {
     },
 
     suggestSeo(payload: Omit<AiRewritePayload, 'action' | 'instruction'>, signal?: AbortSignal) {
-        return api.post<AiSuggestSeoResponse>(
-            '/ai/rewrite',
-            { ...payload, action: 'suggest_seo' },
-            signal
-        );
+        return api.post<AiSuggestSeoResponse>('/ai/rewrite', { ...payload, action: 'suggest_seo' }, signal);
     },
 };

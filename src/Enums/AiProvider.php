@@ -29,16 +29,54 @@ enum AiProvider: string
     }
 
     /**
-     * Fast, non-reasoning defaults for editor rewrite/SEO latency.
-     * Prefer mini/haiku/fast-non-reasoning SKUs over flagship thinking models.
+     * Fast defaults for editor rewrite/SEO latency.
+     * Prefer mini/haiku/fast SKUs over flagship thinking models.
      */
     public function defaultModel(): string
     {
         return match ($this) {
-            self::Xai => 'grok-4-fast-non-reasoning',
+            self::Xai => 'grok-4.3',
             self::OpenAi => 'gpt-4o-mini',
             self::Anthropic => 'claude-haiku-4-5',
         };
+    }
+
+    /**
+     * Higher-quality preset for the Expert tier (may be slower / costlier).
+     */
+    public function expertModel(): string
+    {
+        return match ($this) {
+            self::Xai => 'grok-4.5',
+            self::OpenAi => 'gpt-5.6-terra',
+            self::Anthropic => 'claude-sonnet-5',
+        };
+    }
+
+    /**
+     * Curated model tiers for Integrations (Auto is null / package default).
+     *
+     * @return list<array{tier: 'auto'|'fast'|'expert', model: string|null, label: string}>
+     */
+    public function modelPresets(): array
+    {
+        return [
+            [
+                'tier' => 'auto',
+                'model' => null,
+                'label' => 'Auto',
+            ],
+            [
+                'tier' => 'fast',
+                'model' => $this->defaultModel(),
+                'label' => 'Fast',
+            ],
+            [
+                'tier' => 'expert',
+                'model' => $this->expertModel(),
+                'label' => 'Expert',
+            ],
+        ];
     }
 
     public function consoleUrl(): string

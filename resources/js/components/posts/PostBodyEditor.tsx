@@ -194,8 +194,7 @@ function EditorToolbar({
         editor.isActive('heading', { level: 1 }) ||
         editor.isActive('heading', { level: 2 }) ||
         editor.isActive('heading', { level: 3 });
-    const inList =
-        editor.isActive('bulletList') || editor.isActive('orderedList') || editor.isActive('taskList');
+    const inList = editor.isActive('bulletList') || editor.isActive('orderedList') || editor.isActive('taskList');
     const codeLanguage = (editor.getAttributes('codeBlock').language as string | null | undefined) ?? '';
     const toolbarDisabled = disabled || aiBusy;
     const moreActive =

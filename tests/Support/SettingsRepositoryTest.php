@@ -42,6 +42,23 @@ it('masks secrets for display', function (): void {
     expect(SettingsRepository::mask(null))->toBeNull()
         ->and(SettingsRepository::mask(''))->toBeNull()
         ->and(SettingsRepository::mask('ab'))->toBe('••')
-        ->and(SettingsRepository::mask('secret-key-1234'))->toEndWith('1234')
-        ->and(SettingsRepository::mask('secret-key-1234'))->toStartWith('•');
+        ->and(SettingsRepository::mask('secret-key-1234'))->toBe('••••••••1234')
+        ->and(SettingsRepository::mask(str_repeat('a', 64).'WXYZ'))->toBe('••••••••WXYZ');
+});
+
+it('returns created_at for a setting row without decrypting', function (): void {
+    $repository = app(SettingsRepository::class);
+
+    expect($repository->createdAt(SettingKey::UnsplashAccessKey))->toBeNull();
+
+    $repository->set(SettingKey::UnsplashAccessKey, 'my-secret');
+
+    $createdAt = $repository->createdAt(SettingKey::UnsplashAccessKey);
+
+    expect($createdAt)->toBeString()
+        ->and(strtotime((string) $createdAt))->not->toBeFalse();
+
+    $repository->set(SettingKey::UnsplashAccessKey, 'replacement-secret');
+
+    expect($repository->createdAt(SettingKey::UnsplashAccessKey))->toBe($createdAt);
 });
