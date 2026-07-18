@@ -1,8 +1,8 @@
-import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 
 import { Text } from '@/components/text';
 import type { MonthOverMonth } from '@/types/api';
+import { IconArrowDown, IconArrowUp } from '@tabler/icons-react';
 
 type StatCardProps = {
     label: string;
@@ -24,7 +24,7 @@ export default function StatCard({ label, value, change }: StatCardProps) {
                         isUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                     )}
                 >
-                    {isUp ? <ArrowUpIcon className="size-4" /> : <ArrowDownIcon className="size-4" />}
+                    {isUp ? <IconArrowUp className="size-4" /> : <IconArrowDown className="size-4" />}
                     {change.percentage}% vs last month
                 </p>
             ) : null}

@@ -1,4 +1,3 @@
-import { PlusIcon } from '@heroicons/react/20/solid';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -15,6 +14,7 @@ import { Skeleton } from '@/components/Skeleton';
 import { PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { usePermissions } from '@/hooks/usePermissions';
 import { isInitialLoading, isRefreshing } from '@/lib/async-ui';
 import { statsApi } from '@/lib/api/stats';
@@ -27,6 +27,7 @@ import {
     type DashboardPresentation,
     type DashboardScope,
 } from '@/lib/dashboard';
+import { IconPlus } from '@tabler/icons-react';
 
 function DashboardSkeleton() {
     return (
@@ -53,6 +54,8 @@ export default function Dashboard() {
     const [presentation, setPresentation] = useState<DashboardPresentation | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    useDocumentTitle(t('dashboard.title'));
 
     useEffect(() => {
         let cancelled = false;
@@ -146,7 +149,7 @@ export default function Dashboard() {
                                 visual={<DashboardEmptyVisual />}
                                 action={
                                     <Button href="/posts/new" color="dark/zinc">
-                                        <PlusIcon data-slot="icon" />
+                                        <IconPlus data-slot="icon" />
                                         {t(DASHBOARD_EMPTY_STATE_KEYS.cta)}
                                     </Button>
                                 }

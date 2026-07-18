@@ -1,4 +1,3 @@
-import { PhotoIcon } from '@heroicons/react/20/solid';
 import { useState } from 'react';
 
 import ImageSourcePicker from '@/components/media/ImageSourcePicker';
@@ -9,6 +8,7 @@ import { Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { resolveMediaUrl } from '@/lib/media/list';
 import type { PostFormState } from '@/lib/posts/form';
+import { IconPhoto } from '@tabler/icons-react';
 
 type FeaturedImagePickerProps = {
     form: PostFormState;
@@ -49,7 +49,7 @@ export default function FeaturedImagePicker({ form, onChange, disabled = false }
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-950/10 bg-zinc-950/[0.01] px-4 py-8 text-center dark:border-white/10 dark:bg-white/[0.02]">
-                    <PhotoIcon className="size-8 text-zinc-400 dark:text-zinc-500" />
+                    <IconPhoto className="size-8 text-zinc-400 dark:text-zinc-500" />
                     <Text className="mt-2 text-sm text-canvas-muted dark:text-canvas-muted-dark">
                         {t('editor.no_featured_image')}
                     </Text>

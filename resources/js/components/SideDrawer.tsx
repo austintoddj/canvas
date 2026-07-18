@@ -1,9 +1,9 @@
-import { XMarkIcon } from '@heroicons/react/20/solid';
 import * as Headless from '@headlessui/react';
 import type { ReactNode } from 'react';
 
 import { Button } from '@/components/button';
 import { cn } from '@/lib/utils';
+import { IconX } from '@tabler/icons-react';
 
 type SideDrawerProps = {
     open: boolean;
@@ -50,7 +50,7 @@ export function SideDrawer({
                                     </Headless.DialogTitle>
                                 </div>
                                 <Headless.CloseButton as={Button} plain aria-label={closeLabel} className="shrink-0">
-                                    <XMarkIcon data-slot="icon" />
+                                    <IconX data-slot="icon" />
                                 </Headless.CloseButton>
                             </div>
 

@@ -1,4 +1,3 @@
-import { ArrowUpTrayIcon, PhotoIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 import { useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
 
@@ -6,6 +5,7 @@ import { Text } from '@/components/text';
 import { ALLOWED_MEDIA_MIME_TYPES, getMaxUploadBytes } from '@/lib/api/media';
 import { applyDragDepth, isFileDragTypes } from '@/lib/media/drag';
 import { formatMediaBytes, mediaFilesFromList } from '@/lib/media/list';
+import { IconPhoto, IconUpload } from '@tabler/icons-react';
 
 const ACCEPT = ALLOWED_MEDIA_MIME_TYPES.join(',');
 
@@ -179,9 +179,9 @@ export function MediaDropzone({
                 )}
             >
                 {uploading ? (
-                    <ArrowUpTrayIcon className="size-5 animate-pulse" aria-hidden="true" />
+                    <IconUpload className="size-5 animate-pulse" aria-hidden="true" />
                 ) : (
-                    <PhotoIcon className="size-5" aria-hidden="true" />
+                    <IconPhoto className="size-5" aria-hidden="true" />
                 )}
             </span>
 

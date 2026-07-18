@@ -1,4 +1,3 @@
-import { PlusIcon, TrashIcon } from '@heroicons/react/20/solid';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -27,8 +26,9 @@ import { TagsEmptyVisual } from '@/components/tags/TagsEmptyVisual';
 import { TaxonomyDetailDrawer } from '@/components/taxonomy/TaxonomyDetailDrawer';
 import { TopicsEmptyVisual } from '@/components/topics/TopicsEmptyVisual';
 import { Text, PageDescription, ErrorText } from '@/components/text';
-import { useCanvas } from '@/hooks/useCanvas';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
+import { useCanvas } from '@/hooks/useCanvas';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { tagsApi } from '@/lib/api/tags';
 import { topicsApi } from '@/lib/api/topics';
@@ -50,6 +50,7 @@ import {
     type TaxonomyListSort,
 } from '@/lib/taxonomy/list';
 import type { Paginated, Tag, Topic } from '@/types/api';
+import { IconPlus, IconTrash } from '@tabler/icons-react';
 
 type TaxonomyItem = Tag | Topic;
 
@@ -105,6 +106,9 @@ export default function OrganizeIndex() {
     const filters = parseOrganizeListFilters(searchParams);
     const detailId = taxonomyDetailId(searchParams);
     const tab = filters.tab;
+
+    useDocumentTitle(t('organize.title'));
+
     const copy: TabCopy =
         tab === 'topics'
             ? {
@@ -341,7 +345,7 @@ export default function OrganizeIndex() {
                 title={t('organize.title')}
                 actions={
                     <Button type="button" color="dark/zinc" disabled={creating} onClick={() => void handleCreate()}>
-                        <PlusIcon data-slot="icon" />
+                        <IconPlus data-slot="icon" />
                         {creating ? copy.creatingLabel : copy.newLabel}
                     </Button>
                 }
@@ -398,7 +402,7 @@ export default function OrganizeIndex() {
                                 disabled={creating}
                                 onClick={() => void handleCreate()}
                             >
-                                <PlusIcon data-slot="icon" />
+                                <IconPlus data-slot="icon" />
                                 {creating ? copy.creatingLabel : copy.createLabel}
                             </Button>
                         }
@@ -453,7 +457,7 @@ export default function OrganizeIndex() {
                                                     danger
                                                     onClick={() => setPendingDelete(item)}
                                                 >
-                                                    <TrashIcon className="size-5" aria-hidden="true" />
+                                                    <IconTrash className="size-5" aria-hidden="true" />
                                                 </ListRowActionButton>
                                             </ListRowEnd>
                                         </TableCell>

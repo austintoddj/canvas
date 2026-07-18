@@ -1,4 +1,3 @@
-import { PhotoIcon, XMarkIcon } from '@heroicons/react/20/solid';
 import { useState } from 'react';
 
 import { Avatar } from '@/components/avatar';
@@ -6,6 +5,7 @@ import { Button } from '@/components/button';
 import { Description, ErrorMessage, Field, Label } from '@/components/fieldset';
 import ImageSourcePicker from '@/components/media/ImageSourcePicker';
 import { useCanvas } from '@/hooks/useCanvas';
+import { IconPhoto, IconX } from '@tabler/icons-react';
 
 type AvatarImagePickerProps = {
     value: string;
@@ -47,7 +47,7 @@ export function AvatarImagePicker({
                             onClick={() => onChange('')}
                             aria-label={t('profile.remove_avatar')}
                         >
-                            <XMarkIcon data-slot="icon" />
+                            <IconX data-slot="icon" />
                             {t('editor.remove')}
                         </Button>
                     ) : null}
@@ -56,7 +56,7 @@ export function AvatarImagePicker({
 
             {!hasAvatar ? (
                 <div className="mt-3 flex items-center gap-2 rounded-lg border border-dashed border-zinc-950/10 bg-zinc-950/[0.01] px-3 py-2 text-sm text-canvas-muted dark:border-white/10 dark:bg-white/[0.02] dark:text-canvas-muted-dark">
-                    <PhotoIcon className="size-4 shrink-0" aria-hidden="true" />
+                    <IconPhoto className="size-4 shrink-0" aria-hidden="true" />
                     <span>{t('profile.avatar_empty')}</span>
                 </div>
             ) : null}

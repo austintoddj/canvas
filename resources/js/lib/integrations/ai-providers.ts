@@ -43,21 +43,21 @@ function buildPresets(defaultModel: string, expertModel: string): AiModelPreset[
             model: null,
             label: 'Auto',
             descriptionKey: 'integrations.model_tier_auto_help',
-            descriptionFallback: 'Canvas default · best for rewrites and SEO',
+            descriptionFallback: 'Provider default · recommended for rewrites and SEO',
         },
         {
             tier: 'fast',
             model: defaultModel,
             label: 'Fast',
             descriptionKey: 'integrations.model_tier_fast_help',
-            descriptionFallback: 'Faster · solid everyday quality',
+            descriptionFallback: 'Same as the provider default · optimized for speed',
         },
         {
             tier: 'expert',
             model: expertModel,
             label: 'Expert',
             descriptionKey: 'integrations.model_tier_expert_help',
-            descriptionFallback: 'Highest quality · can be slower',
+            descriptionFallback: 'Higher-capacity model · better quality, can be slower',
         },
     ];
 }

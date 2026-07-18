@@ -13,7 +13,7 @@
     },
     "dependencies": {
         "@headlessui/react": "^2.2.10",
-        "@heroicons/react": "^2.2.0",
+        "@tabler/icons-react": "^3.45.0",
         "@tiptap/extension-character-count": "^3.27.3",
         "@tiptap/extension-code-block-lowlight": "^3.27.3",
         "@tiptap/extension-highlight": "^3.27.3",

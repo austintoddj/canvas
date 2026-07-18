@@ -1,4 +1,3 @@
-import { PlusIcon, TrashIcon } from '@heroicons/react/20/solid';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -27,6 +26,7 @@ import { TableListSkeleton } from '@/components/TableListSkeleton';
 import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { usersApi } from '@/lib/api/users';
 import { formatListDate } from '@/lib/format-list-date';
@@ -42,6 +42,7 @@ import {
 import { roleLabel, userInitials } from '@/lib/users/roles';
 import type { Paginated } from '@/types/api';
 import type { UserResource } from '@/types/boot';
+import { IconPlus, IconTrash } from '@tabler/icons-react';
 
 function roleBadgeColor(role: number | null | undefined): 'zinc' | 'blue' | 'amber' | 'green' {
     if (role === 3) {
@@ -72,6 +73,8 @@ export default function SettingsUsersIndex() {
     const [grantOpen, setGrantOpen] = useState(false);
     const [pendingRevoke, setPendingRevoke] = useState<UserResource | null>(null);
     const [revoking, setRevoking] = useState(false);
+
+    useDocumentTitle(t('users.title'));
 
     useEffect(() => {
         let cancelled = false;
@@ -199,7 +202,7 @@ export default function SettingsUsersIndex() {
                 title={t('users.title')}
                 actions={
                     <Button type="button" color="dark/zinc" onClick={() => setGrantOpen(true)}>
-                        <PlusIcon data-slot="icon" />
+                        <IconPlus data-slot="icon" />
                         {t('users.invite')}
                     </Button>
                 }
@@ -219,7 +222,7 @@ export default function SettingsUsersIndex() {
                         visual={<UsersEmptyVisual />}
                         action={
                             <Button type="button" color="dark/zinc" onClick={() => setGrantOpen(true)}>
-                                <PlusIcon data-slot="icon" />
+                                <IconPlus data-slot="icon" />
                                 {t('users.invite')}
                             </Button>
                         }
@@ -289,7 +292,7 @@ export default function SettingsUsersIndex() {
                                                         danger
                                                         onClick={() => setPendingRevoke(user)}
                                                     >
-                                                        <TrashIcon className="size-5" aria-hidden="true" />
+                                                        <IconTrash className="size-5" aria-hidden="true" />
                                                     </ListRowActionButton>
                                                 ) : null}
                                             </ListRowEnd>

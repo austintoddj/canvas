@@ -1,4 +1,3 @@
-import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 
 import {
@@ -14,6 +13,7 @@ import {
 } from '@/components/dropdown';
 import type { AiProviderValue } from '@/lib/api/integrations';
 import { AI_PROVIDER_OPTIONS, aiProviderOption } from '@/lib/integrations/ai-providers';
+import { IconCheck, IconChevronDown } from '@tabler/icons-react';
 
 type AiProviderDropdownProps = {
     value: AiProviderValue | null;
@@ -46,7 +46,7 @@ export function AiProviderDropdown({
                 )}
             >
                 <span className="min-w-0 truncate text-left">{selected?.label ?? emptyLabel}</span>
-                <ChevronDownIcon data-slot="icon" className="shrink-0" />
+                <IconChevronDown data-slot="icon" className="shrink-0" />
             </DropdownButton>
             <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                 {AI_PROVIDER_OPTIONS.map((option) => {
@@ -62,7 +62,7 @@ export function AiProviderDropdown({
                             <DropdownLabel>{option.label}</DropdownLabel>
                             {isSelected ? (
                                 <DropdownTrailingIcon>
-                                    <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
+                                    <IconCheck className="size-4 text-zinc-950 dark:text-white" />
                                 </DropdownTrailingIcon>
                             ) : null}
                         </DropdownItem>

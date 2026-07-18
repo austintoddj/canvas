@@ -1,33 +1,5 @@
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import {
-    ArrowsPointingInIcon,
-    ArrowsPointingOutIcon,
-    Bars3BottomLeftIcon,
-    Bars3BottomRightIcon,
-    Bars3Icon,
-    BoldIcon,
-    ChatBubbleBottomCenterTextIcon,
-    CheckCircleIcon,
-    CheckIcon,
-    CodeBracketIcon,
-    EllipsisHorizontalIcon,
-    H1Icon,
-    H2Icon,
-    H3Icon,
-    ItalicIcon,
-    LinkIcon,
-    ListBulletIcon,
-    MinusIcon,
-    NumberedListIcon,
-    PhotoIcon,
-    SparklesIcon,
-    SwatchIcon,
-    StrikethroughIcon,
-    TableCellsIcon,
-    TrashIcon,
-    UnderlineIcon,
-} from '@heroicons/react/20/solid';
-import {
     useEffect,
     useRef,
     useState,
@@ -61,6 +33,34 @@ import { AI_WRITING_ACTIONS, rewriteErrorMessage, selectionText } from '@/lib/po
 import { bodyFromEditorHtml, bodyHtmlForEditor } from '@/lib/posts/body';
 import { CODE_BLOCK_LANGUAGES, createPostEditorExtensions } from '@/lib/posts/editor-extensions';
 import { toast } from '@/lib/toast';
+import {
+    IconAlignCenter,
+    IconAlignLeft,
+    IconAlignRight,
+    IconArrowsMaximize,
+    IconArrowsMinimize,
+    IconBold,
+    IconCheck,
+    IconCircleCheck,
+    IconCode,
+    IconColorSwatch,
+    IconDots,
+    IconH1,
+    IconH2,
+    IconH3,
+    IconItalic,
+    IconLink,
+    IconList,
+    IconListNumbers,
+    IconMessage,
+    IconMinus,
+    IconPhoto,
+    IconSparkles,
+    IconStrikethrough,
+    IconTable,
+    IconTrash,
+    IconUnderline,
+} from '@tabler/icons-react';
 
 type PostBodyEditorProps = {
     body: string | null;
@@ -156,7 +156,7 @@ function ToolbarMenuItem({
             <DropdownLabel>{label}</DropdownLabel>
             {active ? (
                 <DropdownTrailingIcon>
-                    <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
+                    <IconCheck className="size-4 text-zinc-950 dark:text-white" />
                 </DropdownTrailingIcon>
             ) : null}
         </DropdownItem>
@@ -221,7 +221,7 @@ function EditorToolbar({
                     disabled={toolbarDisabled}
                     onClick={() => editor.chain().focus().toggleBold().run()}
                 >
-                    <BoldIcon className="size-4" />
+                    <IconBold className="size-4" />
                 </ToolbarButton>
                 <ToolbarButton
                     label={t('editor.italic')}
@@ -229,7 +229,7 @@ function EditorToolbar({
                     disabled={toolbarDisabled}
                     onClick={() => editor.chain().focus().toggleItalic().run()}
                 >
-                    <ItalicIcon className="size-4" />
+                    <IconItalic className="size-4" />
                 </ToolbarButton>
                 {mdUp ? (
                     <ToolbarButton
@@ -238,7 +238,7 @@ function EditorToolbar({
                         disabled={toolbarDisabled}
                         onClick={() => editor.chain().focus().toggleUnderline().run()}
                     >
-                        <UnderlineIcon className="size-4" />
+                        <IconUnderline className="size-4" />
                     </ToolbarButton>
                 ) : null}
                 <ToolbarButton
@@ -247,7 +247,7 @@ function EditorToolbar({
                     disabled={toolbarDisabled}
                     onClick={onOpenLink}
                 >
-                    <LinkIcon className="size-4" />
+                    <IconLink className="size-4" />
                 </ToolbarButton>
 
                 <ToolbarDivider />
@@ -260,7 +260,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                         >
-                            <H1Icon className="size-4" />
+                            <IconH1 className="size-4" />
                         </ToolbarButton>
                         <ToolbarButton
                             label={t('editor.heading_2')}
@@ -268,7 +268,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                         >
-                            <H2Icon className="size-4" />
+                            <IconH2 className="size-4" />
                         </ToolbarButton>
                         <ToolbarButton
                             label={t('editor.heading_3')}
@@ -276,7 +276,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
                         >
-                            <H3Icon className="size-4" />
+                            <IconH3 className="size-4" />
                         </ToolbarButton>
                     </>
                 ) : (
@@ -293,7 +293,7 @@ function EditorToolbar({
                                 inHeading && 'bg-zinc-950/10 text-zinc-950 dark:bg-white/15 dark:text-white'
                             )}
                         >
-                            <H1Icon className="size-4" />
+                            <IconH1 className="size-4" />
                         </DropdownButton>
                         <DropdownMenu anchor="bottom start" className="min-w-44">
                             <ToolbarMenuItem
@@ -302,7 +302,7 @@ function EditorToolbar({
                                 disabled={toolbarDisabled}
                                 onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                             >
-                                <H1Icon data-slot="icon" />
+                                <IconH1 data-slot="icon" />
                             </ToolbarMenuItem>
                             <ToolbarMenuItem
                                 label={t('editor.heading_2')}
@@ -310,7 +310,7 @@ function EditorToolbar({
                                 disabled={toolbarDisabled}
                                 onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                             >
-                                <H2Icon data-slot="icon" />
+                                <IconH2 data-slot="icon" />
                             </ToolbarMenuItem>
                             <ToolbarMenuItem
                                 label={t('editor.heading_3')}
@@ -318,7 +318,7 @@ function EditorToolbar({
                                 disabled={toolbarDisabled}
                                 onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
                             >
-                                <H3Icon data-slot="icon" />
+                                <IconH3 data-slot="icon" />
                             </ToolbarMenuItem>
                         </DropdownMenu>
                     </Dropdown>
@@ -334,7 +334,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().toggleBulletList().run()}
                         >
-                            <ListBulletIcon className="size-4" />
+                            <IconList className="size-4" />
                         </ToolbarButton>
                         <ToolbarButton
                             label={t('editor.numbered_list')}
@@ -342,7 +342,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().toggleOrderedList().run()}
                         >
-                            <NumberedListIcon className="size-4" />
+                            <IconListNumbers className="size-4" />
                         </ToolbarButton>
                         <ToolbarButton
                             label={t('editor.checklist')}
@@ -350,7 +350,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().toggleTaskList().run()}
                         >
-                            <CheckCircleIcon className="size-4" />
+                            <IconCircleCheck className="size-4" />
                         </ToolbarButton>
                         <ToolbarButton
                             label={t('editor.quote')}
@@ -358,7 +358,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().toggleBlockquote().run()}
                         >
-                            <ChatBubbleBottomCenterTextIcon className="size-4" />
+                            <IconMessage className="size-4" />
                         </ToolbarButton>
                         <ToolbarButton
                             label={t('editor.code_block')}
@@ -366,7 +366,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().toggleCodeBlock().run()}
                         >
-                            <CodeBracketIcon className="size-4" />
+                            <IconCode className="size-4" />
                         </ToolbarButton>
                     </>
                 ) : (
@@ -383,7 +383,7 @@ function EditorToolbar({
                                 inList && 'bg-zinc-950/10 text-zinc-950 dark:bg-white/15 dark:text-white'
                             )}
                         >
-                            <ListBulletIcon className="size-4" />
+                            <IconList className="size-4" />
                         </DropdownButton>
                         <DropdownMenu anchor="bottom start" className="min-w-48">
                             <ToolbarMenuItem
@@ -392,7 +392,7 @@ function EditorToolbar({
                                 disabled={toolbarDisabled}
                                 onClick={() => editor.chain().focus().toggleBulletList().run()}
                             >
-                                <ListBulletIcon data-slot="icon" />
+                                <IconList data-slot="icon" />
                             </ToolbarMenuItem>
                             <ToolbarMenuItem
                                 label={t('editor.numbered_list')}
@@ -400,7 +400,7 @@ function EditorToolbar({
                                 disabled={toolbarDisabled}
                                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
                             >
-                                <NumberedListIcon data-slot="icon" />
+                                <IconListNumbers data-slot="icon" />
                             </ToolbarMenuItem>
                             <ToolbarMenuItem
                                 label={t('editor.checklist')}
@@ -408,7 +408,7 @@ function EditorToolbar({
                                 disabled={toolbarDisabled}
                                 onClick={() => editor.chain().focus().toggleTaskList().run()}
                             >
-                                <CheckCircleIcon data-slot="icon" />
+                                <IconCircleCheck data-slot="icon" />
                             </ToolbarMenuItem>
                         </DropdownMenu>
                     </Dropdown>
@@ -422,7 +422,7 @@ function EditorToolbar({
                     disabled={toolbarDisabled}
                     onClick={onOpenMedia}
                 >
-                    <PhotoIcon className="size-4" />
+                    <IconPhoto className="size-4" />
                 </ToolbarButton>
 
                 {inCodeBlock ? (
@@ -469,7 +469,7 @@ function EditorToolbar({
                                             <DropdownLabel>{option.label}</DropdownLabel>
                                             {active ? (
                                                 <DropdownTrailingIcon>
-                                                    <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
+                                                    <IconCheck className="size-4 text-zinc-950 dark:text-white" />
                                                 </DropdownTrailingIcon>
                                             ) : null}
                                         </DropdownItem>
@@ -502,7 +502,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().deleteTable().run()}
                         >
-                            <TrashIcon className="size-4" />
+                            <IconTrash className="size-4" />
                         </ToolbarButton>
                     </>
                 ) : null}
@@ -526,7 +526,7 @@ function EditorToolbar({
                                 aiBusy && 'bg-zinc-950/10 text-zinc-950 dark:bg-white/15 dark:text-white'
                             )}
                         >
-                            <SparklesIcon className={clsx('size-4', aiBusy && 'animate-pulse')} />
+                            <IconSparkles className={clsx('size-4', aiBusy && 'animate-pulse')} />
                         </DropdownButton>
                         <DropdownMenu anchor="bottom end" className="min-w-52">
                             {AI_WRITING_ACTIONS.map((item) => (
@@ -559,7 +559,7 @@ function EditorToolbar({
                             moreActive && 'bg-zinc-950/10 text-zinc-950 dark:bg-white/15 dark:text-white'
                         )}
                     >
-                        <EllipsisHorizontalIcon className="size-4" />
+                        <IconDots className="size-4" />
                     </DropdownButton>
                     <DropdownMenu anchor="bottom end" className="min-w-52">
                         {!mdUp ? (
@@ -570,7 +570,7 @@ function EditorToolbar({
                                     disabled={toolbarDisabled}
                                     onClick={() => editor.chain().focus().toggleUnderline().run()}
                                 >
-                                    <UnderlineIcon data-slot="icon" />
+                                    <IconUnderline data-slot="icon" />
                                 </ToolbarMenuItem>
                                 <ToolbarMenuItem
                                     label={t('editor.quote')}
@@ -578,7 +578,7 @@ function EditorToolbar({
                                     disabled={toolbarDisabled}
                                     onClick={() => editor.chain().focus().toggleBlockquote().run()}
                                 >
-                                    <ChatBubbleBottomCenterTextIcon data-slot="icon" />
+                                    <IconMessage data-slot="icon" />
                                 </ToolbarMenuItem>
                                 <ToolbarMenuItem
                                     label={t('editor.code_block')}
@@ -586,7 +586,7 @@ function EditorToolbar({
                                     disabled={toolbarDisabled}
                                     onClick={() => editor.chain().focus().toggleCodeBlock().run()}
                                 >
-                                    <CodeBracketIcon data-slot="icon" />
+                                    <IconCode data-slot="icon" />
                                 </ToolbarMenuItem>
                                 <DropdownDivider />
                             </>
@@ -597,7 +597,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().toggleStrike().run()}
                         >
-                            <StrikethroughIcon data-slot="icon" />
+                            <IconStrikethrough data-slot="icon" />
                         </ToolbarMenuItem>
                         <ToolbarMenuItem
                             label={t('editor.highlight')}
@@ -605,7 +605,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().toggleHighlight().run()}
                         >
-                            <SwatchIcon data-slot="icon" />
+                            <IconColorSwatch data-slot="icon" />
                         </ToolbarMenuItem>
                         <DropdownDivider />
                         <ToolbarMenuItem
@@ -613,7 +613,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().setHorizontalRule().run()}
                         >
-                            <MinusIcon data-slot="icon" />
+                            <IconMinus data-slot="icon" />
                         </ToolbarMenuItem>
                         <ToolbarMenuItem
                             label={t('editor.insert_table')}
@@ -623,7 +623,7 @@ function EditorToolbar({
                                 editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
                             }
                         >
-                            <TableCellsIcon data-slot="icon" />
+                            <IconTable data-slot="icon" />
                         </ToolbarMenuItem>
                         <DropdownDivider />
                         <ToolbarMenuItem
@@ -632,7 +632,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().setTextAlign('left').run()}
                         >
-                            <Bars3BottomLeftIcon data-slot="icon" />
+                            <IconAlignLeft data-slot="icon" />
                         </ToolbarMenuItem>
                         <ToolbarMenuItem
                             label={t('editor.align_center')}
@@ -640,7 +640,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().setTextAlign('center').run()}
                         >
-                            <Bars3Icon data-slot="icon" />
+                            <IconAlignCenter data-slot="icon" />
                         </ToolbarMenuItem>
                         <ToolbarMenuItem
                             label={t('editor.align_right')}
@@ -648,7 +648,7 @@ function EditorToolbar({
                             disabled={toolbarDisabled}
                             onClick={() => editor.chain().focus().setTextAlign('right').run()}
                         >
-                            <Bars3BottomRightIcon data-slot="icon" />
+                            <IconAlignRight data-slot="icon" />
                         </ToolbarMenuItem>
                     </DropdownMenu>
                 </Dropdown>
@@ -662,9 +662,9 @@ function EditorToolbar({
                         data-post-focus-toggle="true"
                     >
                         {focusMode ? (
-                            <ArrowsPointingInIcon className="size-4" />
+                            <IconArrowsMinimize className="size-4" />
                         ) : (
-                            <ArrowsPointingOutIcon className="size-4" />
+                            <IconArrowsMaximize className="size-4" />
                         )}
                     </ToolbarButton>
                 ) : null}

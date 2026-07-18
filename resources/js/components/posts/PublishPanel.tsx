@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { IconCalendar } from '@tabler/icons-react';
 
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
+import DateTimePicker from '@/components/DateTimePicker';
 import { Description, Field, Fieldset, Label } from '@/components/fieldset';
-import { Input } from '@/components/input';
 import { useCanvas } from '@/hooks/useCanvas';
+import { defaultScheduleDate, isScheduleInFuture, toPickerValue } from '@/lib/datetime-picker';
 import { isPublished, isScheduled, publishStatus, toDatetimeLocalValue, type PostFormState } from '@/lib/posts/form';
 
 type PublishPanelProps = {
@@ -17,6 +19,14 @@ type PublishPanelProps = {
     deleting?: boolean;
 };
 
+function seedScheduleValue(existing: string): string {
+    if (existing.trim() !== '' && isScheduleInFuture(existing)) {
+        return existing;
+    }
+
+    return toPickerValue(defaultScheduleDate());
+}
+
 export default function PublishPanel({
     form,
     onPublish,
@@ -26,7 +36,8 @@ export default function PublishPanel({
     disabled = false,
     deleting = false,
 }: PublishPanelProps) {
-    const { t } = useCanvas();
+    const { boot, user, t } = useCanvas();
+    const locale = user.canvas?.locale ?? boot.defaultLocale;
     const status = publishStatus(form);
     const published = isPublished(form);
     const scheduled = isScheduled(form);
@@ -42,7 +53,7 @@ export default function PublishPanel({
         const nowScheduled = isScheduled(form);
 
         setSyncedPublishedAt(form.publishedAt);
-        setScheduleDraft(null);
+        setScheduleDraft(nowScheduled ? seedScheduleValue(toDatetimeLocalValue(form.publishedAt)) : null);
 
         if (nowScheduled && !wasScheduled) {
             setScheduleExpanded(true);
@@ -53,7 +64,12 @@ export default function PublishPanel({
         }
     }
 
+    if (scheduleExpanded && scheduleDraft === null) {
+        setScheduleDraft(seedScheduleValue(formScheduleValue));
+    }
+
     const scheduleAt = scheduleDraft ?? formScheduleValue;
+    const canSubmitSchedule = scheduleAt.trim() !== '' && isScheduleInFuture(scheduleAt);
 
     const badgeColor = status === 'published' ? 'green' : status === 'scheduled' ? 'blue' : 'amber';
     const badgeLabel =
@@ -69,8 +85,18 @@ export default function PublishPanel({
               ? t('editor.visibility_scheduled')
               : t('editor.visibility_draft');
 
+    function openSchedule() {
+        setScheduleDraft(seedScheduleValue(formScheduleValue));
+        setScheduleExpanded(true);
+    }
+
+    function closeSchedule() {
+        setScheduleExpanded(false);
+        setScheduleDraft(null);
+    }
+
     async function handlePublish() {
-        if (busy) {
+        if (busy || scheduleExpanded) {
             return;
         }
 
@@ -79,13 +105,14 @@ export default function PublishPanel({
         try {
             await onPublish();
             setScheduleExpanded(false);
+            setScheduleDraft(null);
         } finally {
             setBusyAction(null);
         }
     }
 
     async function handleSchedule() {
-        if (busy || scheduleAt.trim() === '') {
+        if (busy || !canSubmitSchedule) {
             return;
         }
 
@@ -94,6 +121,7 @@ export default function PublishPanel({
         try {
             await onSchedule(scheduleAt);
             setScheduleExpanded(true);
+            setScheduleDraft(null);
         } finally {
             setBusyAction(null);
         }
@@ -128,22 +156,49 @@ export default function PublishPanel({
                 <Description>{visibilityDescription}</Description>
                 <div className="mt-3 flex flex-wrap gap-2">
                     {!published ? (
-                        <Button type="button" color="dark/zinc" disabled={busy} onClick={() => void handlePublish()}>
-                            {busyAction === 'publish' ? t('editor.publishing') : t('editor.publish')}
-                        </Button>
+                        scheduleExpanded ? (
+                            <Button type="button" outline disabled>
+                                {t('editor.publish')}
+                            </Button>
+                        ) : (
+                            <Button
+                                type="button"
+                                color="dark/zinc"
+                                disabled={busy}
+                                onClick={() => void handlePublish()}
+                            >
+                                {busyAction === 'publish' ? t('editor.publishing') : t('editor.publish')}
+                            </Button>
+                        )
                     ) : null}
-                    {!published ? (
+
+                    {!published && !scheduleExpanded ? (
                         <Button
                             type="button"
                             outline
                             disabled={busy}
-                            aria-expanded={scheduleExpanded}
+                            aria-expanded={false}
                             data-publish-schedule-toggle
-                            onClick={() => setScheduleExpanded((open) => !open)}
+                            onClick={openSchedule}
                         >
+                            <IconCalendar data-slot="icon" />
                             {t('editor.schedule')}
                         </Button>
                     ) : null}
+
+                    {!published && scheduleExpanded && !scheduled ? (
+                        <Button
+                            type="button"
+                            outline
+                            disabled={busy}
+                            aria-expanded
+                            data-publish-schedule-toggle
+                            onClick={closeSchedule}
+                        >
+                            {t('common.cancel')}
+                        </Button>
+                    ) : null}
+
                     {published || scheduled ? (
                         <Button type="button" outline disabled={busy} onClick={() => void handleUnpublish()}>
                             {busyAction === 'unpublish'
@@ -160,22 +215,38 @@ export default function PublishPanel({
                 <Field className="mt-4 min-w-0" data-publish-schedule>
                     <Label>{t('editor.schedule_for')}</Label>
                     <Description>{t('editor.schedule_for_help')}</Description>
-                    <div className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-                        <Input
-                            type="datetime-local"
-                            name="published_at"
+                    <div className="mt-3 space-y-3">
+                        <DateTimePicker
                             value={scheduleAt}
                             disabled={busy}
-                            onChange={(event) => setScheduleDraft(event.target.value)}
-                            data-publish-schedule-input
+                            locale={locale}
+                            data-publish-schedule-input=""
+                            labels={{
+                                time: t('editor.schedule_time', 'Time'),
+                                prevMonth: t('editor.schedule_prev_month', 'Previous month'),
+                                nextMonth: t('editor.schedule_next_month', 'Next month'),
+                                empty: t('editor.schedule_pick', 'Choose a date and time'),
+                                timezoneHint: t(
+                                    'editor.schedule_timezone_hint',
+                                    "Times use this device's local timezone."
+                                ),
+                                presets: {
+                                    in_one_hour: t('editor.schedule_presets.in_one_hour', 'In 1 hour'),
+                                    tomorrow_morning: t('editor.schedule_presets.tomorrow_morning', 'Tomorrow 9am'),
+                                    next_monday: t('editor.schedule_presets.next_monday', 'Next Monday'),
+                                },
+                            }}
+                            onChange={setScheduleDraft}
                         />
                         <Button
                             type="button"
                             color="dark/zinc"
-                            disabled={busy || scheduleAt.trim() === ''}
+                            className="w-full sm:w-auto"
+                            disabled={busy || !canSubmitSchedule}
                             onClick={() => void handleSchedule()}
                             data-publish-schedule-submit
                         >
+                            <IconCalendar data-slot="icon" />
                             {busyAction === 'schedule' ? t('editor.scheduling') : t('editor.schedule')}
                         </Button>
                     </div>

@@ -135,18 +135,9 @@ export function UnsplashIntegrationDrawer({
 
     const busy = saving || clearing;
     const permissions = [
-        t(
-            'integrations.unsplash_perm_search',
-            'Search Unsplash from the post editor and media pickers'
-        ),
-        t(
-            'integrations.unsplash_perm_scope',
-            'Photo search only — not account settings or billing'
-        ),
-        t(
-            'integrations.unsplash_perm_encrypted',
-            'Stored encrypted; never shown in full after save'
-        ),
+        t('integrations.unsplash_perm_search', 'Search Unsplash from the post editor and media pickers'),
+        t('integrations.unsplash_perm_scope', 'Photo search only — not account settings or billing'),
+        t('integrations.unsplash_perm_encrypted', 'Stored encrypted; never shown in full after save'),
     ];
 
     return (
@@ -275,9 +266,7 @@ export function UnsplashIntegrationDrawer({
             </SideDrawer>
 
             <Alert open={confirmDisconnectOpen} onClose={closeDisconnectConfirm} size="sm">
-                <AlertTitle>
-                    {t('integrations.disconnect_unsplash_title', 'Disconnect Unsplash?')}
-                </AlertTitle>
+                <AlertTitle>{t('integrations.disconnect_unsplash_title', 'Disconnect Unsplash?')}</AlertTitle>
                 <AlertDescription>
                     {t(
                         'integrations.disconnect_unsplash_body',
@@ -289,9 +278,7 @@ export function UnsplashIntegrationDrawer({
                         {t('common.cancel')}
                     </Button>
                     <Button type="button" color="red" disabled={clearing} onClick={() => void confirmDisconnect()}>
-                        {clearing
-                            ? t('integrations.disconnecting', 'Disconnecting…')
-                            : t('integrations.disconnect')}
+                        {clearing ? t('integrations.disconnecting', 'Disconnecting…') : t('integrations.disconnect')}
                     </Button>
                 </AlertActions>
             </Alert>

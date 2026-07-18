@@ -1,4 +1,3 @@
-import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 
 import {
@@ -14,6 +13,7 @@ import {
 } from '@/components/dropdown';
 import type { RoleValue } from '@/lib/permissions';
 import { ROLE_OPTIONS, roleLabel } from '@/lib/users/roles';
+import { IconCheck, IconChevronDown } from '@tabler/icons-react';
 
 type RoleSelectDropdownProps = {
     value: RoleValue | null;
@@ -48,7 +48,7 @@ export function RoleSelectDropdown({
                 )}
             >
                 <span className="min-w-0 truncate text-left">{selectedLabel ?? emptyLabel}</span>
-                <ChevronDownIcon data-slot="icon" className="shrink-0" />
+                <IconChevronDown data-slot="icon" className="shrink-0" />
             </DropdownButton>
             <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                 {ROLE_OPTIONS.map((option) => {
@@ -65,7 +65,7 @@ export function RoleSelectDropdown({
                             <DropdownLabel inset>{label}</DropdownLabel>
                             {selected ? (
                                 <DropdownTrailingIcon inset>
-                                    <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
+                                    <IconCheck className="size-4 text-zinc-950 dark:text-white" />
                                 </DropdownTrailingIcon>
                             ) : null}
                         </DropdownItem>

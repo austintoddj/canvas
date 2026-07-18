@@ -1,4 +1,3 @@
-import { ArrowLeftIcon } from '@heroicons/react/20/solid';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -10,10 +9,12 @@ import { Divider } from '@/components/divider';
 import { Heading, Subheading } from '@/components/heading';
 import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
 import { postsApi } from '@/lib/api/posts';
 import { parseDailyGraph, rankedEntries } from '@/lib/analytics';
 import type { PostStatsResponse } from '@/types/api';
+import { IconArrowLeft } from '@tabler/icons-react';
 
 function RankedList({
     entries,
@@ -50,6 +51,12 @@ export default function PostsStats() {
     const [stats, setStats] = useState<PostStatsResponse | null>(null);
     const [loading, setLoading] = useState(postId !== null);
     const [error, setError] = useState<string | null>(postId === null ? t('stats.post_not_found') : null);
+
+    const statsPageTitle =
+        stats === null
+            ? t('stats.title')
+            : `${stats.post.title.trim() === '' ? t('editor.untitled_post') : stats.post.title.trim()} ― ${t('stats.title')}`;
+    useDocumentTitle(statsPageTitle);
 
     useEffect(() => {
         if (postId === null) {
@@ -116,7 +123,7 @@ export default function PostsStats() {
         <div className="space-y-8">
             <div className="flex flex-wrap items-center gap-3">
                 <Button href={`/posts/${stats.post.id}`} plain aria-label={t('stats.back_to_post')}>
-                    <ArrowLeftIcon data-slot="icon" />
+                    <IconArrowLeft data-slot="icon" />
                 </Button>
                 <div>
                     <Heading>{title}</Heading>

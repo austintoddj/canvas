@@ -7,6 +7,7 @@ import { UnsplashIntegrationDrawer } from '@/components/integrations/UnsplashInt
 import { PageHeader } from '@/components/PageHeader';
 import { PageDescription, ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { integrationsApi, type IntegrationsStatus } from '@/lib/api/integrations';
 import { integrationsAiMeta } from '@/lib/integrations/ai-providers';
 
@@ -18,6 +19,8 @@ export default function SettingsIntegrations() {
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [openDrawer, setOpenDrawer] = useState<OpenDrawer>(null);
+
+    useDocumentTitle(t('integrations.title'));
 
     function handleStatusChange(next: IntegrationsStatus) {
         setStatus(next);
@@ -93,10 +96,7 @@ export default function SettingsIntegrations() {
                     <IntegrationRow
                         kind="ai"
                         title={t('integrations.ai')}
-                        description={t(
-                            'integrations.ai_help',
-                            'Rewrite and SEO tools with Grok, ChatGPT, or Claude.'
-                        )}
+                        description={t('integrations.ai_help', 'Rewrite and SEO tools with Grok, ChatGPT, or Claude.')}
                         configured={aiConfigured}
                         configuredLabel={enabledLabel}
                         notConfiguredLabel={notEnabledLabel}

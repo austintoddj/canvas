@@ -1,4 +1,3 @@
-import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 
 import { BadgeButton } from '@/components/badge';
@@ -20,6 +19,7 @@ import { useCanvas } from '@/hooks/useCanvas';
 import { isExistingTaxonomy, type PostFormState } from '@/lib/posts/form';
 import type { LaravelValidationErrors } from '@/lib/api';
 import type { TaxonomyOption } from '@/types/api';
+import { IconCheck, IconChevronDown } from '@tabler/icons-react';
 
 type PostSidebarProps = {
     form: PostFormState;
@@ -55,7 +55,7 @@ function TaxonomySelectButton({
             )}
         >
             <span className="min-w-0 truncate text-left">{label ?? emptyLabel}</span>
-            <ChevronDownIcon data-slot="icon" className="shrink-0" />
+            <IconChevronDown data-slot="icon" className="shrink-0" />
         </DropdownButton>
     );
 }
@@ -76,7 +76,7 @@ function TaxonomyMenuItem({
             <DropdownLabel inset>{label}</DropdownLabel>
             {selected ? (
                 <DropdownTrailingIcon inset>
-                    <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
+                    <IconCheck className="size-4 text-zinc-950 dark:text-white" />
                 </DropdownTrailingIcon>
             ) : null}
         </DropdownItem>

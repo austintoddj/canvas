@@ -1,5 +1,4 @@
 import { useId, useState } from 'react';
-import { CheckIcon, ChevronDownIcon, PlusIcon, XMarkIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 
 import { Button } from '@/components/button';
@@ -24,6 +23,7 @@ import {
     emptySocial,
     type SocialFieldKey,
 } from '@/lib/settings/profile';
+import { IconCheck, IconChevronDown, IconPlus, IconX } from '@tabler/icons-react';
 
 type SocialLinkRow = {
     id: string;
@@ -102,7 +102,7 @@ function PlatformSelectDropdown({
                 <span className="min-w-0 truncate text-left">
                     {value === null ? 'Select platform' : SOCIAL_LABELS[value]}
                 </span>
-                <ChevronDownIcon data-slot="icon" className="shrink-0" />
+                <IconChevronDown data-slot="icon" className="shrink-0" />
             </DropdownButton>
             <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                 {options.map((key) => {
@@ -113,7 +113,7 @@ function PlatformSelectDropdown({
                             <DropdownLabel inset>{SOCIAL_LABELS[key]}</DropdownLabel>
                             {selected ? (
                                 <DropdownTrailingIcon inset>
-                                    <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
+                                    <IconCheck className="size-4 text-zinc-950 dark:text-white" />
                                 </DropdownTrailingIcon>
                             ) : null}
                         </DropdownItem>
@@ -210,7 +210,7 @@ export function SocialLinksEditor({ social, fieldErrors, onChange }: SocialLinks
                                     className="shrink-0"
                                     onClick={() => removeRow(row.id)}
                                 >
-                                    <XMarkIcon data-slot="icon" />
+                                    <IconX data-slot="icon" />
                                 </Button>
                             ) : null}
                         </div>
@@ -224,7 +224,7 @@ export function SocialLinksEditor({ social, fieldErrors, onChange }: SocialLinks
             {canAddMore ? (
                 <div>
                     <Button type="button" outline onClick={addRow}>
-                        <PlusIcon data-slot="icon" />
+                        <IconPlus data-slot="icon" />
                         Add more
                     </Button>
                 </div>

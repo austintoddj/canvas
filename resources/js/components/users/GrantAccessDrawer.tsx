@@ -79,11 +79,10 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
         } catch (lookupError) {
             if (lookupError instanceof ValidationError) {
                 setFieldErrors(lookupError.errors);
-                setError(null);
             } else if (lookupError instanceof ApiError && lookupError.status === 404) {
-                setError(t('users.lookup_not_found'));
+                toast.error(t('users.lookup_not_found'));
             } else {
-                setError(t('users.lookup_error'));
+                toast.error(t('users.lookup_error'));
             }
         } finally {
             setLookingUp(false);

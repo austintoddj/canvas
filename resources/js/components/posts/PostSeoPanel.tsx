@@ -1,6 +1,6 @@
-import { SparklesIcon } from '@heroicons/react/20/solid';
 import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
+import { IconRestore, IconSparkles } from '@tabler/icons-react';
 
 import { Button } from '@/components/button';
 import { Description, ErrorMessage, Field, Fieldset, Label } from '@/components/fieldset';
@@ -172,24 +172,18 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
             <SeoPreview post={seoInputFromForm(form)} />
 
             {aiEnabled ? (
-                <div className="space-y-1.5">
-                    <button
+                <div className="rounded-lg border border-zinc-950/10 bg-zinc-950/[0.02] p-3 dark:border-white/10 dark:bg-white/[0.02]">
+                    <Button
                         type="button"
+                        outline
                         data-post-seo-ai="true"
                         disabled={disabled || aiBusy}
                         onClick={() => void suggestSeo()}
-                        className={clsx(
-                            'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition',
-                            'text-zinc-700 dark:text-zinc-200',
-                            'hover:bg-zinc-950/5 disabled:pointer-events-none disabled:opacity-40 dark:hover:bg-white/10',
-                            'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
-                            aiBusy && 'bg-zinc-950/10 dark:bg-white/15'
-                        )}
                     >
-                        <SparklesIcon className={clsx('size-3.5', aiBusy && 'animate-pulse')} />
+                        <IconSparkles data-slot="icon" className={clsx(aiBusy && 'animate-pulse')} />
                         {aiBusy ? t('editor.ai_generating') : t('editor.ai_suggest_seo')}
-                    </button>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">{t('editor.ai_suggest_seo_help')}</p>
+                    </Button>
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{t('editor.ai_suggest_seo_help')}</p>
                 </div>
             ) : null}
 
@@ -257,9 +251,12 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
             </Field>
 
             {hasOverrides ? (
-                <Button type="button" plain disabled={disabled} onClick={resetOverrides}>
-                    {t('editor.reset_seo')}
-                </Button>
+                <div className="border-t border-zinc-950/10 pt-4 dark:border-white/10">
+                    <Button type="button" outline disabled={disabled} onClick={resetOverrides}>
+                        <IconRestore data-slot="icon" />
+                        {t('editor.reset_seo')}
+                    </Button>
+                </div>
             ) : null}
         </Fieldset>
     );

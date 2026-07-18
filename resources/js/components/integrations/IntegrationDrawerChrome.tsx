@@ -1,4 +1,3 @@
-import { CheckIcon, ClockIcon } from '@heroicons/react/20/solid';
 import type { ReactNode } from 'react';
 
 import { Badge } from '@/components/badge';
@@ -9,6 +8,7 @@ import { Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { formatRelativeTime } from '@/lib/format-relative-time';
 import type { IntegrationDeveloper } from '@/lib/integrations/ai-providers';
+import { IconCheck, IconClock } from '@tabler/icons-react';
 
 const developerLinkClass =
     'font-medium text-blue-600 underline decoration-blue-600/30 underline-offset-2 hover:decoration-blue-600 dark:text-blue-400';
@@ -40,8 +40,7 @@ export function IntegrationDrawerChrome({
 }: IntegrationDrawerChromeProps) {
     const { t } = useCanvas();
     const relative = enabled ? formatRelativeTime(enabledAt) : null;
-    const enabledAgo =
-        relative === null ? null : t('integrations.enabled_ago', { relative }, 'Enabled :relative');
+    const enabledAgo = relative === null ? null : t('integrations.enabled_ago', { relative }, 'Enabled :relative');
     const developedByPrefix = t('integrations.developed_by_prefix', 'Developed by');
 
     return (
@@ -64,7 +63,7 @@ export function IntegrationDrawerChrome({
                         <p className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
                             {enabledAgo ? (
                                 <span className="inline-flex items-center gap-1">
-                                    <ClockIcon className="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+                                    <IconClock className="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
                                     <span>{enabledAgo}</span>
                                 </span>
                             ) : null}
@@ -95,15 +94,12 @@ export function IntegrationDrawerChrome({
                 <section className="min-w-0 space-y-2" data-integration-permissions="true">
                     <Subheading level={3}>{t('integrations.permissions', 'Permissions')}</Subheading>
                     <Text className="text-xs text-canvas-muted dark:text-canvas-muted-dark">
-                        {t(
-                            'integrations.permissions_help',
-                            'How this key is used.'
-                        )}
+                        {t('integrations.permissions_help', 'How this key is used.')}
                     </Text>
                     <ul className="divide-y divide-zinc-950/5 dark:divide-white/5">
                         {permissions.map((permission) => (
                             <li key={permission} className="flex min-w-0 gap-2 py-2 first:pt-0 last:pb-0">
-                                <CheckIcon
+                                <IconCheck
                                     className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400"
                                     aria-hidden="true"
                                 />

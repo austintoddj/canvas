@@ -1,4 +1,3 @@
-import { ArrowUpTrayIcon, TrashIcon } from '@heroicons/react/20/solid';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -20,6 +19,7 @@ import { Select } from '@/components/select';
 import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { usePermissions } from '@/hooks/usePermissions';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { ALLOWED_MEDIA_MIME_TYPES, mediaApi, uploadMedia } from '@/lib/api/media';
@@ -52,6 +52,7 @@ import {
 } from '@/lib/media/list';
 import { toast, toastFromTone } from '@/lib/toast';
 import type { Media } from '@/types/api';
+import { IconTrash, IconUpload } from '@tabler/icons-react';
 
 const ACCEPT = ALLOWED_MEDIA_MIME_TYPES.join(',');
 
@@ -117,6 +118,8 @@ export default function MediaIndex() {
     const detailId = searchParams.get('detail');
     const pageDragDepth = useRef(0);
     const browseInputRef = useRef<HTMLInputElement>(null);
+
+    useDocumentTitle(t('media.title'));
 
     const [searchDraft, setSearchDraft] = useState(filters.search);
     const [syncedSearch, setSyncedSearch] = useState(filters.search);
@@ -567,7 +570,7 @@ export default function MediaIndex() {
                             transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.8 }}
                         >
                             <span className="flex size-14 items-center justify-center rounded-2xl bg-zinc-950 text-white dark:bg-white dark:text-zinc-950">
-                                <ArrowUpTrayIcon className="size-7" aria-hidden="true" />
+                                <IconUpload className="size-7" aria-hidden="true" />
                             </span>
                             <Text className="mt-5 text-lg font-semibold text-zinc-950 dark:text-white">
                                 {t('media.drop_to_upload')}
@@ -587,7 +590,7 @@ export default function MediaIndex() {
                     title={t('media.title')}
                     actions={
                         <Button type="button" color="dark/zinc" disabled={uploading} onClick={openBrowse}>
-                            <ArrowUpTrayIcon data-slot="icon" />
+                            <IconUpload data-slot="icon" />
                             {uploadLabel}
                         </Button>
                     }
@@ -672,7 +675,7 @@ export default function MediaIndex() {
                             visual={<MediaEmptyVisual />}
                             action={
                                 <Button type="button" color="dark/zinc" disabled={uploading} onClick={openBrowse}>
-                                    <ArrowUpTrayIcon data-slot="icon" />
+                                    <IconUpload data-slot="icon" />
                                     {uploading ? t('common.loading') : t(MEDIA_EMPTY_STATE_KEYS.cta)}
                                 </Button>
                             }
@@ -782,7 +785,7 @@ export default function MediaIndex() {
                                     disabled={bulkDeleting || uploading}
                                     onClick={openBulkDeleteConfirm}
                                 >
-                                    <TrashIcon data-slot="icon" />
+                                    <IconTrash data-slot="icon" />
                                     {bulkDeleting ? t('common.deleting') : t('common.delete')}
                                 </Button>
                             </div>

@@ -1,4 +1,3 @@
-import { ChartBarIcon, PlusIcon, TrashIcon } from '@heroicons/react/20/solid';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -25,6 +24,7 @@ import { TableListSkeleton } from '@/components/TableListSkeleton';
 import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { usePermissions } from '@/hooks/usePermissions';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { postsApi } from '@/lib/api/posts';
@@ -39,6 +39,7 @@ import {
 } from '@/lib/posts/list';
 import { toast } from '@/lib/toast';
 import type { Paginated, PostListItem, PostsIndexResponse } from '@/types/api';
+import { IconChartBar, IconPlus, IconTrash } from '@tabler/icons-react';
 
 function updateFilters(current: URLSearchParams, patch: Partial<PostsListFilters>, resetPage = false): URLSearchParams {
     const next = new URLSearchParams(current);
@@ -85,6 +86,8 @@ export default function PostsIndex() {
     const [error, setError] = useState<string | null>(null);
     const [pendingDelete, setPendingDelete] = useState<PostListItem | null>(null);
     const [deleting, setDeleting] = useState(false);
+
+    useDocumentTitle(t('posts.title'));
 
     useEffect(() => {
         let cancelled = false;
@@ -194,7 +197,7 @@ export default function PostsIndex() {
                 title={t('posts.title')}
                 actions={
                     <Button href="/posts/new" color="dark/zinc">
-                        <PlusIcon data-slot="icon" />
+                        <IconPlus data-slot="icon" />
                         {t('posts.new')}
                     </Button>
                 }
@@ -242,7 +245,7 @@ export default function PostsIndex() {
                         visual={<PostsEmptyVisual />}
                         action={
                             <Button href="/posts/new" color="dark/zinc">
-                                <PlusIcon data-slot="icon" />
+                                <IconPlus data-slot="icon" />
                                 {t('posts.empty_cta')}
                             </Button>
                         }
@@ -302,7 +305,7 @@ export default function PostsIndex() {
                                                         href={`/posts/${post.id}/stats`}
                                                         label={`View stats for ${title}`}
                                                     >
-                                                        <ChartBarIcon className="size-5" aria-hidden="true" />
+                                                        <IconChartBar className="size-5" aria-hidden="true" />
                                                     </ListRowActionLink>
                                                 ) : null}
                                                 <ListRowActionButton
@@ -310,7 +313,7 @@ export default function PostsIndex() {
                                                     danger
                                                     onClick={() => setPendingDelete(post)}
                                                 >
-                                                    <TrashIcon className="size-5" aria-hidden="true" />
+                                                    <IconTrash className="size-5" aria-hidden="true" />
                                                 </ListRowActionButton>
                                             </ListRowEnd>
                                         </TableCell>

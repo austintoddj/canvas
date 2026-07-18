@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-BDSIhLyL.js";import{I as t}from"./text-c6MjsidW.js";var n=e();function r({className:e,style:r}){return(0,n.jsx)(`div`,{className:t(`animate-pulse rounded-xl bg-zinc-950/5 dark:bg-white/5`,e),style:r,"aria-hidden":`true`})}export{r as t};

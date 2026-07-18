@@ -1,6 +1,7 @@
 import { AnimatedOutlet } from '@/components/AnimatedOutlet';
 import { Avatar } from '@/components/avatar';
 import { CommandPalette } from '@/components/CommandPalette';
+import { QuillIcon } from '@/components/QuillIcon';
 import {
     Dropdown,
     DropdownButton,
@@ -12,6 +13,7 @@ import {
     dropdownInsetItemClass,
     dropdownProfileItemClass,
 } from '@/components/dropdown';
+import { Link } from '@/components/link';
 import { Navbar, NavbarItem, NavbarSection, NavbarSpacer } from '@/components/navbar';
 import { KbdGroup } from '@/components/kbd';
 import {
@@ -26,7 +28,7 @@ import {
     SidebarShortcut,
     SidebarSpacer,
 } from '@/components/sidebar';
-import { SidebarLayout } from '@/components/sidebar-layout';
+import { CloseMenuIcon, SidebarLayout } from '@/components/sidebar-layout';
 import { Toaster } from '@/components/Toaster';
 import { UserDetailDrawer } from '@/components/users/UserDetailDrawer';
 import { useCanvas } from '@/hooks/useCanvas';
@@ -36,32 +38,33 @@ import { type ThemeMode, useTheme } from '@/hooks/useTheme';
 import { searchShortcutKeys } from '@/lib/platform';
 import { hostHomeUrl } from '@/lib/urls';
 import { userInitials } from '@/lib/users/roles';
-import {
-    ArrowTopRightOnSquareIcon,
-    BookOpenIcon,
-    BuildingStorefrontIcon,
-    ComputerDesktopIcon,
-    DocumentTextIcon,
-    HomeIcon,
-    LifebuoyIcon,
-    MagnifyingGlassIcon,
-    MoonIcon,
-    PhotoIcon,
-    RectangleStackIcon,
-    RocketLaunchIcon,
-    SunIcon,
-    UsersIcon,
-} from '@heroicons/react/20/solid';
+import * as Headless from '@headlessui/react';
 import clsx from 'clsx';
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import {
+    IconBook,
+    IconBuildingStore,
+    IconDeviceDesktop,
+    IconExternalLink,
+    IconFileText,
+    IconLayoutDashboard,
+    IconLifebuoy,
+    IconMoon,
+    IconPhoto,
+    IconRocket,
+    IconSearch,
+    IconStack2,
+    IconSun,
+    IconUsers,
+} from '@tabler/icons-react';
 
 function ThemeToggle({ mode, setMode }: { mode: ThemeMode; setMode: (m: ThemeMode) => void }) {
     const { t } = useCanvas();
-    const options: { value: ThemeMode; label: string; Icon: typeof SunIcon }[] = [
-        { value: 'system', label: t('nav.theme_system'), Icon: ComputerDesktopIcon },
-        { value: 'light', label: t('nav.theme_light'), Icon: SunIcon },
-        { value: 'dark', label: t('nav.theme_dark'), Icon: MoonIcon },
+    const options: { value: ThemeMode; label: string; Icon: typeof IconSun }[] = [
+        { value: 'system', label: t('nav.theme_system'), Icon: IconDeviceDesktop },
+        { value: 'light', label: t('nav.theme_light'), Icon: IconSun },
+        { value: 'dark', label: t('nav.theme_dark'), Icon: IconMoon },
     ];
 
     return (
@@ -138,7 +141,7 @@ function UserDropdownContent({
             >
                 <DropdownLabel inset>{t('nav.home_page')}</DropdownLabel>
                 <DropdownTrailingIcon inset>
-                    <ArrowTopRightOnSquareIcon />
+                    <IconExternalLink />
                 </DropdownTrailingIcon>
             </DropdownItem>
             <DropdownItem
@@ -149,7 +152,7 @@ function UserDropdownContent({
             >
                 <DropdownLabel inset>{t('nav.changelog')}</DropdownLabel>
                 <DropdownTrailingIcon inset>
-                    <RocketLaunchIcon />
+                    <IconRocket />
                 </DropdownTrailingIcon>
             </DropdownItem>
             <DropdownItem
@@ -160,7 +163,7 @@ function UserDropdownContent({
             >
                 <DropdownLabel inset>{t('nav.help')}</DropdownLabel>
                 <DropdownTrailingIcon inset>
-                    <LifebuoyIcon />
+                    <IconLifebuoy />
                 </DropdownTrailingIcon>
             </DropdownItem>
             <DropdownItem
@@ -171,14 +174,15 @@ function UserDropdownContent({
             >
                 <DropdownLabel inset>{t('nav.docs')}</DropdownLabel>
                 <DropdownTrailingIcon inset>
-                    <BookOpenIcon />
+                    <IconBook />
                 </DropdownTrailingIcon>
             </DropdownItem>
 
             <DropdownDivider />
 
-            <div className="col-span-full rounded-b-xl bg-zinc-50 px-3.5 py-2 dark:bg-white/[0.03] sm:px-3">
-                <p className="text-xs text-zinc-400 dark:text-zinc-500">
+            <div className="col-span-full px-3.5 py-2 sm:px-3">
+                <p className="flex items-center justify-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
+                    <QuillIcon className="size-3.5 shrink-0" />
                     {t('common.version', { version: boot.version })}
                 </p>
             </div>
@@ -225,7 +229,7 @@ export default function Layout() {
                         <NavbarSpacer />
                         <NavbarSection>
                             <NavbarItem onClick={openPalette} aria-label={t('nav.search')}>
-                                <MagnifyingGlassIcon />
+                                <IconSearch data-slot="icon" />
                             </NavbarItem>
                             <Dropdown>
                                 <DropdownButton as={NavbarItem}>
@@ -240,18 +244,32 @@ export default function Layout() {
                 }
                 sidebar={
                     <Sidebar>
-                        <SidebarHeader className="max-lg:pr-12">
-                            <SidebarItem href="/" className="lg:mb-2.5">
-                                <Avatar
-                                    initials="C"
-                                    className="bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-                                    square
-                                />
-                                <SidebarLabel>{t('nav.canvas')}</SidebarLabel>
-                            </SidebarItem>
+                        <SidebarHeader>
+                            <div className="flex items-center gap-2 lg:mb-2.5">
+                                <Headless.CloseButton
+                                    as={Link}
+                                    href="/"
+                                    className="inline-flex max-w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-base/6 font-medium text-zinc-950 focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500 sm:py-2 sm:text-sm/5 dark:text-white"
+                                >
+                                    <span
+                                        data-slot="avatar"
+                                        className="inline-grid size-7 shrink-0 place-items-center rounded-[20%] bg-zinc-900 text-white outline -outline-offset-1 outline-black/10 sm:size-6 dark:bg-white dark:text-zinc-900 dark:outline-white/10"
+                                        aria-hidden
+                                    >
+                                        <QuillIcon className="size-[65%]" />
+                                    </span>
+                                    <SidebarLabel>{t('nav.canvas')}</SidebarLabel>
+                                </Headless.CloseButton>
+                                <Headless.CloseButton
+                                    aria-label={t('common.close')}
+                                    className="-mr-1.5 ml-auto flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg text-zinc-500 focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500 lg:hidden dark:text-zinc-400"
+                                >
+                                    <CloseMenuIcon className="size-6" />
+                                </Headless.CloseButton>
+                            </div>
                             <SidebarSection className="max-lg:hidden">
                                 <SidebarItem onClick={openPalette}>
-                                    <MagnifyingGlassIcon />
+                                    <IconSearch data-slot="icon" />
                                     <SidebarLabel>{t('nav.search')}</SidebarLabel>
                                     <SidebarShortcut>
                                         <KbdGroup keys={searchShortcutKeys()} />
@@ -263,15 +281,15 @@ export default function Layout() {
                         <SidebarBody>
                             <SidebarSection>
                                 <SidebarItem href="/" current={pathname === '/'}>
-                                    <HomeIcon />
+                                    <IconLayoutDashboard data-slot="icon" />
                                     <SidebarLabel>{t('nav.dashboard')}</SidebarLabel>
                                 </SidebarItem>
                                 <SidebarItem href="/posts" current={pathname.startsWith('/posts')}>
-                                    <DocumentTextIcon />
+                                    <IconFileText data-slot="icon" />
                                     <SidebarLabel>{t('nav.posts')}</SidebarLabel>
                                 </SidebarItem>
                                 <SidebarItem href="/media" current={pathname.startsWith('/media')}>
-                                    <PhotoIcon />
+                                    <IconPhoto data-slot="icon" />
                                     <SidebarLabel>{t('nav.media')}</SidebarLabel>
                                 </SidebarItem>
                                 {canManageTaxonomy ? (
@@ -283,7 +301,7 @@ export default function Layout() {
                                             pathname.startsWith('/topics')
                                         }
                                     >
-                                        <RectangleStackIcon />
+                                        <IconStack2 data-slot="icon" />
                                         <SidebarLabel>{t('nav.organize')}</SidebarLabel>
                                     </SidebarItem>
                                 ) : null}
@@ -292,7 +310,7 @@ export default function Layout() {
                                         href="/settings/users"
                                         current={pathname.startsWith('/settings/users')}
                                     >
-                                        <UsersIcon />
+                                        <IconUsers data-slot="icon" />
                                         <SidebarLabel>{t('nav.users')}</SidebarLabel>
                                     </SidebarItem>
                                 ) : null}
@@ -301,7 +319,7 @@ export default function Layout() {
                                         href="/settings/integrations"
                                         current={pathname.startsWith('/settings/integrations')}
                                     >
-                                        <BuildingStorefrontIcon />
+                                        <IconBuildingStore data-slot="icon" />
                                         <SidebarLabel>{t('nav.integrations')}</SidebarLabel>
                                     </SidebarItem>
                                 ) : null}

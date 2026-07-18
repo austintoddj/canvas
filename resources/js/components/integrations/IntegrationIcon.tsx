@@ -1,5 +1,5 @@
-import { PhotoIcon, SparklesIcon } from '@heroicons/react/20/solid';
 import type { ComponentType, SVGProps } from 'react';
+import { IconBrandUnsplash, IconSparkles } from '@tabler/icons-react';
 
 import { cn } from '@/lib/utils';
 
@@ -17,8 +17,8 @@ const iconStyles: Record<IntegrationKind, string> = {
 };
 
 const iconByKind: Record<IntegrationKind, ComponentType<SVGProps<SVGSVGElement>>> = {
-    unsplash: PhotoIcon,
-    ai: SparklesIcon,
+    unsplash: IconBrandUnsplash,
+    ai: IconSparkles,
 };
 
 type IntegrationIconProps = {

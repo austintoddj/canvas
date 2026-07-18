@@ -1,15 +1,9 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useSyncExternalStore } from 'react';
-import {
-    CheckCircleIcon,
-    ExclamationCircleIcon,
-    ExclamationTriangleIcon,
-    InformationCircleIcon,
-    XMarkIcon,
-} from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 
 import { dismissToast, getToasts, subscribeToasts, type ToastItem, type ToastTone } from '@/lib/toast';
+import { IconAlertTriangle, IconCircleCheck, IconExclamationCircle, IconInfoCircle, IconX } from '@tabler/icons-react';
 
 function toneClasses(tone: ToastTone): string {
     switch (tone) {
@@ -29,13 +23,13 @@ function ToastToneIcon({ tone, className }: { tone: ToastTone; className?: strin
 
     switch (tone) {
         case 'success':
-            return <CheckCircleIcon className={iconClass} aria-hidden="true" />;
+            return <IconCircleCheck className={iconClass} aria-hidden="true" />;
         case 'error':
-            return <ExclamationCircleIcon className={iconClass} aria-hidden="true" />;
+            return <IconExclamationCircle className={iconClass} aria-hidden="true" />;
         case 'warning':
-            return <ExclamationTriangleIcon className={iconClass} aria-hidden="true" />;
+            return <IconAlertTriangle className={iconClass} aria-hidden="true" />;
         default:
-            return <InformationCircleIcon className={iconClass} aria-hidden="true" />;
+            return <IconInfoCircle className={iconClass} aria-hidden="true" />;
     }
 }
 
@@ -77,7 +71,7 @@ function ToastCard({ item }: { item: ToastItem }) {
                 aria-label="Dismiss notification"
                 onClick={() => dismissToast(item.id)}
             >
-                <XMarkIcon className="size-4" aria-hidden="true" />
+                <IconX className="size-4" aria-hidden="true" />
             </button>
         </motion.div>
     );

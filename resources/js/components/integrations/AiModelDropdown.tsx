@@ -1,4 +1,3 @@
-import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 
 import {
@@ -12,6 +11,7 @@ import {
 import type { AiProviderValue } from '@/lib/api/integrations';
 import type { Translate } from '@/lib/canvas-context-value';
 import { aiProviderOption, type AiModelTier, type AiModelPreset } from '@/lib/integrations/ai-providers';
+import { IconCheck, IconChevronDown } from '@tabler/icons-react';
 
 type AiModelDropdownProps = {
     provider: AiProviderValue | null;
@@ -47,7 +47,7 @@ function ModelOptionContent({
                 ) : null}
             </span>
             {selected ? (
-                <CheckIcon className="mt-0.5 size-4 shrink-0 text-zinc-950 dark:text-white" aria-hidden="true" />
+                <IconCheck className="mt-0.5 size-4 shrink-0 text-zinc-950 dark:text-white" aria-hidden="true" />
             ) : (
                 <span className="size-4 shrink-0" aria-hidden="true" />
             )}
@@ -87,11 +87,12 @@ export function AiModelDropdown({
                 )}
             >
                 <span className="min-w-0 truncate text-left">{triggerLabel}</span>
-                <ChevronDownIcon data-slot="icon" className="shrink-0" />
+                <IconChevronDown data-slot="icon" className="shrink-0" />
             </DropdownButton>
             <DropdownMenu anchor="bottom start" className={clsx(selectDropdownMenuClass, 'min-w-72')}>
                 {presets.map((preset) => {
                     const isSelected = value === preset.tier;
+                    const sku = preset.tier === 'auto' ? (option?.defaultModel ?? null) : (preset.model ?? null);
 
                     return (
                         <DropdownItem
@@ -103,7 +104,7 @@ export function AiModelDropdown({
                             <ModelOptionContent
                                 label={preset.label}
                                 description={presetDescription(preset, t)}
-                                sku={preset.model}
+                                sku={sku}
                                 selected={isSelected}
                             />
                         </DropdownItem>
@@ -112,7 +113,7 @@ export function AiModelDropdown({
                 <DropdownItem disabled={isDisabled} onClick={() => onChange('custom')} className="!flex items-start">
                     <ModelOptionContent
                         label={t('integrations.model_tier_custom', 'Custom')}
-                        description={t('integrations.model_tier_custom_help', 'Any model id from the provider')}
+                        description={t('integrations.model_tier_custom_help', 'Any model id from the provider API')}
                         selected={value === 'custom'}
                     />
                 </DropdownItem>

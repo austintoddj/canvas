@@ -1,4 +1,3 @@
-import { ArrowLeftIcon, ChartBarIcon, Cog6ToothIcon, GlobeAltIcon } from '@heroicons/react/20/solid';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
@@ -16,6 +15,7 @@ import {
     type PostFormState,
     type PostSaveStatus,
 } from '@/lib/posts/form';
+import { IconArrowLeft, IconChartBar, IconSettings, IconWorld } from '@tabler/icons-react';
 
 export type PostEditorFocusControls = {
     focusMode: boolean;
@@ -112,7 +112,7 @@ export default function PostEditorLayout({
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
                 {!focusMode ? (
                     <Button href="/posts" plain aria-label={t('editor.back_to_posts')}>
-                        <ArrowLeftIcon data-slot="icon" />
+                        <IconArrowLeft data-slot="icon" />
                     </Button>
                 ) : null}
                 <div className="flex min-w-0 items-center gap-2">
@@ -158,7 +158,7 @@ export default function PostEditorLayout({
                         aria-label={t('editor.view_stats')}
                         title={t('editor.stats')}
                     >
-                        <ChartBarIcon data-slot="icon" />
+                        <IconChartBar data-slot="icon" />
                         <span className="hidden sm:inline">{t('editor.stats')}</span>
                     </Button>
                 ) : null}
@@ -171,7 +171,7 @@ export default function PostEditorLayout({
                     title={t('editor.seo')}
                     data-post-seo-trigger
                 >
-                    <GlobeAltIcon data-slot="icon" />
+                    <IconWorld data-slot="icon" />
                 </Button>
                 <Button
                     type="button"
@@ -182,7 +182,7 @@ export default function PostEditorLayout({
                     title={t('editor.settings')}
                     data-post-settings-trigger
                 >
-                    <Cog6ToothIcon data-slot="icon" />
+                    <IconSettings data-slot="icon" />
                 </Button>
             </div>
         </div>

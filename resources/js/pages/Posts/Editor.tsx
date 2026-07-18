@@ -15,6 +15,7 @@ import { SideDrawer } from '@/components/SideDrawer';
 import { Skeleton } from '@/components/Skeleton';
 import { PageDescription, ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useMarkOnboardingComplete } from '@/hooks/useMarkOnboardingComplete';
 import { usePostAutosave } from '@/hooks/usePostAutosave';
 import { postsApi } from '@/lib/api/posts';
@@ -70,6 +71,9 @@ export default function PostsEditor() {
     const allowLeaveRef = useRef(false);
     const syncBaselineRef = useRef<(snapshot: string) => void>(() => {});
     const markOnboardingComplete = useMarkOnboardingComplete();
+
+    const documentPage = form.title.trim() === '' ? t('editor.untitled_post') : form.title.trim();
+    useDocumentTitle(loading ? t('posts.title') : documentPage);
 
     useEffect(() => {
         slugManuallyEditedRef.current = slugManuallyEdited;

@@ -1,15 +1,4 @@
 import * as Headless from '@headlessui/react';
-import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
-import {
-    BuildingStorefrontIcon,
-    DocumentTextIcon,
-    HomeIcon,
-    PhotoIcon,
-    RectangleStackIcon,
-    TagIcon,
-    UserCircleIcon,
-    UsersIcon,
-} from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -33,6 +22,17 @@ import {
 } from '@/lib/command-palette';
 import { api } from '@/lib/api';
 import { type SearchResult } from '@/types/api';
+import {
+    IconBuildingStore,
+    IconFileText,
+    IconLayoutDashboard,
+    IconPhoto,
+    IconSearch,
+    IconStack2,
+    IconTag,
+    IconUserCircle,
+    IconUsers,
+} from '@tabler/icons-react';
 
 type Props = {
     open: boolean;
@@ -40,22 +40,22 @@ type Props = {
 };
 
 const ENTITY_ICONS: Record<SearchResult['type'], React.ElementType> = {
-    Post: DocumentTextIcon,
-    Tag: TagIcon,
-    Topic: RectangleStackIcon,
-    User: UserCircleIcon,
+    Post: IconFileText,
+    Tag: IconTag,
+    Topic: IconStack2,
+    User: IconUserCircle,
 };
 
 const PAGE_ICONS: Record<string, React.ElementType> = {
-    dashboard: HomeIcon,
-    posts: DocumentTextIcon,
-    'new-post': DocumentTextIcon,
-    media: PhotoIcon,
-    organize: RectangleStackIcon,
-    tags: TagIcon,
-    topics: RectangleStackIcon,
-    users: UsersIcon,
-    integrations: BuildingStorefrontIcon,
+    dashboard: IconLayoutDashboard,
+    posts: IconFileText,
+    'new-post': IconFileText,
+    media: IconPhoto,
+    organize: IconStack2,
+    tags: IconTag,
+    topics: IconStack2,
+    users: IconUsers,
+    integrations: IconBuildingStore,
 };
 
 export function CommandPalette({ open, onClose }: Props) {
@@ -188,7 +188,7 @@ export function CommandPalette({ open, onClose }: Props) {
                         }}
                     >
                         <div className="flex items-center border-b border-zinc-200 px-4 dark:border-white/10">
-                            <MagnifyingGlassIcon className="size-5 shrink-0 text-zinc-400" />
+                            <IconSearch className="size-5 shrink-0 text-zinc-400" />
 
                             <Headless.ComboboxInput
                                 // eslint-disable-next-line jsx-a11y/no-autofocus -- keyboard-driven command palette
@@ -289,8 +289,7 @@ export function CommandPalette({ open, onClose }: Props) {
 }
 
 function ResultItem({ item }: { item: PaletteItem }) {
-    const Icon =
-        item.kind === 'page' ? (PAGE_ICONS[item.page.id] ?? MagnifyingGlassIcon) : ENTITY_ICONS[item.result.type];
+    const Icon = item.kind === 'page' ? (PAGE_ICONS[item.page.id] ?? IconSearch) : ENTITY_ICONS[item.result.type];
     const meta = item.kind === 'page' ? 'Page' : item.result.type;
 
     return (

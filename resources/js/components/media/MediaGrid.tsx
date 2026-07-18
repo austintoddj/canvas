@@ -1,4 +1,3 @@
-import { CheckIcon, PhotoIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 import { useMemo, type ReactNode } from 'react';
 
@@ -9,6 +8,7 @@ import { Text } from '@/components/text';
 import { JUSTIFIED_TARGET_ROW_HEIGHT_DIALOG, JUSTIFIED_TARGET_ROW_HEIGHT_PAGE } from '@/lib/media/layout';
 import { mediaDisplayName, resolveMediaUrl } from '@/lib/media/list';
 import type { Media } from '@/types/api';
+import { IconCheck, IconPhoto } from '@tabler/icons-react';
 
 type MediaGridProps = {
     items: Media[];
@@ -49,7 +49,7 @@ function MediaSelectCheck({
                 onToggle();
             }}
             className={clsx(
-                'absolute top-2 left-2 z-10 flex size-7 items-center justify-center rounded-full transition duration-200 ease-out',
+                'absolute top-2 left-2 z-10 flex size-7 items-center justify-center rounded-full transition-[background-color,color,box-shadow,transform,opacity] duration-200 ease-out',
                 'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
                 'disabled:cursor-not-allowed disabled:opacity-50',
                 selected
@@ -63,11 +63,8 @@ function MediaSelectCheck({
                       )
             )}
         >
-            <CheckIcon
-                className={clsx(
-                    'size-4 transition duration-200',
-                    selected ? 'opacity-100' : 'opacity-70 group-hover/tile:opacity-100'
-                )}
+            <IconCheck
+                className={clsx('size-4', selected ? 'opacity-100' : 'opacity-70 group-hover/tile:opacity-100')}
                 aria-hidden="true"
             />
         </button>
@@ -117,7 +114,7 @@ export function MediaGrid({
                 data-media-filtered-empty="true"
             >
                 <span className="flex size-11 items-center justify-center rounded-full bg-zinc-950/5 text-zinc-400 dark:bg-white/10 dark:text-zinc-400">
-                    <PhotoIcon className="size-5" />
+                    <IconPhoto className="size-5" />
                 </span>
                 <Text className="mt-3 text-sm text-canvas-muted dark:text-canvas-muted-dark">{emptyMessage}</Text>
             </div>

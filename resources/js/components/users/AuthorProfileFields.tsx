@@ -1,4 +1,3 @@
-import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 import { useMemo } from 'react';
 
@@ -25,6 +24,7 @@ import type { LaravelValidationErrors } from '@/lib/api';
 import type { ProfileFormState, SocialFieldKey } from '@/lib/settings/profile';
 import { listTimezoneOptions, timezoneLabel, type TimezoneOption } from '@/lib/timezones';
 import type { LanguageOption } from '@/types/boot';
+import { IconCheck, IconChevronDown } from '@tabler/icons-react';
 
 type AuthorProfileFieldsProps = {
     form: ProfileFormState;
@@ -65,7 +65,7 @@ function LanguageSelectDropdown({
                 className={clsx(selectDropdownTriggerCompactClass, invalid && 'border-red-500 dark:border-red-600')}
             >
                 <span className="min-w-0 truncate text-left">{selectedLabel || t('profile.select_language')}</span>
-                <ChevronDownIcon data-slot="icon" className="shrink-0" />
+                <IconChevronDown data-slot="icon" className="shrink-0" />
             </DropdownButton>
             <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                 {options.map((option) => {
@@ -81,7 +81,7 @@ function LanguageSelectDropdown({
                             <DropdownLabel inset>{option.label}</DropdownLabel>
                             {selected ? (
                                 <DropdownTrailingIcon inset>
-                                    <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
+                                    <IconCheck className="size-4 text-zinc-950 dark:text-white" />
                                 </DropdownTrailingIcon>
                             ) : null}
                         </DropdownItem>
@@ -123,7 +123,7 @@ function TimezoneSelectDropdown({
                 <span className="min-w-0 truncate text-left">
                     {value ? timezoneLabel(value) : t('profile.select_timezone')}
                 </span>
-                <ChevronDownIcon data-slot="icon" className="shrink-0" />
+                <IconChevronDown data-slot="icon" className="shrink-0" />
             </DropdownButton>
             <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                 {options.map((zone) => {
@@ -138,7 +138,7 @@ function TimezoneSelectDropdown({
                             <DropdownLabel inset>{zone.label}</DropdownLabel>
                             {selected ? (
                                 <DropdownTrailingIcon inset>
-                                    <CheckIcon className="size-4 text-zinc-950 dark:text-white" />
+                                    <IconCheck className="size-4 text-zinc-950 dark:text-white" />
                                 </DropdownTrailingIcon>
                             ) : null}
                         </DropdownItem>

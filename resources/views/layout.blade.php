@@ -6,7 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name') }} ― Canvas</title>
+    <title>Canvas</title>
+
+    <link rel="icon" href="{{ asset('vendor/canvas/favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('vendor/canvas/favicon-32x32.png') }}" type="image/png" sizes="32x32" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="{{ asset('vendor/canvas/favicon-16x16.png') }}" type="image/png" sizes="16x16" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="{{ asset('vendor/canvas/favicon-dark-32x32.png') }}" type="image/png" sizes="32x32" media="(prefers-color-scheme: dark)">
+    <link rel="icon" href="{{ asset('vendor/canvas/favicon-dark-16x16.png') }}" type="image/png" sizes="16x16" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="{{ asset('vendor/canvas/apple-touch-icon.png') }}">
 
     <link rel="preconnect" href="https://rsms.me/">
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
