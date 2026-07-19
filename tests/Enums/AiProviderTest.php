@@ -15,7 +15,7 @@ it('exposes fast defaults and expert presets', function (AiProvider $provider, s
     $presets = $provider->modelPresets();
 
     expect($presets)->toHaveCount(3)
-        ->and($presets[0])->toMatchArray(['tier' => 'auto', 'model' => null, 'label' => 'Auto'])
+        ->and($presets[0])->toMatchArray(['tier' => 'auto', 'model' => null, 'label' => 'Default'])
         ->and($presets[1])->toMatchArray(['tier' => 'fast', 'model' => $fast, 'label' => 'Fast'])
         ->and($presets[2])->toMatchArray(['tier' => 'expert', 'model' => $expert, 'label' => 'Expert']);
 })->with([

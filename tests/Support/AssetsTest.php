@@ -32,10 +32,7 @@ it('compares published and package manifests when not running unit tests', funct
 
     $hotFile = public_path('vendor/canvas/canvas.hot');
     $published = public_path('vendor/canvas/manifest.json');
-    $package = base_path('vendor/austintoddj/canvas/public/vendor/canvas/manifest.json');
-
-    // Package path used by Assets is relative to src/Support → package public.
-    $packageManifest = dirname(__DIR__, 2).'/public/vendor/canvas/manifest.json';
+    $packageManifest = dirname(__DIR__, 2).'/resources/dist/manifest.json';
 
     File::ensureDirectoryExists(dirname($published));
     File::delete($hotFile);

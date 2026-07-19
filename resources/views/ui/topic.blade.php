@@ -2,6 +2,15 @@
 
 @section('title', $topic->name . ' — ' . config('app.name'))
 
+@push('head')
+    @include('canvas::ui.partials.meta', [
+        'title' => $topic->name,
+        'description' => 'Posts in '.$topic->name.'.',
+        'url' => route('canvas-ui.topic', $topic->slug),
+        'type' => 'website',
+    ])
+@endpush
+
 @section('content')
     <header class="mb-10">
         <p class="text-sm text-gray-500 mb-1">Topic</p>

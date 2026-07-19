@@ -10,7 +10,7 @@ class MigrateCommand extends Command
 {
     protected $signature = 'canvas:migrate { --force : Force the operation to run when in production }';
 
-    protected $description = 'Run Canvas schema migrations only (does not reshape v6 data)';
+    protected $description = 'Run the Canvas package migrations';
 
     public function handle(): int
     {
@@ -19,9 +19,7 @@ class MigrateCommand extends Command
             '--force' => (bool) $this->option('force'),
         ]);
 
-        $this->info('Canvas schema migration complete.');
-        $this->line('This command only runs package migrations. It does not convert v6 data.');
-        $this->line('Upgrading from v6? See UPGRADE.md scenarios, then run: php artisan canvas:upgrade-report');
+        $this->info('Canvas migrations complete.');
 
         return self::SUCCESS;
     }

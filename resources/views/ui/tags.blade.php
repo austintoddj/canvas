@@ -2,6 +2,15 @@
 
 @section('title', 'Tags — ' . config('app.name'))
 
+@push('head')
+    @include('canvas::ui.partials.meta', [
+        'title' => 'Tags',
+        'description' => 'Browse tags on '.config('app.name').'.',
+        'url' => route('canvas-ui.tags'),
+        'type' => 'website',
+    ])
+@endpush
+
 @section('content')
     <header class="mb-10">
         <h1 class="text-3xl font-bold">Tags</h1>

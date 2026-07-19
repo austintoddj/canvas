@@ -30,14 +30,14 @@ If you want to work locally, use a Laravel app with a sibling Canvas checkout:
     php artisan storage:link
     ```
 
-3. To avoid re-publishing frontend assets every time you make a change, symlink the Canvas build output into your Laravel app instead:
+3. To avoid re-publishing frontend assets every time you make a change, symlink the Canvas package build output into your Laravel app instead:
 
     ```bash
     rm -rf public/vendor/canvas
-    ln -s "$(cd .. && pwd)/canvas/public/vendor/canvas" public/vendor/canvas
+    ln -s "$(cd .. && pwd)/canvas/resources/dist" public/vendor/canvas
     ```
 
-    This symlinks the full build directory, including `assets`, `manifest.json`, and the `canvas.hot` file written by the Vite dev server.
+    Package builds land in `resources/dist` (including `assets`, `manifest.json`, and the `canvas.hot` file from the Vite dev server). Hosts still serve them from `public/vendor/canvas` after publish or this symlink.
 
 4. From the Canvas package directory, start the Vite dev server:
 
@@ -46,14 +46,14 @@ If you want to work locally, use a Laravel app with a sibling Canvas checkout:
     npm run dev
     ```
 
-    Canvas uses Laravel's Vite integration with a dedicated build directory (`vendor/canvas`). Running `npm run dev` starts the dev server and writes a `canvas.hot` file — this is what tells Canvas to serve assets from the dev server rather than the production build. For a production-style build, run `npm run build` instead.
+    Canvas uses Laravel's Vite integration: the package writes builds to `resources/dist`, while production base URLs stay `/vendor/canvas/...` so they match the host publish path. Running `npm run dev` starts the dev server and writes `resources/dist/canvas.hot` — that file tells Canvas to serve assets from the dev server rather than the production build. For a production-style build, run `npm run build` instead.
 
 5. Adjust `/canvas` if your folder layout is different.
 
 ## Before opening a pull request
 
 - Run `npm run typecheck`, `npm run lint`, and `npm test`
-- Run `npm run build` and commit updated assets in `public/vendor/canvas`
+- Run `npm run build` and commit updated assets in `resources/dist`
 - Run `composer pint` (or `composer pint:test` to check without fixing)
 - Run `composer lint` (PHPStan)
 - Run `composer test:ci` to match the PHP matrix locally

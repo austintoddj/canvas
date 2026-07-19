@@ -69,7 +69,7 @@ export function AiModelDropdown({
     const triggerLabel =
         value === 'custom'
             ? t('integrations.model_tier_custom', 'Custom')
-            : (selectedPreset?.label ?? t('integrations.model_tier_auto', 'Auto'));
+            : (selectedPreset?.label ?? t('integrations.model_tier_auto', 'Default'));
 
     const isDisabled = disabled || option === null;
 

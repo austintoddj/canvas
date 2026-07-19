@@ -126,7 +126,7 @@ export function AiIntegrationDrawer({
 
         if (modelTier === 'custom' && (nextModel === null || nextModel === '')) {
             setFieldErrors({
-                model: t('integrations.model_custom_required', 'Enter a model id, or choose Auto.'),
+                model: t('integrations.model_custom_required', 'Enter a model id, or choose Default.'),
             });
             return;
         }
@@ -442,7 +442,7 @@ export function AiIntegrationDrawer({
                                     <Description>
                                         {t(
                                             'integrations.model_tier_help',
-                                            'Auto and Fast use the provider’s default model id. Expert uses a higher-capacity SKU (slower, better quality). Custom accepts any model id from the provider API.'
+                                            'Default and Fast use the provider’s default model id. Expert uses a higher-capacity SKU (slower, better quality). Custom accepts any model id from the provider API.'
                                         )}
                                     </Description>
                                     <div className="mt-3">

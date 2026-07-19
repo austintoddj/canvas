@@ -12,7 +12,6 @@ use Canvas\Console\MigrateCommand;
 use Canvas\Console\PublishCommand;
 use Canvas\Console\RemoveAccessCommand;
 use Canvas\Console\UiCommand;
-use Canvas\Console\UpgradeReportCommand;
 use Canvas\Console\UsersCommand;
 use Canvas\Events\PostViewed;
 use Canvas\Http\Requests\FormRequest;
@@ -138,7 +137,6 @@ class CanvasServiceProvider extends ServiceProvider
             PublishCommand::class,
             RemoveAccessCommand::class,
             UiCommand::class,
-            UpgradeReportCommand::class,
             UsersCommand::class,
         ]);
     }
@@ -196,7 +194,7 @@ class CanvasServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../public/vendor/canvas' => public_path('vendor/canvas'),
+                __DIR__.'/../resources/dist' => public_path('vendor/canvas'),
             ], 'canvas-assets');
 
             $this->publishes([

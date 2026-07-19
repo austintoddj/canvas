@@ -10,6 +10,7 @@ use Canvas\Models\Topic;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Collection;
 
@@ -25,6 +26,29 @@ class CanvasUiController extends Controller
         $this->attachCanvasUsersToPosts($posts);
 
         return view('canvas::ui.index', compact('posts'));
+    }
+
+    public function feed(): Response
+    {
+        $posts = Post::published()
+            ->latest()
+            ->limit(20)
+            ->get();
+
+        $channelTitle = config('app.name');
+        $channelLink = route('canvas-ui.index');
+        $channelDescription = 'Posts from '.$channelTitle.'.';
+        $channelLanguage = str_replace('_', '-', app()->getLocale());
+
+        return response()
+            ->view('canvas::ui.feed', compact(
+                'posts',
+                'channelTitle',
+                'channelLink',
+                'channelDescription',
+                'channelLanguage',
+            ))
+            ->header('Content-Type', 'application/rss+xml; charset=UTF-8');
     }
 
     public function show(string $slug): View

@@ -5,9 +5,10 @@ import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
+const packageDist = 'resources/dist';
+
 function copyStaticAssets(): Plugin {
     const fromDir = 'resources/images';
-    const toDir = 'public/vendor/canvas';
     const files = [
         'favicon.svg',
         'favicon-16x16.png',
@@ -18,10 +19,10 @@ function copyStaticAssets(): Plugin {
     ];
 
     const copy = () => {
-        mkdirSync(toDir, { recursive: true });
+        mkdirSync(packageDist, { recursive: true });
 
         for (const file of files) {
-            copyFileSync(join(fromDir, file), join(toDir, file));
+            copyFileSync(join(fromDir, file), join(packageDist, file));
         }
     };
 
@@ -40,14 +41,20 @@ export default defineConfig({
     plugins: [
         laravel({
             input: ['resources/js/app.tsx'],
+            // Hosts publish this tree to public/vendor/canvas; keep that name so
+            // production base URLs (/vendor/canvas/...) match the published path.
             buildDirectory: 'vendor/canvas',
-            hotFile: 'public/vendor/canvas/canvas.hot',
+            hotFile: `${packageDist}/canvas.hot`,
             refresh: ['resources/views/**/*.blade.php', 'resources/js/**'],
         }),
         react(),
         tailwindcss(),
         copyStaticAssets(),
     ],
+    build: {
+        outDir: packageDist,
+        emptyOutDir: true,
+    },
     resolve: {
         alias: {
             '@': '/resources/js',

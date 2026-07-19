@@ -19,11 +19,11 @@ it('publishes all reader view files', function (): void {
 
     $base = resource_path('views/vendor/canvas/ui');
 
-    foreach (['layout', 'index', 'show', 'tag', 'topic', 'tags', 'topics', 'author'] as $view) {
+    foreach (['layout', 'index', 'show', 'tag', 'topic', 'tags', 'topics', 'author', 'feed'] as $view) {
         $this->assertFileExists("{$base}/{$view}.blade.php", "Missing view: {$view}.blade.php");
     }
 
-    foreach (['author', 'pagination', 'post-list-item', 'social-links'] as $partial) {
+    foreach (['author', 'meta', 'pagination', 'post-list-item', 'social-links'] as $partial) {
         $this->assertFileExists("{$base}/partials/{$partial}.blade.php", "Missing partial: {$partial}.blade.php");
     }
 });
@@ -46,7 +46,7 @@ it('scaffolds a controller with all reader methods', function (): void {
 
     $contents = file_get_contents(app_path('Http/Controllers/Canvas/CanvasUiController.php'));
 
-    foreach (['index', 'show', 'author', 'tags', 'tag', 'topics', 'topic'] as $method) {
+    foreach (['index', 'feed', 'show', 'author', 'tags', 'tag', 'topics', 'topic'] as $method) {
         $this->assertStringContainsString(
             "public function {$method}",
             $contents,
@@ -101,6 +101,7 @@ it('creates the route stub with all named routes', function (): void {
 
     foreach ([
         'canvas-ui.index',
+        'canvas-ui.feed',
         'canvas-ui.show',
         'canvas-ui.author',
         'canvas-ui.tags',
@@ -110,6 +111,12 @@ it('creates the route stub with all named routes', function (): void {
     ] as $name) {
         $this->assertStringContainsString($name, $contents, "Missing named route: {$name}");
     }
+
+    $this->assertStringContainsString('/feed', $contents);
+    $this->assertTrue(
+        strpos($contents, "Route::get('/feed'") < strpos($contents, "Route::get('/{slug}'"),
+        'Feed route must be registered before the slug catch-all'
+    );
 });
 
 it('warns when the controller already exists and --force is not passed', function (): void {

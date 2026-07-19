@@ -9,9 +9,10 @@ import {
 } from '@/lib/integrations/ai-providers';
 
 describe('AI model presets', () => {
-    it('ships Auto / Fast / Expert presets for every provider', () => {
+    it('ships Default / Fast / Expert presets for every provider', () => {
         for (const option of AI_PROVIDER_OPTIONS) {
             expect(option.presets.map((preset) => preset.tier)).toEqual(['auto', 'fast', 'expert']);
+            expect(option.presets[0]?.label).toBe('Default');
             expect(option.presets[0]?.model).toBeNull();
             expect(option.presets[1]?.model).toBe(option.defaultModel);
             expect(option.presets[2]?.model).toBe(option.expertModel);
@@ -52,13 +53,13 @@ describe('AI model presets', () => {
         expect(modelIdForTier(null, 'fast', '')).toBeNull();
     });
 
-    it('labels tiers for list meta without SKUs except Custom', () => {
-        expect(modelTierLabel('xai', null)).toBe('Auto');
+    it('labels tiers without SKUs except Custom', () => {
+        expect(modelTierLabel('xai', null)).toBe('Default');
         expect(modelTierLabel('xai', 'grok-4.3')).toBe('Fast');
         expect(modelTierLabel('xai', 'grok-4.5')).toBe('Expert');
         expect(modelTierLabel('xai', 'custom-sku')).toBe('Custom · custom-sku');
 
-        expect(integrationsAiMeta('openai', null)).toBe('ChatGPT (OpenAI) · Auto');
+        expect(integrationsAiMeta('openai', null)).toBe('ChatGPT (OpenAI) · Default');
         expect(integrationsAiMeta('anthropic', 'claude-sonnet-5')).toBe('Claude (Anthropic) · Expert');
         expect(integrationsAiMeta('xai', 'weird-id')).toBe('Grok (xAI) · Custom · weird-id');
         expect(integrationsAiMeta(null, null)).toBeUndefined();

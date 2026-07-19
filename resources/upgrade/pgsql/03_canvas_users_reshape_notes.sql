@@ -1,6 +1,0 @@
--- canvas_users reshape is environment-specific (PostgreSQL notes).
--- Do not run blindly. Build {v6_id → host users.id} first.
--- Full playbook: UPGRADE.md Scenario A / B.
---
--- dark_mode boolean → theme text ('dark' / 'system')
--- user_id must be bigint matching stock users.id

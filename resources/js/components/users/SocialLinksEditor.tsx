@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useState, type ComponentType, type SVGProps } from 'react';
 import clsx from 'clsx';
 
 import { Button } from '@/components/button';
@@ -9,7 +9,6 @@ import {
     DropdownLabel,
     DropdownMenu,
     DropdownTrailingIcon,
-    dropdownInsetItemClass,
     selectDropdownMenuClass,
     selectDropdownTriggerCompactClass,
 } from '@/components/dropdown';
@@ -23,7 +22,29 @@ import {
     emptySocial,
     type SocialFieldKey,
 } from '@/lib/settings/profile';
-import { IconCheck, IconChevronDown, IconPlus, IconX } from '@tabler/icons-react';
+import {
+    IconBrandBluesky,
+    IconBrandFacebook,
+    IconBrandGithub,
+    IconBrandInstagram,
+    IconBrandMedium,
+    IconBrandX,
+    IconCheck,
+    IconChevronDown,
+    IconPlus,
+    IconX,
+} from '@tabler/icons-react';
+
+type SocialIcon = ComponentType<SVGProps<SVGSVGElement>>;
+
+const SOCIAL_ICONS: Record<SocialFieldKey, SocialIcon> = {
+    facebook: IconBrandFacebook,
+    instagram: IconBrandInstagram,
+    bluesky: IconBrandBluesky,
+    x: IconBrandX,
+    github: IconBrandGithub,
+    medium: IconBrandMedium,
+};
 
 type SocialLinkRow = {
     id: string;
@@ -85,6 +106,7 @@ function PlatformSelectDropdown({
     invalid?: boolean;
 }) {
     const options = SOCIAL_FIELD_KEYS.filter((key) => key === value || !usedPlatforms.has(key));
+    const SelectedIcon = value === null ? null : SOCIAL_ICONS[value];
 
     return (
         <Dropdown>
@@ -99,20 +121,27 @@ function PlatformSelectDropdown({
                     invalid && 'border-red-500 dark:border-red-600'
                 )}
             >
-                <span className="min-w-0 truncate text-left">
-                    {value === null ? 'Select platform' : SOCIAL_LABELS[value]}
+                <span className="flex min-w-0 items-center gap-x-2">
+                    {SelectedIcon ? (
+                        <SelectedIcon aria-hidden className="size-4 shrink-0 text-zinc-500 dark:text-zinc-400" />
+                    ) : null}
+                    <span className="min-w-0 truncate text-left">
+                        {value === null ? 'Select platform' : SOCIAL_LABELS[value]}
+                    </span>
                 </span>
                 <IconChevronDown data-slot="icon" className="shrink-0" />
             </DropdownButton>
             <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                 {options.map((key) => {
                     const selected = value === key;
+                    const Icon = SOCIAL_ICONS[key];
 
                     return (
-                        <DropdownItem key={key} onClick={() => onChange(key)} className={dropdownInsetItemClass}>
-                            <DropdownLabel inset>{SOCIAL_LABELS[key]}</DropdownLabel>
+                        <DropdownItem key={key} onClick={() => onChange(key)}>
+                            <Icon data-slot="icon" />
+                            <DropdownLabel>{SOCIAL_LABELS[key]}</DropdownLabel>
                             {selected ? (
-                                <DropdownTrailingIcon inset>
+                                <DropdownTrailingIcon>
                                     <IconCheck className="size-4 text-zinc-950 dark:text-white" />
                                 </DropdownTrailingIcon>
                             ) : null}
@@ -177,7 +206,7 @@ export function SocialLinksEditor({ social, fieldErrors, onChange }: SocialLinks
                 return (
                     <Field key={row.id}>
                         <div className="flex flex-row items-center gap-2">
-                            <div className="w-[8rem] shrink-0 sm:w-36">
+                            <div className="w-[9.5rem] shrink-0 sm:w-40">
                                 <PlatformSelectDropdown
                                     value={row.platform}
                                     usedPlatforms={usedPlatforms}

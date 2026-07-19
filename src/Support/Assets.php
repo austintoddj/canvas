@@ -30,6 +30,6 @@ final class Assets
             return false;
         }
 
-        return File::get($path) === File::get(__DIR__.'/../../public/vendor/canvas/manifest.json');
+        return File::get($path) === File::get(__DIR__.'/../../resources/dist/manifest.json');
     }
 }

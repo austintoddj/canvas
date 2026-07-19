@@ -1,0 +1,1 @@
+import{d as e,f as t,r as n,t as r}from"./jsx-runtime-BDSIhLyL.js";import{n as i}from"./list-eOQtBLAd.js";var a=r();function o(){let{id:r}=e(),[o]=t();return r===void 0||r===``?(0,a.jsx)(n,{to:i(`tags`,o),replace:!0}):(0,a.jsx)(n,{to:i(`tags`,o,r),replace:!0})}export{o as default};

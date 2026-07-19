@@ -2,6 +2,15 @@
 
 @section('title', config('app.name'))
 
+@push('head')
+    @include('canvas::ui.partials.meta', [
+        'title' => config('app.name'),
+        'description' => 'Posts from '.config('app.name').'.',
+        'url' => route('canvas-ui.index'),
+        'type' => 'website',
+    ])
+@endpush
+
 @section('content')
     <div class="space-y-10">
         @forelse ($posts as $post)
@@ -10,7 +19,9 @@
                     <a href="{{ route('canvas-ui.show', $post->slug) }}">
                         <img src="{{ $post->featured_image }}"
                              alt="{{ $post->featured_image_caption ?? $post->title }}"
-                             class="w-full h-56 object-cover rounded-lg mb-4">
+                             class="w-full h-56 object-cover rounded-lg mb-4"
+                             loading="lazy"
+                             decoding="async">
                     </a>
                 @endif
 

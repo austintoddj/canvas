@@ -1,6 +1,43 @@
 @extends('canvas::ui.layout')
 
-@section('title', $post->title . ' — ' . config('app.name'))
+@php
+    $seo = \Canvas\Support\PostSeo::resolve($post, route('canvas-ui.show', $post->slug));
+    $pageTitle = $seo['title'].' — '.config('app.name');
+    $jsonLd = [
+        '@context' => 'https://schema.org',
+        '@type' => 'Article',
+        'headline' => $seo['title'],
+        'description' => $seo['description'],
+        'mainEntityOfPage' => $seo['canonical_url'],
+        'datePublished' => $post->published_at?->toAtomString(),
+        'dateModified' => $post->updated_at?->toAtomString(),
+    ];
+    if (filled($seo['image_url'])) {
+        $jsonLd['image'] = [$seo['image_url']];
+    }
+    if ($post->user) {
+        $jsonLd['author'] = [
+            '@type' => 'Person',
+            'name' => $post->user->name,
+        ];
+    }
+@endphp
+
+@section('title', $pageTitle)
+
+@push('head')
+    @include('canvas::ui.partials.meta', [
+        'title' => $seo['title'],
+        'description' => $seo['description'],
+        'url' => $seo['canonical_url'],
+        'type' => 'article',
+        'image' => $seo['image_url'],
+        'imageAlt' => $seo['image_alt'],
+        'publishedTime' => $post->published_at?->toAtomString(),
+        'modifiedTime' => $post->updated_at?->toAtomString(),
+        'jsonLd' => $jsonLd,
+    ])
+@endpush
 
 @section('content')
     <article>
@@ -40,7 +77,8 @@
             <figure class="mb-8">
                 <img src="{{ $post->featured_image }}"
                      alt="{{ $post->featured_image_caption ?? $post->title }}"
-                     class="w-full rounded-lg">
+                     class="w-full rounded-lg"
+                     decoding="async">
                 @if ($post->featured_image_caption)
                     <figcaption class="text-sm text-center text-gray-400 mt-2">
                         {{ $post->featured_image_caption }}

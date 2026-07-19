@@ -1,2 +1,0 @@
--- canvas_users reshape is environment-specific (SQLite notes).
--- Prefer export/reshape/import with a mapping table. See UPGRADE.md Scenario A / B.

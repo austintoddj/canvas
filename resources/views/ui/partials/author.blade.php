@@ -16,7 +16,9 @@
         @if ($avatarUrl)
             <img src="{{ $avatarUrl }}"
                  alt="{{ $user->name }}"
-                 @class(['rounded-full object-cover', $imageClass ?? 'w-6 h-6'])>
+                 @class(['rounded-full object-cover', $imageClass ?? 'w-6 h-6'])
+                 loading="lazy"
+                 decoding="async">
         @else
             <span @class([
                 'inline-flex items-center justify-center rounded-full bg-gray-200 text-gray-600 font-medium',

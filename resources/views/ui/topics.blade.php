@@ -2,6 +2,15 @@
 
 @section('title', 'Topics — ' . config('app.name'))
 
+@push('head')
+    @include('canvas::ui.partials.meta', [
+        'title' => 'Topics',
+        'description' => 'Browse topics on '.config('app.name').'.',
+        'url' => route('canvas-ui.topics'),
+        'type' => 'website',
+    ])
+@endpush
+
 @section('content')
     <header class="mb-10">
         <h1 class="text-3xl font-bold">Topics</h1>

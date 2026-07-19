@@ -4,7 +4,7 @@ export type AiModelTier = 'auto' | 'fast' | 'expert' | 'custom';
 
 export type AiModelPreset = {
     tier: Exclude<AiModelTier, 'custom'>;
-    /** null means package default (Auto). */
+    /** null means package default (Default tier). */
     model: string | null;
     label: string;
     descriptionKey: string;
@@ -41,7 +41,7 @@ function buildPresets(defaultModel: string, expertModel: string): AiModelPreset[
         {
             tier: 'auto',
             model: null,
-            label: 'Auto',
+            label: 'Default',
             descriptionKey: 'integrations.model_tier_auto_help',
             descriptionFallback: 'Provider default · recommended for rewrites and SEO',
         },
@@ -122,7 +122,7 @@ export function aiProviderOption(value: AiProviderValue | null | undefined): AiP
 }
 
 /**
- * Map a stored model override (null = Auto) to a UI tier selection.
+ * Map a stored model override (null = Default) to a UI tier selection.
  * Unknown ids resolve to Custom so existing free-text values keep working.
  */
 export function resolveModelTier(
@@ -154,7 +154,7 @@ export function resolveModelTier(
     return 'custom';
 }
 
-/** Model id to persist: null for Auto, preset model for Fast/Expert, custom string otherwise. */
+/** Model id to persist: null for Default, preset model for Fast/Expert, custom string otherwise. */
 export function modelIdForTier(
     provider: AiProviderValue | null | undefined,
     tier: AiModelTier,
@@ -189,7 +189,7 @@ export function modelTierLabel(
     const tier = resolveModelTier(provider, storedModel);
 
     if (tier === 'auto') {
-        return labels?.auto ?? 'Auto';
+        return labels?.auto ?? 'Default';
     }
 
     if (tier === 'fast') {

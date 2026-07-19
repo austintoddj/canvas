@@ -159,7 +159,7 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function publishPackageAssets(): void
     {
-        $source = dirname(__DIR__).'/public/vendor/canvas';
+        $source = dirname(__DIR__).'/resources/dist';
         $target = public_path('vendor/canvas');
 
         if (! File::isDirectory($source)) {

@@ -11,16 +11,32 @@
     if ($initials === '') {
         $initials = '?';
     }
+    $authorDescription = filled($canvasUser?->summary)
+        ? $canvasUser->summary
+        : 'Posts by '.$user->name.'.';
 @endphp
 
 @section('title', $user->name . ' — ' . config('app.name'))
+
+@push('head')
+    @include('canvas::ui.partials.meta', [
+        'title' => $user->name,
+        'description' => $authorDescription,
+        'url' => route('canvas-ui.author', $canvasUser?->username ?? ''),
+        'type' => 'website',
+        'image' => $avatarUrl,
+        'imageAlt' => $user->name,
+    ])
+@endpush
 
 @section('content')
     <header class="mb-10 flex items-start gap-5">
         @if ($avatarUrl)
             <img src="{{ $avatarUrl }}"
                  alt="{{ $user->name }}"
-                 class="w-20 h-20 rounded-full object-cover shrink-0">
+                 class="w-20 h-20 rounded-full object-cover shrink-0"
+                 loading="lazy"
+                 decoding="async">
         @else
             <span class="inline-flex w-20 h-20 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xl font-medium shrink-0" aria-hidden="true">{{ $initials }}</span>
         @endif

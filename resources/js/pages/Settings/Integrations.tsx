@@ -9,7 +9,6 @@ import { PageDescription, ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { integrationsApi, type IntegrationsStatus } from '@/lib/api/integrations';
-import { integrationsAiMeta } from '@/lib/integrations/ai-providers';
 
 type OpenDrawer = 'unsplash' | 'ai' | null;
 
@@ -56,12 +55,6 @@ export default function SettingsIntegrations() {
 
     const unsplashConfigured = status?.unsplash.configured === true;
     const aiConfigured = status?.ai.configured === true;
-    const aiMeta = integrationsAiMeta(status?.ai.provider, status?.ai.model, {
-        auto: t('integrations.model_tier_auto', 'Auto'),
-        fast: t('integrations.model_tier_fast', 'Fast'),
-        expert: t('integrations.model_tier_expert', 'Expert'),
-        custom: t('integrations.model_tier_custom', 'Custom'),
-    });
     const configureLabel = t('integrations.configure', 'Configure');
     const enabledLabel = t('integrations.enabled', 'Enabled');
     const notEnabledLabel = t('integrations.not_enabled', 'Not enabled');
@@ -101,7 +94,6 @@ export default function SettingsIntegrations() {
                         configuredLabel={enabledLabel}
                         notConfiguredLabel={notEnabledLabel}
                         actionLabel={configureLabel}
-                        meta={aiConfigured ? aiMeta : undefined}
                         onConfigure={() => setOpenDrawer('ai')}
                     />
                 </div>

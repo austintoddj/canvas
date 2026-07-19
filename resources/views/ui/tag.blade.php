@@ -2,6 +2,15 @@
 
 @section('title', $tag->name . ' — ' . config('app.name'))
 
+@push('head')
+    @include('canvas::ui.partials.meta', [
+        'title' => $tag->name,
+        'description' => 'Posts tagged '.$tag->name.'.',
+        'url' => route('canvas-ui.tag', $tag->slug),
+        'type' => 'website',
+    ])
+@endpush
+
 @section('content')
     <header class="mb-10">
         <p class="text-sm text-gray-500 mb-1">Tag</p>

@@ -54,7 +54,7 @@ enum AiProvider: string
     }
 
     /**
-     * Curated model tiers for Integrations (Auto is null / package default).
+     * Curated model tiers for Integrations (Default is null / package default).
      *
      * @return list<array{tier: 'auto'|'fast'|'expert', model: string|null, label: string}>
      */
@@ -64,7 +64,7 @@ enum AiProvider: string
             [
                 'tier' => 'auto',
                 'model' => null,
-                'label' => 'Auto',
+                'label' => 'Default',
             ],
             [
                 'tier' => 'fast',

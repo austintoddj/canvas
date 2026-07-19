@@ -45,6 +45,9 @@ beforeEach(function (): void {
         Route::get('/', [CanvasUiController::class, 'index'])
             ->name('canvas-ui.index');
 
+        Route::get('/feed', [CanvasUiController::class, 'feed'])
+            ->name('canvas-ui.feed');
+
         Route::get('/tags', [CanvasUiController::class, 'tags'])
             ->name('canvas-ui.tags');
 
@@ -96,6 +99,97 @@ it('shows a single published post', function (): void {
         ->assertSuccessful()
         ->assertViewIs('canvas::ui.show')
         ->assertViewHas('post', fn ($p) => $p->id === $post->id);
+});
+
+it('emits seo meta tags with fallbacks on the post page', function (): void {
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+        'title' => 'Reader SEO Post',
+        'summary' => 'A plain summary for crawlers.',
+        'featured_image' => 'https://cdn.example.com/hero.jpg',
+        'meta' => null,
+    ]);
+
+    $canonical = route('canvas-ui.show', $post->slug);
+
+    $this->get("canvas-ui/{$post->slug}")
+        ->assertSuccessful()
+        ->assertSee('<meta name="description" content="A plain summary for crawlers.">', false)
+        ->assertSee('<link rel="canonical" href="'.$canonical.'">', false)
+        ->assertSee('<meta property="og:title" content="Reader SEO Post">', false)
+        ->assertSee('<meta property="og:image" content="https://cdn.example.com/hero.jpg">', false)
+        ->assertSee('"@type":"Article"', false)
+        ->assertSee('"headline":"Reader SEO Post"', false);
+});
+
+it('prefers post meta overrides for seo tags', function (): void {
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+        'title' => 'Display Title',
+        'summary' => 'Display summary',
+        'meta' => [
+            'title' => 'Custom SEO Title',
+            'description' => 'Custom SEO description.',
+            'canonical_link' => 'https://example.com/custom-canonical',
+        ],
+    ]);
+
+    $this->get("canvas-ui/{$post->slug}")
+        ->assertSuccessful()
+        ->assertSee('<title>Custom SEO Title —', false)
+        ->assertSee('<meta name="description" content="Custom SEO description.">', false)
+        ->assertSee('<link rel="canonical" href="https://example.com/custom-canonical">', false)
+        ->assertSee('<meta property="og:title" content="Custom SEO Title">', false);
+});
+
+it('serves an rss feed of published posts only', function (): void {
+    Post::factory()->count(2)->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => null,
+        'title' => 'Draft Should Not Appear In Feed',
+    ]);
+
+    $response = $this->get('canvas-ui/feed')
+        ->assertSuccessful()
+        ->assertHeader('Content-Type', 'application/rss+xml; charset=UTF-8');
+
+    $content = $response->getContent();
+
+    expect($content)
+        ->toContain('<rss version="2.0">')
+        ->toContain('<channel>')
+        ->toContain(route('canvas-ui.index'))
+        ->not->toContain('Draft Should Not Appear In Feed');
+
+    expect(substr_count($content, '<item>'))->toBe(2);
+});
+
+it('limits the rss feed to twenty posts', function (): void {
+    Post::factory()->count(25)->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $content = $this->get('canvas-ui/feed')
+        ->assertSuccessful()
+        ->getContent();
+
+    expect(substr_count($content, '<item>'))->toBe(20);
+});
+
+it('discovers the rss feed from the layout', function (): void {
+    $this->get('canvas-ui')
+        ->assertSuccessful()
+        ->assertSee('type="application/rss+xml"', false)
+        ->assertSee(route('canvas-ui.feed'), false)
+        ->assertSee('>RSS</a>', false);
 });
 
 it('returns 404 for a draft post', function (): void {
