@@ -69,11 +69,17 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      *
+     * Live (published) posts keep a stable public snapshot: ordinary saves write
+     * `pending` only. Pass `promote: true` (or unpublish) to mutate live fields.
+     *
      * @throws Exception
      */
     public function store(PostRequest $request, string $id): JsonResponse
     {
         $data = $request->validated();
+        $promote = (bool) ($data['promote'] ?? false);
+        unset($data['promote']);
+
         $user = request()->user(config('canvas.guard'));
 
         $post = Post::query()->with('tags', 'topic')->find($id);
@@ -85,17 +91,48 @@ class PostController extends Controller
 
         $post ??= new Post(['id' => $id]);
 
+        $tagsInput = $request->input('tags', []);
+        $topicInput = $request->input('topic', []);
+        $tagsInput = is_array($tagsInput) ? $tagsInput : [];
+        $topicInput = is_array($topicInput) ? $topicInput : [];
+
+        if ($this->shouldWritePendingOnly($post, $data, $promote)) {
+            $post->writePending($data, $tagsInput, $topicInput);
+
+            return response()->json($post->refresh()->load('tags:name,slug', 'topic:id,name,slug'), 200);
+        }
+
         $post->fill($data);
         $post->user_id ??= data_get($user, 'id');
+        $post->clearPending();
 
         $allowTaxonomyCreate = $post->published_at !== null;
 
-        $post->topic_id = $this->resolveTopicId($request->input('topic', []), $user, $allowTaxonomyCreate);
+        $post->topic_id = $this->resolveTopicId($topicInput, $user, $allowTaxonomyCreate);
         $post->save();
 
-        $post->tags()->sync($this->resolveTagsForSync($request->input('tags', []), $user, $allowTaxonomyCreate));
+        $post->tags()->sync($this->resolveTagsForSync($tagsInput, $user, $allowTaxonomyCreate));
 
-        return response()->json($post->refresh(), $created ? 201 : 200);
+        return response()->json($post->refresh()->load('tags:name,slug', 'topic:id,name,slug'), $created ? 201 : 200);
+    }
+
+    /**
+     * Drop unpublished changes and restore the public snapshot in the editor.
+     */
+    public function discard(Post $post): JsonResponse
+    {
+        $this->ensurePostIsVisibleToCurrentUser($post);
+
+        if (Gate::forUser(request()->user(config('canvas.guard')))->denies('update', $post)) {
+            throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
+        }
+
+        $post->clearPending();
+        $post->save();
+
+        $post->loadMissing('tags:name,slug', 'topic:id,name,slug');
+
+        return response()->json($post->refresh());
     }
 
     /**
@@ -153,6 +190,20 @@ class PostController extends Controller
         if (Gate::forUser(request()->user(config('canvas.guard')))->denies('view', $post)) {
             throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function shouldWritePendingOnly(Post $post, array $data, bool $promote): bool
+    {
+        if ($promote || ! $post->exists || ! $post->published) {
+            return false;
+        }
+
+        $nextPublishedAt = array_key_exists('published_at', $data) ? $data['published_at'] : $post->published_at;
+
+        return $nextPublishedAt !== null && $nextPublishedAt !== '';
     }
 
     /**

@@ -1,46 +1,39 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import DailyBarChart from '@/components/analytics/DailyBarChart';
+import MetricHero from '@/components/analytics/MetricHero';
+import RankedBarList from '@/components/analytics/RankedBarList';
 import StatCard from '@/components/analytics/StatCard';
 import { Button } from '@/components/button';
-import { DescriptionDetails, DescriptionList, DescriptionTerm } from '@/components/description-list';
-import { Divider } from '@/components/divider';
-import { Heading, Subheading } from '@/components/heading';
-import { Text, PageDescription, ErrorText } from '@/components/text';
+import { ContentReveal } from '@/components/ContentReveal';
+import { Heading } from '@/components/heading';
+import { Skeleton } from '@/components/Skeleton';
+import { PageDescription, ErrorText } from '@/components/text';
+import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { isInitialLoading, isRefreshing } from '@/lib/async-ui';
 import { ApiError } from '@/lib/api';
 import { postsApi } from '@/lib/api/posts';
-import { parseDailyGraph, rankedEntries } from '@/lib/analytics';
+import { parseDailyGraph, rankedWithShare } from '@/lib/analytics';
 import type { PostStatsResponse } from '@/types/api';
 import { IconArrowLeft } from '@tabler/icons-react';
 
-function RankedList({
-    entries,
-    suffix,
-    emptyLabel,
-}: {
-    entries: [string, string][];
-    suffix?: string;
-    emptyLabel: string;
-}) {
-    if (entries.length === 0) {
-        return <Text className="text-sm text-zinc-500">{emptyLabel}</Text>;
-    }
-
+function StatsSkeleton() {
     return (
-        <DescriptionList>
-            {entries.map(([label, value]) => (
-                <div key={label} className="contents">
-                    <DescriptionTerm>{label}</DescriptionTerm>
-                    <DescriptionDetails>
-                        {value}
-                        {suffix ?? ''}
-                    </DescriptionDetails>
-                </div>
-            ))}
-        </DescriptionList>
+        <div className="space-y-8" aria-hidden="true">
+            <Skeleton className="h-72 w-full" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <Skeleton className="h-36" />
+                <Skeleton className="h-36" />
+                <Skeleton className="h-36" />
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+                <Skeleton className="h-64" />
+                <Skeleton className="h-64" />
+                <Skeleton className="h-64" />
+            </div>
+        </div>
     );
 }
 
@@ -80,9 +73,9 @@ export default function PostsStats() {
                     setStats(response);
                 }
             })
-            .catch((error: unknown) => {
+            .catch((caught: unknown) => {
                 if (!cancelled) {
-                    const notFound = error instanceof ApiError && error.status === 404;
+                    const notFound = caught instanceof ApiError && caught.status === 404;
                     setError(notFound ? t('stats.published_only') : t('stats.load_error'));
                     setStats(null);
                 }
@@ -99,84 +92,111 @@ export default function PostsStats() {
         };
     }, [postId, t]);
 
-    if (loading) {
-        return (
-            <div className="px-8 py-12">
-                <Text className="text-zinc-500">{t('stats.loading')}</Text>
-            </div>
-        );
-    }
+    const viewsSeries = useMemo(() => (stats ? parseDailyGraph(stats.graph.views) : []), [stats]);
+    const visitsSeries = useMemo(() => (stats ? parseDailyGraph(stats.graph.visits) : []), [stats]);
 
-    if (error !== null || stats === null) {
-        return (
-            <div className="space-y-4">
-                <ErrorText>{error ?? t('stats.post_not_found')}</ErrorText>
-            </div>
-        );
-    }
+    const referers = useMemo(() => (stats ? rankedWithShare(stats.topReferers, 50) : []), [stats]);
+    const browsers = useMemo(() => (stats ? rankedWithShare(stats.topBrowsers, 0) : []), [stats]);
+    const popularTimes = useMemo(
+        () => (stats ? rankedWithShare(stats.popularReadingTimes, 0, { valuesAreShares: true }) : []),
+        [stats]
+    );
 
-    const title = stats.post.title.trim() === '' ? t('editor.untitled_post') : stats.post.title;
-    const viewsSeries = parseDailyGraph(stats.graph.views);
-    const visitsSeries = parseDailyGraph(stats.graph.visits);
+    const itemCount = stats === null ? 0 : 1;
+    const showInitialSkeleton = isInitialLoading(loading, itemCount);
+    const refreshing = isRefreshing(loading, itemCount);
+    const { animateContent } = useAsyncReveal(loading, itemCount);
+    const changeSuffix = t('stats.vs_last_month');
+
+    const title = stats === null ? null : stats.post.title.trim() === '' ? t('editor.untitled_post') : stats.post.title;
 
     return (
         <div className="space-y-8">
             <div className="flex flex-wrap items-center gap-3">
-                <Button href={`/posts/${stats.post.id}`} plain aria-label={t('stats.back_to_post')}>
+                <Button
+                    href={stats ? `/posts/${stats.post.id}` : postId ? `/posts/${postId}` : '/posts'}
+                    plain
+                    aria-label={t('stats.back_to_post')}
+                >
                     <IconArrowLeft data-slot="icon" />
                 </Button>
-                <div>
-                    <Heading>{title}</Heading>
+                <div className="min-w-0">
+                    {title ? <Heading>{title}</Heading> : <Skeleton className="h-8 w-48 max-w-full" />}
                     <PageDescription>{t('stats.description')}</PageDescription>
                 </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <StatCard
-                    label={t('stats.views_month')}
-                    value={stats.monthlyViews}
-                    change={stats.monthOverMonthViews}
-                />
-                <StatCard
-                    label={t('stats.visits_month')}
-                    value={stats.monthlyVisits}
-                    change={stats.monthOverMonthVisits}
-                />
-                <StatCard label={t('stats.all_time_views')} value={stats.totalViews} />
-            </div>
+            {error && !loading ? <ErrorText>{error}</ErrorText> : null}
 
-            <div className="grid gap-6 lg:grid-cols-2">
-                <DailyBarChart title={t('stats.views_30')} data={viewsSeries} />
-                <DailyBarChart title={t('stats.visits_30')} data={visitsSeries} />
-            </div>
+            {showInitialSkeleton ? (
+                <StatsSkeleton />
+            ) : stats ? (
+                <ContentReveal className="space-y-8" busy={refreshing} animate={animateContent}>
+                    <MetricHero
+                        label={t('stats.views_month')}
+                        value={stats.monthlyViews}
+                        change={stats.monthOverMonthViews}
+                        changeSuffix={changeSuffix}
+                        series={viewsSeries}
+                        caption={t('stats.last_30_days')}
+                        emptyLabel={t('stats.no_data')}
+                    />
 
-            <Divider />
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <StatCard
+                            label={t('stats.visits_month')}
+                            value={stats.monthlyVisits}
+                            change={stats.monthOverMonthVisits}
+                            changeSuffix={changeSuffix}
+                            sparkline={visitsSeries}
+                        />
+                        <StatCard label={t('stats.all_time_views')} value={stats.totalViews} />
+                        <StatCard label={t('stats.reading_time')} valueLabel={stats.readTime} />
+                    </div>
 
-            <div className="grid gap-8 lg:grid-cols-3">
-                <div>
-                    <Subheading>{t('stats.reading_time')}</Subheading>
-                    <Text className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{stats.readTime}</Text>
-                    <Subheading className="mt-6">{t('stats.popular_times')}</Subheading>
-                    <div className="mt-3">
-                        <RankedList
-                            entries={rankedEntries(stats.popularReadingTimes)}
+                    <div className="grid gap-4 lg:grid-cols-3">
+                        <RankedBarList
+                            title={t('stats.top_referers')}
+                            entries={referers}
                             emptyLabel={t('stats.no_data')}
+                            iconKind="referer"
+                            previewLimit={5}
+                            searchPlaceholder={t('stats.search_list')}
+                            exportLabel={t('stats.export_csv')}
+                            closeLabel={t('stats.close_list')}
+                            viewAllLabel={t('stats.view_all')}
+                            valueColumnLabel={t('stats.metric_views')}
+                            csvFilename="referers.csv"
+                        />
+                        <RankedBarList
+                            title={t('stats.top_browsers')}
+                            entries={browsers}
+                            emptyLabel={t('stats.no_data')}
+                            iconKind="browser"
+                            previewLimit={5}
+                            searchPlaceholder={t('stats.search_list')}
+                            exportLabel={t('stats.export_csv')}
+                            closeLabel={t('stats.close_list')}
+                            viewAllLabel={t('stats.view_all')}
+                            valueColumnLabel={t('stats.metric_views')}
+                            csvFilename="browsers.csv"
+                        />
+                        <RankedBarList
+                            title={t('stats.popular_times')}
+                            entries={popularTimes}
+                            emptyLabel={t('stats.no_data')}
+                            iconKind="time"
+                            previewLimit={5}
+                            searchPlaceholder={t('stats.search_list')}
+                            exportLabel={t('stats.export_csv')}
+                            closeLabel={t('stats.close_list')}
+                            viewAllLabel={t('stats.view_all')}
+                            valueColumnLabel={t('stats.share')}
+                            csvFilename="reading-times.csv"
                         />
                     </div>
-                </div>
-                <div>
-                    <Subheading>{t('stats.top_referers')}</Subheading>
-                    <div className="mt-3">
-                        <RankedList entries={rankedEntries(stats.topReferers)} emptyLabel={t('stats.no_data')} />
-                    </div>
-                </div>
-                <div>
-                    <Subheading>{t('stats.top_browsers')}</Subheading>
-                    <div className="mt-3">
-                        <RankedList entries={rankedEntries(stats.topBrowsers)} emptyLabel={t('stats.no_data')} />
-                    </div>
-                </div>
-            </div>
+                </ContentReveal>
+            ) : null}
         </div>
     );
 }

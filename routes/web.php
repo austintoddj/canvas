@@ -56,6 +56,7 @@ Route::middleware([
             Route::get('create', 'create');
             Route::get('{post}/stats', 'stats');
             Route::get('{post}', 'show');
+            Route::post('{post}/discard', 'discard');
             Route::post('{id}', 'store');
             Route::delete('{post}', 'destroy');
         });

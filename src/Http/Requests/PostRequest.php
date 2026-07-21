@@ -39,6 +39,7 @@ class PostRequest extends FormRequest
             'featured_image' => 'nullable|string',
             'featured_image_caption' => 'nullable|string',
             'meta' => 'nullable|array',
+            'promote' => 'sometimes|boolean',
         ];
     }
 }

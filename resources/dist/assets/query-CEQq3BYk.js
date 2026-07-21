@@ -1,1 +1,0 @@
-function e(e){let t=new URLSearchParams;for(let[n,r]of Object.entries(e))r!=null&&r!==``&&t.set(n,String(r));let n=t.toString();return n?`?${n}`:``}export{e as t};

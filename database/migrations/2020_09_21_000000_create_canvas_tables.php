@@ -24,6 +24,7 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->index();
             $table->uuid('topic_id')->nullable()->index();
             $table->json('meta')->nullable();
+            $table->json('pending')->nullable();
             $table->timestamps();
             $table->softDeletes();
             $table->unique(['slug', 'user_id']);
@@ -114,17 +115,24 @@ return new class extends Migration
             $table->index('mime_type');
             $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
         });
+
+        Schema::create('canvas_settings', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->text('value')->nullable();
+            $table->timestamps();
+        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('canvas_posts_tags');
-        Schema::dropIfExists('canvas_views');
-        Schema::dropIfExists('canvas_visits');
-        Schema::dropIfExists('canvas_media');
         Schema::dropIfExists('canvas_posts');
         Schema::dropIfExists('canvas_tags');
         Schema::dropIfExists('canvas_topics');
+        Schema::dropIfExists('canvas_posts_tags');
+        Schema::dropIfExists('canvas_views');
+        Schema::dropIfExists('canvas_visits');
         Schema::dropIfExists('canvas_users');
+        Schema::dropIfExists('canvas_media');
+        Schema::dropIfExists('canvas_settings');
     }
 };

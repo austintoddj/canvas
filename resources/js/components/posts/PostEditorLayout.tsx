@@ -15,7 +15,7 @@ import {
     type PostFormState,
     type PostSaveStatus,
 } from '@/lib/posts/form';
-import { IconArrowLeft, IconChartBar, IconSettings, IconWorld } from '@tabler/icons-react';
+import { IconArrowLeft, IconChartBar, IconLayoutSidebarRight } from '@tabler/icons-react';
 
 export type PostEditorFocusControls = {
     focusMode: boolean;
@@ -27,9 +27,10 @@ type PostEditorLayoutProps = {
     postId: string | null;
     titleError?: string;
     saveStatus: PostSaveStatus;
+    hasPendingChanges?: boolean;
+    inspectorOpen?: boolean;
     onTitleChange: (title: string) => void;
-    onOpenSettings: () => void;
-    onOpenSeo: () => void;
+    onOpenInspector: () => void;
     body: ReactNode | ((focus: PostEditorFocusControls) => ReactNode);
     disabled?: boolean;
 };
@@ -39,9 +40,10 @@ export default function PostEditorLayout({
     postId,
     titleError,
     saveStatus,
+    hasPendingChanges = false,
+    inspectorOpen = false,
     onTitleChange,
-    onOpenSettings,
-    onOpenSeo,
+    onOpenInspector,
     body,
     disabled = false,
 }: PostEditorLayoutProps) {
@@ -50,13 +52,22 @@ export default function PostEditorLayout({
     const animateStatus = shouldAnimateReveal({ reducedMotion: reducedMotion === true, animate: true });
     const published = isPublished(form);
     const status = publishStatus(form);
-    const badgeColor = status === 'published' ? 'green' : status === 'scheduled' ? 'blue' : 'amber';
+    const badgeColor =
+        status === 'published' && hasPendingChanges
+            ? 'amber'
+            : status === 'published'
+              ? 'green'
+              : status === 'scheduled'
+                ? 'blue'
+                : 'amber';
     const badgeLabel =
-        status === 'published'
-            ? t('editor.published_badge')
-            : status === 'scheduled'
-              ? t('editor.scheduled_badge')
-              : t('editor.draft_badge');
+        status === 'published' && hasPendingChanges
+            ? t('editor.unpublished_changes_badge', 'Unpublished changes')
+            : status === 'published'
+              ? t('editor.published_badge')
+              : status === 'scheduled'
+                ? t('editor.scheduled_badge')
+                : t('editor.draft_badge');
     const statusLabel = navSaveStatusLabel(saveStatus, {
         saving: t('common.saving'),
         saved: t('common.saved'),
@@ -119,7 +130,11 @@ export default function PostEditorLayout({
                     <Heading level={2} className={clsx('truncate text-lg/7', focusMode ? 'block' : 'hidden sm:block')}>
                         {(form.title ?? '').trim() === '' ? t('editor.untitled_post') : form.title}
                     </Heading>
-                    <Badge color={badgeColor} data-publish-status={status}>
+                    <Badge
+                        color={badgeColor}
+                        data-publish-status={status}
+                        data-has-pending-changes={hasPendingChanges ? 'true' : 'false'}
+                    >
                         {badgeLabel}
                     </Badge>
                 </div>
@@ -166,23 +181,13 @@ export default function PostEditorLayout({
                     type="button"
                     outline
                     disabled={disabled}
-                    onClick={onOpenSeo}
-                    aria-label={t('editor.seo')}
-                    title={t('editor.seo')}
-                    data-post-seo-trigger
+                    onClick={onOpenInspector}
+                    aria-label={t('editor.post_settings')}
+                    title={t('editor.post_settings')}
+                    aria-expanded={inspectorOpen}
+                    data-post-inspector-trigger
                 >
-                    <IconWorld data-slot="icon" />
-                </Button>
-                <Button
-                    type="button"
-                    outline
-                    disabled={disabled}
-                    onClick={onOpenSettings}
-                    aria-label={t('editor.settings')}
-                    title={t('editor.settings')}
-                    data-post-settings-trigger
-                >
-                    <IconSettings data-slot="icon" />
+                    <IconLayoutSidebarRight data-slot="icon" />
                 </Button>
             </div>
         </div>

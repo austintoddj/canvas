@@ -11,7 +11,10 @@ import { isPublished, isScheduled, publishStatus, toDatetimeLocalValue, type Pos
 
 type PublishPanelProps = {
     form: PostFormState;
+    hasPendingChanges?: boolean;
     onPublish: () => void | Promise<void>;
+    onUpdate?: () => void | Promise<void>;
+    onDiscard?: () => void | Promise<void>;
     onSchedule: (datetimeLocal: string) => void | Promise<void>;
     onUnpublish: () => void | Promise<void>;
     onDelete?: () => void;
@@ -29,7 +32,10 @@ function seedScheduleValue(existing: string): string {
 
 export default function PublishPanel({
     form,
+    hasPendingChanges = false,
     onPublish,
+    onUpdate,
+    onDiscard,
     onSchedule,
     onUnpublish,
     onDelete,
@@ -45,7 +51,9 @@ export default function PublishPanel({
     const [scheduleDraft, setScheduleDraft] = useState<string | null>(null);
     const [syncedPublishedAt, setSyncedPublishedAt] = useState(form.publishedAt);
     const [scheduleExpanded, setScheduleExpanded] = useState(scheduled);
-    const [busyAction, setBusyAction] = useState<'publish' | 'schedule' | 'unpublish' | null>(null);
+    const [busyAction, setBusyAction] = useState<'publish' | 'update' | 'discard' | 'schedule' | 'unpublish' | null>(
+        null
+    );
     const busy = disabled || deleting || busyAction !== null;
 
     if (form.publishedAt !== syncedPublishedAt) {
@@ -71,19 +79,33 @@ export default function PublishPanel({
     const scheduleAt = scheduleDraft ?? formScheduleValue;
     const canSubmitSchedule = scheduleAt.trim() !== '' && isScheduleInFuture(scheduleAt);
 
-    const badgeColor = status === 'published' ? 'green' : status === 'scheduled' ? 'blue' : 'amber';
+    const badgeColor =
+        status === 'published' && hasPendingChanges
+            ? 'amber'
+            : status === 'published'
+              ? 'green'
+              : status === 'scheduled'
+                ? 'blue'
+                : 'amber';
     const badgeLabel =
-        status === 'published'
-            ? t('editor.published_badge')
-            : status === 'scheduled'
-              ? t('editor.scheduled_badge')
-              : t('editor.draft_badge');
+        status === 'published' && hasPendingChanges
+            ? t('editor.unpublished_changes_badge', 'Unpublished changes')
+            : status === 'published'
+              ? t('editor.published_badge')
+              : status === 'scheduled'
+                ? t('editor.scheduled_badge')
+                : t('editor.draft_badge');
     const visibilityDescription =
-        status === 'published'
-            ? t('editor.visibility_live')
-            : status === 'scheduled'
-              ? t('editor.visibility_scheduled')
-              : t('editor.visibility_draft');
+        status === 'published' && hasPendingChanges
+            ? t(
+                  'editor.visibility_pending',
+                  'Live on your site. Edits stay private until you update the published post.'
+              )
+            : status === 'published'
+              ? t('editor.visibility_live')
+              : status === 'scheduled'
+                ? t('editor.visibility_scheduled')
+                : t('editor.visibility_draft');
 
     function openSchedule() {
         setScheduleDraft(seedScheduleValue(formScheduleValue));
@@ -143,10 +165,42 @@ export default function PublishPanel({
         }
     }
 
+    async function handleUpdate() {
+        if (busy || onUpdate === undefined) {
+            return;
+        }
+
+        setBusyAction('update');
+
+        try {
+            await onUpdate();
+        } finally {
+            setBusyAction(null);
+        }
+    }
+
+    async function handleDiscard() {
+        if (busy || onDiscard === undefined) {
+            return;
+        }
+
+        setBusyAction('discard');
+
+        try {
+            await onDiscard();
+        } finally {
+            setBusyAction(null);
+        }
+    }
+
     return (
         <Fieldset className="min-w-0 rounded-lg border border-zinc-950/10 p-4 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5">
             <div className="flex min-w-0 items-center justify-between gap-3">
-                <Badge color={badgeColor} data-publish-status={status}>
+                <Badge
+                    color={badgeColor}
+                    data-publish-status={status}
+                    data-has-pending-changes={hasPendingChanges ? 'true' : 'false'}
+                >
                     {badgeLabel}
                 </Badge>
             </div>
@@ -170,6 +224,32 @@ export default function PublishPanel({
                                 {busyAction === 'publish' ? t('editor.publishing') : t('editor.publish')}
                             </Button>
                         )
+                    ) : null}
+
+                    {published && hasPendingChanges && onUpdate !== undefined ? (
+                        <Button
+                            type="button"
+                            color="dark/zinc"
+                            disabled={busy}
+                            data-publish-update
+                            onClick={() => void handleUpdate()}
+                        >
+                            {busyAction === 'update' ? t('editor.updating', 'Updating…') : t('editor.update', 'Update')}
+                        </Button>
+                    ) : null}
+
+                    {published && hasPendingChanges && onDiscard !== undefined ? (
+                        <Button
+                            type="button"
+                            outline
+                            disabled={busy}
+                            data-publish-discard
+                            onClick={() => void handleDiscard()}
+                        >
+                            {busyAction === 'discard'
+                                ? t('editor.discarding', 'Discarding…')
+                                : t('editor.discard_changes', 'Discard changes')}
+                        </Button>
                     ) : null}
 
                     {!published && !scheduleExpanded ? (

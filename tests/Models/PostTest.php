@@ -52,7 +52,7 @@ it('allows a user to save a post slug', function (): void {
         'title' => 'A new post',
     ];
 
-    $post = Post::factory()->create([
+    $post = Post::factory()->draft()->create([
         'user_id' => $this->admin->id,
     ]);
 
@@ -65,6 +65,23 @@ it('allows a user to save a post slug', function (): void {
         'slug' => $response->original['slug'],
         'user_id' => $response->original['user_id'],
     ]);
+});
+
+it('casts pending to an array and reports pending changes', function (): void {
+    $post = Post::factory()->create([
+        'pending' => [
+            'title' => 'Pending',
+            'slug' => 'pending',
+        ],
+    ]);
+
+    expect($post->pending)->toBeArray()
+        ->and($post->has_pending_changes)->toBeTrue();
+
+    $post->clearPending();
+    $post->save();
+
+    expect($post->fresh()->has_pending_changes)->toBeFalse();
 });
 
 // Regression: GH-647 — slug uniqueness is scoped per user, not globally
@@ -80,7 +97,7 @@ it('allows posts to share the same slug across different users', function (): vo
         'title' => $data['title'],
     ]);
 
-    $secondaryPost = Post::factory()->create([
+    $secondaryPost = Post::factory()->draft()->create([
         'user_id' => $this->editor->id,
     ]);
 

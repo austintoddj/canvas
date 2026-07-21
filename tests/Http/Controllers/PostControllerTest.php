@@ -327,8 +327,8 @@ describe('when storing and updating posts', function (): void {
                 'user_id' => $this->admin->id,
             ]);
     });
-    it('updates an existing post', function (): void {
-        $post = Post::factory()->create();
+    it('updates an existing draft post', function (): void {
+        $post = Post::factory()->draft()->create();
 
         $data = [
             'title' => 'Updated Title',
@@ -343,6 +343,101 @@ describe('when storing and updating posts', function (): void {
                 'title' => $data['title'],
                 'slug' => $data['slug'],
             ]);
+    });
+
+    it('autosaves live published posts into pending without mutating the public snapshot', function (): void {
+        $post = Post::factory()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Live Title',
+            'slug' => 'live-slug',
+            'body' => 'Live body',
+            'published_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => 'Edited Title',
+                'slug' => 'edited-slug',
+                'body' => 'Edited body',
+                'published_at' => $post->published_at->format('Y-m-d H:i:s'),
+            ])
+            ->assertOk()
+            ->assertJsonPath('title', 'Live Title')
+            ->assertJsonPath('slug', 'live-slug')
+            ->assertJsonPath('body', 'Live body')
+            ->assertJsonPath('has_pending_changes', true)
+            ->assertJsonPath('pending.title', 'Edited Title')
+            ->assertJsonPath('pending.slug', 'edited-slug')
+            ->assertJsonPath('pending.body', 'Edited body');
+
+        $fresh = $post->fresh();
+
+        expect($fresh->title)->toBe('Live Title')
+            ->and($fresh->slug)->toBe('live-slug')
+            ->and($fresh->body)->toBe('Live body')
+            ->and($fresh->has_pending_changes)->toBeTrue()
+            ->and($fresh->pending['title'] ?? null)->toBe('Edited Title');
+    });
+
+    it('promotes pending changes onto the live published snapshot', function (): void {
+        $post = Post::factory()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Live Title',
+            'slug' => 'live-slug',
+            'body' => 'Live body',
+            'published_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => 'Promoted Title',
+                'slug' => 'promoted-slug',
+                'body' => 'Promoted body',
+                'published_at' => $post->published_at->format('Y-m-d H:i:s'),
+                'promote' => true,
+            ])
+            ->assertOk()
+            ->assertJsonPath('title', 'Promoted Title')
+            ->assertJsonPath('slug', 'promoted-slug')
+            ->assertJsonPath('body', 'Promoted body')
+            ->assertJsonPath('has_pending_changes', false)
+            ->assertJsonPath('pending', null);
+
+        $fresh = $post->fresh();
+
+        expect($fresh->title)->toBe('Promoted Title')
+            ->and($fresh->slug)->toBe('promoted-slug')
+            ->and($fresh->body)->toBe('Promoted body')
+            ->and($fresh->pending)->toBeNull();
+    });
+
+    it('discards pending changes and restores the live snapshot', function (): void {
+        $post = Post::factory()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Live Title',
+            'slug' => 'live-slug',
+            'published_at' => now()->subDay(),
+            'pending' => [
+                'title' => 'Pending Title',
+                'slug' => 'pending-slug',
+                'summary' => null,
+                'body' => 'Pending body',
+                'featured_image' => null,
+                'featured_image_caption' => null,
+                'meta' => null,
+                'tags' => [],
+                'topic' => null,
+            ],
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}/discard")
+            ->assertOk()
+            ->assertJsonPath('title', 'Live Title')
+            ->assertJsonPath('has_pending_changes', false)
+            ->assertJsonPath('pending', null);
+
+        expect($post->fresh()->pending)->toBeNull();
     });
 
     it('stores a future published_at with time-of-day fidelity and keeps the post non-live', function (): void {
@@ -406,7 +501,7 @@ describe('when storing and updating posts', function (): void {
     });
 
     it('lets contributors update only their own posts', function (): void {
-        $post = Post::factory()->create([
+        $post = Post::factory()->draft()->create([
             'user_id' => $this->contributor->id,
         ]);
 
@@ -464,6 +559,7 @@ describe('when storing and updating posts', function (): void {
             ->postJson("canvas/api/posts/{$otherAuthorPost->id}", [
                 'title' => 'Edited by editor',
                 'slug' => 'editor-unique-for-author',
+                'promote' => true,
             ])
             ->assertOk()
             ->assertJsonPath('slug', 'editor-unique-for-author')
@@ -481,6 +577,7 @@ describe('when syncing taxonomy', function (): void {
             'title' => $post->title,
             'slug' => $post->slug,
             'published_at' => now()->subDay()->toDateString(),
+            'promote' => true,
             'tags' => [
                 [
                     'name' => 'A new tag',
@@ -571,6 +668,7 @@ describe('when syncing taxonomy', function (): void {
         $data = [
             'title' => $post->title,
             'slug' => $post->slug,
+            'promote' => true,
             'tags' => [
                 [
                     'name' => $tag->name,
@@ -595,6 +693,31 @@ describe('when syncing taxonomy', function (): void {
         ]);
     });
 
+    it('stores taxonomy on pending without touching live pivots for published posts', function (): void {
+        $post = Post::factory()->create([
+            'user_id' => $this->admin->id,
+        ]);
+        $tag = Tag::factory()->create();
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'published_at' => $post->published_at->format('Y-m-d H:i:s'),
+                'tags' => [
+                    [
+                        'name' => $tag->name,
+                        'slug' => $tag->slug,
+                    ],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('has_pending_changes', true)
+            ->assertJsonPath('pending.tags.0.slug', $tag->slug);
+
+        expect($post->fresh()->tags)->toHaveCount(0);
+    });
+
     it('creates a new topic when the post is published', function (): void {
         $post = Post::factory()->create();
 
@@ -602,6 +725,7 @@ describe('when syncing taxonomy', function (): void {
             'title' => $post->title,
             'slug' => $post->slug,
             'published_at' => now()->subDay()->toDateString(),
+            'promote' => true,
             'topic' => [
                 [
                     'name' => 'A new topic',
@@ -653,6 +777,7 @@ describe('when syncing taxonomy', function (): void {
         $data = [
             'title' => $post->title,
             'slug' => $post->slug,
+            'promote' => true,
             'topic' => [
                 [
                     'name' => $topic->name,

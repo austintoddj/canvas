@@ -44,6 +44,18 @@ export type PostListItem = {
     views_count: number;
 };
 
+export type PostPending = {
+    title?: string;
+    slug?: string;
+    summary?: string | null;
+    body?: string | null;
+    featured_image?: string | null;
+    featured_image_caption?: string | null;
+    meta?: PostMeta | null;
+    tags?: TaxonomyOption[];
+    topic?: TaxonomyOption | null;
+};
+
 export type Post = PostListItem & {
     slug: string;
     body: string | null;
@@ -51,6 +63,8 @@ export type Post = PostListItem & {
     user_id: number | null;
     topic_id: string | null;
     meta: PostMeta | null;
+    pending?: PostPending | null;
+    has_pending_changes?: boolean;
     read_time?: string;
     tags?: TaxonomyOption[];
     topic?: TaxonomyOption & { id: string };
@@ -85,6 +99,8 @@ export type PostStorePayload = {
     meta?: PostMeta | null;
     tags?: TaxonomyOption[];
     topic?: TaxonomyOption[];
+    /** When true on a live post, write the public snapshot and clear pending. */
+    promote?: boolean;
 };
 
 export type MonthOverMonth = {
@@ -203,6 +219,23 @@ export type UserPostsParams = {
     page?: number;
 };
 
+export type DashboardLibrary = {
+    published: number;
+    drafts: number;
+    scheduled: number;
+    pending_updates: number;
+};
+
+export type DashboardRecentPost = PostListItem & {
+    has_pending_changes?: boolean;
+};
+
+export type DashboardTopPost = {
+    id: string;
+    title: string;
+    views: number;
+};
+
 export type DashboardInsights = {
     views: number;
     visits: number;
@@ -210,6 +243,12 @@ export type DashboardInsights = {
         views: string;
         visits: string;
     };
+    monthOverMonthViews: MonthOverMonth;
+    monthOverMonthVisits: MonthOverMonth;
+    topReferers: Record<string, number>;
+    library: DashboardLibrary;
+    recent_posts: DashboardRecentPost[];
+    top_posts: DashboardTopPost[];
 };
 
 export type StatsIndexParams = {

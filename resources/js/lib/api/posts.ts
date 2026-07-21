@@ -31,6 +31,10 @@ export const postsApi = {
         return api.post<Post>(`/posts/${id}`, payload, signal);
     },
 
+    discard(id: string, signal?: AbortSignal) {
+        return api.post<Post>(`/posts/${id}/discard`, {}, signal);
+    },
+
     destroy(id: string, signal?: AbortSignal) {
         return api.delete<null>(`/posts/${id}`, signal);
     },

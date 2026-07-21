@@ -4,16 +4,10 @@ import { useBlocker, useLocation, useNavigate, useParams } from 'react-router-do
 import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
 import { Button } from '@/components/button';
 import PostBodyEditor from '@/components/posts/PostBodyEditor';
-import FeaturedImagePicker from '@/components/posts/FeaturedImagePicker';
 import PostEditorLayout from '@/components/posts/PostEditorLayout';
-import PostSeoPanel from '@/components/posts/PostSeoPanel';
-import PostSidebar from '@/components/posts/PostSidebar';
-import PublishPanel from '@/components/posts/PublishPanel';
-import { Divider } from '@/components/divider';
-import { Heading } from '@/components/heading';
-import { SideDrawer } from '@/components/SideDrawer';
+import PostInspectorDrawer, { type PostInspectorSection } from '@/components/posts/PostInspectorDrawer';
 import { Skeleton } from '@/components/Skeleton';
-import { PageDescription, ErrorText } from '@/components/text';
+import { ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useMarkOnboardingComplete } from '@/hooks/useMarkOnboardingComplete';
@@ -22,6 +16,7 @@ import { postsApi } from '@/lib/api/posts';
 import {
     formFromCreateResponse,
     mergeTaxonomyOptions,
+    postHasPendingChanges,
     postToFormState,
     publishFormState,
     scheduleFormState,
@@ -31,7 +26,7 @@ import {
     type PostFormState,
 } from '@/lib/posts/form';
 import { toast } from '@/lib/toast';
-import type { TaxonomyOption } from '@/types/api';
+import type { Post, TaxonomyOption } from '@/types/api';
 
 const emptyForm = (): PostFormState => ({
     title: '',
@@ -60,10 +55,11 @@ export default function PostsEditor() {
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
-    const [settingsOpen, setSettingsOpen] = useState(false);
-    const [seoOpen, setSeoOpen] = useState(false);
+    const [inspectorOpen, setInspectorOpen] = useState(false);
+    const [inspectorSection, setInspectorSection] = useState<PostInspectorSection>('post');
     const [deleting, setDeleting] = useState(false);
     const [pendingDelete, setPendingDelete] = useState(false);
+    const [hasPendingChanges, setHasPendingChanges] = useState(false);
 
     const slugManuallyEditedRef = useRef(slugManuallyEdited);
     /** create() only mints a UUID — skip show() after redirect to /posts/:id. */
@@ -82,7 +78,9 @@ export default function PostsEditor() {
     const autosaveEnabled = postId !== null && !loading && loadError === null;
 
     const handleSaved = useCallback(
-        (post: { published_at?: string | null }) => {
+        (post: Post) => {
+            setHasPendingChanges(postHasPendingChanges(post));
+
             setForm((current) => {
                 const nextPublishedAt = post.published_at ?? null;
 
@@ -133,12 +131,42 @@ export default function PostsEditor() {
         const next = publishFormState(form);
         setForm(next);
 
-        const ok = await saveNow(next);
+        const ok = await saveNow(next, { promote: true });
 
         if (ok) {
+            setHasPendingChanges(false);
             toast.success(t('editor.published'));
         } else {
             toast.error(t('editor.publish_error'));
+        }
+    }
+
+    async function handleUpdate() {
+        const ok = await saveNow(form, { promote: true });
+
+        if (ok) {
+            setHasPendingChanges(false);
+            toast.success(t('editor.updated', 'Post updated.'));
+        } else {
+            toast.error(t('editor.update_error', 'Unable to update this post.'));
+        }
+    }
+
+    async function handleDiscard() {
+        if (postId === null) {
+            return;
+        }
+
+        try {
+            const post = await postsApi.discard(postId);
+            const next = postToFormState(post);
+            setForm(next);
+            setHasPendingChanges(false);
+            setSlugManuallyEdited(next.slug !== '' && next.slug !== slugify(next.title));
+            resetBaseline(serializeFormState(next));
+            toast.success(t('editor.discarded', 'Changes discarded.'));
+        } catch {
+            toast.error(t('editor.discard_error', 'Unable to discard changes.'));
         }
     }
 
@@ -152,9 +180,10 @@ export default function PostsEditor() {
 
         setForm(next);
 
-        const ok = await saveNow(next);
+        const ok = await saveNow(next, { promote: true });
 
         if (ok) {
+            setHasPendingChanges(false);
             toast.success(t('editor.scheduled'));
         } else {
             toast.error(t('editor.schedule_error'));
@@ -165,9 +194,10 @@ export default function PostsEditor() {
         const next = unpublishFormState(form);
         setForm(next);
 
-        const ok = await saveNow(next);
+        const ok = await saveNow(next, { promote: true });
 
         if (ok) {
+            setHasPendingChanges(false);
             toast.success(t('editor.unpublished'));
         } else {
             toast.error(t('editor.unpublish_error'));
@@ -197,11 +227,18 @@ export default function PostsEditor() {
     }
 
     const hydrateEditor = useCallback(
-        (nextForm: PostFormState, tags: TaxonomyOption[], topics: TaxonomyOption[], nextPostId: string) => {
+        (
+            nextForm: PostFormState,
+            tags: TaxonomyOption[],
+            topics: TaxonomyOption[],
+            nextPostId: string,
+            pending = false
+        ) => {
             setForm(nextForm);
             setAvailableTags(tags);
             setAvailableTopics(topics);
             setPostId(nextPostId);
+            setHasPendingChanges(pending);
             setSlugManuallyEdited(nextForm.slug !== '' && nextForm.slug !== slugify(nextForm.title));
             resetBaseline(serializeFormState(nextForm));
             setLoading(false);
@@ -227,7 +264,7 @@ export default function PostsEditor() {
                     const response = await postsApi.create(controller.signal);
                     const nextId = response.post.id;
                     bootstrappedPostId.current = nextId;
-                    hydrateEditor(formFromCreateResponse(response.post), response.tags, response.topics, nextId);
+                    hydrateEditor(formFromCreateResponse(response.post), response.tags, response.topics, nextId, false);
                     navigate(`/posts/${nextId}`, { replace: true });
                     return;
                 }
@@ -239,7 +276,13 @@ export default function PostsEditor() {
                 }
 
                 const response = await postsApi.show(id, controller.signal);
-                hydrateEditor(postToFormState(response.post), response.tags, response.topics, response.post.id);
+                hydrateEditor(
+                    postToFormState(response.post),
+                    response.tags,
+                    response.topics,
+                    response.post.id,
+                    postHasPendingChanges(response.post)
+                );
             } catch {
                 if (!controller.signal.aborted) {
                     setLoadError(t('editor.load_error'));
@@ -292,7 +335,7 @@ export default function PostsEditor() {
             allowLeaveRef.current = true;
             resetBaseline(serializeFormState(form));
             setPendingDelete(false);
-            setSettingsOpen(false);
+            setInspectorOpen(false);
             toast.success(t('editor.deleted'));
             navigate('/posts', { replace: true });
         } catch {
@@ -311,7 +354,6 @@ export default function PostsEditor() {
                         <Skeleton className="h-6 w-16 rounded-full" />
                     </div>
                     <div className="flex shrink-0 gap-1 sm:gap-2">
-                        <Skeleton className="size-9 rounded-lg" />
                         <Skeleton className="size-9 rounded-lg" />
                     </div>
                 </div>
@@ -340,16 +382,11 @@ export default function PostsEditor() {
                 postId={postId}
                 titleError={fieldErrors.title?.[0]}
                 saveStatus={saveStatus}
+                hasPendingChanges={hasPendingChanges}
+                inspectorOpen={inspectorOpen}
                 disabled={!autosaveEnabled}
                 onTitleChange={handleTitleChange}
-                onOpenSettings={() => {
-                    setSeoOpen(false);
-                    setSettingsOpen(true);
-                }}
-                onOpenSeo={() => {
-                    setSettingsOpen(false);
-                    setSeoOpen(true);
-                }}
+                onOpenInspector={() => setInspectorOpen(true)}
                 body={({ focusMode, onToggleFocusMode }) => (
                     <PostBodyEditor
                         body={form.body}
@@ -362,62 +399,27 @@ export default function PostsEditor() {
                 )}
             />
 
-            <SideDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} title={t('editor.post_settings')}>
-                <div className="min-w-0 space-y-6 overflow-x-hidden px-5 py-5">
-                    <div className="min-w-0">
-                        <Heading level={3} className="text-base/7">
-                            {t('editor.details')}
-                        </Heading>
-                        <PageDescription>{t('editor.details_help')}</PageDescription>
-                        <div className="mt-4 min-w-0">
-                            <PostSidebar
-                                form={form}
-                                availableTags={availableTags}
-                                availableTopics={availableTopics}
-                                fieldErrors={fieldErrors}
-                                disabled={!autosaveEnabled}
-                                onChange={handleFormChange}
-                                onSlugManualEdit={() => setSlugManuallyEdited(true)}
-                            />
-                        </div>
-                    </div>
-
-                    <Divider soft />
-
-                    <div className="min-w-0">
-                        <Heading level={3} className="text-base/7">
-                            {t('editor.featured_image')}
-                        </Heading>
-                        <PageDescription>{t('editor.featured_image_help')}</PageDescription>
-                        <div className="mt-4 min-w-0">
-                            <FeaturedImagePicker form={form} disabled={!autosaveEnabled} onChange={handleFormChange} />
-                        </div>
-                    </div>
-
-                    <Divider soft />
-
-                    <PublishPanel
-                        form={form}
-                        disabled={!autosaveEnabled}
-                        deleting={deleting}
-                        onPublish={handlePublish}
-                        onSchedule={handleSchedule}
-                        onUnpublish={handleUnpublish}
-                        onDelete={() => setPendingDelete(true)}
-                    />
-                </div>
-            </SideDrawer>
-
-            <SideDrawer open={seoOpen} onClose={() => setSeoOpen(false)} title={t('editor.seo')}>
-                <div className="min-w-0 overflow-x-hidden px-5 py-5">
-                    <PostSeoPanel
-                        form={form}
-                        fieldErrors={fieldErrors}
-                        disabled={!autosaveEnabled}
-                        onChange={handleFormChange}
-                    />
-                </div>
-            </SideDrawer>
+            <PostInspectorDrawer
+                open={inspectorOpen}
+                section={inspectorSection}
+                onClose={() => setInspectorOpen(false)}
+                onSectionChange={setInspectorSection}
+                form={form}
+                availableTags={availableTags}
+                availableTopics={availableTopics}
+                fieldErrors={fieldErrors}
+                disabled={!autosaveEnabled}
+                hasPendingChanges={hasPendingChanges}
+                deleting={deleting}
+                onChange={handleFormChange}
+                onSlugManualEdit={() => setSlugManuallyEdited(true)}
+                onPublish={handlePublish}
+                onUpdate={handleUpdate}
+                onDiscard={handleDiscard}
+                onSchedule={handleSchedule}
+                onUnpublish={handleUnpublish}
+                onDelete={() => setPendingDelete(true)}
+            />
 
             <Alert open={pendingDelete} onClose={closeDeleteConfirm} size="sm">
                 <AlertTitle>{t('editor.delete_title')}</AlertTitle>

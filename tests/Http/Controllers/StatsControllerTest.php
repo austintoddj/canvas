@@ -3,6 +3,7 @@
 use Canvas\Models\Post;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
+use Illuminate\Support\Carbon;
 
 it('fetches user stats by default', function (): void {
     Post::factory()->count(3)->create([
@@ -29,12 +30,31 @@ it('fetches user stats by default', function (): void {
                 'views',
                 'visits',
             ],
+            'monthOverMonthViews' => [
+                'direction',
+                'percentage',
+            ],
+            'monthOverMonthVisits' => [
+                'direction',
+                'percentage',
+            ],
+            'topReferers',
+            'library' => [
+                'published',
+                'drafts',
+                'scheduled',
+                'pending_updates',
+            ],
+            'recent_posts',
+            'top_posts',
         ])
         ->assertJsonFragment([
             'views' => 9,
             'visits' => 6,
-        ]);
+        ])
+        ->assertJsonPath('library.published', 3);
 });
+
 it('fetches all post stats with a given query scope', function (): void {
     Post::factory()->count(3)->create([
         'user_id' => $this->admin->id,
@@ -60,9 +80,129 @@ it('fetches all post stats with a given query scope', function (): void {
                 'views',
                 'visits',
             ],
+            'library',
+            'recent_posts',
+            'top_posts',
         ])
         ->assertJsonFragment([
             'views' => 13,
             'visits' => 8,
-        ]);
+        ])
+        ->assertJsonPath('library.published', 5);
+});
+
+it('includes library counts and recent posts ordered by updated_at', function (): void {
+    $older = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'title' => 'Older post',
+        'published_at' => now()->subWeek(),
+    ]);
+    $older->forceFill(['updated_at' => now()->subDays(3)])->saveQuietly();
+
+    $draft = Post::factory()->draft()->create([
+        'user_id' => $this->admin->id,
+        'title' => 'Draft post',
+    ]);
+    $draft->forceFill(['updated_at' => now()->subDay()])->saveQuietly();
+
+    $scheduled = Post::factory()->scheduled()->create([
+        'user_id' => $this->admin->id,
+        'title' => 'Scheduled post',
+    ]);
+    $scheduled->forceFill(['updated_at' => now()->subHours(2)])->saveQuietly();
+
+    $pending = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'title' => 'Pending post',
+        'published_at' => now()->subDay(),
+        'pending' => [
+            'title' => 'Edited',
+            'slug' => 'edited',
+        ],
+    ]);
+    $pending->forceFill(['updated_at' => now()])->saveQuietly();
+
+    Post::factory()->create([
+        'user_id' => $this->contributor->id,
+        'title' => 'Other author',
+    ]);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/stats')
+        ->assertSuccessful()
+        ->assertJsonPath('library.published', 2)
+        ->assertJsonPath('library.drafts', 1)
+        ->assertJsonPath('library.scheduled', 1)
+        ->assertJsonPath('library.pending_updates', 1);
+
+    $titles = collect($response->json('recent_posts'))->pluck('title')->all();
+
+    expect($titles)->toBe([
+        'Pending post',
+        'Scheduled post',
+        'Draft post',
+        'Older post',
+    ])
+        ->and($response->json('recent_posts.0.has_pending_changes'))->toBeTrue()
+        ->and($response->json('recent_posts.0.id'))->toBe($pending->id)
+        ->and($titles)->not->toContain('Other author');
+});
+
+it('ranks top posts by views in the last 30 days', function (): void {
+    Carbon::setTestNow(Carbon::parse('2026-06-15 12:00:00', 'UTC'));
+
+    $quiet = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'title' => 'Quiet post',
+        'published_at' => now()->subWeek(),
+    ]);
+
+    $popular = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'title' => 'Popular post',
+        'published_at' => now()->subWeek(),
+    ]);
+
+    $runnerUp = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'title' => 'Runner up',
+        'published_at' => now()->subWeek(),
+    ]);
+
+    View::factory()->count(5)->create([
+        'post_id' => $popular->id,
+        'created_at' => now()->subDays(2),
+        'referer' => 'https://news.example',
+    ]);
+
+    View::factory()->count(2)->create([
+        'post_id' => $runnerUp->id,
+        'created_at' => now()->subDays(1),
+        'referer' => 'https://social.example',
+    ]);
+
+    View::factory()->count(10)->create([
+        'post_id' => $quiet->id,
+        'created_at' => now()->subDays(45),
+    ]);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/stats')
+        ->assertSuccessful();
+
+    expect($response->json('top_posts'))->toEqual([
+        [
+            'id' => $popular->id,
+            'title' => 'Popular post',
+            'views' => 5,
+        ],
+        [
+            'id' => $runnerUp->id,
+            'title' => 'Runner up',
+            'views' => 2,
+        ],
+    ])
+        ->and($response->json('topReferers')['https://news.example'] ?? null)->toBe(5);
+
+    Carbon::setTestNow();
 });

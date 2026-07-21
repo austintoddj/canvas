@@ -38,6 +38,7 @@ class Post extends Model
     /** @var list<string> */
     protected $appends = [
         'read_time',
+        'has_pending_changes',
     ];
 
     /** @var array<string, string> */
@@ -45,6 +46,7 @@ class Post extends Model
         'user_id' => 'integer',
         'published_at' => 'datetime',
         'meta' => 'array',
+        'pending' => 'array',
     ];
 
     protected static function newFactory(): PostFactory
@@ -108,6 +110,56 @@ class Post extends Model
     public function getPublishedAttribute(): bool
     {
         return ! is_null($this->published_at) && $this->published_at <= now()->toDateTimeString();
+    }
+
+    public function getHasPendingChangesAttribute(): bool
+    {
+        return is_array($this->pending) && $this->pending !== [];
+    }
+
+    /**
+     * Persist editor state as unpublished changes without mutating the public snapshot.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<int, array{name?: string, slug?: string}>  $tags
+     * @param  array<int, array{name?: string, slug?: string}>  $topic
+     */
+    public function writePending(array $data, array $tags = [], array $topic = []): void
+    {
+        $topicInput = collect($topic)->first();
+
+        $this->pending = [
+            'title' => $data['title'] ?? $this->title,
+            'slug' => $data['slug'] ?? $this->slug,
+            'summary' => array_key_exists('summary', $data) ? $data['summary'] : $this->summary,
+            'body' => array_key_exists('body', $data) ? $data['body'] : $this->body,
+            'featured_image' => array_key_exists('featured_image', $data) ? $data['featured_image'] : $this->featured_image,
+            'featured_image_caption' => array_key_exists('featured_image_caption', $data)
+                ? $data['featured_image_caption']
+                : $this->featured_image_caption,
+            'meta' => array_key_exists('meta', $data) ? $data['meta'] : $this->meta,
+            'tags' => collect($tags)
+                ->filter(fn (array $tag): bool => filled($tag['slug'] ?? null))
+                ->map(fn (array $tag): array => [
+                    'name' => (string) ($tag['name'] ?? $tag['slug']),
+                    'slug' => (string) $tag['slug'],
+                ])
+                ->values()
+                ->all(),
+            'topic' => is_array($topicInput) && filled($topicInput['slug'] ?? null)
+                ? [
+                    'name' => (string) ($topicInput['name'] ?? $topicInput['slug']),
+                    'slug' => (string) $topicInput['slug'],
+                ]
+                : null,
+        ];
+
+        $this->save();
+    }
+
+    public function clearPending(): void
+    {
+        $this->pending = null;
     }
 
     /**

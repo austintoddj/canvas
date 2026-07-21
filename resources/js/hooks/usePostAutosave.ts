@@ -36,6 +36,7 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
     const mountedRef = useRef(true);
     const performSaveRef = useRef<() => Promise<boolean>>(async () => false);
     const savingStartedAt = useRef<number | null>(null);
+    const promoteNextSave = useRef(false);
 
     useEffect(() => {
         formRef.current = form;
@@ -133,7 +134,9 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
             }
 
             try {
-                const post = await postsApi.store(id, toStorePayload(formSnapshot));
+                const shouldPromote = promoteNextSave.current;
+                promoteNextSave.current = false;
+                const post = await postsApi.store(id, toStorePayload(formSnapshot, { promote: shouldPromote }));
 
                 if (!mountedRef.current) {
                     lastSavedSnapshot.current = snapshot;
@@ -202,7 +205,7 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
         };
     }, [markSaved]);
 
-    const saveNow = useCallback(async (nextForm?: PostFormState): Promise<boolean> => {
+    const saveNow = useCallback(async (nextForm?: PostFormState, options?: { promote?: boolean }): Promise<boolean> => {
         if (debounceTimer.current !== null) {
             clearTimeout(debounceTimer.current);
             debounceTimer.current = null;
@@ -211,6 +214,8 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
         if (nextForm !== undefined) {
             formRef.current = nextForm;
         }
+
+        promoteNextSave.current = options?.promote === true;
 
         return performSaveRef.current();
     }, []);

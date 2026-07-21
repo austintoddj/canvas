@@ -11,6 +11,7 @@ import {
     mergeTaxonomyOptions,
     navSaveStatusLabel,
     parsePublishedAt,
+    postHasPendingChanges,
     postToFormState,
     publishFormState,
     publishStatus,
@@ -87,6 +88,34 @@ describe('post form helpers', () => {
             publishedAt: null,
         });
         expect(serializeFormState(form)).toBe(serializeFormState(postToFormState(samplePost)));
+        expect(toStorePayload(form, { promote: true }).promote).toBe(true);
+        expect(serializeFormState(form)).not.toContain('promote');
+    });
+
+    it('prefers pending content when hydrating a published post', () => {
+        const withPending: Post = {
+            ...samplePost,
+            has_pending_changes: true,
+            pending: {
+                title: 'Pending title',
+                slug: 'pending-slug',
+                summary: 'Pending summary',
+                body: '<p>Pending body</p>',
+                tags: [{ name: 'Draft Tag', slug: 'draft-tag' }],
+                topic: { name: 'Draft Topic', slug: 'draft-topic' },
+            },
+        };
+
+        expect(postHasPendingChanges(withPending)).toBe(true);
+        expect(postToFormState(withPending)).toMatchObject({
+            title: 'Pending title',
+            slug: 'pending-slug',
+            summary: 'Pending summary',
+            body: '<p>Pending body</p>',
+            publishedAt: samplePost.published_at,
+            tags: [{ name: 'Draft Tag', slug: 'draft-tag' }],
+            topic: { name: 'Draft Topic', slug: 'draft-topic' },
+        });
     });
 
     it('handles publish, schedule, and draft state with time fidelity', () => {

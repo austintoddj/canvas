@@ -21,6 +21,17 @@ final readonly class Period
         );
     }
 
+    /**
+     * The window of equal length immediately before {@see days()}.
+     */
+    public static function previousDays(int $days): self
+    {
+        return new self(
+            today()->subDays($days * 2)->startOfDay(),
+            today()->subDays($days + 1)->endOfDay(),
+        );
+    }
+
     public static function currentMonth(): self
     {
         return new self(

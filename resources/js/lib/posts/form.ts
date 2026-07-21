@@ -227,18 +227,43 @@ export function isScheduled(form: PostFormState, now: Date = new Date()): boolea
     return publishStatus(form, now) === 'scheduled';
 }
 
+export function postHasPendingChanges(post: Pick<Post, 'has_pending_changes' | 'pending'>): boolean {
+    if (post.has_pending_changes === true) {
+        return true;
+    }
+
+    return post.pending !== null && post.pending !== undefined;
+}
+
+/**
+ * Map an API post into editor form state.
+ * Live `published_at` always wins; content fields prefer `pending` when present.
+ */
 export function postToFormState(post: Post): PostFormState {
+    const pending = postHasPendingChanges(post) ? (post.pending ?? null) : null;
+    const source = pending ?? post;
+    const liveTopic = post.topic ? { name: post.topic.name, slug: post.topic.slug } : null;
+    const topic =
+        pending !== null && pending.topic !== undefined
+            ? pending.topic === null
+                ? null
+                : { name: pending.topic.name, slug: pending.topic.slug }
+            : liveTopic;
+
     return {
-        title: post.title ?? '',
-        slug: post.slug ?? '',
-        summary: post.summary ?? '',
-        body: normalizeBodyHtml(post.body),
+        title: source.title ?? post.title ?? '',
+        slug: source.slug ?? post.slug ?? '',
+        summary: (source.summary ?? post.summary ?? '') as string,
+        body: normalizeBodyHtml(source.body ?? post.body),
         publishedAt: post.published_at ?? null,
-        featuredImage: post.featured_image ?? null,
-        featuredImageCaption: post.featured_image_caption ?? null,
-        meta: post.meta ?? null,
-        tags: post.tags ?? [],
-        topic: post.topic ? { name: post.topic.name, slug: post.topic.slug } : null,
+        featuredImage: source.featured_image !== undefined ? source.featured_image : (post.featured_image ?? null),
+        featuredImageCaption:
+            source.featured_image_caption !== undefined
+                ? source.featured_image_caption
+                : (post.featured_image_caption ?? null),
+        meta: source.meta !== undefined ? source.meta : (post.meta ?? null),
+        tags: pending?.tags ?? post.tags ?? [],
+        topic,
     };
 }
 
@@ -258,7 +283,7 @@ export function formFromCreateResponse(post: Pick<Post, 'id' | 'slug'>): PostFor
     };
 }
 
-export function toStorePayload(form: PostFormState): PostStorePayload {
+export function toStorePayload(form: PostFormState, options?: { promote?: boolean }): PostStorePayload {
     return {
         title: form.title,
         slug: form.slug,
@@ -270,6 +295,7 @@ export function toStorePayload(form: PostFormState): PostStorePayload {
         meta: form.meta,
         tags: form.tags,
         topic: form.topic ? [form.topic] : [],
+        ...(options?.promote === true ? { promote: true } : {}),
     };
 }
 

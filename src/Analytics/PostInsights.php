@@ -195,7 +195,7 @@ final readonly class PostInsights implements JsonSerializable
 
         $results = [];
 
-        foreach ($rows->take(5) as $row) {
+        foreach ($rows as $row) {
             $start = Date::createFromTimeString((string) $row->hour);
             $end = $start->copy()->addMinutes(60);
             $label = sprintf('%s - %s', $start->format('g:i A'), $end->format('g:i A'));
@@ -218,7 +218,7 @@ final readonly class PostInsights implements JsonSerializable
             ->selectRaw('referer, COUNT(*) as aggregate')
             ->groupBy('referer')
             ->orderByDesc('aggregate')
-            ->limit(10)
+            ->limit(50)
             ->get();
 
         $results = [];
@@ -230,7 +230,7 @@ final readonly class PostInsights implements JsonSerializable
 
         arsort($results);
 
-        return array_slice($results, 0, 10, true);
+        return array_slice($results, 0, 50, true);
     }
 
     /**
@@ -248,7 +248,7 @@ final readonly class PostInsights implements JsonSerializable
 
         arsort($results);
 
-        return array_slice($results, 0, 5, true);
+        return $results;
     }
 
     private static function parseBrowser(?string $agent, ?string $locale): string
