@@ -1,8 +1,10 @@
+import { Avatar } from '@/components/avatar';
 import { Dialog, DialogBody, DialogCloseButton, DialogTitle } from '@/components/dialog';
 import { Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { resolveMediaUrl } from '@/lib/media/list';
 import { bodyHtmlForEditor, parsePublishedAt, type PostFormState } from '@/lib/posts/form';
+import { userInitials } from '@/lib/users/roles';
 
 type PostPreviewDialogProps = {
     open: boolean;
@@ -29,7 +31,11 @@ export default function PostPreviewDialog({ open, form, onClose }: PostPreviewDi
     const hasBody = bodyHtml !== '';
     const featuredSrc =
         form.featuredImage !== null && form.featuredImage.trim() !== '' ? resolveMediaUrl(form.featuredImage) : null;
-    const avatarSrc = user.avatar_url ?? user.canvas?.avatar_url ?? null;
+    const author = form.author;
+    const authorName = (author?.name ?? '').trim();
+    const displayName = authorName !== '' ? authorName : author !== null ? t('users.unknown', 'Unknown') : user.name;
+    const avatarSrc =
+        author?.avatar_url ?? (author === null ? (user.avatar_url ?? user.canvas?.avatar_url ?? null) : null);
     const dateLabel = formatPreviewDate(form.publishedAt, locale);
 
     return (
@@ -56,15 +62,14 @@ export default function PostPreviewDialog({ open, form, onClose }: PostPreviewDi
                         ) : null}
 
                         <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
-                            <div className="flex items-center gap-2">
-                                {avatarSrc !== null ? (
-                                    <img src={avatarSrc} alt="" className="size-8 rounded-full object-cover" />
-                                ) : (
-                                    <span className="flex size-8 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
-                                        {user.name.trim().charAt(0).toUpperCase() || '?'}
-                                    </span>
-                                )}
-                                <span className="font-medium text-zinc-700 dark:text-zinc-200">{user.name}</span>
+                            <div className="flex items-center gap-2" data-post-preview-author="true">
+                                <Avatar
+                                    src={avatarSrc}
+                                    initials={userInitials(displayName)}
+                                    className="size-8"
+                                    alt=""
+                                />
+                                <span className="font-medium text-zinc-700 dark:text-zinc-200">{displayName}</span>
                             </div>
                             <span aria-hidden="true">&middot;</span>
                             <time>{dateLabel}</time>

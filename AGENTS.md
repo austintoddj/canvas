@@ -114,6 +114,7 @@ When touching existing code: do not leave behind narrative comments; clean them 
 Durable patterns for list pages and media (set by the media library; reuse elsewhere):
 
 - **Stable chrome** — shell, page header, filters, and primary actions appear immediately and never blank while data loads. Do not rise/fade known chrome on route change.
+- **Page header actions** — top-right create/upload/invite controls use Catalyst **`outline`** (quiet chrome). List **empty-state** CTAs stay solid `color="dark/zinc"` (one focal action when empty). Domain icons on list headers (`IconPlus` create, `IconUpload` media); Dashboard header New post is text-only outline and hidden when cold empty owns Write.
 - **Route transitions** — `AnimatedOutlet` swaps route bodies **instantly** (no whole-page opacity or Y motion). Hard refresh stays skeleton-first via Suspense/`PageFallback`. Never invent artificial wait for data that is already ready.
 - **Skeletons** — when `isInitialLoading` (loading + no items), show a layout-matched skeleton **with no entrance motion**. Same rules for hard refresh and SPA navigation — decide from `loading` + `itemCount`, not navigation type.
 - **Filled content** — wrap list bodies/grids in `ContentReveal` (opacity-only settle ~150ms, `busy` dim while refetching). No vertical travel. Pass `animate={false}` when re-settling without a skeleton→data transition (see `useAsyncReveal` / `nextRevealAnimation`).

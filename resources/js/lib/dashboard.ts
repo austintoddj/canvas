@@ -2,6 +2,8 @@ import { parseDailyGraph, type DailyDataPoint } from '@/lib/analytics';
 import type {
     DashboardInsights,
     DashboardLibrary,
+    DashboardPipeline,
+    DashboardRangeDays,
     DashboardRecentPost,
     DashboardTopPost,
     MonthOverMonth,
@@ -25,46 +27,71 @@ export type DashboardChart = {
 
 export type DashboardEmptyKind = 'no_posts' | 'drafts_only' | 'no_traffic';
 
-export type DashboardPulseItem = {
-    key: keyof DashboardLibrary;
-    value: number;
-    href: string;
-};
-
-export type DashboardNextActionKind = 'write' | 'continue_draft' | 'review_pending' | 'view_scheduled';
-
-export type DashboardNextAction = {
-    kind: DashboardNextActionKind;
-    href: string;
-    titleKey: string;
-    blurbKey: string;
-    ctaKey: string;
-};
+export type DashboardAudienceMode = 'cold' | 'drafts_only' | 'waiting_readers' | 'active';
 
 export type DashboardGreetingPeriod = 'morning' | 'afternoon' | 'evening';
+
+export const DASHBOARD_RANGE_DAYS = [7, 30, 90, 365] as const satisfies readonly DashboardRangeDays[];
+
+export const DASHBOARD_DEFAULT_RANGE: DashboardRangeDays = 30;
+
+/** Shared preview row count for Most viewed + referers side-by-side cards. */
+export const DASHBOARD_RANKED_PREVIEW = 5;
+
+export const DASHBOARD_RANGE_LABEL_KEYS = {
+    7: 'dashboard.range_7',
+    30: 'dashboard.range_30',
+    90: 'dashboard.range_90',
+    365: 'dashboard.range_365',
+} as const satisfies Record<DashboardRangeDays, string>;
 
 export type DashboardPresentation = {
     cards: DashboardStatCard[];
     charts: DashboardChart[];
     totalActivity: number;
+    rangeDays: DashboardRangeDays;
     library: DashboardLibrary;
+    pipeline: DashboardPipeline;
     recentPosts: DashboardRecentPost[];
     topPosts: DashboardTopPost[];
     topReferers: Record<string, number>;
     emptyKind: DashboardEmptyKind;
-    pulse: DashboardPulseItem[];
+    audienceMode: DashboardAudienceMode;
     hasPosts: boolean;
-    nextAction: DashboardNextAction | null;
     monthOverMonthViews: MonthOverMonth;
     monthOverMonthVisits: MonthOverMonth;
+    scope: DashboardScope;
 };
 
 export function parseDashboardScope(value: string | null | undefined): DashboardScope {
     return value === 'all' ? 'all' : 'user';
 }
 
-export function dashboardStatsParams(scope: DashboardScope): StatsIndexParams {
-    return scope === 'all' ? { scope: 'all' } : { scope: 'user' };
+export function parseDashboardRange(value: string | null | undefined): DashboardRangeDays {
+    const days = Number.parseInt(value ?? '', 10);
+
+    if (days === 7 || days === 30 || days === 90 || days === 365) {
+        return days;
+    }
+
+    return DASHBOARD_DEFAULT_RANGE;
+}
+
+export function dashboardStatsParams(
+    scope: DashboardScope,
+    days: DashboardRangeDays = DASHBOARD_DEFAULT_RANGE
+): StatsIndexParams {
+    const params: StatsIndexParams = {};
+
+    if (scope === 'all') {
+        params.scope = 'all';
+    }
+
+    if (days !== DASHBOARD_DEFAULT_RANGE) {
+        params.days = days;
+    }
+
+    return params;
 }
 
 export function emptyLibrary(): DashboardLibrary {
@@ -76,17 +103,31 @@ export function emptyLibrary(): DashboardLibrary {
     };
 }
 
+export function emptyPipeline(): DashboardPipeline {
+    return {
+        drafts: [],
+        scheduled: [],
+        pending: [],
+    };
+}
+
 export function emptyMonthOverMonth(): MonthOverMonth {
     return { direction: 'down', percentage: '0', comparable: false };
 }
 
+export function greetingPeriodKey(rangeDays: DashboardRangeDays): string {
+    return `dashboard.greeting_period_${rangeDays}`;
+}
+
 export function greetingSummaryParts(
     drafts: number,
-    views: number
-): { draftKey: string; viewsKey: string; drafts: number; views: number } {
+    views: number,
+    rangeDays: DashboardRangeDays = DASHBOARD_DEFAULT_RANGE
+): { draftKey: string; viewsKey: string; periodKey: string; drafts: number; views: number } {
     return {
         draftKey: drafts === 1 ? 'dashboard.greeting_drafts_one' : 'dashboard.greeting_drafts_other',
         viewsKey: views === 1 ? 'dashboard.greeting_views_one' : 'dashboard.greeting_views_other',
+        periodKey: greetingPeriodKey(rangeDays),
         drafts,
         views,
     };
@@ -108,16 +149,24 @@ export function dashboardEmptyKind(library: DashboardLibrary): DashboardEmptyKin
     return 'no_traffic';
 }
 
-export function dashboardPulseItems(library: DashboardLibrary, scope: DashboardScope): DashboardPulseItem[] {
-    const scopeQuery = scope === 'all' ? '?scope=all' : '';
-    const draftQuery = scope === 'all' ? '?type=draft&scope=all' : '?type=draft';
+export function dashboardAudienceMode(library: DashboardLibrary, totalActivity: number): DashboardAudienceMode {
+    if (libraryPostCount(library) === 0) {
+        return 'cold';
+    }
 
-    return [
-        { key: 'published', value: library.published, href: `/posts${scopeQuery}` },
-        { key: 'drafts', value: library.drafts, href: `/posts${draftQuery}` },
-        { key: 'scheduled', value: library.scheduled, href: `/posts${scopeQuery}` },
-        { key: 'pending_updates', value: library.pending_updates, href: `/posts${scopeQuery}` },
-    ];
+    if (library.published === 0) {
+        return 'drafts_only';
+    }
+
+    if (totalActivity === 0) {
+        return 'waiting_readers';
+    }
+
+    return 'active';
+}
+
+export function pipelineHasItems(pipeline: DashboardPipeline): boolean {
+    return pipeline.drafts.length > 0 || pipeline.scheduled.length > 0 || pipeline.pending.length > 0;
 }
 
 export function greetingPeriod(now: Date = new Date()): DashboardGreetingPeriod {
@@ -138,75 +187,23 @@ export function greetingKey(period: DashboardGreetingPeriod = greetingPeriod()):
     return `dashboard.greeting_${period}`;
 }
 
-/**
- * Single primary next step. Priority: write → pending → draft → scheduled.
- * Returns null when the library is healthy published work with nothing waiting.
- */
-export function resolveNextAction(
-    library: DashboardLibrary,
-    recentPosts: DashboardRecentPost[],
-    scope: DashboardScope = 'user'
-): DashboardNextAction | null {
-    if (libraryPostCount(library) === 0) {
-        return {
-            kind: 'write',
-            href: '/posts/new',
-            titleKey: 'dashboard.next_write_title',
-            blurbKey: 'dashboard.next_write_blurb',
-            ctaKey: 'dashboard.empty_cta',
-        };
-    }
-
-    if (library.pending_updates > 0) {
-        const pending = recentPosts.find((post) => post.has_pending_changes);
-
-        return {
-            kind: 'review_pending',
-            href: pending ? `/posts/${pending.id}` : `/posts${scope === 'all' ? '?scope=all' : ''}`,
-            titleKey: 'dashboard.next_pending_title',
-            blurbKey: 'dashboard.next_pending_blurb',
-            ctaKey: 'dashboard.next_pending_cta',
-        };
-    }
-
-    if (library.drafts > 0) {
-        const draft = recentPosts.find((post) => post.published_at === null || post.published_at === '');
-
-        return {
-            kind: 'continue_draft',
-            href: draft ? `/posts/${draft.id}` : `/posts?type=draft${scope === 'all' ? '&scope=all' : ''}`,
-            titleKey: 'dashboard.next_draft_title',
-            blurbKey: 'dashboard.next_draft_blurb',
-            ctaKey: 'dashboard.next_draft_cta',
-        };
-    }
-
-    if (library.scheduled > 0) {
-        return {
-            kind: 'view_scheduled',
-            href: `/posts?type=draft${scope === 'all' ? '&scope=all' : ''}`,
-            titleKey: 'dashboard.next_scheduled_title',
-            blurbKey: 'dashboard.next_scheduled_blurb',
-            ctaKey: 'dashboard.next_scheduled_cta',
-        };
-    }
-
-    return null;
-}
-
 export function mapDashboardInsights(
     insights: DashboardInsights,
     labels?: { views: string; visits: string },
-    scope: DashboardScope = 'user'
+    scope: DashboardScope = 'user',
+    rangeDays: DashboardRangeDays = DASHBOARD_DEFAULT_RANGE
 ): DashboardPresentation {
     const viewsSeries = parseDailyGraph(insights.graph.views);
     const visitsSeries = parseDailyGraph(insights.graph.visits);
-    const viewsLabel = labels?.views ?? 'Views (last 30 days)';
-    const visitsLabel = labels?.visits ?? 'Visitors (last 30 days)';
+    const viewsLabel = labels?.views ?? 'Views';
+    const visitsLabel = labels?.visits ?? 'Visitors';
     const library = insights.library ?? emptyLibrary();
+    const pipeline = insights.pipeline ?? emptyPipeline();
     const recentPosts = insights.recent_posts ?? [];
     const monthOverMonthViews = insights.monthOverMonthViews ?? emptyMonthOverMonth();
     const monthOverMonthVisits = insights.monthOverMonthVisits ?? emptyMonthOverMonth();
+    const totalActivity = insights.views + insights.visits;
+    const resolvedDays = parseDashboardRange(String(insights.days ?? rangeDays));
 
     return {
         cards: [
@@ -227,17 +224,19 @@ export function mapDashboardInsights(
             { key: 'views', title: viewsLabel, data: viewsSeries },
             { key: 'visits', title: visitsLabel, data: visitsSeries },
         ],
-        totalActivity: insights.views + insights.visits,
+        totalActivity,
+        rangeDays: resolvedDays,
         library,
+        pipeline,
         recentPosts,
         topPosts: insights.top_posts ?? [],
         topReferers: insights.topReferers ?? {},
         emptyKind: dashboardEmptyKind(library),
-        pulse: dashboardPulseItems(library, scope),
+        audienceMode: dashboardAudienceMode(library, totalActivity),
         hasPosts: libraryPostCount(library) > 0 || recentPosts.length > 0,
-        nextAction: resolveNextAction(library, recentPosts, scope),
         monthOverMonthViews,
         monthOverMonthVisits,
+        scope,
     };
 }
 
@@ -264,11 +263,4 @@ export const DASHBOARD_EMPTY_STATE_KEYS = {
         cta: 'dashboard.empty_posts_cta',
         href: '/posts',
     },
-} as const;
-
-export const DASHBOARD_PULSE_LABEL_KEYS = {
-    published: 'dashboard.pulse_published',
-    drafts: 'dashboard.pulse_drafts',
-    scheduled: 'dashboard.pulse_scheduled',
-    pending_updates: 'dashboard.pulse_pending',
 } as const;

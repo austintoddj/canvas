@@ -1,3 +1,4 @@
+import { Extension } from '@tiptap/core';
 import CharacterCount from '@tiptap/extension-character-count';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import Highlight from '@tiptap/extension-highlight';
@@ -16,6 +17,43 @@ import { common, createLowlight } from 'lowlight';
 
 import { AiRewriteDecoration } from '@/lib/posts/ai-rewrite-decoration';
 import { CanvasEmbed } from '@/lib/posts/embed-extension';
+
+const ImageCreditParagraph = Extension.create({
+    name: 'imageCreditParagraph',
+
+    addGlobalAttributes() {
+        return [
+            {
+                types: ['paragraph'],
+                attributes: {
+                    class: {
+                        default: null,
+                        parseHTML: (element) => {
+                            if (
+                                element.getAttribute('class') === 'canvas-post-body-image-credit' ||
+                                element.getAttribute('data-canvas-image-credit') === 'true'
+                            ) {
+                                return 'canvas-post-body-image-credit';
+                            }
+
+                            return null;
+                        },
+                        renderHTML: (attributes) => {
+                            if (attributes.class !== 'canvas-post-body-image-credit') {
+                                return {};
+                            }
+
+                            return {
+                                class: 'canvas-post-body-image-credit',
+                                'data-canvas-image-credit': 'true',
+                            };
+                        },
+                    },
+                },
+            },
+        ];
+    },
+});
 
 const lowlight = createLowlight(common);
 
@@ -90,6 +128,7 @@ export function createPostEditorExtensions() {
                 class: 'canvas-post-body-image',
             },
         }),
+        ImageCreditParagraph,
         Youtube.configure({
             controls: true,
             nocookie: true,

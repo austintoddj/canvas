@@ -344,7 +344,7 @@ export default function OrganizeIndex() {
             <PageHeader
                 title={t('organize.title')}
                 actions={
-                    <Button type="button" color="dark/zinc" disabled={creating} onClick={() => void handleCreate()}>
+                    <Button type="button" outline disabled={creating} onClick={() => void handleCreate()}>
                         <IconPlus data-slot="icon" />
                         {creating ? copy.creatingLabel : copy.newLabel}
                     </Button>

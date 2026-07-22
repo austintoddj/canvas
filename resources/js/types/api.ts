@@ -56,6 +56,14 @@ export type PostPending = {
     topic?: TaxonomyOption | null;
 };
 
+/** Display-only author on post show/store responses (never written back). */
+export type PostAuthor = {
+    id: number;
+    name: string | null;
+    username: string | null;
+    avatar_url: string | null;
+};
+
 export type Post = PostListItem & {
     slug: string;
     body: string | null;
@@ -68,6 +76,8 @@ export type Post = PostListItem & {
     read_time?: string;
     tags?: TaxonomyOption[];
     topic?: TaxonomyOption & { id: string };
+    /** Present on show/store/discard; omit from list rows. */
+    user?: PostAuthor | null;
 };
 
 export type PostsIndexResponse = {
@@ -228,6 +238,19 @@ export type DashboardLibrary = {
     pending_updates: number;
 };
 
+export type DashboardPipelinePost = {
+    id: string;
+    title: string;
+    published_at: string | null;
+    updated_at: string;
+};
+
+export type DashboardPipeline = {
+    drafts: DashboardPipelinePost[];
+    scheduled: DashboardPipelinePost[];
+    pending: DashboardPipelinePost[];
+};
+
 export type DashboardRecentPost = PostListItem & {
     has_pending_changes?: boolean;
 };
@@ -241,6 +264,8 @@ export type DashboardTopPost = {
 export type DashboardInsights = {
     views: number;
     visits: number;
+    /** Resolved analytics window in days (7 | 30 | 90 | 365). */
+    days?: number;
     graph: {
         views: string;
         visits: string;
@@ -249,12 +274,16 @@ export type DashboardInsights = {
     monthOverMonthVisits: MonthOverMonth;
     topReferers: Record<string, number>;
     library: DashboardLibrary;
+    pipeline: DashboardPipeline;
     recent_posts: DashboardRecentPost[];
     top_posts: DashboardTopPost[];
 };
 
+export type DashboardRangeDays = 7 | 30 | 90 | 365;
+
 export type StatsIndexParams = {
     scope?: 'user' | 'all';
+    days?: DashboardRangeDays;
 };
 
 export type PostSearchResult = {

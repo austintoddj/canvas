@@ -24,7 +24,7 @@ export default function FeaturedImagePicker({ form, onChange, disabled = false }
         onChange({
             ...form,
             featuredImage: url,
-            featuredImageCaption: caption ?? form.featuredImageCaption,
+            featuredImageCaption: caption !== undefined && caption !== null ? caption : form.featuredImageCaption,
         });
         setPickerOpen(false);
     }

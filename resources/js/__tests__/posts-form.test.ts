@@ -71,6 +71,7 @@ describe('post form helpers', () => {
             meta: { title: 'SEO title' },
             tags: [{ name: 'News', slug: 'news' }],
             topic: { name: 'Updates', slug: 'updates' },
+            author: null,
         });
         expect(toStorePayload(form)).toEqual({
             title: 'Hello World',
@@ -89,10 +90,39 @@ describe('post form helpers', () => {
             slug: 'post-new-1',
             body: null,
             publishedAt: null,
+            author: null,
         });
+        expect(
+            formFromCreateResponse(
+                { id: 'new-1', slug: 'post-new-1' },
+                { id: 9, name: 'Ada', username: 'ada', avatar_url: null }
+            ).author
+        ).toEqual({ id: 9, name: 'Ada', username: 'ada', avatar_url: null });
         expect(serializeFormState(form)).toBe(serializeFormState(postToFormState(samplePost)));
+        expect(serializeFormState(form)).not.toContain('author');
         expect(toStorePayload(form, { promote: true }).promote).toBe(true);
         expect(serializeFormState(form)).not.toContain('promote');
+    });
+
+    it('maps API author for display only', () => {
+        const form = postToFormState({
+            ...samplePost,
+            user: {
+                id: 4,
+                name: 'Grace Hopper',
+                username: 'grace',
+                avatar_url: 'https://cdn.example/grace.jpg',
+            },
+        });
+
+        expect(form.author).toEqual({
+            id: 4,
+            name: 'Grace Hopper',
+            username: 'grace',
+            avatar_url: 'https://cdn.example/grace.jpg',
+        });
+        expect(toStorePayload(form)).not.toHaveProperty('user');
+        expect(toStorePayload(form)).not.toHaveProperty('author');
     });
 
     it('prefers pending content when hydrating a published post', () => {

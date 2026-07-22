@@ -9,6 +9,7 @@ use Canvas\Http\Requests\PostRequest;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
+use Canvas\Support\PostAuthor;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -99,7 +100,7 @@ class PostController extends Controller
         if ($this->shouldWritePendingOnly($post, $data, $promote)) {
             $post->writePending($data, $tagsInput, $topicInput);
 
-            return response()->json($post->refresh()->load('tags:name,slug', 'topic:id,name,slug'), 200);
+            return response()->json($this->postPayload($post->refresh()), 200);
         }
 
         $post->fill($data);
@@ -113,7 +114,7 @@ class PostController extends Controller
 
         $post->tags()->sync($this->resolveTagsForSync($tagsInput, $user, $allowTaxonomyCreate));
 
-        return response()->json($post->refresh()->load('tags:name,slug', 'topic:id,name,slug'), $created ? 201 : 200);
+        return response()->json($this->postPayload($post->refresh()), $created ? 201 : 200);
     }
 
     /**
@@ -130,9 +131,7 @@ class PostController extends Controller
         $post->clearPending();
         $post->save();
 
-        $post->loadMissing('tags:name,slug', 'topic:id,name,slug');
-
-        return response()->json($post->refresh());
+        return response()->json($this->postPayload($post->refresh()));
     }
 
     /**
@@ -142,11 +141,10 @@ class PostController extends Controller
     {
         $this->ensurePostIsVisibleToCurrentUser($post);
 
-        $post->loadMissing('tags:name,slug', 'topic:id,name,slug');
         $post->reconcileNoOpPending();
 
         return response()->json([
-            'post' => $post->refresh()->load('tags:name,slug', 'topic:id,name,slug'),
+            'post' => $this->postPayload($post->refresh()),
             'tags' => Tag::query()->get(['name', 'slug']),
             'topics' => Topic::query()->get(['name', 'slug']),
         ]);
@@ -191,6 +189,24 @@ class PostController extends Controller
         if (Gate::forUser(request()->user(config('canvas.guard')))->denies('view', $post)) {
             throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
         }
+    }
+
+    /**
+     * Post JSON for the admin SPA: taxonomy relations + display-only author.
+     * Avoids serializing the full host User model (passwords, etc.).
+     *
+     * @return array<string, mixed>
+     */
+    private function postPayload(Post $post): array
+    {
+        $post->loadMissing('tags:name,slug', 'topic:id,name,slug', 'user');
+        $author = PostAuthor::for($post);
+        $post->unsetRelation('user');
+
+        $payload = $post->toArray();
+        $payload['user'] = $author;
+
+        return $payload;
     }
 
     /**

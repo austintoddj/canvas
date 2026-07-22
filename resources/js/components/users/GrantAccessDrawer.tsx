@@ -182,10 +182,10 @@ export function GrantAccessDrawer({ open, onClose, onGranted, onOpenExisting }: 
 
                     <Fieldset>
                         <Legend>{t('users.host_account')}</Legend>
+                        <Text className="mt-1">{t('users.host_account_help')}</Text>
                         <FieldGroup>
                             <Field>
-                                <Label>{t('users.email_or_id')}</Label>
-                                <Description>{t('users.email_or_id_help_long')}</Description>
+                                <Label className="sr-only">{t('users.email_or_id')}</Label>
                                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
                                     <div className="min-w-0 flex-1">
                                         <Input

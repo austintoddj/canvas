@@ -1,4 +1,4 @@
-import type { Post, PostMeta, PostStorePayload, TaxonomyOption } from '@/types/api';
+import type { Post, PostAuthor, PostMeta, PostStorePayload, TaxonomyOption } from '@/types/api';
 
 import { normalizeBodyHtml } from '@/lib/posts/body';
 
@@ -13,6 +13,8 @@ export type PostFormState = {
     meta: PostMeta | null;
     tags: TaxonomyOption[];
     topic: TaxonomyOption | null;
+    /** Display-only; never included in store payloads. */
+    author: PostAuthor | null;
 };
 
 export type PostSaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
@@ -337,11 +339,15 @@ export function postToFormState(post: Post): PostFormState {
         meta: source.meta !== undefined ? source.meta : (post.meta ?? null),
         tags: pending?.tags ?? post.tags ?? [],
         topic,
+        author: post.user ?? null,
     };
 }
 
 /** Draft shell from GET /posts/create (UUID only — row is not persisted yet). */
-export function formFromCreateResponse(post: Pick<Post, 'id' | 'slug'>): PostFormState {
+export function formFromCreateResponse(
+    post: Pick<Post, 'id' | 'slug'>,
+    provisionalAuthor: PostAuthor | null = null
+): PostFormState {
     return {
         title: '',
         slug: post.slug ?? '',
@@ -353,6 +359,7 @@ export function formFromCreateResponse(post: Pick<Post, 'id' | 'slug'>): PostFor
         meta: null,
         tags: [],
         topic: null,
+        author: provisionalAuthor,
     };
 }
 

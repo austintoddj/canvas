@@ -1,22 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    DASHBOARD_DEFAULT_RANGE,
     DASHBOARD_EMPTY_STATE_KEYS,
+    DASHBOARD_RANGE_DAYS,
+    dashboardAudienceMode,
     dashboardEmptyKind,
-    dashboardPulseItems,
     dashboardStatsParams,
     emptyLibrary,
     emptyMonthOverMonth,
+    emptyPipeline,
     greetingKey,
     greetingPeriod,
     greetingSummaryParts,
     isZeroActivity,
     libraryPostCount,
     mapDashboardInsights,
+    parseDashboardRange,
     parseDashboardScope,
-    resolveNextAction,
+    pipelineHasItems,
 } from '@/lib/dashboard';
-import type { DashboardInsights, DashboardRecentPost } from '@/types/api';
+import type { DashboardInsights, DashboardPipelinePost, DashboardRecentPost } from '@/types/api';
 
 const samplePost = (overrides: Partial<DashboardRecentPost> = {}): DashboardRecentPost => ({
     id: 'post-1',
@@ -30,9 +34,18 @@ const samplePost = (overrides: Partial<DashboardRecentPost> = {}): DashboardRece
     ...overrides,
 });
 
+const samplePipelinePost = (overrides: Partial<DashboardPipelinePost> = {}): DashboardPipelinePost => ({
+    id: 'draft-1',
+    title: 'Draft one',
+    published_at: null,
+    updated_at: '2026-07-02T00:00:00.000000Z',
+    ...overrides,
+});
+
 const sampleInsights = (overrides: Partial<DashboardInsights> = {}): DashboardInsights => ({
     views: 12,
     visits: 5,
+    days: 30,
     graph: {
         views: JSON.stringify({ '2026-07-01': 4, '2026-07-02': 8 }),
         visits: JSON.stringify({ '2026-07-01': 2, '2026-07-02': 3 }),
@@ -46,38 +59,57 @@ const sampleInsights = (overrides: Partial<DashboardInsights> = {}): DashboardIn
         scheduled: 0,
         pending_updates: 0,
     },
+    pipeline: {
+        drafts: [samplePipelinePost()],
+        scheduled: [],
+        pending: [],
+    },
     recent_posts: [samplePost()],
     top_posts: [{ id: 'post-1', title: 'Hello', views: 12 }],
     ...overrides,
 });
 
 describe('dashboard helpers', () => {
-    it('parses scope, maps insights, and detects zero activity', () => {
+    it('parses scope/range, maps insights, and detects zero activity', () => {
         expect(parseDashboardScope(null)).toBe('user');
         expect(parseDashboardScope('all')).toBe('all');
-        expect(dashboardStatsParams('user')).toEqual({ scope: 'user' });
+        expect(parseDashboardRange(null)).toBe(30);
+        expect(parseDashboardRange('7')).toBe(7);
+        expect(parseDashboardRange('90')).toBe(90);
+        expect(parseDashboardRange('365')).toBe(365);
+        expect(parseDashboardRange('14')).toBe(DASHBOARD_DEFAULT_RANGE);
+        expect(DASHBOARD_RANGE_DAYS).toEqual([7, 30, 90, 365]);
+
+        expect(dashboardStatsParams('user')).toEqual({});
         expect(dashboardStatsParams('all')).toEqual({ scope: 'all' });
+        expect(dashboardStatsParams('user', 7)).toEqual({ days: 7 });
+        expect(dashboardStatsParams('all', 90)).toEqual({ scope: 'all', days: 90 });
+        expect(dashboardStatsParams('user', 30)).toEqual({});
 
         const presentation = mapDashboardInsights(
             sampleInsights(),
             {
-                views: 'Views (last 30 days)',
-                visits: 'Visitors (last 30 days)',
+                views: 'Views',
+                visits: 'Visitors',
             },
-            'user'
+            'user',
+            30
         );
 
         expect(presentation.totalActivity).toBe(17);
+        expect(presentation.audienceMode).toBe('active');
+        expect(presentation.scope).toBe('user');
+        expect(presentation.rangeDays).toBe(30);
         expect(presentation.cards).toEqual([
             {
                 key: 'views',
-                label: 'Views (last 30 days)',
+                label: 'Views',
                 value: 12,
                 change: { direction: 'up', percentage: '20', comparable: true },
             },
             {
                 key: 'visits',
-                label: 'Visitors (last 30 days)',
+                label: 'Visitors',
                 value: 5,
                 change: { direction: 'down', percentage: '10', comparable: true },
             },
@@ -85,80 +117,81 @@ describe('dashboard helpers', () => {
         expect(presentation.charts[0]?.data.map((point) => point.value)).toEqual([4, 8]);
         expect(presentation.hasPosts).toBe(true);
         expect(presentation.emptyKind).toBe('no_traffic');
-        expect(presentation.pulse).toHaveLength(4);
+        expect(presentation.pipeline.drafts).toHaveLength(1);
         expect(presentation.recentPosts).toHaveLength(1);
         expect(presentation.topPosts).toEqual([{ id: 'post-1', title: 'Hello', views: 12 }]);
         expect(presentation.topReferers).toEqual({ 'example.com': 8, Other: 4 });
-        expect(presentation.nextAction?.kind).toBe('continue_draft');
 
         const empty = mapDashboardInsights(
             sampleInsights({
                 views: 0,
                 visits: 0,
+                days: 7,
                 graph: { views: '{}', visits: '{}' },
                 monthOverMonthViews: emptyMonthOverMonth(),
                 monthOverMonthVisits: emptyMonthOverMonth(),
                 topReferers: {},
                 library: emptyLibrary(),
+                pipeline: emptyPipeline(),
                 recent_posts: [],
                 top_posts: [],
-            })
+            }),
+            undefined,
+            'user',
+            7
         );
         expect(isZeroActivity(empty)).toBe(true);
         expect(isZeroActivity(presentation)).toBe(false);
         expect(empty.emptyKind).toBe('no_posts');
-        expect(empty.nextAction?.kind).toBe('write');
+        expect(empty.audienceMode).toBe('cold');
+        expect(empty.rangeDays).toBe(7);
         expect(DASHBOARD_EMPTY_STATE_KEYS.no_posts.cta).toBe('dashboard.empty_cta');
     });
 
-    it('classifies empty kinds, pulse links, greetings, and next actions', () => {
+    it('classifies audience modes, empty kinds, and greetings', () => {
         expect(dashboardEmptyKind(emptyLibrary())).toBe('no_posts');
         expect(dashboardEmptyKind({ published: 0, drafts: 2, scheduled: 1, pending_updates: 0 })).toBe('drafts_only');
         expect(dashboardEmptyKind({ published: 3, drafts: 0, scheduled: 0, pending_updates: 1 })).toBe('no_traffic');
         expect(libraryPostCount({ published: 1, drafts: 2, scheduled: 3, pending_updates: 4 })).toBe(6);
 
-        const mine = dashboardPulseItems({ published: 1, drafts: 2, scheduled: 0, pending_updates: 0 }, 'user');
-        expect(mine.find((item) => item.key === 'published')?.href).toBe('/posts');
-        expect(mine.find((item) => item.key === 'drafts')?.href).toBe('/posts?type=draft');
-
-        const all = dashboardPulseItems({ published: 1, drafts: 2, scheduled: 0, pending_updates: 0 }, 'all');
-        expect(all.find((item) => item.key === 'published')?.href).toBe('/posts?scope=all');
-        expect(all.find((item) => item.key === 'drafts')?.href).toBe('/posts?type=draft&scope=all');
+        expect(dashboardAudienceMode(emptyLibrary(), 0)).toBe('cold');
+        expect(dashboardAudienceMode({ published: 0, drafts: 1, scheduled: 0, pending_updates: 0 }, 0)).toBe(
+            'drafts_only'
+        );
+        expect(dashboardAudienceMode({ published: 2, drafts: 0, scheduled: 0, pending_updates: 0 }, 0)).toBe(
+            'waiting_readers'
+        );
+        expect(dashboardAudienceMode({ published: 2, drafts: 0, scheduled: 0, pending_updates: 0 }, 12)).toBe('active');
 
         expect(greetingPeriod(new Date('2026-07-20T09:00:00'))).toBe('morning');
         expect(greetingPeriod(new Date('2026-07-20T14:00:00'))).toBe('afternoon');
         expect(greetingPeriod(new Date('2026-07-20T20:00:00'))).toBe('evening');
         expect(greetingKey('morning')).toBe('dashboard.greeting_morning');
-        expect(greetingSummaryParts(1, 627)).toEqual({
+        expect(greetingSummaryParts(1, 627, 30)).toEqual({
             draftKey: 'dashboard.greeting_drafts_one',
             viewsKey: 'dashboard.greeting_views_other',
+            periodKey: 'dashboard.greeting_period_30',
             drafts: 1,
             views: 627,
         });
-        expect(greetingSummaryParts(2, 1)).toEqual({
+        expect(greetingSummaryParts(0, 1, 90)).toEqual({
             draftKey: 'dashboard.greeting_drafts_other',
             viewsKey: 'dashboard.greeting_views_one',
-            drafts: 2,
+            periodKey: 'dashboard.greeting_period_90',
+            drafts: 0,
             views: 1,
         });
         expect(emptyMonthOverMonth()).toEqual({ direction: 'down', percentage: '0', comparable: false });
+    });
 
-        expect(resolveNextAction(emptyLibrary(), [])?.kind).toBe('write');
+    it('detects whether the pipeline has concrete posts', () => {
+        expect(pipelineHasItems(emptyPipeline())).toBe(false);
         expect(
-            resolveNextAction({ published: 1, drafts: 0, scheduled: 0, pending_updates: 2 }, [
-                samplePost({ has_pending_changes: true, id: 'pending-1' }),
-            ])
-        ).toMatchObject({ kind: 'review_pending', href: '/posts/pending-1' });
-        expect(
-            resolveNextAction({ published: 0, drafts: 1, scheduled: 0, pending_updates: 0 }, [
-                samplePost({ id: 'draft-1', published_at: null }),
-            ])
-        ).toMatchObject({ kind: 'continue_draft', href: '/posts/draft-1' });
-        expect(resolveNextAction({ published: 0, drafts: 0, scheduled: 2, pending_updates: 0 }, [])).toMatchObject({
-            kind: 'view_scheduled',
-        });
-        expect(
-            resolveNextAction({ published: 3, drafts: 0, scheduled: 0, pending_updates: 0 }, [samplePost()])
-        ).toBeNull();
+            pipelineHasItems({
+                drafts: [samplePipelinePost()],
+                scheduled: [],
+                pending: [],
+            })
+        ).toBe(true);
     });
 });

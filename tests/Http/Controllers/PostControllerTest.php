@@ -157,6 +157,50 @@ describe('when showing posts', function (): void {
                 'id' => $post->id,
             ]);
     });
+
+    it('includes a display-only author on show for another authors post', function (): void {
+        $canvasUser = $this->contributor->canvasUser;
+        $canvasUser?->update([
+            'username' => 'contrib-author',
+            'avatar' => 'https://cdn.example.com/avatars/contrib.jpg',
+        ]);
+
+        $post = Post::factory()->create([
+            'user_id' => $this->contributor->id,
+        ]);
+
+        $this->actingAs($this->editor, 'canvas')
+            ->getJson("canvas/api/posts/{$post->id}")
+            ->assertSuccessful()
+            ->assertJsonPath('post.user_id', $this->contributor->id)
+            ->assertJsonPath('post.user.id', $this->contributor->id)
+            ->assertJsonPath('post.user.name', $this->contributor->name)
+            ->assertJsonPath('post.user.username', 'contrib-author')
+            ->assertJsonPath('post.user.avatar_url', 'https://cdn.example.com/avatars/contrib.jpg')
+            ->assertJsonMissingPath('post.user.email')
+            ->assertJsonMissingPath('post.user.password');
+    });
+
+    it('keeps author sticky when an editor saves another authors post', function (): void {
+        $post = Post::factory()->draft()->create([
+            'user_id' => $this->contributor->id,
+            'title' => 'Original',
+            'slug' => 'original-slug',
+        ]);
+
+        $this->actingAs($this->editor, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => 'Edited by editor',
+                'slug' => 'original-slug',
+                'user_id' => $this->editor->id,
+            ])
+            ->assertSuccessful()
+            ->assertJsonPath('user_id', $this->contributor->id)
+            ->assertJsonPath('user.id', $this->contributor->id)
+            ->assertJsonPath('title', 'Edited by editor');
+
+        expect($post->fresh()->user_id)->toBe($this->contributor->id);
+    });
 });
 
 describe('when fetching post stats', function (): void {

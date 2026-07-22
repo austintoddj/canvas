@@ -42,10 +42,11 @@ const emptyForm = (): PostFormState => ({
     meta: null,
     tags: [],
     topic: null,
+    author: null,
 });
 
 export default function PostsEditor() {
-    const { t } = useCanvas();
+    const { t, user } = useCanvas();
     const { id } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
@@ -321,7 +322,18 @@ export default function PostsEditor() {
                     const nextId = response.post.id;
                     bootstrappedPostId.current = nextId;
                     setDraftPersisted(false);
-                    hydrateEditor(formFromCreateResponse(response.post), response.tags, response.topics, nextId, false);
+                    hydrateEditor(
+                        formFromCreateResponse(response.post, {
+                            id: user.id,
+                            name: user.name,
+                            username: user.canvas?.username ?? null,
+                            avatar_url: user.avatar_url ?? user.canvas?.avatar_url ?? null,
+                        }),
+                        response.tags,
+                        response.topics,
+                        nextId,
+                        false
+                    );
                     navigate(`/posts/${nextId}`, { replace: true });
                     return;
                 }
@@ -352,7 +364,7 @@ export default function PostsEditor() {
         void initialize();
 
         return () => controller.abort();
-    }, [hydrateEditor, id, isNewRoute, navigate, t]);
+    }, [hydrateEditor, id, isNewRoute, navigate, t, user]);
 
     function handleTitleChange(title: string) {
         setForm((current) => ({

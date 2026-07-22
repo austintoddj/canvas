@@ -118,6 +118,7 @@ export default function PostPublishDialog({
                     value={mode}
                     onChange={setMode}
                     indicator="slide"
+                    slideMotion="ease"
                     aria-label={t('editor.publish_timing_label', 'When to publish')}
                     className="w-full"
                 >

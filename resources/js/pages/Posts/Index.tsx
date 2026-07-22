@@ -7,6 +7,7 @@ import { Button } from '@/components/button';
 import { ContentReveal } from '@/components/ContentReveal';
 import { EmptyState } from '@/components/EmptyState';
 import { EmptyStateReveal } from '@/components/EmptyStateReveal';
+import { FadeInImage } from '@/components/FadeInImage';
 import { ListRowActionButton, ListRowActionLink, ListRowEnd } from '@/components/ListRowEnd';
 import { PageHeader } from '@/components/PageHeader';
 import { PostsEmptyVisual } from '@/components/posts/PostsEmptyVisual';
@@ -200,7 +201,7 @@ export default function PostsIndex() {
             <PageHeader
                 title={t('posts.title')}
                 actions={
-                    <Button href="/posts/new" color="dark/zinc">
+                    <Button href="/posts/new" outline>
                         <IconPlus data-slot="icon" />
                         {t('posts.new')}
                     </Button>
@@ -271,6 +272,7 @@ export default function PostsIndex() {
                                         : status === 'scheduled'
                                           ? t('posts.scheduled_badge')
                                           : t('posts.draft_badge');
+                                const thumb = (post.featured_image ?? '').trim();
 
                                 return (
                                     <TableRow
@@ -287,20 +289,29 @@ export default function PostsIndex() {
                                         }}
                                     >
                                         <TableCell className="w-full max-w-0">
-                                            <div className="min-w-0">
-                                                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                                    <span className="truncate font-medium text-zinc-950 dark:text-white">
-                                                        {title}
-                                                    </span>
-                                                    <Badge color={badgeColor} data-publish-status={status}>
-                                                        {badgeLabel}
-                                                    </Badge>
+                                            <div className="flex min-w-0 items-center gap-3">
+                                                {thumb !== '' ? (
+                                                    <FadeInImage
+                                                        src={thumb}
+                                                        alt=""
+                                                        className="size-9 shrink-0 rounded-lg object-cover"
+                                                    />
+                                                ) : null}
+                                                <div className="min-w-0">
+                                                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                                        <span className="truncate font-medium text-zinc-950 dark:text-white">
+                                                            {title}
+                                                        </span>
+                                                        <Badge color={badgeColor} data-publish-status={status}>
+                                                            {badgeLabel}
+                                                        </Badge>
+                                                    </div>
+                                                    <Text className="mt-1 line-clamp-1 text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                                                        {post.summary?.trim()
+                                                            ? post.summary
+                                                            : `${post.views_count.toLocaleString()} views`}
+                                                    </Text>
                                                 </div>
-                                                <Text className="mt-1 line-clamp-1 text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                                                    {post.summary?.trim()
-                                                        ? post.summary
-                                                        : `${post.views_count.toLocaleString()} views`}
-                                                </Text>
                                             </div>
                                         </TableCell>
                                         <TableCell className="w-px whitespace-nowrap">

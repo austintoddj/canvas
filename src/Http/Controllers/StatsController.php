@@ -15,6 +15,11 @@ use Illuminate\Support\Facades\Gate;
 
 class StatsController extends Controller
 {
+    private const PIPELINE_LIMIT = 3;
+
+    /** @var list<int> */
+    private const ALLOWED_DAYS = [7, 30, 90, 365];
+
     /**
      * Display a listing of the resource.
      */
@@ -23,6 +28,7 @@ class StatsController extends Controller
         $user = request()->user(config('canvas.guard'));
         $canViewAllPosts = Gate::forUser($user)->allows('viewAll', Post::class);
         $scopeAll = request()->query('scope', 'user') === 'all' && $canViewAllPosts;
+        $days = $this->resolveDays();
 
         $baseQuery = Post::query()->when(
             ! $scopeAll,
@@ -33,11 +39,20 @@ class StatsController extends Controller
         $locale = is_string(data_get($user, 'locale')) ? data_get($user, 'locale') : null;
 
         return response()->json([
-            ...DashboardInsights::for($publishedIds, 30, $locale)->jsonSerialize(),
+            ...DashboardInsights::for($publishedIds, $days, $locale)->jsonSerialize(),
+            'days' => $days,
             'library' => $this->libraryCounts($baseQuery),
+            'pipeline' => $this->pipeline($baseQuery),
             'recent_posts' => $this->recentPosts($baseQuery),
-            'top_posts' => $this->topPosts($baseQuery, 30),
+            'top_posts' => $this->topPosts($baseQuery, $days),
         ]);
+    }
+
+    private function resolveDays(): int
+    {
+        $days = (int) request()->query('days', 30);
+
+        return in_array($days, self::ALLOWED_DAYS, true) ? $days : 30;
     }
 
     /**
@@ -66,6 +81,64 @@ class StatsController extends Controller
             'scheduled' => (int) ($counts->scheduled_count ?? 0),
             'pending_updates' => (int) ($counts->pending_count ?? 0),
         ];
+    }
+
+    /**
+     * @param  Builder<Post>  $baseQuery
+     * @return array{
+     *     drafts: list<array{id: string, title: string, published_at: mixed, updated_at: mixed}>,
+     *     scheduled: list<array{id: string, title: string, published_at: mixed, updated_at: mixed}>,
+     *     pending: list<array{id: string, title: string, published_at: mixed, updated_at: mixed}>
+     * }
+     */
+    private function pipeline(Builder $baseQuery): array
+    {
+        $now = now();
+
+        return [
+            'drafts' => $this->mapPipelinePosts(
+                (clone $baseQuery)
+                    ->select('id', 'title', 'published_at', 'updated_at')
+                    ->whereNull('published_at')
+                    ->latest('updated_at')
+                    ->limit(self::PIPELINE_LIMIT)
+                    ->get()
+            ),
+            'scheduled' => $this->mapPipelinePosts(
+                (clone $baseQuery)
+                    ->select('id', 'title', 'published_at', 'updated_at')
+                    ->whereNotNull('published_at')
+                    ->where('published_at', '>', $now)
+                    ->orderBy('published_at')
+                    ->limit(self::PIPELINE_LIMIT)
+                    ->get()
+            ),
+            'pending' => $this->mapPipelinePosts(
+                (clone $baseQuery)
+                    ->select('id', 'title', 'published_at', 'updated_at')
+                    ->whereNotNull('pending')
+                    ->latest('updated_at')
+                    ->limit(self::PIPELINE_LIMIT)
+                    ->get()
+            ),
+        ];
+    }
+
+    /**
+     * @param  Collection<int, Post>  $posts
+     * @return list<array{id: string, title: string, published_at: mixed, updated_at: mixed}>
+     */
+    private function mapPipelinePosts(Collection $posts): array
+    {
+        return $posts
+            ->map(static fn (Post $post): array => [
+                'id' => (string) $post->id,
+                'title' => (string) $post->title,
+                'published_at' => $post->published_at,
+                'updated_at' => $post->updated_at,
+            ])
+            ->values()
+            ->all();
     }
 
     /**

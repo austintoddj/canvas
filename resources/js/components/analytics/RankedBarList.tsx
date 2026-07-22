@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { motion, useReducedMotion } from 'motion/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import AnalyticsEntryIcon from '@/components/analytics/AnalyticsEntryIcon';
 import { Button } from '@/components/button';
@@ -8,35 +8,10 @@ import { Dialog, DialogActions, DialogBody, DialogTitle } from '@/components/dia
 import { Subheading } from '@/components/heading';
 import { Input, InputGroup } from '@/components/input';
 import { Text } from '@/components/text';
+import { useFinePointerHover } from '@/hooks/useFinePointerHover';
 import { downloadCsv, rankedToCsv, type RankedShareEntry } from '@/lib/analytics';
 import type { AnalyticsIconKind } from '@/lib/analytics-icons';
 import { IconArrowsMaximize, IconFileSpreadsheet, IconSearch } from '@tabler/icons-react';
-
-function useFinePointerHover(): boolean {
-    const [fineHover, setFineHover] = useState(() => {
-        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-            return true;
-        }
-
-        return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    });
-
-    useEffect(() => {
-        if (typeof window.matchMedia !== 'function') {
-            return;
-        }
-
-        const media = window.matchMedia('(hover: hover) and (pointer: fine)');
-        const sync = () => setFineHover(media.matches);
-
-        sync();
-        media.addEventListener('change', sync);
-
-        return () => media.removeEventListener('change', sync);
-    }, []);
-
-    return fineHover;
-}
 
 type RankedBarListProps = {
     title: string;
@@ -51,6 +26,7 @@ type RankedBarListProps = {
     viewAllLabel?: string;
     valueColumnLabel?: string;
     csvFilename?: string;
+    className?: string;
 };
 
 function RankedRows({
@@ -116,6 +92,7 @@ export default function RankedBarList({
     viewAllLabel = 'View all',
     valueColumnLabel = 'Value',
     csvFilename,
+    className,
 }: RankedBarListProps) {
     const fineHover = useFinePointerHover();
     const reducedMotion = useReducedMotion() === true;
@@ -124,8 +101,9 @@ export default function RankedBarList({
     const [hovered, setHovered] = useState(false);
 
     const preview = entries.slice(0, previewLimit);
+    const hasMore = entries.length > previewLimit;
     // Touch: always on. Desktop: only while the pointer is over the card.
-    const pillVisible = !fineHover || hovered;
+    const pillVisible = hasMore && (!fineHover || hovered);
 
     const filtered = useMemo(() => {
         const needle = query.trim().toLowerCase();
@@ -159,9 +137,11 @@ export default function RankedBarList({
                 onPointerEnter={() => setHovered(true)}
                 onPointerLeave={() => setHovered(false)}
                 className={clsx(
-                    'relative rounded-xl border border-zinc-950/10 p-5',
-                    'dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5'
+                    'relative flex h-full flex-col rounded-xl border border-zinc-950/10 p-5',
+                    'dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5',
+                    className
                 )}
+                data-ranked-bar-list="true"
             >
                 <Subheading level={3} className="text-sm/6">
                     {title}
@@ -170,48 +150,50 @@ export default function RankedBarList({
                 {entries.length === 0 ? (
                     <Text className="mt-4 text-sm text-canvas-muted dark:text-canvas-muted-dark">{emptyLabel}</Text>
                 ) : (
-                    <div className="relative mt-4">
+                    <div className="relative mt-4 min-h-0 flex-1">
                         <RankedRows entries={preview} iconKind={iconKind} />
 
-                        <div className="pointer-events-none absolute inset-x-0 bottom-1 z-10 flex justify-center">
-                            <motion.div
-                                initial={false}
-                                animate={{
-                                    opacity: pillVisible ? 1 : 0,
-                                    y: pillVisible ? 0 : 8,
-                                    scale: pillVisible ? 1 : 0.96,
-                                }}
-                                transition={
-                                    reducedMotion
-                                        ? { duration: 0 }
-                                        : {
-                                              type: 'tween',
-                                              duration: 0.22,
-                                              ease: [0.16, 1, 0.3, 1],
-                                          }
-                                }
-                                className="will-change-transform"
-                                style={{ pointerEvents: pillVisible ? 'auto' : 'none' }}
-                            >
-                                <button
-                                    type="button"
-                                    onClick={openDialog}
-                                    tabIndex={pillVisible ? 0 : -1}
-                                    className={clsx(
-                                        'inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-lg shadow-zinc-950/10',
-                                        'ring-1 ring-zinc-950/10 backdrop-blur-sm',
-                                        'hover:bg-white hover:text-zinc-950',
-                                        'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
-                                        'dark:bg-zinc-900/95 dark:text-zinc-200 dark:shadow-none dark:ring-white/15',
-                                        'dark:hover:bg-zinc-800 dark:hover:text-white'
-                                    )}
-                                    data-analytics-list-actions="true"
+                        {hasMore ? (
+                            <div className="pointer-events-none absolute inset-x-0 bottom-1 z-10 flex justify-center">
+                                <motion.div
+                                    initial={false}
+                                    animate={{
+                                        opacity: pillVisible ? 1 : 0,
+                                        y: pillVisible ? 0 : 8,
+                                        scale: pillVisible ? 1 : 0.96,
+                                    }}
+                                    transition={
+                                        reducedMotion
+                                            ? { duration: 0 }
+                                            : {
+                                                  type: 'tween',
+                                                  duration: 0.22,
+                                                  ease: [0.16, 1, 0.3, 1],
+                                              }
+                                    }
+                                    className="will-change-transform"
+                                    style={{ pointerEvents: pillVisible ? 'auto' : 'none' }}
                                 >
-                                    <IconArrowsMaximize className="size-3.5 shrink-0" aria-hidden="true" />
-                                    {viewAllLabel}
-                                </button>
-                            </motion.div>
-                        </div>
+                                    <button
+                                        type="button"
+                                        onClick={openDialog}
+                                        tabIndex={pillVisible ? 0 : -1}
+                                        className={clsx(
+                                            'inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-lg shadow-zinc-950/10',
+                                            'ring-1 ring-zinc-950/10 backdrop-blur-sm',
+                                            'hover:bg-white hover:text-zinc-950',
+                                            'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
+                                            'dark:bg-zinc-900/95 dark:text-zinc-200 dark:shadow-none dark:ring-white/15',
+                                            'dark:hover:bg-zinc-800 dark:hover:text-white'
+                                        )}
+                                        data-analytics-list-actions="true"
+                                    >
+                                        <IconArrowsMaximize className="size-3.5 shrink-0" aria-hidden="true" />
+                                        {viewAllLabel}
+                                    </button>
+                                </motion.div>
+                            </div>
+                        ) : null}
                     </div>
                 )}
             </div>

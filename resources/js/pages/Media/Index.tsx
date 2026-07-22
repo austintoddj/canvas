@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useRef, useState, type DragEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type DragEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
@@ -135,6 +135,8 @@ export default function MediaIndex() {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
     const [bulkDeleting, setBulkDeleting] = useState(false);
     const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+    const libraryBodyRef = useRef<HTMLDivElement>(null);
+    const [libraryBodyMinHeight, setLibraryBodyMinHeight] = useState<number | undefined>(undefined);
 
     if (filters.search !== syncedSearch) {
         setSyncedSearch(filters.search);
@@ -519,6 +521,32 @@ export default function MediaIndex() {
     const canLoadMore = showFilledLibrary && !loading && page < lastPage;
     const selectionCount = selectedIds.size;
 
+    useLayoutEffect(() => {
+        const node = libraryBodyRef.current;
+
+        if (refreshing) {
+            if (node !== null) {
+                const height = node.offsetHeight;
+
+                setLibraryBodyMinHeight((current) => current ?? height);
+            }
+
+            return;
+        }
+
+        if (libraryBodyMinHeight === undefined) {
+            return;
+        }
+
+        const frame = window.requestAnimationFrame(() => {
+            setLibraryBodyMinHeight(undefined);
+        });
+
+        return () => {
+            window.cancelAnimationFrame(frame);
+        };
+    }, [refreshing, libraryBodyMinHeight, itemCount]);
+
     const uploadLabel =
         uploading && uploadProgress !== null
             ? t('media.uploading_progress', {
@@ -527,7 +555,7 @@ export default function MediaIndex() {
               })
             : uploading
               ? t('media.uploading')
-              : t('media.upload');
+              : null;
 
     return (
         <div
@@ -589,9 +617,14 @@ export default function MediaIndex() {
                 <PageHeader
                     title={t('media.title')}
                     actions={
-                        <Button type="button" color="dark/zinc" disabled={uploading} onClick={openBrowse}>
+                        <Button type="button" outline disabled={uploading} onClick={openBrowse}>
                             <IconUpload data-slot="icon" />
-                            {uploadLabel}
+                            {uploadLabel ?? (
+                                <>
+                                    <span className="sm:hidden">{t('media.upload_short', 'Upload')}</span>
+                                    <span className="hidden sm:inline">{t('media.upload')}</span>
+                                </>
+                            )}
                         </Button>
                     }
                 >
@@ -610,36 +643,34 @@ export default function MediaIndex() {
                     </Field>
 
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                        <div className="flex min-w-0 flex-1 gap-2 sm:max-w-md">
-                            <Field className="min-w-0 flex-1">
-                                <Label className="sr-only">{t('media.file_type')}</Label>
-                                <Select
-                                    name="media-mime"
-                                    value={filters.mime}
-                                    onChange={(event) => setFilters({ mime: event.target.value as MediaMimeFilter })}
-                                >
-                                    {MEDIA_MIME_FILTERS.map((option) => (
-                                        <option key={option.value || 'all'} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </Select>
-                            </Field>
+                        <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-md">
+                            <Select
+                                name="media-mime"
+                                className="min-w-0 flex-1"
+                                aria-label={t('media.file_type')}
+                                value={filters.mime}
+                                onChange={(event) => setFilters({ mime: event.target.value as MediaMimeFilter })}
+                            >
+                                {MEDIA_MIME_FILTERS.map((option) => (
+                                    <option key={option.value || 'all'} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </Select>
 
-                            <Field className="min-w-0 flex-1">
-                                <Label className="sr-only">{t('media.sort_label')}</Label>
-                                <Select
-                                    name="media-sort"
-                                    value={filters.sort}
-                                    onChange={(event) => setFilters({ sort: event.target.value as MediaListSort })}
-                                >
-                                    {MEDIA_SORT_OPTIONS.map((option) => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </Select>
-                            </Field>
+                            <Select
+                                name="media-sort"
+                                className="min-w-0 flex-1"
+                                aria-label={t('media.sort_label')}
+                                value={filters.sort}
+                                onChange={(event) => setFilters({ sort: event.target.value as MediaListSort })}
+                            >
+                                {MEDIA_SORT_OPTIONS.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </Select>
                         </div>
 
                         {canViewAllMedia ? (
@@ -648,9 +679,14 @@ export default function MediaIndex() {
                                 onChange={(scope) => setFilters({ scope })}
                                 aria-label={t('media.scope_label')}
                                 className="shrink-0"
+                                indicator="slide"
                             >
-                                <PillNavItem value="user">{t('media.scope_mine')}</PillNavItem>
-                                <PillNavItem value="all">{t('media.scope_all')}</PillNavItem>
+                                <PillNavItem value="user" className="justify-center">
+                                    {t('media.scope_mine')}
+                                </PillNavItem>
+                                <PillNavItem value="all" className="justify-center">
+                                    {t('media.scope_all')}
+                                </PillNavItem>
                             </PillNav>
                         ) : null}
                     </div>
@@ -691,7 +727,11 @@ export default function MediaIndex() {
 
                 {showFilledLibrary ? (
                     <ContentReveal busy={refreshing} animate={animateContent}>
-                        <div data-media-library-body="true">
+                        <div
+                            ref={libraryBodyRef}
+                            data-media-library-body="true"
+                            style={libraryBodyMinHeight !== undefined ? { minHeight: libraryBodyMinHeight } : undefined}
+                        >
                             <MediaGrid
                                 items={items}
                                 selectedIds={selectedIds}

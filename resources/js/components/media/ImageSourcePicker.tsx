@@ -13,6 +13,7 @@ import { useCanvas } from '@/hooks/useCanvas';
 import { unsplashApi } from '@/lib/api/unsplash';
 import { unsplashPerPage, unsplashTargetRowHeight, type UnsplashGridDensity } from '@/lib/media/layout';
 import { MEDIA_SEARCH_DEBOUNCE_MS } from '@/lib/media/list';
+import { formatUnsplashAlt, formatUnsplashCredit } from '@/lib/media/unsplash-credit';
 import type { Media, UnsplashPhoto } from '@/types/api';
 
 type PickerTab = 'library' | 'unsplash';
@@ -198,17 +199,11 @@ export default function ImageSourcePicker({ open, onClose, onSelect, title, desc
         handleClose();
     }
 
-    function unsplashCredit(photo: UnsplashPhoto): string {
-        return photo.alt_description ?? photo.description ?? t('unsplash.photo_by', { name: photo.user.name });
-    }
-
     function selectUnsplash(photo: UnsplashPhoto) {
-        const credit = unsplashCredit(photo);
-
         onSelect({
             url: photo.urls.regular,
-            alt: credit,
-            caption: credit,
+            alt: formatUnsplashAlt(photo, t),
+            caption: formatUnsplashCredit(photo, t),
             source: 'unsplash',
             photo,
         });
@@ -333,7 +328,8 @@ export default function ImageSourcePicker({ open, onClose, onSelect, title, desc
                                             return null;
                                         }
 
-                                        const credit = unsplashCredit(photo);
+                                        const credit = formatUnsplashCredit(photo, t);
+                                        const alt = formatUnsplashAlt(photo, t);
 
                                         return (
                                             <button
@@ -345,7 +341,7 @@ export default function ImageSourcePicker({ open, onClose, onSelect, title, desc
                                             >
                                                 <FadeInImage
                                                     src={thumbUrl(photo)}
-                                                    alt={credit}
+                                                    alt={alt}
                                                     className="size-full object-cover transition group-hover:opacity-90"
                                                 />
                                             </button>

@@ -28,6 +28,7 @@ import ImageSourcePicker from '@/components/media/ImageSourcePicker';
 import { useCanvas } from '@/hooks/useCanvas';
 import { aiApi, type AiRewriteAction } from '@/lib/api/ai';
 import { resolveMediaUrl } from '@/lib/media/list';
+import { buildUnsplashBodyInsertHtml } from '@/lib/media/unsplash-credit';
 import { AI_REWRITE_SETTLE_MS, rangeAfterPlainTextReplace } from '@/lib/posts/ai-rewrite-decoration';
 import { AI_WRITING_ACTIONS, rewriteErrorMessage, selectionText } from '@/lib/posts/ai-writing';
 import { bodyFromEditorHtml, bodyHtmlForEditor } from '@/lib/posts/body';
@@ -1138,14 +1139,27 @@ export default function PostBodyEditor({
                         return;
                     }
 
-                    editor
-                        .chain()
-                        .focus()
-                        .setImage({
-                            src: resolveMediaUrl(selection.url),
-                            alt: selection.alt ?? '',
-                        })
-                        .run();
+                    const src = resolveMediaUrl(selection.url);
+                    const alt = selection.alt ?? '';
+                    const credit = selection.caption?.trim() ?? '';
+
+                    if (selection.source === 'unsplash' && credit !== '') {
+                        editor
+                            .chain()
+                            .focus()
+                            .insertContent(
+                                buildUnsplashBodyInsertHtml({
+                                    src,
+                                    alt,
+                                    credit,
+                                })
+                            )
+                            .run();
+
+                        return;
+                    }
+
+                    editor.chain().focus().setImage({ src, alt }).run();
                 }}
             />
         </div>

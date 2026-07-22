@@ -151,7 +151,13 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                 </Field>
 
                 {canViewAllMedia ? (
-                    <PillNav value={scope} onChange={(next) => setScope(next)} aria-label="Media author scope">
+                    <PillNav
+                        value={scope}
+                        onChange={(next) => setScope(next)}
+                        indicator="slide"
+                        aria-label="Media author scope"
+                        className="shrink-0"
+                    >
                         <PillNavItem value="user">Mine</PillNavItem>
                         <PillNavItem value="all">All</PillNavItem>
                     </PillNav>

@@ -201,7 +201,7 @@ export default function SettingsUsersIndex() {
             <PageHeader
                 title={t('users.title')}
                 actions={
-                    <Button type="button" color="dark/zinc" onClick={() => setGrantOpen(true)}>
+                    <Button type="button" outline onClick={() => setGrantOpen(true)}>
                         <IconPlus data-slot="icon" />
                         {t('users.invite')}
                     </Button>

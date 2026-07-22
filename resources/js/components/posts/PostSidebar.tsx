@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 
+import { Avatar } from '@/components/avatar';
 import { BadgeButton } from '@/components/badge';
 import {
     Dropdown,
@@ -17,6 +18,7 @@ import { Input } from '@/components/input';
 import { Textarea } from '@/components/textarea';
 import { useCanvas } from '@/hooks/useCanvas';
 import { isExistingTaxonomy, type PostFormState } from '@/lib/posts/form';
+import { userInitials } from '@/lib/users/roles';
 import type { LaravelValidationErrors } from '@/lib/api';
 import type { TaxonomyOption } from '@/types/api';
 import { IconCheck, IconChevronDown } from '@tabler/icons-react';
@@ -114,8 +116,33 @@ export default function PostSidebar({
         onChange({ ...form, tags: form.tags.filter((tag) => tag.slug !== slug) });
     }
 
+    const authorName = (form.author?.name ?? '').trim();
+    const authorUsername = form.author?.username?.trim() ?? '';
+
     return (
         <Fieldset className="space-y-6">
+            {form.author !== null ? (
+                <Field className="min-w-0" data-post-author="true">
+                    <Label>{t('editor.author', 'Author')}</Label>
+                    <div className="mt-3 flex min-w-0 items-center gap-3">
+                        <Avatar
+                            src={form.author.avatar_url}
+                            initials={userInitials(authorName === '' ? '?' : authorName)}
+                            className="size-9"
+                            alt=""
+                        />
+                        <div className="min-w-0">
+                            <p className="truncate text-sm/6 font-medium text-zinc-950 dark:text-white">
+                                {authorName === '' ? t('users.unknown', 'Unknown') : authorName}
+                            </p>
+                            {authorUsername !== '' ? (
+                                <p className="truncate text-sm/6 text-zinc-500 dark:text-zinc-400">@{authorUsername}</p>
+                            ) : null}
+                        </div>
+                    </div>
+                </Field>
+            ) : null}
+
             <Field className="min-w-0">
                 <Label>{t('editor.slug')}</Label>
                 <Description className="break-all">{`${canvasPath}/posts/${slugPreview}`}</Description>
