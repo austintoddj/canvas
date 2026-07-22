@@ -1,1 +1,0 @@
-import{f as e,r as t,t as n}from"./jsx-runtime-witVGegz.js";import{n as r}from"./list-CUg4dMn8.js";var i=n();function a(){let[n]=e();return(0,i.jsx)(t,{to:r(`tags`,n),replace:!0})}export{a as default};

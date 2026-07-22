@@ -344,10 +344,12 @@ export default function OrganizeIndex() {
             <PageHeader
                 title={t('organize.title')}
                 actions={
-                    <Button type="button" outline disabled={creating} onClick={() => void handleCreate()}>
-                        <IconPlus data-slot="icon" />
-                        {creating ? copy.creatingLabel : copy.newLabel}
-                    </Button>
+                    !showInitialSkeleton && !showTrueEmpty ? (
+                        <Button type="button" outline disabled={creating} onClick={() => void handleCreate()}>
+                            <IconPlus data-slot="icon" />
+                            {creating ? copy.creatingLabel : copy.newLabel}
+                        </Button>
+                    ) : undefined
                 }
             >
                 <PageDescription>{t('organize.description')}</PageDescription>

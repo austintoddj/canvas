@@ -201,10 +201,12 @@ export default function PostsIndex() {
             <PageHeader
                 title={t('posts.title')}
                 actions={
-                    <Button href="/posts/new" outline>
-                        <IconPlus data-slot="icon" />
-                        {t('posts.new')}
-                    </Button>
+                    !showInitialSkeleton && !isEmpty ? (
+                        <Button href="/posts/new" outline>
+                            <IconPlus data-slot="icon" />
+                            {t('posts.new')}
+                        </Button>
+                    ) : undefined
                 }
             >
                 <PageDescription>{t('posts.description')}</PageDescription>

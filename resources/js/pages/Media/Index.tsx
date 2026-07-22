@@ -617,15 +617,17 @@ export default function MediaIndex() {
                 <PageHeader
                     title={t('media.title')}
                     actions={
-                        <Button type="button" outline disabled={uploading} onClick={openBrowse}>
-                            <IconUpload data-slot="icon" />
-                            {uploadLabel ?? (
-                                <>
-                                    <span className="sm:hidden">{t('media.upload_short', 'Upload')}</span>
-                                    <span className="hidden sm:inline">{t('media.upload')}</span>
-                                </>
-                            )}
-                        </Button>
+                        !showInitialSkeleton && !showEmptyLibrary ? (
+                            <Button type="button" outline disabled={uploading} onClick={openBrowse}>
+                                <IconUpload data-slot="icon" />
+                                {uploadLabel ?? (
+                                    <>
+                                        <span className="sm:hidden">{t('media.upload_short', 'Upload')}</span>
+                                        <span className="hidden sm:inline">{t('media.upload')}</span>
+                                    </>
+                                )}
+                            </Button>
+                        ) : undefined
                     }
                 >
                     <PageDescription>{t('media.description')}</PageDescription>
