@@ -17,8 +17,8 @@ final readonly class DashboardInsights implements JsonSerializable
 {
     /**
      * @param  array{views: string, visits: string}  $graph
-     * @param  array{direction: string, percentage: string}  $monthOverMonthViews
-     * @param  array{direction: string, percentage: string}  $monthOverMonthVisits
+     * @param  array{direction: string, percentage: string, comparable: bool}  $monthOverMonthViews
+     * @param  array{direction: string, percentage: string, comparable: bool}  $monthOverMonthVisits
      * @param  array<string, int>  $topReferers
      */
     private function __construct(
@@ -35,7 +35,7 @@ final readonly class DashboardInsights implements JsonSerializable
      */
     public static function for(Collection $postIds, int $days = 30, ?string $locale = null): self
     {
-        $emptyChange = self::monthOverMonth(0, 0);
+        $emptyChange = MonthOverMonth::compare(0, 0);
 
         if ($postIds->isEmpty()) {
             $emptyGraph = self::dailySeries(collect(), $days)->toJson();
@@ -84,8 +84,8 @@ final readonly class DashboardInsights implements JsonSerializable
                 'views' => self::dailySeries(self::dailyAggregates($viewsQuery), $days)->toJson(),
                 'visits' => self::dailySeries(self::dailyAggregates($visitsQuery), $days)->toJson(),
             ],
-            monthOverMonthViews: self::monthOverMonth($views, $previousViews),
-            monthOverMonthVisits: self::monthOverMonth($visits, $previousVisits),
+            monthOverMonthViews: MonthOverMonth::compare($views, $previousViews),
+            monthOverMonthVisits: MonthOverMonth::compare($visits, $previousVisits),
             topReferers: self::topReferers(clone $viewsQuery, $locale),
         );
     }
@@ -95,8 +95,8 @@ final readonly class DashboardInsights implements JsonSerializable
      *     views: int,
      *     visits: int,
      *     graph: array{views: string, visits: string},
-     *     monthOverMonthViews: array{direction: string, percentage: string},
-     *     monthOverMonthVisits: array{direction: string, percentage: string},
+     *     monthOverMonthViews: array{direction: string, percentage: string, comparable: bool},
+     *     monthOverMonthVisits: array{direction: string, percentage: string, comparable: bool},
      *     topReferers: array<string, int>
      * }
      */
@@ -147,21 +147,6 @@ final readonly class DashboardInsights implements JsonSerializable
         }
 
         return $result;
-    }
-
-    /**
-     * @return array{direction: string, percentage: string}
-     */
-    private static function monthOverMonth(int $current, int $previous): array
-    {
-        $growth = $previous !== 0
-            ? (($current - $previous) / $previous) * 100
-            : $current * 100;
-
-        return [
-            'direction' => $current > $previous ? 'up' : 'down',
-            'percentage' => number_format(abs($growth)),
-        ];
     }
 
     /**

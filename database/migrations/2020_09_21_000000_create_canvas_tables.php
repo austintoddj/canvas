@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('canvas_posts', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('slug');
-            $table->string('title');
+            $table->string('title')->nullable();
             $table->text('summary')->nullable();
             $table->text('body')->nullable();
             $table->dateTime('published_at')->nullable()->index();

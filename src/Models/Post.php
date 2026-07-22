@@ -120,15 +120,74 @@ class Post extends Model
     /**
      * Persist editor state as unpublished changes without mutating the public snapshot.
      *
+     * When the payload matches the live public snapshot, clear any existing pending
+     * row instead of storing a no-op diff (e.g. autosave right after promote).
+     *
      * @param  array<string, mixed>  $data
      * @param  array<int, array{name?: string, slug?: string}>  $tags
      * @param  array<int, array{name?: string, slug?: string}>  $topic
      */
     public function writePending(array $data, array $tags = [], array $topic = []): void
     {
+        $pending = $this->buildPendingPayload($data, $tags, $topic);
+
+        if ($this->pendingPayloadMatchesLive($pending)) {
+            if ($this->has_pending_changes) {
+                $this->clearPending();
+                $this->save();
+            }
+
+            return;
+        }
+
+        $this->pending = $pending;
+        $this->save();
+    }
+
+    public function clearPending(): void
+    {
+        $this->pending = null;
+    }
+
+    /**
+     * Drop a pending blob that no longer differs from the public snapshot.
+     * Safe to call on editor load so no-op pending does not stick forever.
+     */
+    public function reconcileNoOpPending(): void
+    {
+        if (! $this->has_pending_changes || ! is_array($this->pending)) {
+            return;
+        }
+
+        if (! $this->pendingPayloadMatchesLive($this->pending)) {
+            return;
+        }
+
+        $this->clearPending();
+        $this->save();
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<int, array{name?: string, slug?: string}>  $tags
+     * @param  array<int, array{name?: string, slug?: string}>  $topic
+     * @return array{
+     *     title: mixed,
+     *     slug: mixed,
+     *     summary: mixed,
+     *     body: mixed,
+     *     featured_image: mixed,
+     *     featured_image_caption: mixed,
+     *     meta: mixed,
+     *     tags: list<array{name: string, slug: string}>,
+     *     topic: array{name: string, slug: string}|null
+     * }
+     */
+    public function buildPendingPayload(array $data, array $tags = [], array $topic = []): array
+    {
         $topicInput = collect($topic)->first();
 
-        $this->pending = [
+        return [
             'title' => $data['title'] ?? $this->title,
             'slug' => $data['slug'] ?? $this->slug,
             'summary' => array_key_exists('summary', $data) ? $data['summary'] : $this->summary,
@@ -153,13 +212,139 @@ class Post extends Model
                 ]
                 : null,
         ];
-
-        $this->save();
     }
 
-    public function clearPending(): void
+    /**
+     * @param  array{
+     *     title?: mixed,
+     *     slug?: mixed,
+     *     summary?: mixed,
+     *     body?: mixed,
+     *     featured_image?: mixed,
+     *     featured_image_caption?: mixed,
+     *     meta?: mixed,
+     *     tags?: list<array{name?: string, slug?: string}>,
+     *     topic?: array{name?: string, slug?: string}|null
+     * }  $pending
+     */
+    public function pendingPayloadMatchesLive(array $pending): bool
     {
-        $this->pending = null;
+        $this->loadMissing(['tags:name,slug', 'topic:id,name,slug']);
+
+        if (! $this->scalarFieldsMatchLive($pending)) {
+            return false;
+        }
+
+        if (! $this->metaMatchesLive($pending['meta'] ?? null)) {
+            return false;
+        }
+
+        return $this->taxonomyMatchesLive($pending['tags'] ?? [], $pending['topic'] ?? null);
+    }
+
+    /**
+     * @param  array<string, mixed>  $pending
+     */
+    private function scalarFieldsMatchLive(array $pending): bool
+    {
+        $fields = ['title', 'slug', 'summary', 'body', 'featured_image', 'featured_image_caption'];
+
+        foreach ($fields as $field) {
+            if (! array_key_exists($field, $pending)) {
+                continue;
+            }
+
+            if (! $this->nullableStringsEqual($pending[$field] ?? null, $this->getAttribute($field))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function metaMatchesLive(mixed $pendingMeta): bool
+    {
+        $liveMeta = $this->meta;
+
+        if ($pendingMeta === null || $pendingMeta === []) {
+            return $liveMeta === null || $liveMeta === [];
+        }
+
+        if (! is_array($pendingMeta) || ! is_array($liveMeta)) {
+            return $pendingMeta === $liveMeta;
+        }
+
+        return $this->normalizeAssociative($pendingMeta) === $this->normalizeAssociative($liveMeta);
+    }
+
+    /**
+     * @param  list<array{name?: string, slug?: string}>  $pendingTags
+     * @param  array{name?: string, slug?: string}|null  $pendingTopic
+     */
+    private function taxonomyMatchesLive(array $pendingTags, ?array $pendingTopic): bool
+    {
+        $liveTagSlugs = $this->tags
+            ->pluck('slug')
+            ->filter()
+            ->map(fn (mixed $slug): string => (string) $slug)
+            ->sort()
+            ->values()
+            ->all();
+
+        $pendingTagSlugs = collect($pendingTags)
+            ->pluck('slug')
+            ->filter()
+            ->map(fn (mixed $slug): string => (string) $slug)
+            ->sort()
+            ->values()
+            ->all();
+
+        if ($liveTagSlugs !== $pendingTagSlugs) {
+            return false;
+        }
+
+        $liveTopicSlug = $this->topic?->slug;
+        $pendingTopicSlug = is_array($pendingTopic) ? ($pendingTopic['slug'] ?? null) : null;
+
+        return $this->nullableStringsEqual($liveTopicSlug, $pendingTopicSlug);
+    }
+
+    private function nullableStringsEqual(mixed $left, mixed $right): bool
+    {
+        $normalize = static function (mixed $value): ?string {
+            if ($value === null) {
+                return null;
+            }
+
+            if (! is_scalar($value)) {
+                return null;
+            }
+
+            $string = (string) $value;
+
+            return $string === '' ? null : $string;
+        };
+
+        return $normalize($left) === $normalize($right);
+    }
+
+    /**
+     * @param  array<string, mixed>  $value
+     * @return array<string, mixed>
+     */
+    private function normalizeAssociative(array $value): array
+    {
+        ksort($value);
+
+        foreach ($value as $key => $item) {
+            if (is_array($item)) {
+                $value[$key] = $this->normalizeAssociative($item);
+            } elseif ($item === '') {
+                $value[$key] = null;
+            }
+        }
+
+        return $value;
     }
 
     /**

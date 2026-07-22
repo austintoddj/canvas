@@ -135,8 +135,8 @@ export default function PostSidebar({
             </Field>
 
             <Field>
-                <Label>{t('editor.summary')}</Label>
-                <Description>{t('editor.summary_help')}</Description>
+                <Label>{t('editor.summary', 'Excerpt')}</Label>
+                <Description>{t('editor.summary_help', 'A short summary shown of the post')}</Description>
                 <Textarea
                     name="summary"
                     rows={3}
@@ -153,7 +153,7 @@ export default function PostSidebar({
 
             <Field className="min-w-0">
                 <Label>{t('editor.topic')}</Label>
-                <Description>{t('editor.topic_help')}</Description>
+                <Description>{t('editor.topic_help', 'One topic per post. Manage topics in Organize.')}</Description>
                 <Dropdown>
                     <TaxonomySelectButton
                         label={form.topic?.name ?? null}
@@ -184,7 +184,7 @@ export default function PostSidebar({
 
             <Field className="min-w-0">
                 <Label>{t('editor.tags')}</Label>
-                <Description>{t('editor.tags_help')}</Description>
+                <Description>{t('editor.tags_help', 'Manage tags in Organize.')}</Description>
                 {form.tags.length > 0 ? (
                     <div className="mt-3 flex flex-wrap gap-2">
                         {form.tags.map((tag) => {

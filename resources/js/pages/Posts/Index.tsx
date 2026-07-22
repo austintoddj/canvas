@@ -31,6 +31,7 @@ import { postsApi } from '@/lib/api/posts';
 import { formatListDate } from '@/lib/format-list-date';
 import { paginationWindow, shouldGoToPreviousPageAfterDelete } from '@/lib/list-pagination';
 import {
+    countsAfterPostDelete,
     parsePostsListFilters,
     postListStatus,
     postsIndexPath,
@@ -153,6 +154,8 @@ export default function PostsIndex() {
             setPendingDelete(null);
             toast.success(t('editor.deleted'));
 
+            const status = postListStatus(pendingDelete.published_at);
+
             setResponse((current) => {
                 if (current === null) {
                     return current;
@@ -160,6 +163,7 @@ export default function PostsIndex() {
 
                 return {
                     ...current,
+                    ...countsAfterPostDelete(current, status),
                     posts: {
                         ...current.posts,
                         data: current.posts.data.filter((item) => item.id !== postId),
@@ -187,9 +191,9 @@ export default function PostsIndex() {
         filters.tab === 'draft' ? t('posts.empty_drafts_headline') : t('posts.empty_published_headline');
     const emptyDescription = filters.tab === 'draft' ? t('posts.empty_drafts_blurb') : t('posts.empty_published_blurb');
     const deleteLabel =
-        pendingDelete === null || pendingDelete.title.trim() === ''
+        pendingDelete === null || (pendingDelete.title ?? '').trim() === ''
             ? t('posts.this_post')
-            : `“${pendingDelete.title.trim()}”`;
+            : `“${(pendingDelete.title ?? '').trim()}”`;
 
     return (
         <div className="space-y-8">
@@ -257,7 +261,8 @@ export default function PostsIndex() {
                         <TableBody>
                             {posts.data.map((post) => {
                                 const status = postListStatus(post.published_at);
-                                const title = post.title.trim() === '' ? 'Untitled post' : post.title;
+                                const rawTitle = (post.title ?? '').trim();
+                                const title = rawTitle === '' ? t('editor.untitled_post') : rawTitle;
                                 const badgeColor =
                                     status === 'published' ? 'green' : status === 'scheduled' ? 'blue' : 'amber';
                                 const badgeLabel =

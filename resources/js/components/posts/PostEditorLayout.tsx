@@ -4,13 +4,13 @@ import clsx from 'clsx';
 
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
-import { Heading } from '@/components/heading';
 import { ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { CONTENT_REVEAL_MS, shouldAnimateReveal } from '@/lib/async-ui';
 import {
+    editorSaveActivityLabel,
+    editorStatusBadge,
     isPublished,
-    navSaveStatusLabel,
     publishStatus,
     type PostFormState,
     type PostSaveStatus,
@@ -31,8 +31,12 @@ type PostEditorLayoutProps = {
     inspectorOpen?: boolean;
     onTitleChange: (title: string) => void;
     onOpenInspector: () => void;
+    onPreview?: () => void;
+    onPublishRequest?: () => void;
+    onUpdateRequest?: () => void;
     body: ReactNode | ((focus: PostEditorFocusControls) => ReactNode);
     disabled?: boolean;
+    publishBusy?: boolean;
 };
 
 export default function PostEditorLayout({
@@ -44,31 +48,27 @@ export default function PostEditorLayout({
     inspectorOpen = false,
     onTitleChange,
     onOpenInspector,
+    onPreview,
+    onPublishRequest,
+    onUpdateRequest,
     body,
     disabled = false,
+    publishBusy = false,
 }: PostEditorLayoutProps) {
     const { t } = useCanvas();
     const reducedMotion = useReducedMotion();
     const animateStatus = shouldAnimateReveal({ reducedMotion: reducedMotion === true, animate: true });
     const published = isPublished(form);
     const status = publishStatus(form);
-    const badgeColor =
-        status === 'published' && hasPendingChanges
-            ? 'amber'
-            : status === 'published'
-              ? 'green'
-              : status === 'scheduled'
-                ? 'blue'
-                : 'amber';
-    const badgeLabel =
-        status === 'published' && hasPendingChanges
-            ? t('editor.unpublished_changes_badge', 'Unpublished changes')
-            : status === 'published'
-              ? t('editor.published_badge')
-              : status === 'scheduled'
-                ? t('editor.scheduled_badge')
-                : t('editor.draft_badge');
-    const statusLabel = navSaveStatusLabel(saveStatus, {
+    const badge = editorStatusBadge(status, hasPendingChanges, {
+        draft: t('editor.draft_badge'),
+        scheduled: t('editor.scheduled_badge'),
+        published: t('editor.published_badge'),
+        unpublishedChanges: t('editor.pending_edits_badge', 'Pending edits'),
+    });
+    const badgeLabelCompact =
+        status === 'published' && hasPendingChanges ? t('editor.pending_edits_badge_short', 'Pending') : badge.label;
+    const saveActivity = editorSaveActivityLabel(saveStatus, status, {
         saving: t('common.saving'),
         saved: t('common.saved'),
         error: t('editor.save_failed'),
@@ -112,6 +112,8 @@ export default function PostEditorLayout({
     };
 
     const bodyNode = typeof body === 'function' ? body(focusControls) : body;
+    const showPublish = !published && onPublishRequest !== undefined;
+    const showUpdate = published && hasPendingChanges && onUpdateRequest !== undefined;
 
     const chrome = (
         <div
@@ -122,37 +124,16 @@ export default function PostEditorLayout({
         >
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
                 {!focusMode ? (
-                    <Button href="/posts" plain aria-label={t('editor.back_to_posts')}>
+                    <Button href="/posts" plain data-post-back-to-posts>
                         <IconArrowLeft data-slot="icon" />
+                        {t('posts.title')}
                     </Button>
                 ) : null}
                 <div className="flex min-w-0 items-center gap-2">
-                    <Heading level={2} className={clsx('truncate text-lg/7', focusMode ? 'block' : 'hidden sm:block')}>
-                        {(form.title ?? '').trim() === '' ? t('editor.untitled_post') : form.title}
-                    </Heading>
-                    <Badge
-                        color={badgeColor}
-                        data-publish-status={status}
-                        data-has-pending-changes={hasPendingChanges ? 'true' : 'false'}
-                    >
-                        {badgeLabel}
-                    </Badge>
-                </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-                <div className="relative flex min-h-5 items-center justify-end" aria-live="polite">
-                    <AnimatePresence mode="wait" initial={false}>
-                        {statusLabel ? (
-                            <motion.p
-                                key={`${saveStatus}-${statusLabel}`}
-                                data-slot="text"
-                                data-post-save-status="true"
-                                className={
-                                    saveStatus === 'error'
-                                        ? 'me-1 whitespace-nowrap text-xs text-canvas-danger sm:me-0 sm:text-sm dark:text-canvas-danger-dark'
-                                        : 'me-1 whitespace-nowrap text-xs text-canvas-muted sm:me-0 sm:text-sm dark:text-canvas-muted-dark'
-                                }
+                    <div className="relative flex min-h-6 items-center">
+                        <AnimatePresence mode="wait" initial={false}>
+                            <motion.span
+                                key={`${status}-${hasPendingChanges ? 'pending' : 'clean'}-${badge.label}`}
                                 initial={animateStatus ? { opacity: 0 } : false}
                                 animate={{ opacity: 1 }}
                                 exit={animateStatus ? { opacity: 0 } : undefined}
@@ -160,12 +141,77 @@ export default function PostEditorLayout({
                                     duration: animateStatus ? CONTENT_REVEAL_MS / 1000 : 0,
                                     ease: 'easeOut',
                                 }}
+                                className="inline-flex"
                             >
-                                {statusLabel}
-                            </motion.p>
-                        ) : null}
-                    </AnimatePresence>
+                                <Badge
+                                    color={badge.color}
+                                    data-publish-status={status}
+                                    data-has-pending-changes={hasPendingChanges ? 'true' : 'false'}
+                                    data-editor-status-badge="true"
+                                    title={badge.label}
+                                >
+                                    <span className="sm:hidden">{badgeLabelCompact}</span>
+                                    <span className="hidden sm:inline">{badge.label}</span>
+                                </Badge>
+                            </motion.span>
+                        </AnimatePresence>
+                    </div>
+                    <div className="relative flex min-h-5 min-w-0 items-center" aria-live="polite">
+                        <AnimatePresence mode="wait" initial={false}>
+                            {saveActivity !== null ? (
+                                <motion.p
+                                    key={`${saveStatus}-${saveActivity}`}
+                                    data-post-save-status={saveStatus}
+                                    className={clsx(
+                                        'whitespace-nowrap text-xs sm:text-sm',
+                                        saveStatus === 'error'
+                                            ? 'text-canvas-danger dark:text-canvas-danger-dark'
+                                            : 'text-canvas-muted dark:text-canvas-muted-dark'
+                                    )}
+                                    initial={animateStatus ? { opacity: 0 } : false}
+                                    animate={{ opacity: 1 }}
+                                    exit={animateStatus ? { opacity: 0 } : undefined}
+                                    transition={{
+                                        duration: animateStatus ? CONTENT_REVEAL_MS / 1000 : 0,
+                                        ease: 'easeOut',
+                                    }}
+                                >
+                                    {saveActivity}
+                                </motion.p>
+                            ) : null}
+                        </AnimatePresence>
+                    </div>
                 </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+                {!focusMode && onPreview !== undefined ? (
+                    <Button type="button" outline disabled={disabled} onClick={onPreview} data-post-preview-trigger>
+                        {t('editor.preview')}
+                    </Button>
+                ) : null}
+                {!focusMode && showPublish ? (
+                    <Button
+                        type="button"
+                        color="dark/zinc"
+                        disabled={disabled || publishBusy}
+                        onClick={onPublishRequest}
+                        data-post-publish-trigger
+                    >
+                        {publishBusy ? t('editor.publishing') : t('editor.publish')}
+                    </Button>
+                ) : null}
+                {!focusMode && showUpdate ? (
+                    <Button
+                        type="button"
+                        color="dark/zinc"
+                        disabled={disabled || publishBusy}
+                        onClick={onUpdateRequest}
+                        data-post-update-trigger
+                    >
+                        {publishBusy ? t('editor.updating', 'Updating…') : t('editor.update', 'Update')}
+                    </Button>
+                ) : null}
                 {published && postId !== null && !focusMode ? (
                     <Button
                         href={`/posts/${postId}/stats`}
@@ -179,7 +225,7 @@ export default function PostEditorLayout({
                 ) : null}
                 <Button
                     type="button"
-                    outline
+                    plain
                     disabled={disabled}
                     onClick={onOpenInspector}
                     aria-label={t('editor.post_settings')}

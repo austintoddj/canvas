@@ -197,12 +197,14 @@ describe('when fetching post stats', function (): void {
                 'monthOverMonthViews' => [
                     'direction' => 'down',
                     'percentage' => '100',
+                    'comparable' => true,
                 ],
             ])
             ->assertJsonFragment([
                 'monthOverMonthVisits' => [
                     'direction' => 'down',
                     'percentage' => '100',
+                    'comparable' => true,
                 ],
             ]);
     });
@@ -225,10 +227,12 @@ describe('when fetching post stats', function (): void {
                 'monthOverMonthViews' => [
                     'direction',
                     'percentage',
+                    'comparable',
                 ],
                 'monthOverMonthVisits' => [
                     'direction',
                     'percentage',
+                    'comparable',
                 ],
                 'graph' => [
                     'views',
@@ -255,10 +259,12 @@ describe('when fetching post stats', function (): void {
                 'monthOverMonthViews' => [
                     'direction',
                     'percentage',
+                    'comparable',
                 ],
                 'monthOverMonthVisits' => [
                     'direction',
                     'percentage',
+                    'comparable',
                 ],
                 'graph' => [
                     'views',
@@ -327,6 +333,19 @@ describe('when storing and updating posts', function (): void {
                 'user_id' => $this->admin->id,
             ]);
     });
+
+    it('requires a title when creating a post', function (): void {
+        $id = (string) Str::uuid();
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$id}", [
+                'slug' => 'no-title-yet',
+                'title' => '',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['title']);
+    });
+
     it('updates an existing draft post', function (): void {
         $post = Post::factory()->draft()->create();
 
@@ -343,6 +362,24 @@ describe('when storing and updating posts', function (): void {
                 'title' => $data['title'],
                 'slug' => $data['slug'],
             ]);
+    });
+
+    it('allows clearing the title on an existing draft (lists show Untitled post)', function (): void {
+        $post = Post::factory()->draft()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Had a title',
+            'slug' => 'had-a-title',
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => '',
+                'slug' => $post->slug,
+            ])
+            ->assertOk()
+            ->assertJsonPath('title', null);
+
+        expect($post->fresh()->title)->toBeNull();
     });
 
     it('autosaves live published posts into pending without mutating the public snapshot', function (): void {
@@ -409,6 +446,81 @@ describe('when storing and updating posts', function (): void {
             ->and($fresh->slug)->toBe('promoted-slug')
             ->and($fresh->body)->toBe('Promoted body')
             ->and($fresh->pending)->toBeNull();
+    });
+
+    it('clears no-op pending when the editor reloads a post', function (): void {
+        $post = Post::factory()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Live Title',
+            'slug' => 'live-slug',
+            'summary' => null,
+            'body' => '<p>Live body</p>',
+            'featured_image' => null,
+            'featured_image_caption' => null,
+            'meta' => null,
+            'published_at' => now()->subDay(),
+            'pending' => [
+                'title' => 'Live Title',
+                'slug' => 'live-slug',
+                'summary' => null,
+                'body' => '<p>Live body</p>',
+                'featured_image' => null,
+                'featured_image_caption' => null,
+                'meta' => null,
+                'tags' => [],
+                'topic' => null,
+            ],
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson("canvas/api/posts/{$post->id}")
+            ->assertOk()
+            ->assertJsonPath('post.has_pending_changes', false)
+            ->assertJsonPath('post.pending', null);
+
+        expect($post->fresh()->pending)->toBeNull();
+    });
+
+    it('does not reintroduce pending after promote when the next autosave matches live', function (): void {
+        $post = Post::factory()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Live Title',
+            'slug' => 'live-slug',
+            'summary' => null,
+            'body' => 'Live body',
+            'featured_image' => null,
+            'featured_image_caption' => null,
+            'meta' => null,
+            'published_at' => now()->subDay(),
+        ]);
+
+        $payload = [
+            'title' => 'Promoted Title',
+            'slug' => 'promoted-slug',
+            'summary' => null,
+            'body' => 'Promoted body',
+            'featured_image' => null,
+            'featured_image_caption' => null,
+            'meta' => null,
+            'tags' => [],
+            'topic' => [],
+            'published_at' => $post->published_at->format('Y-m-d H:i:s'),
+        ];
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [...$payload, 'promote' => true])
+            ->assertOk()
+            ->assertJsonPath('has_pending_changes', false);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", $payload)
+            ->assertOk()
+            ->assertJsonPath('title', 'Promoted Title')
+            ->assertJsonPath('body', 'Promoted body')
+            ->assertJsonPath('has_pending_changes', false)
+            ->assertJsonPath('pending', null);
+
+        expect($post->fresh()->pending)->toBeNull();
     });
 
     it('discards pending changes and restores the live snapshot', function (): void {

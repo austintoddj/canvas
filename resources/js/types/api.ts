@@ -35,7 +35,7 @@ export type TaxonomyOption = {
 
 export type PostListItem = {
     id: string;
-    title: string;
+    title: string | null;
     summary: string | null;
     featured_image: string | null;
     published_at: string | null;
@@ -106,6 +106,8 @@ export type PostStorePayload = {
 export type MonthOverMonth = {
     direction: 'up' | 'down';
     percentage: string;
+    /** False when the prior period has no baseline (avoids nonsense % growth). */
+    comparable: boolean;
 };
 
 export type PostStatsResponse = {

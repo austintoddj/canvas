@@ -26,6 +26,7 @@ function bootFixture(): CanvasBoot {
         translations: JSON.stringify({ 'nav.dashboard': 'Dashboard', 'nav.posts': 'Posts' }),
         unsplash: false,
         ai: false,
+        assetsUpToDate: true,
         version: '7.0.0',
         user: {
             id: 1,

@@ -35,6 +35,7 @@ final class FrontendBootData
             'translations' => Localization::availableTranslations($locale),
             'unsplash' => Unsplash::configured(),
             'ai' => Ai::configured(),
+            'assetsUpToDate' => Assets::isUpToDate(),
             'user' => UserResource::make($user)->resolve(),
             'version' => Version::installed(),
         ];

@@ -23,8 +23,8 @@ final readonly class PostInsights implements JsonSerializable
      * @param  array<string, string>  $popularReadingTimes
      * @param  array<string, int>  $topReferers
      * @param  array<string, int>  $topBrowsers
-     * @param  array{direction: string, percentage: string}  $monthOverMonthViews
-     * @param  array{direction: string, percentage: string}  $monthOverMonthVisits
+     * @param  array{direction: string, percentage: string, comparable: bool}  $monthOverMonthViews
+     * @param  array{direction: string, percentage: string, comparable: bool}  $monthOverMonthVisits
      * @param  array{views: string, visits: string}  $graph
      */
     private function __construct(
@@ -79,8 +79,8 @@ final readonly class PostInsights implements JsonSerializable
             monthlyViews: $monthlyViews,
             totalViews: $post->views()->count(),
             monthlyVisits: $monthlyVisits,
-            monthOverMonthViews: self::monthOverMonth($monthlyViews, $previousViewsCount),
-            monthOverMonthVisits: self::monthOverMonth($monthlyVisits, $previousVisitsCount),
+            monthOverMonthViews: MonthOverMonth::compare($monthlyViews, $previousViewsCount),
+            monthOverMonthVisits: MonthOverMonth::compare($monthlyVisits, $previousVisitsCount),
             graph: [
                 'views' => self::dailySeries(self::dailyAggregates(clone $graphViewsQuery), 30)->toJson(),
                 'visits' => self::dailySeries(self::dailyAggregates(clone $graphVisitsQuery), 30)->toJson(),
@@ -98,8 +98,8 @@ final readonly class PostInsights implements JsonSerializable
      *     monthlyViews: int,
      *     totalViews: int,
      *     monthlyVisits: int,
-     *     monthOverMonthViews: array{direction: string, percentage: string},
-     *     monthOverMonthVisits: array{direction: string, percentage: string},
+     *     monthOverMonthViews: array{direction: string, percentage: string, comparable: bool},
+     *     monthOverMonthVisits: array{direction: string, percentage: string, comparable: bool},
      *     graph: array{views: string, visits: string}
      * }
      */
@@ -155,21 +155,6 @@ final readonly class PostInsights implements JsonSerializable
         }
 
         return $result;
-    }
-
-    /**
-     * @return array{direction: string, percentage: string}
-     */
-    private static function monthOverMonth(int $thisMonth, int $lastMonth): array
-    {
-        $growth = $lastMonth !== 0
-            ? (($thisMonth - $lastMonth) / $lastMonth) * 100
-            : $thisMonth * 100;
-
-        return [
-            'direction' => $thisMonth > $lastMonth ? 'up' : 'down',
-            'percentage' => number_format(abs($growth)),
-        ];
     }
 
     /**

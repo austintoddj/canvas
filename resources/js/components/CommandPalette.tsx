@@ -145,12 +145,16 @@ export function CommandPalette({ open, onClose }: Props) {
         onClose();
     }
 
-    const recentPostResults: SearchResult[] = recentPosts.map((p) => ({
-        id: p.id,
-        title: p.title,
-        type: 'Post',
-        route: 'edit-post',
-    }));
+    const recentPostResults: SearchResult[] = recentPosts.map((p) => {
+        const rawTitle = (p.title ?? '').trim();
+
+        return {
+            id: p.id,
+            title: rawTitle === '' ? t('editor.untitled_post') : rawTitle,
+            type: 'Post' as const,
+            route: 'edit-post' as const,
+        };
+    });
 
     const showRecentPosts = parsed.mode === 'search' && parsed.entityType === null && parsed.term === '';
     const entityResults = restrictedEntity ? [] : showRecentPosts ? recentPostResults : results;

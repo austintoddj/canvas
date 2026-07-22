@@ -17,6 +17,7 @@ it('returns empty dashboard analytics for an empty post collection', function ()
         ->and($insights->monthOverMonthViews)->toMatchArray([
             'direction' => 'down',
             'percentage' => '0',
+            'comparable' => false,
         ]);
 });
 
@@ -92,6 +93,32 @@ it('aggregates views and visits in sql without hydrating view rows', function ()
         ->and($insights->monthOverMonthViews)->toMatchArray([
             'direction' => 'up',
             'percentage' => '50',
+            'comparable' => true,
+        ]);
+
+    Carbon::setTestNow();
+});
+
+it('marks growth as not comparable when the prior period is empty', function (): void {
+    Carbon::setTestNow(Carbon::parse('2026-06-15 12:00:00', 'UTC'));
+
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subWeek(),
+    ]);
+
+    View::factory()->count(5)->create([
+        'post_id' => $post->id,
+        'created_at' => now()->subDays(2),
+    ]);
+
+    $insights = DashboardInsights::for(collect([$post->id]), 30);
+
+    expect($insights->views)->toBe(5)
+        ->and($insights->monthOverMonthViews)->toMatchArray([
+            'direction' => 'up',
+            'percentage' => '0',
+            'comparable' => false,
         ]);
 
     Carbon::setTestNow();
@@ -121,6 +148,7 @@ it('computes growth when the prior period is quieter', function (): void {
         ->and($insights->monthOverMonthViews)->toMatchArray([
             'direction' => 'up',
             'percentage' => '200',
+            'comparable' => true,
         ]);
 
     Carbon::setTestNow();

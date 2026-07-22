@@ -36,7 +36,8 @@ export function DashboardRecentPosts({ posts }: DashboardRecentPostsProps) {
                 <TableBody>
                     {posts.map((post) => {
                         const status = postListStatus(post.published_at);
-                        const title = post.title.trim() === '' ? t('editor.untitled_post') : post.title;
+                        const rawTitle = (post.title ?? '').trim();
+                        const title = rawTitle === '' ? t('editor.untitled_post') : rawTitle;
                         const badgeColor = status === 'published' ? 'green' : status === 'scheduled' ? 'blue' : 'amber';
                         const badgeLabel =
                             status === 'published'

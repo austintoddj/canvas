@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    countsAfterPostDelete,
     isPostPublished,
     isPostScheduled,
     parsePostsListFilters,
@@ -10,6 +11,25 @@ import {
 } from '@/lib/posts/list';
 
 describe('posts list helpers', () => {
+    it('decrements the matching tab count after delete', () => {
+        expect(countsAfterPostDelete({ draftCount: 4, publishedCount: 7 }, 'draft')).toEqual({
+            draftCount: 3,
+            publishedCount: 7,
+        });
+        expect(countsAfterPostDelete({ draftCount: 4, publishedCount: 7 }, 'scheduled')).toEqual({
+            draftCount: 3,
+            publishedCount: 7,
+        });
+        expect(countsAfterPostDelete({ draftCount: 4, publishedCount: 7 }, 'published')).toEqual({
+            draftCount: 4,
+            publishedCount: 6,
+        });
+        expect(countsAfterPostDelete({ draftCount: 0, publishedCount: 0 }, 'draft')).toEqual({
+            draftCount: 0,
+            publishedCount: 0,
+        });
+    });
+
     it('detects published, scheduled, and draft posts and maps filters', () => {
         const now = new Date(2026, 5, 15, 12, 0, 0);
 

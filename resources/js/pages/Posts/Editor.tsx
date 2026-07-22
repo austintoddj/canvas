@@ -6,6 +6,8 @@ import { Button } from '@/components/button';
 import PostBodyEditor from '@/components/posts/PostBodyEditor';
 import PostEditorLayout from '@/components/posts/PostEditorLayout';
 import PostInspectorDrawer, { type PostInspectorSection } from '@/components/posts/PostInspectorDrawer';
+import PostPreviewDialog from '@/components/posts/PostPreviewDialog';
+import PostPublishDialog from '@/components/posts/PostPublishDialog';
 import { Skeleton } from '@/components/Skeleton';
 import { ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
@@ -14,6 +16,7 @@ import { useMarkOnboardingComplete } from '@/hooks/useMarkOnboardingComplete';
 import { usePostAutosave } from '@/hooks/usePostAutosave';
 import { postsApi } from '@/lib/api/posts';
 import {
+    canPublishForm,
     formFromCreateResponse,
     mergeTaxonomyOptions,
     postHasPendingChanges,
@@ -60,6 +63,13 @@ export default function PostsEditor() {
     const [deleting, setDeleting] = useState(false);
     const [pendingDelete, setPendingDelete] = useState(false);
     const [hasPendingChanges, setHasPendingChanges] = useState(false);
+    /** False for create() shells until the first successful store. */
+    const [draftPersisted, setDraftPersisted] = useState(!isNewRoute);
+    const [previewOpen, setPreviewOpen] = useState(false);
+    const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+    const [publishDialogKey, setPublishDialogKey] = useState(0);
+    const [updateConfirmOpen, setUpdateConfirmOpen] = useState(false);
+    const [publishBusy, setPublishBusy] = useState(false);
 
     const slugManuallyEditedRef = useRef(slugManuallyEdited);
     /** create() only mints a UUID — skip show() after redirect to /posts/:id. */
@@ -79,6 +89,7 @@ export default function PostsEditor() {
 
     const handleSaved = useCallback(
         (post: Post) => {
+            setDraftPersisted(true);
             setHasPendingChanges(postHasPendingChanges(post));
 
             setForm((current) => {
@@ -96,6 +107,8 @@ export default function PostsEditor() {
                     });
                 }
 
+                // Normalize API datetime onto the form so publish/schedule always
+                // reflect the stored go-live time (not only when the string differs).
                 if (current.publishedAt === nextPublishedAt) {
                     return current;
                 }
@@ -120,6 +133,7 @@ export default function PostsEditor() {
         postId,
         form,
         enabled: autosaveEnabled,
+        isPersisted: draftPersisted,
         onSaved: handleSaved,
     });
 
@@ -128,27 +142,50 @@ export default function PostsEditor() {
     }, [syncBaseline]);
 
     async function handlePublish() {
-        const next = publishFormState(form);
-        setForm(next);
+        if (!canPublishForm(form)) {
+            toast.error(t('editor.publish_needs_title', 'Add a title before publishing.'));
+            return;
+        }
 
-        const ok = await saveNow(next, { promote: true });
+        setPublishBusy(true);
 
-        if (ok) {
-            setHasPendingChanges(false);
-            toast.success(t('editor.published'));
-        } else {
-            toast.error(t('editor.publish_error'));
+        try {
+            // Apply publishedAt only after a successful store so failed validation
+            // (empty shell, missing title) never leaves the badge stuck mid-state.
+            const next = publishFormState(form);
+            const ok = await saveNow(next, { promote: true });
+
+            if (ok) {
+                setForm((current) => ({
+                    ...current,
+                    publishedAt: current.publishedAt ?? next.publishedAt,
+                }));
+                setHasPendingChanges(false);
+                setPublishConfirmOpen(false);
+                toast.success(t('editor.published'));
+            } else {
+                toast.error(t('editor.publish_error'));
+            }
+        } finally {
+            setPublishBusy(false);
         }
     }
 
     async function handleUpdate() {
-        const ok = await saveNow(form, { promote: true });
+        setPublishBusy(true);
 
-        if (ok) {
-            setHasPendingChanges(false);
-            toast.success(t('editor.updated', 'Post updated.'));
-        } else {
-            toast.error(t('editor.update_error', 'Unable to update this post.'));
+        try {
+            const ok = await saveNow(form, { promote: true });
+
+            if (ok) {
+                setHasPendingChanges(false);
+                setUpdateConfirmOpen(false);
+                toast.success(t('editor.updated', 'Post updated.'));
+            } else {
+                toast.error(t('editor.update_error', 'Unable to update this post.'));
+            }
+        } finally {
+            setPublishBusy(false);
         }
     }
 
@@ -171,22 +208,36 @@ export default function PostsEditor() {
     }
 
     async function handleSchedule(datetimeLocal: string) {
-        const next = scheduleFormState(form, datetimeLocal);
-
-        if (next.publishedAt === null) {
-            toast.error(t('editor.schedule_error'));
+        if (!canPublishForm(form)) {
+            toast.error(t('editor.publish_needs_title', 'Add a title before publishing.'));
             return;
         }
 
-        setForm(next);
+        setPublishBusy(true);
 
-        const ok = await saveNow(next, { promote: true });
+        try {
+            const next = scheduleFormState(form, datetimeLocal);
 
-        if (ok) {
-            setHasPendingChanges(false);
-            toast.success(t('editor.scheduled'));
-        } else {
-            toast.error(t('editor.schedule_error'));
+            if (next.publishedAt === null) {
+                toast.error(t('editor.schedule_error'));
+                return;
+            }
+
+            const ok = await saveNow(next, { promote: true });
+
+            if (ok) {
+                setForm((current) => ({
+                    ...current,
+                    publishedAt: current.publishedAt ?? next.publishedAt,
+                }));
+                setHasPendingChanges(false);
+                setPublishConfirmOpen(false);
+                toast.success(t('editor.scheduled'));
+            } else {
+                toast.error(t('editor.schedule_error'));
+            }
+        } finally {
+            setPublishBusy(false);
         }
     }
 
@@ -247,6 +298,11 @@ export default function PostsEditor() {
         [resetBaseline]
     );
 
+    const openPublishDialog = useCallback(() => {
+        setPublishDialogKey((key) => key + 1);
+        setPublishConfirmOpen(true);
+    }, []);
+
     useEffect(() => {
         const controller = new AbortController();
 
@@ -264,6 +320,7 @@ export default function PostsEditor() {
                     const response = await postsApi.create(controller.signal);
                     const nextId = response.post.id;
                     bootstrappedPostId.current = nextId;
+                    setDraftPersisted(false);
                     hydrateEditor(formFromCreateResponse(response.post), response.tags, response.topics, nextId, false);
                     navigate(`/posts/${nextId}`, { replace: true });
                     return;
@@ -276,6 +333,7 @@ export default function PostsEditor() {
                 }
 
                 const response = await postsApi.show(id, controller.signal);
+                setDraftPersisted(true);
                 hydrateEditor(
                     postToFormState(response.post),
                     response.tags,
@@ -354,6 +412,8 @@ export default function PostsEditor() {
                         <Skeleton className="h-6 w-16 rounded-full" />
                     </div>
                     <div className="flex shrink-0 gap-1 sm:gap-2">
+                        <Skeleton className="hidden h-9 w-16 rounded-lg sm:block" />
+                        <Skeleton className="h-9 w-16 rounded-lg" />
                         <Skeleton className="size-9 rounded-lg" />
                     </div>
                 </div>
@@ -385,8 +445,12 @@ export default function PostsEditor() {
                 hasPendingChanges={hasPendingChanges}
                 inspectorOpen={inspectorOpen}
                 disabled={!autosaveEnabled}
+                publishBusy={publishBusy}
                 onTitleChange={handleTitleChange}
                 onOpenInspector={() => setInspectorOpen(true)}
+                onPreview={draftPersisted ? () => setPreviewOpen(true) : undefined}
+                onPublishRequest={draftPersisted ? openPublishDialog : undefined}
+                onUpdateRequest={() => setUpdateConfirmOpen(true)}
                 body={({ focusMode, onToggleFocusMode }) => (
                     <PostBodyEditor
                         body={form.body}
@@ -413,13 +477,59 @@ export default function PostsEditor() {
                 deleting={deleting}
                 onChange={handleFormChange}
                 onSlugManualEdit={() => setSlugManuallyEdited(true)}
-                onPublish={handlePublish}
-                onUpdate={handleUpdate}
                 onDiscard={handleDiscard}
-                onSchedule={handleSchedule}
                 onUnpublish={handleUnpublish}
+                onChangeSchedule={
+                    draftPersisted
+                        ? () => {
+                              setInspectorOpen(false);
+                              openPublishDialog();
+                          }
+                        : undefined
+                }
                 onDelete={() => setPendingDelete(true)}
             />
+
+            <PostPreviewDialog open={previewOpen} form={form} onClose={() => setPreviewOpen(false)} />
+
+            <PostPublishDialog
+                key={publishDialogKey}
+                open={publishConfirmOpen}
+                form={form}
+                busy={publishBusy}
+                disabled={!autosaveEnabled}
+                onClose={() => setPublishConfirmOpen(false)}
+                onPublishNow={handlePublish}
+                onSchedule={handleSchedule}
+            />
+
+            <Alert
+                open={updateConfirmOpen}
+                onClose={() => {
+                    if (!publishBusy) {
+                        setUpdateConfirmOpen(false);
+                    }
+                }}
+                size="sm"
+            >
+                <AlertTitle>{t('editor.update_confirm_title', 'Update published post?')}</AlertTitle>
+                <AlertDescription>
+                    {t('editor.update_confirm_body', 'Readers will see your latest edits on the live post.')}
+                </AlertDescription>
+                <AlertActions>
+                    <Button type="button" plain disabled={publishBusy} onClick={() => setUpdateConfirmOpen(false)}>
+                        {t('common.cancel')}
+                    </Button>
+                    <Button
+                        type="button"
+                        color="dark/zinc"
+                        disabled={publishBusy || !autosaveEnabled}
+                        onClick={() => void handleUpdate()}
+                    >
+                        {publishBusy ? t('editor.updating', 'Updating…') : t('editor.update', 'Update')}
+                    </Button>
+                </AlertActions>
+            </Alert>
 
             <Alert open={pendingDelete} onClose={closeDeleteConfirm} size="sm">
                 <AlertTitle>{t('editor.delete_title')}</AlertTitle>

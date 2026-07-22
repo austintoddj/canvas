@@ -41,6 +41,7 @@ export type CanvasBoot = {
     translations: string;
     unsplash: boolean;
     ai: boolean;
+    assetsUpToDate: boolean;
     version: string;
     user: UserResource;
 };

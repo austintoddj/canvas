@@ -66,4 +66,22 @@ export function postsIndexQueryParams(filters: PostsListFilters): PostsIndexPara
     };
 }
 
+/** Counts match the index API: drafts include scheduled posts. */
+export function countsAfterPostDelete(
+    counts: { draftCount: number; publishedCount: number },
+    status: PostPublishStatus
+): { draftCount: number; publishedCount: number } {
+    if (status === 'published') {
+        return {
+            draftCount: counts.draftCount,
+            publishedCount: Math.max(0, counts.publishedCount - 1),
+        };
+    }
+
+    return {
+        draftCount: Math.max(0, counts.draftCount - 1),
+        publishedCount: counts.publishedCount,
+    };
+}
+
 export { formatListDate as formatPostDate } from '@/lib/format-list-date';

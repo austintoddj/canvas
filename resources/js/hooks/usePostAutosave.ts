@@ -13,15 +13,32 @@ export const SAVE_STATUS_MIN_SAVING_MS = 350;
 /** How long “Saved” stays visible before returning to idle. */
 export const SAVE_STATUS_SAVED_MS = 2500;
 
+/**
+ * Whether performSave can skip the network request.
+ * Promote must always store: pending may already match the form baseline.
+ */
+export function shouldSkipStore(snapshot: string, lastSaved: string | null, promote: boolean): boolean {
+    return !promote && snapshot === lastSaved;
+}
+
 type UsePostAutosaveOptions = {
     postId: string | null;
     form: PostFormState;
     enabled: boolean;
+    /** False for create() UUID shells until the first successful store. */
+    isPersisted?: boolean;
     debounceMs?: number;
     onSaved?: (post: Post) => void;
 };
 
-export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSaved }: UsePostAutosaveOptions) {
+export function usePostAutosave({
+    postId,
+    form,
+    enabled,
+    isPersisted = true,
+    debounceMs = 2500,
+    onSaved,
+}: UsePostAutosaveOptions) {
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
     const [fieldErrors, setFieldErrors] = useState<LaravelValidationErrors>({});
     const [isDirty, setIsDirty] = useState(false);
@@ -30,6 +47,7 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
     const formRef = useRef(form);
     const onSavedRef = useRef(onSaved);
     const enabledRef = useRef(enabled);
+    const isPersistedRef = useRef(isPersisted);
     const postIdRef = useRef(postId);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const inFlightPromise = useRef<Promise<boolean> | null>(null);
@@ -49,6 +67,10 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
     useEffect(() => {
         enabledRef.current = enabled;
     }, [enabled]);
+
+    useEffect(() => {
+        isPersistedRef.current = isPersisted;
+    }, [isPersisted]);
 
     useEffect(() => {
         postIdRef.current = postId;
@@ -105,8 +127,20 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
 
             const formSnapshot = formRef.current;
             const snapshot = serializeFormState(formSnapshot);
+            const shouldPromote = promoteNextSave.current;
+            promoteNextSave.current = false;
 
-            if (snapshot === lastSavedSnapshot.current) {
+            // create() only mints a UUID — do not insert a row until there is a title.
+            if (!isPersistedRef.current && formSnapshot.title.trim() === '') {
+                if (mountedRef.current) {
+                    setIsDirty(false);
+                    setSaveStatus((status) => (status === 'saving' || status === 'saved' ? status : 'idle'));
+                }
+
+                return false;
+            }
+
+            if (shouldSkipStore(snapshot, lastSavedSnapshot.current, shouldPromote)) {
                 if (mountedRef.current) {
                     setIsDirty(false);
                     // Preserve an in-progress “Saved” window; do not force idle over it.
@@ -134,8 +168,6 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
             }
 
             try {
-                const shouldPromote = promoteNextSave.current;
-                promoteNextSave.current = false;
                 const post = await postsApi.store(id, toStorePayload(formSnapshot, { promote: shouldPromote }));
 
                 if (!mountedRef.current) {

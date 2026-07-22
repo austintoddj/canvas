@@ -28,6 +28,7 @@ import {
     DASHBOARD_EMPTY_STATE_KEYS,
     dashboardStatsParams,
     greetingKey,
+    greetingSummaryParts,
     isZeroActivity,
     mapDashboardInsights,
     parseDashboardScope,
@@ -158,14 +159,17 @@ export default function Dashboard() {
 
     const firstName = user.name.trim().split(/\s+/)[0] || user.name;
     const greeting = t(greetingKey(), { name: firstName });
-    const pulseSummary = presentation
+    const viewsCount = presentation?.cards.find((card) => card.key === 'views')?.value ?? 0;
+    const summaryParts = presentation ? greetingSummaryParts(presentation.library.drafts, viewsCount) : null;
+    const pulseSummary = summaryParts
         ? t('dashboard.greeting_summary', {
-              drafts: presentation.library.drafts,
-              views: presentation.cards.find((card) => card.key === 'views')?.value ?? 0,
+              drafts: t(summaryParts.draftKey, { count: summaryParts.drafts }),
+              views: t(summaryParts.viewsKey, { count: summaryParts.views.toLocaleString() }),
           })
         : null;
 
     const changeSuffix = t('stats.vs_prior_period');
+    const changeNewLabel = t('stats.change_new');
 
     return (
         <div className="space-y-8">
@@ -243,6 +247,7 @@ export default function Dashboard() {
                                         value={viewsCard.value}
                                         change={viewsCard.change}
                                         changeSuffix={changeSuffix}
+                                        newLabel={changeNewLabel}
                                         series={viewsChart.data}
                                         caption={t('stats.last_30_days')}
                                         emptyLabel={t('stats.no_data')}
@@ -253,12 +258,13 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            <div className="grid gap-4 lg:grid-cols-2">
+                            <div className="grid items-start gap-4 lg:grid-cols-2">
                                 <StatCard
                                     label={visitsCard.label}
                                     value={visitsCard.value}
                                     change={visitsCard.change}
                                     changeSuffix={changeSuffix}
+                                    newLabel={changeNewLabel}
                                     sparkline={visitsChart.data}
                                 />
                                 <RankedBarList

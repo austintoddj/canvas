@@ -1,4 +1,5 @@
 import { AnimatedOutlet } from '@/components/AnimatedOutlet';
+import { AssetsOutdatedCallout } from '@/components/AssetsOutdatedCallout';
 import { Avatar } from '@/components/avatar';
 import { CommandPalette } from '@/components/CommandPalette';
 import { QuillIcon } from '@/components/QuillIcon';
@@ -191,7 +192,7 @@ function UserDropdownContent({
 }
 
 export default function Layout() {
-    const { user, t } = useCanvas();
+    const { user, t, boot } = useCanvas();
     const { canManageTaxonomy, canManageUsers, canManageSettings } = usePermissions();
     const { pathname } = useLocation();
     const { posts: recentPosts } = useRecentPosts(5);
@@ -368,6 +369,11 @@ export default function Layout() {
                     </Sidebar>
                 }
             >
+                {boot.assetsUpToDate === false ? (
+                    <div className="mb-8">
+                        <AssetsOutdatedCallout />
+                    </div>
+                ) : null}
                 <AnimatedOutlet />
             </SidebarLayout>
         </>

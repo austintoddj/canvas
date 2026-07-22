@@ -48,7 +48,7 @@ export default function PostsStats() {
     const statsPageTitle =
         stats === null
             ? t('stats.title')
-            : `${stats.post.title.trim() === '' ? t('editor.untitled_post') : stats.post.title.trim()} ― ${t('stats.title')}`;
+            : `${(stats.post.title ?? '').trim() === '' ? t('editor.untitled_post') : (stats.post.title ?? '').trim()} ― ${t('stats.title')}`;
     useDocumentTitle(statsPageTitle);
 
     useEffect(() => {
@@ -107,8 +107,14 @@ export default function PostsStats() {
     const refreshing = isRefreshing(loading, itemCount);
     const { animateContent } = useAsyncReveal(loading, itemCount);
     const changeSuffix = t('stats.vs_last_month');
+    const changeNewLabel = t('stats.change_new_month');
 
-    const title = stats === null ? null : stats.post.title.trim() === '' ? t('editor.untitled_post') : stats.post.title;
+    const title =
+        stats === null
+            ? null
+            : (stats.post.title ?? '').trim() === ''
+              ? t('editor.untitled_post')
+              : (stats.post.title ?? '').trim();
 
     return (
         <div className="space-y-8">
@@ -137,6 +143,7 @@ export default function PostsStats() {
                         value={stats.monthlyViews}
                         change={stats.monthOverMonthViews}
                         changeSuffix={changeSuffix}
+                        newLabel={changeNewLabel}
                         series={viewsSeries}
                         caption={t('stats.last_30_days')}
                         emptyLabel={t('stats.no_data')}
@@ -148,6 +155,7 @@ export default function PostsStats() {
                             value={stats.monthlyVisits}
                             change={stats.monthOverMonthVisits}
                             changeSuffix={changeSuffix}
+                            newLabel={changeNewLabel}
                             sparkline={visitsSeries}
                         />
                         <StatCard label={t('stats.all_time_views')} value={stats.totalViews} />

@@ -15,6 +15,7 @@ function bootWithRole(role: number): CanvasBoot {
         translations: JSON.stringify({ hello: 'Hello' }),
         unsplash: false,
         ai: false,
+        assetsUpToDate: true,
         version: '7.0.0',
         user: {
             id: 1,

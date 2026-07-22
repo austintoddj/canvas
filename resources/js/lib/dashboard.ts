@@ -77,7 +77,19 @@ export function emptyLibrary(): DashboardLibrary {
 }
 
 export function emptyMonthOverMonth(): MonthOverMonth {
-    return { direction: 'down', percentage: '0' };
+    return { direction: 'down', percentage: '0', comparable: false };
+}
+
+export function greetingSummaryParts(
+    drafts: number,
+    views: number
+): { draftKey: string; viewsKey: string; drafts: number; views: number } {
+    return {
+        draftKey: drafts === 1 ? 'dashboard.greeting_drafts_one' : 'dashboard.greeting_drafts_other',
+        viewsKey: views === 1 ? 'dashboard.greeting_views_one' : 'dashboard.greeting_views_other',
+        drafts,
+        views,
+    };
 }
 
 export function libraryPostCount(library: DashboardLibrary): number {

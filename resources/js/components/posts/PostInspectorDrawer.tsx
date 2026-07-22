@@ -28,11 +28,9 @@ type PostInspectorDrawerProps = {
     hasPendingChanges?: boolean;
     deleting?: boolean;
     onSlugManualEdit?: () => void;
-    onPublish: () => void | Promise<void>;
-    onUpdate?: () => void | Promise<void>;
     onDiscard?: () => void | Promise<void>;
-    onSchedule: (datetimeLocal: string) => void | Promise<void>;
     onUnpublish: () => void | Promise<void>;
+    onChangeSchedule?: () => void;
     onDelete?: () => void;
 };
 
@@ -50,29 +48,24 @@ export default function PostInspectorDrawer({
     hasPendingChanges = false,
     deleting = false,
     onSlugManualEdit,
-    onPublish,
-    onUpdate,
     onDiscard,
-    onSchedule,
     onUnpublish,
+    onChangeSchedule,
     onDelete,
 }: PostInspectorDrawerProps) {
     const { t } = useCanvas();
+    const drawerTitle =
+        section === 'seo' ? t('editor.seo_settings', 'SEO Settings') : t('editor.general_settings', 'General Settings');
 
     return (
-        <SideDrawer open={open} onClose={onClose} title={t('editor.post_settings')}>
+        <SideDrawer open={open} onClose={onClose} title={drawerTitle}>
             <div
                 className="sticky top-0 z-10 border-b border-canvas-border bg-canvas-panel px-5 py-3 dark:border-canvas-border-dark dark:bg-canvas-panel-dark"
                 data-post-inspector-nav="true"
             >
-                <PillNav
-                    value={section}
-                    onChange={onSectionChange}
-                    aria-label={t('editor.post_settings')}
-                    className="w-full"
-                >
+                <PillNav value={section} onChange={onSectionChange} aria-label={drawerTitle} className="w-full">
                     <PillNavItem value="post" className="flex-1 justify-center">
-                        {t('editor.inspector_post', 'Post')}
+                        {t('editor.inspector_post', 'General')}
                     </PillNavItem>
                     <PillNavItem value="seo" className="flex-1 justify-center">
                         {t('editor.seo')}
@@ -83,21 +76,15 @@ export default function PostInspectorDrawer({
             {section === 'post' ? (
                 <div className="min-w-0 space-y-6 overflow-x-hidden px-5 py-5" data-post-inspector-section="post">
                     <div className="min-w-0">
-                        <Heading level={3} className="text-base/7">
-                            {t('editor.details')}
-                        </Heading>
-                        <PageDescription>{t('editor.details_help')}</PageDescription>
-                        <div className="mt-4 min-w-0">
-                            <PostSidebar
-                                form={form}
-                                availableTags={availableTags}
-                                availableTopics={availableTopics}
-                                fieldErrors={fieldErrors}
-                                disabled={disabled}
-                                onChange={onChange}
-                                onSlugManualEdit={onSlugManualEdit}
-                            />
-                        </div>
+                        <PostSidebar
+                            form={form}
+                            availableTags={availableTags}
+                            availableTopics={availableTopics}
+                            fieldErrors={fieldErrors}
+                            disabled={disabled}
+                            onChange={onChange}
+                            onSlugManualEdit={onSlugManualEdit}
+                        />
                     </div>
 
                     <Divider soft />
@@ -114,18 +101,23 @@ export default function PostInspectorDrawer({
 
                     <Divider soft />
 
-                    <PublishPanel
-                        form={form}
-                        hasPendingChanges={hasPendingChanges}
-                        disabled={disabled}
-                        deleting={deleting}
-                        onPublish={onPublish}
-                        onUpdate={onUpdate}
-                        onDiscard={onDiscard}
-                        onSchedule={onSchedule}
-                        onUnpublish={onUnpublish}
-                        onDelete={onDelete}
-                    />
+                    <div className="min-w-0">
+                        <Heading level={3} className="text-base/7">
+                            {t('editor.publishing_section', 'Publishing')}
+                        </Heading>
+                        <div className="mt-4 min-w-0">
+                            <PublishPanel
+                                form={form}
+                                hasPendingChanges={hasPendingChanges}
+                                disabled={disabled}
+                                deleting={deleting}
+                                onDiscard={onDiscard}
+                                onUnpublish={onUnpublish}
+                                onChangeSchedule={onChangeSchedule}
+                                onDelete={onDelete}
+                            />
+                        </div>
+                    </div>
                 </div>
             ) : (
                 <div className="min-w-0 overflow-x-hidden px-5 py-5" data-post-inspector-section="seo">

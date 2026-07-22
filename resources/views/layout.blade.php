@@ -32,14 +32,6 @@
     {!! \Canvas\Support\Vite::tags() !!}
 </head>
 <body>
-
-@if(!\Canvas\Support\Assets::isUpToDate())
-    <div class="alert alert-danger border-0 text-center rounded-0 mb-0">
-        {{ trans('canvas::app.assets_are_not_up_to_date') }}
-        {{ trans('canvas::app.to_update_run') }}<br/><code>php artisan canvas:publish</code>
-    </div>
-@endif
-
 <div id="canvas"></div>
 </body>
 </html>

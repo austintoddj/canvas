@@ -25,6 +25,7 @@ function bootFixture(website: string | null = null): CanvasBoot {
         translations: '{}',
         unsplash: false,
         ai: false,
+        assetsUpToDate: true,
         version: '7.0.0',
         user: {
             id: 1,

@@ -9,7 +9,7 @@ type SparklineProps = {
 };
 
 const VIEW_W = 120;
-const VIEW_H = 36;
+const VIEW_H = 28;
 
 export default function Sparkline({ data, className, 'aria-hidden': ariaHidden = true }: SparklineProps) {
     const reactId = useId();
@@ -25,7 +25,7 @@ export default function Sparkline({ data, className, 'aria-hidden': ariaHidden =
         return (
             <svg
                 viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-                className={className ?? 'h-9 w-full'}
+                className={className ?? 'h-7 w-full'}
                 aria-hidden={ariaHidden}
                 preserveAspectRatio="none"
             >
@@ -44,7 +44,7 @@ export default function Sparkline({ data, className, 'aria-hidden': ariaHidden =
     return (
         <svg
             viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-            className={className ?? 'h-9 w-full'}
+            className={className ?? 'h-7 w-full'}
             aria-hidden={ariaHidden}
             preserveAspectRatio="none"
         >

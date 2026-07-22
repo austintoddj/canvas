@@ -19,6 +19,11 @@ export type PostSaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 
 export type PostPublishStatus = 'draft' | 'scheduled' | 'published';
 
+/** Title is required by the API — empty shells from create() are not publishable yet. */
+export function canPublishForm(form: PostFormState): boolean {
+    return form.title.trim() !== '';
+}
+
 export function saveStatusLabel(
     status: PostSaveStatus,
     labels?: { pending?: string; saving?: string; saved?: string; error?: string }
@@ -52,6 +57,70 @@ export function navSaveStatusLabel(
         default:
             return null;
     }
+}
+
+/**
+ * Ephemeral Saving/Saved beside the badge — drafts/scheduled only.
+ * Live posts use Published ↔ Pending edits on the badge instead.
+ */
+export function editorSaveActivityLabel(
+    saveStatus: PostSaveStatus,
+    publish: PostPublishStatus,
+    labels?: { saving?: string; saved?: string; error?: string }
+): string | null {
+    if (publish === 'published') {
+        return null;
+    }
+
+    return navSaveStatusLabel(saveStatus, labels);
+}
+
+export type EditorStatusBadgeColor = 'amber' | 'green' | 'blue';
+
+export type EditorStatusBadge = {
+    color: EditorStatusBadgeColor;
+    label: string;
+};
+
+/**
+ * Publish-status badge only (never morphs into Saving/Saved).
+ * Live + pending → amber “Pending edits”; clean live → green Published.
+ */
+export function editorStatusBadge(
+    status: PostPublishStatus,
+    hasPendingChanges: boolean,
+    labels?: {
+        draft?: string;
+        scheduled?: string;
+        published?: string;
+        unpublishedChanges?: string;
+    }
+): EditorStatusBadge {
+    if (status === 'published' && hasPendingChanges) {
+        return {
+            color: 'amber',
+            label: labels?.unpublishedChanges ?? 'Pending edits',
+        };
+    }
+
+    if (status === 'published') {
+        return {
+            color: 'green',
+            label: labels?.published ?? 'Published',
+        };
+    }
+
+    if (status === 'scheduled') {
+        return {
+            color: 'blue',
+            label: labels?.scheduled ?? 'Scheduled',
+        };
+    }
+
+    return {
+        color: 'amber',
+        label: labels?.draft ?? 'Draft',
+    };
 }
 
 export { bodyFromEditorHtml, bodyHtmlForEditor, normalizeBodyHtml } from '@/lib/posts/body';
@@ -228,11 +297,15 @@ export function isScheduled(form: PostFormState, now: Date = new Date()): boolea
 }
 
 export function postHasPendingChanges(post: Pick<Post, 'has_pending_changes' | 'pending'>): boolean {
-    if (post.has_pending_changes === true) {
-        return true;
+    if (typeof post.has_pending_changes === 'boolean') {
+        return post.has_pending_changes;
     }
 
-    return post.pending !== null && post.pending !== undefined;
+    if (post.pending === null || post.pending === undefined) {
+        return false;
+    }
+
+    return Object.keys(post.pending).length > 0;
 }
 
 /**

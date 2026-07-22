@@ -9,6 +9,7 @@ import {
     emptyMonthOverMonth,
     greetingKey,
     greetingPeriod,
+    greetingSummaryParts,
     isZeroActivity,
     libraryPostCount,
     mapDashboardInsights,
@@ -36,8 +37,8 @@ const sampleInsights = (overrides: Partial<DashboardInsights> = {}): DashboardIn
         views: JSON.stringify({ '2026-07-01': 4, '2026-07-02': 8 }),
         visits: JSON.stringify({ '2026-07-01': 2, '2026-07-02': 3 }),
     },
-    monthOverMonthViews: { direction: 'up', percentage: '20' },
-    monthOverMonthVisits: { direction: 'down', percentage: '10' },
+    monthOverMonthViews: { direction: 'up', percentage: '20', comparable: true },
+    monthOverMonthVisits: { direction: 'down', percentage: '10', comparable: true },
     topReferers: { 'example.com': 8, Other: 4 },
     library: {
         published: 2,
@@ -72,13 +73,13 @@ describe('dashboard helpers', () => {
                 key: 'views',
                 label: 'Views (last 30 days)',
                 value: 12,
-                change: { direction: 'up', percentage: '20' },
+                change: { direction: 'up', percentage: '20', comparable: true },
             },
             {
                 key: 'visits',
                 label: 'Visitors (last 30 days)',
                 value: 5,
-                change: { direction: 'down', percentage: '10' },
+                change: { direction: 'down', percentage: '10', comparable: true },
             },
         ]);
         expect(presentation.charts[0]?.data.map((point) => point.value)).toEqual([4, 8]);
@@ -128,6 +129,19 @@ describe('dashboard helpers', () => {
         expect(greetingPeriod(new Date('2026-07-20T14:00:00'))).toBe('afternoon');
         expect(greetingPeriod(new Date('2026-07-20T20:00:00'))).toBe('evening');
         expect(greetingKey('morning')).toBe('dashboard.greeting_morning');
+        expect(greetingSummaryParts(1, 627)).toEqual({
+            draftKey: 'dashboard.greeting_drafts_one',
+            viewsKey: 'dashboard.greeting_views_other',
+            drafts: 1,
+            views: 627,
+        });
+        expect(greetingSummaryParts(2, 1)).toEqual({
+            draftKey: 'dashboard.greeting_drafts_other',
+            viewsKey: 'dashboard.greeting_views_one',
+            drafts: 2,
+            views: 1,
+        });
+        expect(emptyMonthOverMonth()).toEqual({ direction: 'down', percentage: '0', comparable: false });
 
         expect(resolveNextAction(emptyLibrary(), [])?.kind).toBe('write');
         expect(

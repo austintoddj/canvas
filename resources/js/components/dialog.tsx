@@ -1,6 +1,9 @@
 import * as Headless from '@headlessui/react';
 import clsx from 'clsx';
 import type React from 'react';
+import { IconX } from '@tabler/icons-react';
+
+import { Button } from './button';
 import { Text } from './text';
 
 const sizes = {
@@ -19,11 +22,15 @@ export function Dialog({
     size = 'lg',
     className,
     children,
+    /** `top` pins the panel so height growth expands downward (stable header chrome / pill nav). */
+    align = 'center',
     ...props
-}: { size?: keyof typeof sizes; className?: string; children: React.ReactNode } & Omit<
-    Headless.DialogProps,
-    'as' | 'className'
->) {
+}: {
+    size?: keyof typeof sizes;
+    className?: string;
+    children: React.ReactNode;
+    align?: 'center' | 'top';
+} & Omit<Headless.DialogProps, 'as' | 'className'>) {
     return (
         <Headless.Dialog {...props} className="relative z-[60]">
             <Headless.DialogBackdrop
@@ -32,13 +39,22 @@ export function Dialog({
             />
 
             <div className="fixed inset-0 w-screen overflow-y-auto pt-6 sm:pt-0">
-                <div className="grid min-h-full grid-rows-[1fr_auto] justify-items-center sm:grid-rows-[1fr_auto_3fr] sm:p-4">
+                <div
+                    className={clsx(
+                        'grid min-h-full justify-items-center',
+                        align === 'top'
+                            ? // Fixed top track keeps the panel edge still while content grows into the bottom 1fr.
+                              'grid-rows-[1fr_auto] sm:grid-rows-[minmax(2.5rem,auto)_auto_1fr] sm:p-4 sm:pt-10'
+                            : 'grid-rows-[1fr_auto] sm:grid-rows-[1fr_auto_3fr] sm:p-4'
+                    )}
+                >
                     <Headless.DialogPanel
                         transition
                         className={clsx(
                             className,
                             sizes[size],
-                            'row-start-2 w-full min-w-0 rounded-t-3xl bg-white p-(--gutter) shadow-lg ring-1 ring-zinc-950/10 [--gutter:--spacing(8)] sm:mb-auto sm:rounded-2xl dark:bg-zinc-900 dark:ring-white/10 forced-colors:outline',
+                            'row-start-2 w-full min-w-0 rounded-t-3xl bg-white p-(--gutter) shadow-lg ring-1 ring-zinc-950/10 [--gutter:--spacing(8)] sm:rounded-2xl dark:bg-zinc-900 dark:ring-white/10 forced-colors:outline',
+                            align === 'top' ? 'sm:mb-0' : 'sm:mb-auto',
                             'transition duration-100 will-change-transform data-closed:translate-y-12 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in sm:data-closed:translate-y-0 sm:data-closed:data-enter:scale-95'
                         )}
                     >
@@ -62,6 +78,30 @@ export function DialogTitle({
                 'text-lg/6 font-semibold text-balance text-zinc-950 sm:text-base/6 dark:text-white'
             )}
         />
+    );
+}
+
+/** Corner dismiss control — same plain IconX pattern as SideDrawer. */
+export function DialogCloseButton({
+    className,
+    label = 'Close',
+    disabled = false,
+}: {
+    className?: string;
+    label?: string;
+    disabled?: boolean;
+}) {
+    return (
+        <Headless.CloseButton
+            as={Button}
+            plain
+            type="button"
+            disabled={disabled}
+            aria-label={label}
+            className={clsx(className, 'shrink-0')}
+        >
+            <IconX data-slot="icon" />
+        </Headless.CloseButton>
     );
 }
 

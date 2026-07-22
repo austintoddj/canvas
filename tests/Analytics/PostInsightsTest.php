@@ -23,10 +23,12 @@ it('returns empty analytics when a post has no views or visits', function (): vo
         ->and($insights->monthOverMonthViews)->toBe([
             'direction' => 'down',
             'percentage' => '0',
+            'comparable' => false,
         ])
         ->and($insights->monthOverMonthVisits)->toBe([
             'direction' => 'down',
             'percentage' => '0',
+            'comparable' => false,
         ]);
 });
 

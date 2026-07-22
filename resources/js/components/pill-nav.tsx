@@ -1,12 +1,15 @@
 import clsx from 'clsx';
 import { LayoutGroup, motion, useReducedMotion } from 'motion/react';
-import React, { createContext, useContext, useId } from 'react';
+import React, { Children, createContext, isValidElement, useContext, useId } from 'react';
+
+type PillNavIndicator = 'layout' | 'slide';
 
 type PillNavContextValue = {
     value: string;
     onChange: (value: string) => void;
     layoutId: string;
     reducedMotion: boolean;
+    indicator: PillNavIndicator;
 };
 
 const PillNavContext = createContext<PillNavContextValue | null>(null);
@@ -21,21 +24,29 @@ function usePillNav(component: string): PillNavContextValue {
     return context;
 }
 
+/** Duration (seconds) for `indicator="slide"` — keep sibling panel expands in sync. */
+export const PILL_SLIDE_DURATION_S = 0.28;
+
 /**
  * Animated segmented control with a sliding “floating pill” indicator.
- * Uses Motion (formerly Framer Motion) shared layout animations.
+ *
+ * - `layout` (default): shared layoutId spring — great for mixed-width items.
+ * - `slide`: transform-only indicator for equal-width items; immune to parent
+ *   reflow (e.g. a dialog growing when schedule UI mounts).
  */
 export function PillNav<T extends string>({
     value,
     onChange,
     className,
     children,
+    indicator = 'layout',
     'aria-label': ariaLabel,
 }: {
     value: T;
     onChange: (value: T) => void;
     className?: string;
     children: React.ReactNode;
+    indicator?: PillNavIndicator;
     'aria-label'?: string;
 }) {
     const id = useId();
@@ -43,29 +54,70 @@ export function PillNav<T extends string>({
     const layoutId = `${groupId}-active`;
     const reducedMotion = useReducedMotion() === true;
 
-    return (
-        <LayoutGroup id={groupId}>
-            <div
-                role="radiogroup"
-                aria-label={ariaLabel}
-                className={clsx(
-                    className,
-                    'inline-flex items-center gap-0.5 rounded-full bg-zinc-950/5 p-1 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/5'
-                )}
+    const values = Children.toArray(children).flatMap((child) => {
+        if (!isValidElement<{ value?: string }>(child) || typeof child.props.value !== 'string') {
+            return [];
+        }
+
+        return [child.props.value];
+    });
+    const count = Math.max(values.length, 1);
+    const selectedIndex = Math.max(0, values.indexOf(value));
+    // p-1 (0.25rem × 2) + gap-0.5 between items (0.125rem × (n − 1))
+    const trackInsetRem = 0.5 + Math.max(0, count - 1) * 0.125;
+    const slideWidth = `calc((100% - ${trackInsetRem}rem) / ${count})`;
+    const slideX = selectedIndex === 0 ? 0 : `calc(${selectedIndex} * (100% + 0.125rem))`;
+
+    const track = (
+        <div
+            role="radiogroup"
+            aria-label={ariaLabel}
+            className={clsx(
+                className,
+                'relative inline-flex items-center gap-0.5 rounded-full bg-zinc-950/5 p-1 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/5'
+            )}
+        >
+            {indicator === 'slide' ? (
+                reducedMotion ? (
+                    <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute top-1 bottom-1 left-1 rounded-full bg-white shadow-sm dark:bg-zinc-700 dark:shadow-none dark:ring-1 dark:ring-white/10"
+                        style={{
+                            width: slideWidth,
+                            transform: `translateX(${typeof slideX === 'number' ? '0px' : slideX})`,
+                        }}
+                    />
+                ) : (
+                    <motion.span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute top-1 bottom-1 left-1 rounded-full bg-white shadow-sm dark:bg-zinc-700 dark:shadow-none dark:ring-1 dark:ring-white/10"
+                        style={{ width: slideWidth }}
+                        initial={false}
+                        animate={{ x: slideX }}
+                        transition={{ duration: PILL_SLIDE_DURATION_S, ease: [0.2, 0, 0, 1] }}
+                    />
+                )
+            ) : null}
+
+            <PillNavContext.Provider
+                value={{
+                    value,
+                    onChange: (next) => onChange(next as T),
+                    layoutId,
+                    reducedMotion,
+                    indicator,
+                }}
             >
-                <PillNavContext.Provider
-                    value={{
-                        value,
-                        onChange: (next) => onChange(next as T),
-                        layoutId,
-                        reducedMotion,
-                    }}
-                >
-                    {children}
-                </PillNavContext.Provider>
-            </div>
-        </LayoutGroup>
+                {children}
+            </PillNavContext.Provider>
+        </div>
     );
+
+    if (indicator === 'layout') {
+        return <LayoutGroup id={groupId}>{track}</LayoutGroup>;
+    }
+
+    return track;
 }
 
 export function PillNavItem({
@@ -79,7 +131,7 @@ export function PillNavItem({
     className?: string;
     disabled?: boolean;
 }) {
-    const { value: selected, onChange, layoutId, reducedMotion } = usePillNav('PillNavItem');
+    const { value: selected, onChange, layoutId, reducedMotion, indicator } = usePillNav('PillNavItem');
     const current = selected === value;
 
     return (
@@ -99,7 +151,7 @@ export function PillNavItem({
                     : 'text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white'
             )}
         >
-            {current ? (
+            {indicator === 'layout' && current ? (
                 reducedMotion ? (
                     <span
                         className="absolute inset-0 -z-10 rounded-full bg-white shadow-sm dark:bg-zinc-700 dark:shadow-none dark:ring-1 dark:ring-white/10"
@@ -113,7 +165,7 @@ export function PillNavItem({
                     />
                 )
             ) : null}
-            {children}
+            <span className="relative z-10 inline-flex items-center gap-2">{children}</span>
         </button>
     );
 }

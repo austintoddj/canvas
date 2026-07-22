@@ -3,12 +3,15 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    canPublishForm,
     formFromCreateResponse,
     fromDatetimeLocalValue,
     isExistingTaxonomy,
     isPublished,
     isScheduled,
     mergeTaxonomyOptions,
+    editorSaveActivityLabel,
+    editorStatusBadge,
     navSaveStatusLabel,
     parsePublishedAt,
     postHasPendingChanges,
@@ -116,6 +119,23 @@ describe('post form helpers', () => {
             tags: [{ name: 'Draft Tag', slug: 'draft-tag' }],
             topic: { name: 'Draft Topic', slug: 'draft-topic' },
         });
+
+        expect(
+            postHasPendingChanges({
+                ...samplePost,
+                has_pending_changes: false,
+                pending: null,
+            })
+        ).toBe(false);
+
+        // Trust the API flag when present — do not re-derive from a stale pending blob.
+        expect(
+            postHasPendingChanges({
+                ...samplePost,
+                has_pending_changes: false,
+                pending: { title: 'stale' },
+            })
+        ).toBe(false);
     });
 
     it('handles publish, schedule, and draft state with time fidelity', () => {
@@ -168,6 +188,25 @@ describe('post form helpers', () => {
         expect(navSaveStatusLabel('saving')).toBe('Saving…');
         expect(navSaveStatusLabel('saved')).toBe('Saved');
         expect(navSaveStatusLabel('error')).toBe('Save failed');
+
+        expect(editorStatusBadge('draft', false)).toEqual({
+            color: 'amber',
+            label: 'Draft',
+        });
+        expect(editorStatusBadge('published', true).label).toBe('Pending edits');
+        expect(editorStatusBadge('published', false).color).toBe('green');
+        expect(editorStatusBadge('scheduled', false).color).toBe('blue');
+
+        expect(editorSaveActivityLabel('saving', 'draft')).toBe('Saving…');
+        expect(editorSaveActivityLabel('saved', 'scheduled')).toBe('Saved');
+        expect(editorSaveActivityLabel('error', 'draft')).toBe('Save failed');
+        expect(editorSaveActivityLabel('saving', 'published')).toBeNull();
+        expect(editorSaveActivityLabel('saved', 'published')).toBeNull();
+        expect(editorSaveActivityLabel('idle', 'draft')).toBeNull();
+
+        expect(canPublishForm({ ...postToFormState(samplePost), title: '' })).toBe(false);
+        expect(canPublishForm({ ...postToFormState(samplePost), title: '   ' })).toBe(false);
+        expect(canPublishForm(postToFormState(samplePost))).toBe(true);
     });
 
     it('detects pending taxonomy vs known Organize options', () => {

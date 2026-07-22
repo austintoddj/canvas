@@ -24,6 +24,7 @@ it('builds the frontend boot payload', function (): void {
         'translations' => Localization::availableTranslations($this->admin->locale),
         'unsplash' => true,
         'ai' => false,
+        'assetsUpToDate' => true,
         'version' => Version::installed(),
     ]);
 

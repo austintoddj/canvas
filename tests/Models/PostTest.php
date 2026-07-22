@@ -84,6 +84,74 @@ it('casts pending to an array and reports pending changes', function (): void {
     expect($post->fresh()->has_pending_changes)->toBeFalse();
 });
 
+it('does not store pending when the editor payload matches the live snapshot', function (): void {
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => 'Live summary',
+        'body' => '<p>Live body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => null,
+        'published_at' => now()->subDay(),
+        'pending' => null,
+    ]);
+
+    $post->writePending([
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => 'Live summary',
+        'body' => '<p>Live body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => null,
+    ]);
+
+    expect($post->fresh()->pending)->toBeNull()
+        ->and($post->fresh()->has_pending_changes)->toBeFalse();
+});
+
+it('clears existing pending when a later autosave matches the live snapshot', function (): void {
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Live body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => null,
+        'published_at' => now()->subDay(),
+        'pending' => [
+            'title' => 'Stale pending',
+            'slug' => 'live-slug',
+            'summary' => null,
+            'body' => '<p>Live body</p>',
+            'featured_image' => null,
+            'featured_image_caption' => null,
+            'meta' => null,
+            'tags' => [],
+            'topic' => null,
+        ],
+    ]);
+
+    expect($post->has_pending_changes)->toBeTrue();
+
+    $post->writePending([
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Live body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => null,
+    ]);
+
+    expect($post->fresh()->pending)->toBeNull()
+        ->and($post->fresh()->has_pending_changes)->toBeFalse();
+});
+
 // Regression: GH-647 — slug uniqueness is scoped per user, not globally
 it('allows posts to share the same slug across different users', function (): void {
     $data = [

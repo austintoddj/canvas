@@ -63,7 +63,33 @@ export function formatChartDate(date: string): string {
     return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+export type MonthOverMonthPresentation =
+    { kind: 'percent'; direction: 'up' | 'down'; percentage: string } | { kind: 'new' } | { kind: 'none' };
+
+export function presentMonthOverMonth(
+    change: MonthOverMonth | undefined,
+    currentValue = 0
+): MonthOverMonthPresentation {
+    if (!change) {
+        return { kind: 'none' };
+    }
+
+    if (!change.comparable) {
+        return currentValue > 0 ? { kind: 'new' } : { kind: 'none' };
+    }
+
+    return {
+        kind: 'percent',
+        direction: change.direction,
+        percentage: change.percentage,
+    };
+}
+
 export function formatMonthOverMonth(change: MonthOverMonth): string {
+    if (!change.comparable) {
+        return 'new';
+    }
+
     const direction = change.direction === 'up' ? 'up' : 'down';
 
     return `${direction} ${change.percentage}%`;

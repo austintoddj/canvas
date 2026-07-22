@@ -143,9 +143,10 @@ class PostController extends Controller
         $this->ensurePostIsVisibleToCurrentUser($post);
 
         $post->loadMissing('tags:name,slug', 'topic:id,name,slug');
+        $post->reconcileNoOpPending();
 
         return response()->json([
-            'post' => $post,
+            'post' => $post->refresh()->load('tags:name,slug', 'topic:id,name,slug'),
             'tags' => Tag::query()->get(['name', 'slug']),
             'topics' => Topic::query()->get(['name', 'slug']),
         ]);

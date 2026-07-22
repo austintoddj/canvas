@@ -31,7 +31,8 @@ export function DashboardTopPosts({ posts }: DashboardTopPostsProps) {
             ) : (
                 <ol className="mt-4 min-h-0 flex-1 space-y-1">
                     {posts.map((post, index) => {
-                        const title = post.title.trim() === '' ? t('editor.untitled_post') : post.title;
+                        const rawTitle = (post.title ?? '').trim();
+                        const title = rawTitle === '' ? t('editor.untitled_post') : rawTitle;
                         const share = total > 0 ? post.views / total : 0;
                         const barWidth = Math.round(share * 100);
 

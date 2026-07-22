@@ -33,10 +33,12 @@ it('fetches user stats by default', function (): void {
             'monthOverMonthViews' => [
                 'direction',
                 'percentage',
+                'comparable',
             ],
             'monthOverMonthVisits' => [
                 'direction',
                 'percentage',
+                'comparable',
             ],
             'topReferers',
             'library' => [

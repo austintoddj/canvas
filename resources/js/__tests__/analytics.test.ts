@@ -4,6 +4,7 @@ import {
     formatMonthOverMonth,
     formatShareLabel,
     parseDailyGraph,
+    presentMonthOverMonth,
     rankedEntries,
     rankedToCsv,
     rankedWithShare,
@@ -30,8 +31,20 @@ describe('analytics helpers', () => {
         ]);
         expect(parseDailyGraph('not-json')).toEqual([]);
 
-        expect(formatMonthOverMonth({ direction: 'up', percentage: '12' })).toBe('up 12%');
-        expect(formatMonthOverMonth({ direction: 'down', percentage: '100' })).toBe('down 100%');
+        expect(formatMonthOverMonth({ direction: 'up', percentage: '12', comparable: true })).toBe('up 12%');
+        expect(formatMonthOverMonth({ direction: 'down', percentage: '100', comparable: true })).toBe('down 100%');
+        expect(formatMonthOverMonth({ direction: 'up', percentage: '0', comparable: false })).toBe('new');
+        expect(presentMonthOverMonth({ direction: 'up', percentage: '0', comparable: false }, 627)).toEqual({
+            kind: 'new',
+        });
+        expect(presentMonthOverMonth({ direction: 'down', percentage: '0', comparable: false }, 0)).toEqual({
+            kind: 'none',
+        });
+        expect(presentMonthOverMonth({ direction: 'up', percentage: '20', comparable: true }, 12)).toEqual({
+            kind: 'percent',
+            direction: 'up',
+            percentage: '20',
+        });
 
         expect(rankedEntries({ Twitter: 4, Direct: 10, Google: 7 })).toEqual([
             ['Direct', '10'],
