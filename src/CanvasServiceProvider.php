@@ -210,12 +210,6 @@ class CanvasServiceProvider extends ServiceProvider
             ], 'canvas-lang');
 
             $this->publishes([
-                __DIR__.'/../resources/stubs/providers/CanvasServiceProvider.stub' => app_path(
-                    'Providers/CanvasServiceProvider.php'
-                ),
-            ], 'canvas-provider');
-
-            $this->publishes([
                 __DIR__.'/../resources/views/ui' => resource_path('views/vendor/canvas/ui'),
             ], 'canvas-ui-views');
         }

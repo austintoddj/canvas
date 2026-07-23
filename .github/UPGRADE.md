@@ -91,6 +91,8 @@ If you skip this, `/canvas` still loads, admin routes still work, and Canvas sti
     # or: php artisan canvas:migrate && php artisan canvas:publish
     ```
 
+    Package registration is automatic via Composer discovery (`Canvas\CanvasServiceProvider`). No host `App\Providers\CanvasServiceProvider` is published or required. If an older install left that file (or a providers entry for it), delete it — it is unused.
+
 3. Publish config if you need to customize it:
 
     ```bash
@@ -310,7 +312,7 @@ php artisan canvas:users your@email.com
 
 ### Weekly digest
 
-When `canvas.mail.enabled` is true, the package schedules `canvas:digest` for **Mondays at 08:00** in `config('app.timezone')`. Each recipient’s reporting window uses their `canvas_users.timezone` (`DigestPeriod`); timezone affects which activity falls in the week, not when the scheduler fires. Silent weeks (no views or visitors) do not send mail.
+When `canvas.mail.enabled` is true, **`Canvas\CanvasServiceProvider`** schedules `canvas:digest` for **Mondays at 08:00** in `config('app.timezone')` — hosts do not register this themselves. Each recipient’s reporting window uses their `canvas_users.timezone` (`DigestPeriod`); timezone affects which activity falls in the week, not when the scheduler fires. Silent weeks (no views or visitors) do not send mail.
 
 Digest mailables implement Laravel’s `ShouldQueue`. Delivery follows the host queue and mail config:
 

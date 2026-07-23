@@ -26,11 +26,6 @@ class InstallCommand extends Command
     {
         $this->components->info('Installing Canvas.');
 
-        $this->components->task('Publishing service provider', fn (): int => $this->runSilentTask(
-            'vendor:publish',
-            ['--tag' => 'canvas-provider'],
-        ));
-
         $this->components->task('Publishing assets', fn (): int => $this->runSilentTask(
             'vendor:publish',
             ['--tag' => 'canvas-assets'],

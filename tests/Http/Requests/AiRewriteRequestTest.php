@@ -1,9 +1,10 @@
 <?php
 
+use Canvas\Enums\AiProvider;
 use Canvas\Http\Requests\AiRewriteRequest;
 
 it('normalizes blank instruction and title to null', function (): void {
-    setAiIntegration(\Canvas\Enums\AiProvider::Xai, 'key');
+    setAiIntegration(AiProvider::Xai, 'key');
 
     $request = makeFormRequest(AiRewriteRequest::class, [
         'action' => 'improve',
@@ -19,7 +20,7 @@ it('normalizes blank instruction and title to null', function (): void {
 });
 
 it('requires instruction for custom rewrites', function (): void {
-    setAiIntegration(\Canvas\Enums\AiProvider::Xai, 'key');
+    setAiIntegration(AiProvider::Xai, 'key');
 
     assertFormRequestInvalid(
         AiRewriteRequest::class,

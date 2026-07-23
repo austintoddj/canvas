@@ -20,7 +20,7 @@ it('publishes the config file', function (): void {
     });
 });
 
-it('publishes the service provider stub without host digest scheduling', function (): void {
+it('does not publish a host CanvasServiceProvider', function (): void {
     TestCase::withSharedTestbenchLock(function (): void {
         $path = app_path('Providers/CanvasServiceProvider.php');
 
@@ -30,11 +30,7 @@ it('publishes the service provider stub without host digest scheduling', functio
 
         $this->artisan('canvas:install');
 
-        $contents = file_get_contents($path);
-
-        $this->assertFileExists($path);
-        $this->assertStringContainsString('class CanvasServiceProvider', $contents);
-        $this->assertStringNotContainsString('canvas:digest', $contents);
+        $this->assertFileDoesNotExist($path);
     });
 });
 
