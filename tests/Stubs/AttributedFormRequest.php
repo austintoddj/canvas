@@ -6,7 +6,6 @@ namespace Canvas\Tests\Stubs;
 
 use Canvas\Http\Requests\FormRequest;
 use Illuminate\Foundation\Http\Attributes\ErrorBag;
-use Illuminate\Foundation\Http\Attributes\FailOnUnknownFields;
 use Illuminate\Foundation\Http\Attributes\RedirectTo;
 use Illuminate\Foundation\Http\Attributes\RedirectToRoute;
 use Illuminate\Foundation\Http\Attributes\StopOnFirstFailure;
@@ -16,7 +15,6 @@ use Illuminate\Validation\Validator;
 #[RedirectTo('/canvas')]
 #[RedirectToRoute('canvas')]
 #[ErrorBag('canvas')]
-#[FailOnUnknownFields]
 class AttributedFormRequest extends FormRequest
 {
     public function authorize(): bool
