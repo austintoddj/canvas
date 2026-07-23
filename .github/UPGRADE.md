@@ -172,6 +172,27 @@ event(new Canvas\Events\PostViewed(
 ));
 ```
 
+#### Post lifecycle domain events
+
+Canvas dispatches Laravel events when a post’s **public snapshot** changes (never on pending-only autosave). Hosts may listen with zero webhook configuration:
+
+| Event class | When |
+| --- | --- |
+| `Canvas\Events\PostPublished` | Snapshot becomes live (`published_at` ≤ now) |
+| `Canvas\Events\PostScheduled` | Snapshot gains a future `published_at` |
+| `Canvas\Events\PostUpdated` | Live or scheduled snapshot content changes while staying public |
+| `Canvas\Events\PostUnpublished` | `published_at` cleared (or live moved to scheduled; paired with `PostScheduled`) |
+| `Canvas\Events\PostDeleted` | Soft-deleted |
+
+```php
+use Canvas\Events\PostPublished;
+use Illuminate\Support\Facades\Event;
+
+Event::listen(PostPublished::class, function (PostPublished $event): void {
+    // $event->post
+});
+```
+
 #### API and frontend boot payload
 
 `UserResource` is the contract for user endpoints and the SPA boot payload:
@@ -270,11 +291,93 @@ Your host app owns login, logout, and password reset for the configured guard.
 
 ### Integrations
 
-Unsplash and AI providers are configured in the admin SPA at **Integrations** (`/integrations`), not via environment secrets for Unsplash.
+Unsplash, AI providers, and outbound **webhooks** are configured in the admin SPA at **Integrations** (`/integrations`). Admins need the `manage-integrations` gate (Canvas Admin role).
 
-- Access keys are stored encrypted in `canvas_settings`.
-- The SPA boot payload exposes integration readiness as booleans/flags, never raw secrets.
+- Secrets (Unsplash key, AI key, webhook signing secret) are stored encrypted in `canvas_settings`.
+- The SPA boot payload exposes Unsplash/AI readiness as booleans only — never raw secrets. Webhooks are configured only via the Integrations API/UI (no boot flag).
 - When configured, Unsplash appears in the post editor for featured images and body image insert; AI rewrite/SEO appear when an AI provider is configured.
+
+#### Webhooks
+
+Outbound HTTPS notifications for post lifecycle changes (Zapier, Make, n8n, Slack catch hooks, host APIs, CDN purge jobs, etc.).
+
+**Configure:** Integrations → Webhooks — public HTTPS URL, subscribed events, auto-generated signing secret (shown once; rotatable). **Send test** posts a signed `webhook.test` payload immediately.
+
+**Events (subscribable):**
+
+| Event id | Domain event |
+| --- | --- |
+| `post.published` | `PostPublished` |
+| `post.scheduled` | `PostScheduled` |
+| `post.updated` | `PostUpdated` |
+| `post.unpublished` | `PostUnpublished` |
+| `post.deleted` | `PostDeleted` |
+
+`webhook.test` is only used by the admin test button (not a subscription option).
+
+**Delivery:**
+
+| Item | Value |
+| --- | --- |
+| Method | `POST` |
+| Content-Type | `application/json` |
+| `User-Agent` | `Canvas-Webhooks/1.0` |
+| `Canvas-Event` | Event id (e.g. `post.published`) |
+| `Canvas-Delivery-Id` | UUID for this delivery |
+| `Canvas-Signature` | `t={unix},v1={hex}` — HMAC-SHA256 of `{timestamp}.{rawBody}` with the signing secret |
+| Success | HTTP 2xx (lifecycle jobs retry: 3 attempts, backoff 30s / 2m / 10m) |
+| URL rules | HTTPS only; private/reserved IPs blocked |
+
+**Payload** (`api_version: 1`) includes post metadata (id, slug, title, summary, published_at, featured image, SEO meta, topic/tags, author). It does **not** include the full HTML body.
+
+```json
+{
+  "api_version": 1,
+  "event": "post.published",
+  "delivery_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "created_at": "2026-07-22T15:04:05+00:00",
+  "data": {
+    "id": "…",
+    "slug": "…",
+    "title": "…",
+    "summary": "…",
+    "published_at": "…",
+    "featured_image": "…",
+    "featured_image_caption": "…",
+    "meta": {},
+    "topic": { "name": "…", "slug": "…" },
+    "tags": [{ "name": "…", "slug": "…" }],
+    "author": { "id": 1, "name": "Jane", "username": "jane" },
+    "created_at": "…",
+    "updated_at": "…"
+  }
+}
+```
+
+**Verify signature (receiver sketch):**
+
+```php
+// $header = request header Canvas-Signature, e.g. "t=1721657645,v1=abc…"
+// $rawBody = raw request body string; $secret = the signing secret from Integrations
+[$t, $v1] = /* parse t= and v1= from $header */;
+$expected = hash_hmac('sha256', "{$t}.{$rawBody}", $secret);
+hash_equals($expected, $v1); // also reject if |now - $t| is too large
+```
+
+Or use `Canvas\Support\WebhookSigner::verify($secret, $rawBody, $header)`.
+
+**Queue:** lifecycle delivery uses `DeliverWebhookJob` (`ShouldQueue`) — same host pattern as weekly digest mail. **Send test** runs that same job via `dispatchSync` so the admin UI gets an immediate success/failure.
+
+| Host setup | Lifecycle webhooks |
+| --- | --- |
+| `QUEUE_CONNECTION=sync` (Laravel default) | Delivered inline when events fire — no worker process |
+| `database` / `redis` / `sqs` / etc. | Run `queue:work` (or Horizon). Without a worker, jobs stay pending after publish |
+
+**Scheduled go-live limitation:** A post with a future `published_at` becomes reader-visible when time passes **without** another write. Canvas does **not** automatically fire `post.published` at that instant. You receive `post.scheduled` when the future date is set. Exact go-live hooks can listen for schedule set, poll, or wait until a future poller lands.
+
+**Fire rules:** No deliveries for pending-only autosave, discard pending, or draft-only edits. Only true public snapshot mutations (and soft-delete).
+
+Implementation tracker: [`.github/docs/WEBHOOKS.md`](docs/WEBHOOKS.md).
 
 ### Access model
 
@@ -309,6 +412,9 @@ php artisan canvas:users your@email.com
 | 403 on admin user routes           | Authenticated user is not an Admin in `canvas_users` | `canvas:make-admin` or assign role via `canvas:assign-role`        |
 | Locale validation fails on save    | Locale not translated                                | Publish lang files or restrict `CANVAS_LOCALES` to available codes |
 | FK error on `canvas_users.user_id` | Host user does not exist                             | Create the host user first, then grant Canvas access               |
+| Webhook test works but publish never hits the URL | Queue worker not running (non-`sync` driver), or event not subscribed | Run `php artisan queue:work` (or use `QUEUE_CONNECTION=sync`); confirm **Published** (etc.) is selected under Events |
+| Webhook test fails | URL unreachable or non-2xx | Fix the receiver; Send test runs the delivery job synchronously for immediate feedback |
+| Webhook secret lost after configure | Plain secret is shown once | Rotate secret in Integrations and update your receiver |
 
 ### Weekly digest
 

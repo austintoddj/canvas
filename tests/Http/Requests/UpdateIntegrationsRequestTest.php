@@ -30,3 +30,32 @@ it('strips bearer prefixes from api keys during preparation', function (): void 
 
     expect($request->input('ai.api_key'))->toBe('sk-test-key');
 });
+
+it('normalizes blank webhook urls to null', function (): void {
+    $request = makeFormRequest(UpdateIntegrationsRequest::class, [
+        'webhooks' => [
+            'url' => '   ',
+            'events' => ['post.published'],
+        ],
+    ], $this->admin);
+
+    $request->validateResolved();
+
+    expect($request->input('webhooks.url'))->toBeNull();
+});
+
+it('accepts a public https webhook configuration', function (): void {
+    $request = makeFormRequest(UpdateIntegrationsRequest::class, [
+        'webhooks' => [
+            'url' => 'https://example.com/hooks/canvas',
+            'events' => ['post.published', 'post.updated'],
+            'rotate_secret' => true,
+        ],
+    ], $this->admin);
+
+    $request->validateResolved();
+
+    expect($request->input('webhooks.url'))->toBe('https://example.com/hooks/canvas')
+        ->and($request->input('webhooks.events'))->toBe(['post.published', 'post.updated'])
+        ->and($request->input('webhooks.rotate_secret'))->toBeTrue();
+});

@@ -14,6 +14,7 @@ import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useMarkOnboardingComplete } from '@/hooks/useMarkOnboardingComplete';
 import { usePostAutosave } from '@/hooks/usePostAutosave';
+import { invalidateRecentPosts } from '@/hooks/useRecentPosts';
 import { ApiError } from '@/lib/api';
 import { postsApi } from '@/lib/api/posts';
 import {
@@ -414,6 +415,7 @@ export default function PostsEditor() {
             resetBaseline(serializeFormState(form));
             setPendingDelete(false);
             setInspectorOpen(false);
+            invalidateRecentPosts({ removeId: postId });
             toast.success(t('editor.deleted'));
             navigate('/posts', { replace: true });
         } catch {

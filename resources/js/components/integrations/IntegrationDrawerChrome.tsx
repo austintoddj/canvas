@@ -20,7 +20,12 @@ type IntegrationDrawerChromeProps = {
     enabled: boolean;
     enabledAt?: string | null;
     developer?: IntegrationDeveloper | null;
+    /** Callouts above settings (API key scope for Unsplash/AI; delivery behavior for webhooks). */
     permissions: string[];
+    /** Override section heading (default: Permissions). */
+    permissionsTitle?: string;
+    /** Override section help (default: How this key is used.). */
+    permissionsHelp?: string;
     icon?: ReactNode;
     children: ReactNode;
     dangerZone?: ReactNode;
@@ -34,6 +39,8 @@ export function IntegrationDrawerChrome({
     enabledAt = null,
     developer = null,
     permissions,
+    permissionsTitle,
+    permissionsHelp,
     icon,
     children,
     dangerZone,
@@ -42,6 +49,8 @@ export function IntegrationDrawerChrome({
     const relative = enabled ? formatRelativeTime(enabledAt) : null;
     const enabledAgo = relative === null ? null : t('integrations.enabled_ago', { relative }, 'Enabled :relative');
     const developedByPrefix = t('integrations.developed_by_prefix', 'Developed by');
+    const detailsTitle = permissionsTitle ?? t('integrations.permissions', 'Permissions');
+    const detailsHelp = permissionsHelp ?? t('integrations.permissions_help', 'How this key is used.');
 
     return (
         <div className="min-w-0 space-y-6 px-5 py-5" data-integration-drawer={kind}>
@@ -92,10 +101,8 @@ export function IntegrationDrawerChrome({
 
             {permissions.length > 0 ? (
                 <section className="min-w-0 space-y-2" data-integration-permissions="true">
-                    <Subheading level={3}>{t('integrations.permissions', 'Permissions')}</Subheading>
-                    <Text className="text-xs text-canvas-muted dark:text-canvas-muted-dark">
-                        {t('integrations.permissions_help', 'How this key is used.')}
-                    </Text>
+                    <Subheading level={3}>{detailsTitle}</Subheading>
+                    <Text className="text-xs text-canvas-muted dark:text-canvas-muted-dark">{detailsHelp}</Text>
                     <ul className="divide-y divide-zinc-950/5 dark:divide-white/5">
                         {permissions.map((permission) => (
                             <li key={permission} className="flex min-w-0 gap-2 py-2 first:pt-0 last:pb-0">

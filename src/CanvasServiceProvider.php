@@ -13,10 +13,17 @@ use Canvas\Console\PublishCommand;
 use Canvas\Console\RemoveAccessCommand;
 use Canvas\Console\UiCommand;
 use Canvas\Console\UsersCommand;
+use Canvas\Contracts\WebhookEndpointRepository;
+use Canvas\Events\PostDeleted;
+use Canvas\Events\PostPublished;
+use Canvas\Events\PostScheduled;
+use Canvas\Events\PostUnpublished;
+use Canvas\Events\PostUpdated;
 use Canvas\Events\PostViewed;
 use Canvas\Http\Requests\FormRequest;
 use Canvas\Listeners\CaptureView;
 use Canvas\Listeners\CaptureVisit;
+use Canvas\Listeners\DispatchOutboundWebhooks;
 use Canvas\Models\CanvasUser;
 use Canvas\Models\Media;
 use Canvas\Models\Post;
@@ -26,6 +33,7 @@ use Canvas\Policies\UserPolicy;
 use Canvas\Support\MediaService;
 use Canvas\Support\MediaStorage;
 use Canvas\Support\SettingsRepository;
+use Canvas\Support\SettingsWebhookEndpointRepository;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
@@ -48,6 +56,7 @@ class CanvasServiceProvider extends ServiceProvider
         $this->app->singleton(MediaStorage::class, static fn (): MediaStorage => MediaStorage::make());
         $this->app->singleton(MediaService::class);
         $this->app->singleton(SettingsRepository::class);
+        $this->app->singleton(WebhookEndpointRepository::class, SettingsWebhookEndpointRepository::class);
     }
 
     /**
@@ -76,6 +85,21 @@ class CanvasServiceProvider extends ServiceProvider
             PostViewed::class => [
                 CaptureView::class,
                 CaptureVisit::class,
+            ],
+            PostPublished::class => [
+                DispatchOutboundWebhooks::class,
+            ],
+            PostScheduled::class => [
+                DispatchOutboundWebhooks::class,
+            ],
+            PostUpdated::class => [
+                DispatchOutboundWebhooks::class,
+            ],
+            PostUnpublished::class => [
+                DispatchOutboundWebhooks::class,
+            ],
+            PostDeleted::class => [
+                DispatchOutboundWebhooks::class,
             ],
         ];
 

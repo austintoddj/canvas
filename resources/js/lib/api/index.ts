@@ -20,7 +20,11 @@ export type {
     IntegrationsStatus,
     UnsplashIntegrationStatus,
     AiIntegrationStatus,
+    WebhooksIntegrationStatus,
+    WebhookEventId,
+    WebhookEventOption,
     UpdateIntegrationsPayload,
+    WebhookTestResponse,
 } from '@/lib/api/integrations';
 export type { AiRewriteAction, AiRewritePayload, AiRewriteResponse } from '@/lib/api/ai';
 export type { TranslationsDictionary } from '@/lib/api/translations';

@@ -6,7 +6,10 @@ use Canvas\Models\Setting;
 use Canvas\Support\Ai;
 use Canvas\Support\SettingsRepository;
 use Canvas\Support\Unsplash;
+use Canvas\Support\Webhooks;
+use Canvas\Support\WebhookSigner;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
 
 it('returns unconfigured integrations status for admins', function (): void {
     $this->actingAs($this->admin, 'canvas')
@@ -19,7 +22,13 @@ it('returns unconfigured integrations status for admins', function (): void {
         ->assertJsonPath('ai.provider', null)
         ->assertJsonPath('ai.masked_key', null)
         ->assertJsonPath('ai.model', null)
-        ->assertJsonPath('ai.enabled_at', null);
+        ->assertJsonPath('ai.enabled_at', null)
+        ->assertJsonPath('webhooks.configured', false)
+        ->assertJsonPath('webhooks.url', null)
+        ->assertJsonPath('webhooks.masked_secret', null)
+        ->assertJsonPath('webhooks.events', [])
+        ->assertJsonPath('webhooks.enabled_at', null)
+        ->assertJsonPath('webhooks.available_events.0.id', 'post.published');
 });
 
 it('stores an encrypted unsplash access key', function (): void {
@@ -213,4 +222,174 @@ it('forbids non-admins from updating integrations', function (): void {
 it('requires authentication for integrations', function (): void {
     $this->getJson('canvas/api/integrations')
         ->assertUnauthorized();
+});
+
+it('configures webhooks with an auto-generated secret', function (): void {
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'webhooks' => [
+                'url' => 'https://example.com/hooks/canvas',
+                'events' => ['post.published', 'post.deleted'],
+            ],
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('webhooks.configured', true)
+        ->assertJsonPath('webhooks.url', 'https://example.com/hooks/canvas')
+        ->assertJsonPath('webhooks.events', ['post.published', 'post.deleted'])
+        ->assertJsonStructure(['webhooks' => ['plain_secret', 'masked_secret', 'enabled_at']]);
+
+    $plainSecret = $response->json('webhooks.plain_secret');
+    $masked = $response->json('webhooks.masked_secret');
+
+    expect($plainSecret)->toBeString()->toHaveLength(64)
+        ->and($masked)->toBe(SettingsRepository::mask($plainSecret))
+        ->and($response->json())->not->toHaveKey('webhooks.secret');
+
+    $row = Setting::query()->find(SettingKey::WebhookSecret->value);
+
+    expect($row)->not->toBeNull()
+        ->and($row->value)->not->toBe($plainSecret)
+        ->and(Crypt::decryptString($row->value))->toBe($plainSecret)
+        ->and(Webhooks::configured())->toBeTrue()
+        ->and(Webhooks::secret())->toBe($plainSecret);
+});
+
+it('rejects private webhook urls', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'webhooks' => [
+                'url' => 'https://127.0.0.1/hooks',
+                'events' => ['post.published'],
+            ],
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['webhooks.url']);
+});
+
+it('requires at least one event when configuring a webhook url', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'webhooks' => [
+                'url' => 'https://example.com/hooks/canvas',
+                'events' => [],
+            ],
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['webhooks.events']);
+});
+
+it('rejects non-subscribable webhook event ids', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'webhooks' => [
+                'url' => 'https://example.com/hooks/canvas',
+                'events' => ['webhook.test'],
+            ],
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['webhooks.events.0']);
+});
+
+it('rotates the webhook signing secret and returns the plain value once', function (): void {
+    configureWebhooks(
+        url: 'https://example.com/hooks/canvas',
+        secret: 'old-secret-value-aaaaaaaa',
+        events: ['post.published'],
+    );
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'webhooks' => [
+                'rotate_secret' => true,
+            ],
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('webhooks.configured', true);
+
+    $plainSecret = $response->json('webhooks.plain_secret');
+
+    expect($plainSecret)->toBeString()->not->toBe('old-secret-value-aaaaaaaa')
+        ->and(Webhooks::secret())->toBe($plainSecret);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/integrations')
+        ->assertSuccessful()
+        ->assertJsonMissingPath('webhooks.plain_secret')
+        ->assertJsonPath('webhooks.masked_secret', SettingsRepository::mask($plainSecret));
+});
+
+it('disconnects webhooks when url is cleared', function (): void {
+    configureWebhooks();
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'webhooks' => [
+                'url' => null,
+            ],
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('webhooks.configured', false)
+        ->assertJsonPath('webhooks.url', null)
+        ->assertJsonPath('webhooks.masked_secret', null)
+        ->assertJsonPath('webhooks.events', []);
+
+    expect(Webhooks::configured())->toBeFalse()
+        ->and(Setting::query()->find(SettingKey::WebhookUrl->value))->toBeNull()
+        ->and(Setting::query()->find(SettingKey::WebhookSecret->value))->toBeNull()
+        ->and(Setting::query()->find(SettingKey::WebhookEvents->value))->toBeNull();
+});
+
+it('sends an inline signed test webhook when configured', function (): void {
+    Http::fake([
+        'https://example.com/*' => Http::response(['ok' => true], 200),
+    ]);
+
+    configureWebhooks(events: ['post.published']);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/integrations/webhooks/test')
+        ->assertSuccessful()
+        ->assertJsonPath('ok', true)
+        ->assertJsonPath('event', 'webhook.test');
+
+    expect($response->json('delivery_id'))->toBeString();
+
+    Http::assertSent(function ($request): bool {
+        return $request->url() === 'https://example.com/hooks/canvas'
+            && ($request->header('Canvas-Event')[0] ?? null) === 'webhook.test'
+            && WebhookSigner::verify(
+                'whsec_test_secret',
+                $request->body(),
+                $request->header('Canvas-Signature')[0] ?? '',
+                now: time(),
+            );
+    });
+});
+
+it('returns 422 when testing webhooks that are not configured', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/integrations/webhooks/test')
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'webhooks_not_configured');
+});
+
+it('returns 502 when the test webhook endpoint fails', function (): void {
+    Http::fake([
+        'https://example.com/*' => Http::response('nope', 500),
+    ]);
+
+    configureWebhooks();
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/integrations/webhooks/test')
+        ->assertStatus(502)
+        ->assertJsonPath('code', 'webhooks_test_failed');
+});
+
+it('forbids non-admins from testing webhooks', function (): void {
+    configureWebhooks();
+
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson('canvas/api/integrations/webhooks/test')
+        ->assertForbidden();
 });

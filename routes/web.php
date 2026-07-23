@@ -38,6 +38,8 @@ Route::middleware([
         Route::prefix('integrations')->middleware(['can:manage-integrations'])->group(function (): void {
             Route::get('/', [IntegrationsController::class, 'show']);
             Route::put('/', [IntegrationsController::class, 'update']);
+            Route::post('webhooks/test', [IntegrationsController::class, 'testWebhook'])
+                ->middleware('throttle:10,1');
         });
 
         // Media routes...

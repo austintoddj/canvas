@@ -27,6 +27,7 @@ import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { usePermissions } from '@/hooks/usePermissions';
+import { invalidateRecentPosts } from '@/hooks/useRecentPosts';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { postsApi } from '@/lib/api/posts';
 import { formatListDate } from '@/lib/format-list-date';
@@ -153,6 +154,7 @@ export default function PostsIndex() {
         try {
             await postsApi.destroy(postId);
             setPendingDelete(null);
+            invalidateRecentPosts({ removeId: postId });
             toast.success(t('editor.deleted'));
 
             const status = postListStatus(pendingDelete.published_at);

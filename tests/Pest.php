@@ -83,3 +83,17 @@ function setAiIntegration(?AiProvider $provider, ?string $key = null, ?string $m
     $settings->set(SettingKey::AiApiKey, $key);
     $settings->set(SettingKey::AiModel, $model);
 }
+
+/**
+ * @param  list<string>  $events
+ */
+function configureWebhooks(
+    string $url = 'https://example.com/hooks/canvas',
+    string $secret = 'whsec_test_secret',
+    array $events = ['post.published', 'post.updated', 'post.deleted'],
+): void {
+    $settings = app(SettingsRepository::class);
+    $settings->set(SettingKey::WebhookUrl, $url);
+    $settings->set(SettingKey::WebhookSecret, $secret);
+    $settings->set(SettingKey::WebhookEvents, json_encode(array_values($events), JSON_THROW_ON_ERROR));
+}

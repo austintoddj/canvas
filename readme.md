@@ -18,6 +18,7 @@ Canvas is an open-source publishing platform for [Laravel](https://laravel.com).
 - Distraction-free editor with tags, topics, and media uploads
 - Monthly trends and reader insights
 - Contributor, Editor, and Admin roles
+- Integrations: Unsplash, AI writing, and outbound webhooks
 - Optional starter reader frontend via `canvas:ui`
 
 Canvas reads identity from your application's user model and stores author profiles and access in `canvas_users`. Configuration lives in `config/canvas.php` after install.

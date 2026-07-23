@@ -4,13 +4,14 @@ import { AiIntegrationDrawer } from '@/components/integrations/AiIntegrationDraw
 import { IntegrationRow } from '@/components/integrations/IntegrationRow';
 import { IntegrationsListSkeleton } from '@/components/integrations/IntegrationsListSkeleton';
 import { UnsplashIntegrationDrawer } from '@/components/integrations/UnsplashIntegrationDrawer';
+import { WebhookIntegrationDrawer } from '@/components/integrations/WebhookIntegrationDrawer';
 import { PageHeader } from '@/components/PageHeader';
 import { PageDescription, ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { integrationsApi, type IntegrationsStatus } from '@/lib/api/integrations';
 
-type OpenDrawer = 'unsplash' | 'ai' | null;
+type OpenDrawer = 'unsplash' | 'ai' | 'webhooks' | null;
 
 export default function IntegrationsIndex() {
     const { t, setIntegrationFlags } = useCanvas();
@@ -55,6 +56,7 @@ export default function IntegrationsIndex() {
 
     const unsplashConfigured = status?.unsplash.configured === true;
     const aiConfigured = status?.ai.configured === true;
+    const webhooksConfigured = status?.webhooks.configured === true;
     const configureLabel = t('integrations.configure', 'Configure');
     const enabledLabel = t('integrations.enabled', 'Enabled');
     const notEnabledLabel = t('integrations.not_enabled', 'Not enabled');
@@ -69,7 +71,7 @@ export default function IntegrationsIndex() {
 
             {loading ? (
                 <div aria-busy="true">
-                    <IntegrationsListSkeleton rows={2} />
+                    <IntegrationsListSkeleton rows={3} />
                 </div>
             ) : (
                 <div
@@ -96,6 +98,19 @@ export default function IntegrationsIndex() {
                         actionLabel={configureLabel}
                         onConfigure={() => setOpenDrawer('ai')}
                     />
+                    <IntegrationRow
+                        kind="webhooks"
+                        title={t('integrations.webhooks', 'Webhooks')}
+                        description={t(
+                            'integrations.webhooks_help',
+                            'Notify external services when posts are published, updated, or deleted.'
+                        )}
+                        configured={webhooksConfigured}
+                        configuredLabel={enabledLabel}
+                        notConfiguredLabel={notEnabledLabel}
+                        actionLabel={configureLabel}
+                        onConfigure={() => setOpenDrawer('webhooks')}
+                    />
                 </div>
             )}
 
@@ -115,6 +130,18 @@ export default function IntegrationsIndex() {
                 model={status?.ai.model ?? null}
                 maskedKey={status?.ai.masked_key ?? null}
                 enabledAt={status?.ai.enabled_at ?? null}
+                onClose={() => setOpenDrawer(null)}
+                onStatusChange={handleStatusChange}
+            />
+
+            <WebhookIntegrationDrawer
+                open={openDrawer === 'webhooks'}
+                configured={webhooksConfigured}
+                url={status?.webhooks.url ?? null}
+                maskedSecret={status?.webhooks.masked_secret ?? null}
+                events={status?.webhooks.events ?? []}
+                availableEvents={status?.webhooks.available_events ?? []}
+                enabledAt={status?.webhooks.enabled_at ?? null}
                 onClose={() => setOpenDrawer(null)}
                 onStatusChange={handleStatusChange}
             />

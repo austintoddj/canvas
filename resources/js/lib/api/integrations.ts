@@ -16,9 +16,33 @@ export type AiIntegrationStatus = {
     enabled_at: string | null;
 };
 
+export type WebhookEventId =
+    | 'post.published'
+    | 'post.scheduled'
+    | 'post.updated'
+    | 'post.unpublished'
+    | 'post.deleted';
+
+export type WebhookEventOption = {
+    id: WebhookEventId | string;
+    label: string;
+};
+
+export type WebhooksIntegrationStatus = {
+    configured: boolean;
+    url: string | null;
+    masked_secret: string | null;
+    events: string[];
+    enabled_at: string | null;
+    available_events: WebhookEventOption[];
+    /** Present only immediately after create/rotate. */
+    plain_secret?: string | null;
+};
+
 export type IntegrationsStatus = {
     unsplash: UnsplashIntegrationStatus;
     ai: AiIntegrationStatus;
+    webhooks: WebhooksIntegrationStatus;
 };
 
 export type UpdateIntegrationsPayload = {
@@ -30,6 +54,17 @@ export type UpdateIntegrationsPayload = {
         api_key?: string | null;
         model?: string | null;
     };
+    webhooks?: {
+        url?: string | null;
+        events?: string[];
+        rotate_secret?: boolean;
+    };
+};
+
+export type WebhookTestResponse = {
+    ok: boolean;
+    delivery_id: string;
+    event: string;
 };
 
 export const integrationsApi = {
@@ -39,5 +74,9 @@ export const integrationsApi = {
 
     update(payload: UpdateIntegrationsPayload, signal?: AbortSignal) {
         return api.put<IntegrationsStatus>('/integrations', payload, signal);
+    },
+
+    testWebhook(signal?: AbortSignal) {
+        return api.post<WebhookTestResponse>('/integrations/webhooks/test', undefined, signal);
     },
 };

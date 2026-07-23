@@ -10,6 +10,8 @@ use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Canvas\Support\PostAuthor;
+use Canvas\Support\PostLifecycleEvents;
+use Canvas\Support\PostSnapshot;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -103,6 +105,8 @@ class PostController extends Controller
             return response()->json($this->postPayload($post->refresh()), 200);
         }
 
+        $before = $post->exists ? PostSnapshot::from($post) : null;
+
         $post->fill($data);
         $post->user_id ??= data_get($user, 'id');
         $post->clearPending();
@@ -111,8 +115,11 @@ class PostController extends Controller
         $post->save();
 
         $post->tags()->sync($this->resolveTagsForSync($tagsInput));
+        $post->load(['tags', 'topic']);
 
-        return response()->json($this->postPayload($post->refresh()), $created ? 201 : 200);
+        PostLifecycleEvents::dispatch($before, $post);
+
+        return response()->json($this->postPayload($post), $created ? 201 : 200);
     }
 
     /**
@@ -179,6 +186,9 @@ class PostController extends Controller
     public function destroy(Post $post)
     {
         $this->ensurePostIsVisibleToCurrentUser($post);
+
+        $post->loadMissing(['tags', 'topic']);
+        PostLifecycleEvents::dispatch(PostSnapshot::from($post), $post, deleted: true);
 
         $post->delete();
 
