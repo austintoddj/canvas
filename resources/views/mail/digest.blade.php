@@ -11,7 +11,11 @@
 ---
 
 @forelse($posts as $post)
-**[{{ $post['title'] }}]({{ url(config('canvas.path').'/posts/'.$post['id'].'/stats') }})**
+@php
+    $title = is_string($post['title'] ?? null) ? trim($post['title']) : '';
+    $displayTitle = $title !== '' ? $title : __('canvas::app.editor.untitled_post');
+@endphp
+**[{{ $displayTitle }}]({{ url(config('canvas.path').'/posts/'.$post['id'].'/stats') }})**
 
 @if(!empty($post['summary']))
 {{ \Illuminate\Support\Str::limit($post['summary'], 140) }}
@@ -22,16 +26,16 @@
 ---
 
 @empty
-_{{ __('canvas::app.your_posts_received') }} 0 {{ __('canvas::app.views') }} {{ __('canvas::app.this_week') }}._
+_{{ __('canvas::app.digest.empty') }}_
 
 ---
 
 @endforelse
 
-<x-mail::button :url="url(config('canvas.path').'/stats')">
+<x-mail::button :url="url(config('canvas.path'))">
 {{ __('canvas::app.see_all_stats') }}
 </x-mail::button>
 
-Thanks,<br>
+{{ __('canvas::app.digest.thanks') }},<br>
 {{ config('app.name') }}
 </x-mail::message>

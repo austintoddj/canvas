@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\ServiceProvider;
 
 class CanvasServiceProvider extends ServiceProvider
@@ -14,15 +13,6 @@ class CanvasServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
-            // The scheduler timezone controls when the command runs. Each recipient's
-            // digest period and stats window use the timezone stored on canvas_users.
-            $schedule->command('canvas:digest')
-                ->weekly()
-                ->mondays()
-                ->timezone(config('app.timezone'))
-                ->at('08:00')
-                ->when(fn (): bool => (bool) config('canvas.mail.enabled'));
-        });
+        //
     }
 }

@@ -11,7 +11,7 @@ it('assigns a role by email', function (): void {
         'role' => 'editor',
     ])
         ->assertExitCode(0)
-        ->expectsOutput(sprintf('Assigned %s to %s.', Role::Editor->label(), $user->email));
+        ->expectsOutputToContain(sprintf('Assigned %s to %s.', Role::Editor->label(), $user->email));
 
     $this->assertDatabaseHas('canvas_users', [
         'user_id' => $user->id,
@@ -27,7 +27,7 @@ it('shows the previous role when changing roles', function (): void {
         'role' => 'contributor',
     ])
         ->assertExitCode(0)
-        ->expectsOutput(sprintf(
+        ->expectsOutputToContain(sprintf(
             'Updated %s from %s to %s.',
             $user->email,
             Role::Admin->label(),
@@ -47,6 +47,6 @@ it('rejects invalid roles', function (): void {
         'user' => $user->email,
         'role' => 'boss',
     ])
-        ->assertExitCode(0)
-        ->expectsOutput('Please enter a valid role.');
+        ->assertExitCode(1)
+        ->expectsOutputToContain('Please enter a valid role.');
 });

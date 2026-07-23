@@ -13,7 +13,7 @@
 
 ## About Canvas
 
-Canvas is an open-source publishing layer for [Laravel](https://laravel.com). Drop it into an existing application, use your own authentication, and start writing.
+Canvas is an open-source publishing platform for [Laravel](https://laravel.com). Drop it into an existing application, use your own authentication, and start writing.
 
 - Distraction-free editor with tags, topics, and media uploads
 - Monthly trends and reader insights

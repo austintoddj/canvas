@@ -21,9 +21,9 @@ class AssignRoleCommand extends Command
         $role = $this->resolveRole($this->argument('role'));
 
         if (! $role) {
-            $this->error('Please enter a valid role.');
+            $this->components->error('Please enter a valid role.');
 
-            return self::SUCCESS;
+            return self::FAILURE;
         }
 
         $previousRole = $this->currentRole($user);
@@ -32,14 +32,14 @@ class AssignRoleCommand extends Command
         $email = (string) data_get($user, 'email', '');
 
         if ($previousRole) {
-            $this->info(sprintf(
+            $this->components->info(sprintf(
                 'Updated %s from %s to %s.',
                 $email,
                 $previousRole->label(),
                 $role->label(),
             ));
         } else {
-            $this->info(sprintf('Assigned %s to %s.', $role->label(), $email));
+            $this->components->info(sprintf('Assigned %s to %s.', $role->label(), $email));
         }
 
         return self::SUCCESS;

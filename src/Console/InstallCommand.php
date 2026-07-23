@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Canvas\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Console\View\TaskResult;
 
 class InstallCommand extends Command
 {
@@ -21,15 +22,44 @@ class InstallCommand extends Command
         }
     }
 
-    public function handle(): void
+    public function handle(): int
     {
-        $this->callSilent('vendor:publish', ['--tag' => 'canvas-provider']);
-        $this->callSilent('vendor:publish', ['--tag' => 'canvas-assets']);
-        $this->callSilent('vendor:publish', ['--tag' => 'canvas-config']);
-        $this->callSilent('canvas:migrate');
+        $this->components->info('Installing Canvas.');
 
-        $this->info('Installation complete.');
-        $this->info('Next, create or sign in to a user account in your application, then run:');
-        $this->line('  php artisan canvas:make-admin your@email.com');
+        $this->components->task('Publishing service provider', fn (): int => $this->runSilentTask(
+            'vendor:publish',
+            ['--tag' => 'canvas-provider'],
+        ));
+
+        $this->components->task('Publishing assets', fn (): int => $this->runSilentTask(
+            'vendor:publish',
+            ['--tag' => 'canvas-assets'],
+        ));
+
+        $this->components->task('Publishing configuration', fn (): int => $this->runSilentTask(
+            'vendor:publish',
+            ['--tag' => 'canvas-config'],
+        ));
+
+        $this->components->task('Running migrations', fn (): int => $this->runSilentTask('canvas:migrate'));
+
+        $this->newLine();
+        $this->components->info('Installation complete.');
+        $this->components->bulletList([
+            'Create or sign in to a user account in your application',
+            'php artisan canvas:make-admin your@email.com',
+        ]);
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * @param  array<string, mixed>  $parameters
+     */
+    private function runSilentTask(string $command, array $parameters = []): int
+    {
+        return $this->callSilent($command, $parameters) === self::SUCCESS
+            ? TaskResult::Success->value
+            : TaskResult::Failure->value;
     }
 }

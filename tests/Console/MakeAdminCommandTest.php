@@ -10,7 +10,7 @@ it('makes a user an admin by id', function (): void {
         'user' => $user->id,
     ])
         ->assertExitCode(0)
-        ->expectsOutput(sprintf(
+        ->expectsOutputToContain(sprintf(
             'Updated %s from %s to Admin.',
             $user->email,
             Role::Editor->label(),
@@ -29,7 +29,7 @@ it('assigns admin to a host user without prior canvas access', function (): void
         'user' => $user->email,
     ])
         ->assertExitCode(0)
-        ->expectsOutput(sprintf('Assigned Admin to %s.', $user->email));
+        ->expectsOutputToContain(sprintf('Assigned Admin to %s.', $user->email));
 
     $this->assertDatabaseHas('canvas_users', [
         'user_id' => $user->id,

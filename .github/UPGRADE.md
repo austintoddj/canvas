@@ -310,7 +310,17 @@ php artisan canvas:users your@email.com
 
 ### Weekly digest
 
-`canvas:digest` respects each user's `timezone` on `canvas_users` when computing the reporting window (`DigestPeriod`). The command still runs on your scheduler's cadence (weekly by default when `canvas.mail.enabled` is true); per-user timezone affects which posts fall in the digest window, not when the scheduler fires.
+When `canvas.mail.enabled` is true, the package schedules `canvas:digest` for **Mondays at 08:00** in `config('app.timezone')`. Each recipient’s reporting window uses their `canvas_users.timezone` (`DigestPeriod`); timezone affects which activity falls in the week, not when the scheduler fires. Silent weeks (no views or visitors) do not send mail.
+
+Digest mailables implement Laravel’s `ShouldQueue`. Delivery follows the host queue and mail config:
+
+| Host setup | What you need |
+| --- | --- |
+| `QUEUE_CONNECTION=sync` (Laravel default) | Nothing extra — digests send inline when the command runs |
+| `database` / `redis` / `sqs` / etc. | A queue worker (`queue:work`, Horizon, …). Without one, jobs stay pending and no mail goes out |
+| Mail transport | Normal host `MAIL_*` / `MAIL_MAILER` (SMTP, log, SES, …) |
+
+Telescope (or similar) may still show the mailable as **queued** after a successful worker run — that reflects the queue path, not a stuck send.
 
 ### Support window
 

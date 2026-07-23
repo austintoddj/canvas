@@ -14,8 +14,7 @@ use Illuminate\Support\Facades\Mail;
 it('sends digest emails to users with mail enabled', function (): void {
     Mail::fake();
 
-    $user = User::factory()->create([
-    ]);
+    $user = User::factory()->create();
 
     CanvasUser::factory()->create([
         'user_id' => $user->id,
@@ -43,17 +42,17 @@ it('sends digest emails to users with mail enabled', function (): void {
 
     $this->artisan('canvas:digest');
 
-    Mail::assertSent(WeeklyDigest::class, function ($mail) use ($user) {
+    Mail::assertQueued(WeeklyDigest::class, function ($mail) use ($user) {
         $this->assertIsArray($mail->posts);
         $this->assertArrayHasKey('views_count', $mail->posts[0]);
         $this->assertArrayHasKey('visits_count', $mail->posts[0]);
+        $this->assertArrayHasKey('read_time', $mail->posts[0]);
 
         $this->assertSame(4, $mail->totals['views']);
         $this->assertSame(2, $mail->totals['visits']);
 
         $this->assertNotEmpty($mail->startDate);
         $this->assertNotEmpty($mail->endDate);
-        $this->assertNotEmpty($mail->locale);
         $this->assertSame('UTC', $mail->timezone);
 
         return $mail->hasTo($user->email);
@@ -63,8 +62,7 @@ it('sends digest emails to users with mail enabled', function (): void {
 it('does not send digest emails to users with mail disabled', function (): void {
     Mail::fake();
 
-    $user = User::factory()->create([
-    ]);
+    $user = User::factory()->create();
 
     CanvasUser::factory()->create([
         'user_id' => $user->id,
@@ -90,7 +88,71 @@ it('does not send digest emails to users with mail disabled', function (): void 
 
     $this->artisan('canvas:digest');
 
-    Mail::assertNothingSent();
+    Mail::assertNothingOutgoing();
+});
+
+it('does not send when the week had no views or visitors', function (): void {
+    Mail::fake();
+
+    $user = User::factory()->create();
+
+    CanvasUser::factory()->create([
+        'user_id' => $user->id,
+        'role' => Role::Contributor,
+        'digest' => true,
+        'locale' => 'en',
+        'timezone' => 'UTC',
+    ]);
+
+    Post::factory()->create([
+        'user_id' => $user->id,
+        'published_at' => now()->subWeek(),
+    ]);
+
+    $this->artisan('canvas:digest')->assertSuccessful();
+
+    Mail::assertNothingOutgoing();
+});
+
+it('only includes posts with activity and caps the list', function (): void {
+    Mail::fake();
+
+    $user = User::factory()->create();
+
+    CanvasUser::factory()->create([
+        'user_id' => $user->id,
+        'role' => Role::Contributor,
+        'digest' => true,
+        'locale' => 'en',
+        'timezone' => 'UTC',
+    ]);
+
+    $active = Post::factory()->count(12)->create([
+        'user_id' => $user->id,
+        'published_at' => now()->subWeek(),
+    ]);
+
+    foreach ($active as $index => $post) {
+        $post->views()->createMany(
+            View::factory()->count($index + 1)->make()->toArray()
+        );
+    }
+
+    Post::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Quiet post',
+        'published_at' => now()->subWeek(),
+    ]);
+
+    $this->artisan('canvas:digest');
+
+    Mail::assertQueued(WeeklyDigest::class, function (WeeklyDigest $mail) use ($user): bool {
+        expect($mail->posts)->toHaveCount(10);
+        expect(collect($mail->posts)->pluck('title'))->not->toContain('Quiet post');
+        expect($mail->totals['views'])->toBe(array_sum(range(1, 12)));
+
+        return $mail->hasTo($user->email);
+    });
 });
 
 it('uses the recipients timezone for digest periods and stats windows', function (): void {
@@ -123,7 +185,7 @@ it('uses the recipients timezone for digest periods and stats windows', function
 
     $this->artisan('canvas:digest');
 
-    Mail::assertSent(WeeklyDigest::class, function (WeeklyDigest $mail) use ($user) {
+    Mail::assertQueued(WeeklyDigest::class, function (WeeklyDigest $mail) use ($user) {
         expect($mail->startDate)->toBe('Jun 22');
         expect($mail->endDate)->toBe('Jun 29');
         expect($mail->timezone)->toBe('America/Chicago');
@@ -169,7 +231,7 @@ it('sends digest emails for bare host users without canvas relations', function 
 
     $this->artisan('canvas:digest')->assertSuccessful();
 
-    Mail::assertSent(WeeklyDigest::class, function (WeeklyDigest $mail) use ($host): bool {
+    Mail::assertQueued(WeeklyDigest::class, function (WeeklyDigest $mail) use ($host): bool {
         expect($mail->userName)->toBe('Bare Digest Author');
         expect($mail->totals['views'])->toBe(4);
         expect($mail->totals['visits'])->toBe(2);

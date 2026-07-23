@@ -96,7 +96,11 @@ class CanvasServiceProvider extends ServiceProvider
         }
 
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
-            $schedule->command('canvas:digest')->weekly();
+            $schedule->command('canvas:digest')
+                ->weekly()
+                ->mondays()
+                ->at('08:00')
+                ->timezone(config('app.timezone'));
         });
     }
 

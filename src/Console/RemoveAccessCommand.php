@@ -20,7 +20,10 @@ class RemoveAccessCommand extends Command
         $user = $this->resolveUser($this->argument('user'));
         $this->removeAccess($user);
 
-        $this->info(sprintf('Removed access for %s.', (string) data_get($user, 'email', '')));
+        $this->components->info(sprintf(
+            'Removed access for %s.',
+            (string) data_get($user, 'email', ''),
+        ));
 
         return self::SUCCESS;
     }

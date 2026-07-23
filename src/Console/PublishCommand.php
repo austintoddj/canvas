@@ -5,40 +5,39 @@ declare(strict_types=1);
 namespace Canvas\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Console\View\TaskResult;
 
 class PublishCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'canvas:publish { --force : Overwrite any existing files }';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Publish the available assets';
 
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle()
+    public function handle(): int
     {
-        $this->callSilent('vendor:publish', [
-            '--tag' => 'canvas-config',
-            '--force' => $this->option('force'),
-        ]);
+        $this->components->task('Publishing configuration', function (): int {
+            return $this->taskResult($this->callSilent('vendor:publish', [
+                '--tag' => 'canvas-config',
+                '--force' => $this->option('force'),
+            ]));
+        });
 
-        $this->callSilent('vendor:publish', [
-            '--tag' => 'canvas-assets',
-            '--force' => true,
-        ]);
+        $this->components->task('Publishing assets', function (): int {
+            return $this->taskResult($this->callSilent('vendor:publish', [
+                '--tag' => 'canvas-assets',
+                '--force' => true,
+            ]));
+        });
 
-        $this->info('Publishing complete.');
+        $this->components->info('Publishing complete.');
+
+        return self::SUCCESS;
+    }
+
+    private function taskResult(int $exitCode): int
+    {
+        return $exitCode === self::SUCCESS
+            ? TaskResult::Success->value
+            : TaskResult::Failure->value;
     }
 }

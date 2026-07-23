@@ -7,7 +7,7 @@ it('exits successfully and outputs the install messages', function (): void {
     TestCase::withSharedTestbenchLock(function (): void {
         $this->artisan('canvas:install')
             ->assertExitCode(0)
-            ->expectsOutput('Installation complete.')
+            ->expectsOutputToContain('Installation complete')
             ->expectsOutputToContain('canvas:make-admin');
     });
 });
@@ -20,14 +20,21 @@ it('publishes the config file', function (): void {
     });
 });
 
-it('publishes the service provider stub with the digest schedule', function (): void {
+it('publishes the service provider stub without host digest scheduling', function (): void {
     TestCase::withSharedTestbenchLock(function (): void {
-        $this->artisan('canvas:install');
-
         $path = app_path('Providers/CanvasServiceProvider.php');
 
+        if (file_exists($path)) {
+            unlink($path);
+        }
+
+        $this->artisan('canvas:install');
+
+        $contents = file_get_contents($path);
+
         $this->assertFileExists($path);
-        $this->assertStringContainsString('canvas:digest', file_get_contents($path));
+        $this->assertStringContainsString('class CanvasServiceProvider', $contents);
+        $this->assertStringNotContainsString('canvas:digest', $contents);
     });
 });
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Canvas\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Console\View\TaskResult;
 
 class UiCommand extends Command
 {
@@ -12,37 +13,64 @@ class UiCommand extends Command
 
     protected $description = 'Publish the Canvas reader UI views, controller, and route stub';
 
-    public function handle(): void
+    /** @var list<string> */
+    private array $skipped = [];
+
+    public function handle(): int
     {
-        $this->call('vendor:publish', [
-            '--tag' => 'canvas-ui-views',
-            '--force' => $this->option('force'),
+        $this->components->info('Installing Canvas reader UI.');
+
+        $this->components->task('Publishing views', function (): int {
+            $exitCode = $this->callSilent('vendor:publish', [
+                '--tag' => 'canvas-ui-views',
+                '--force' => $this->option('force'),
+            ]);
+
+            return $exitCode === self::SUCCESS
+                ? TaskResult::Success->value
+                : TaskResult::Failure->value;
+        });
+
+        $this->components->task(
+            'Publishing controller',
+            fn (): int => $this->publishController(),
+        );
+
+        $this->components->task(
+            'Publishing routes',
+            fn (): int => $this->publishRoutes(),
+        );
+
+        foreach ($this->skipped as $path) {
+            $this->components->warn("{$path} already exists. Use --force to overwrite.");
+        }
+
+        $this->newLine();
+        $this->components->info('Canvas reader UI installed successfully.');
+
+        $this->components->twoColumnDetail('Views', 'resources/views/vendor/canvas/ui/');
+        $this->components->twoColumnDetail('Controller', 'app/Http/Controllers/Canvas/CanvasUiController.php');
+        $this->components->twoColumnDetail('Routes', 'routes/canvas-ui.php');
+
+        $this->newLine();
+        $this->line('  <fg=gray>Next steps</>');
+        $this->components->bulletList([
+            "Add require __DIR__.'/canvas-ui.php'; to routes/web.php",
+            'HasCanvasAccess on your User model is optional — the sample reader does not require it',
+            'Post show routes use Canvas\\Http\\Middleware\\Session to prune analytics session keys',
         ]);
 
-        $this->publishController();
-        $this->publishRoutes();
-
-        $this->info('Canvas reader UI installed successfully.');
-        $this->newLine();
-        $this->comment('Views:      resources/views/vendor/canvas/ui/');
-        $this->comment('Controller: app/Http/Controllers/Canvas/CanvasUiController.php');
-        $this->comment('Routes:     routes/canvas-ui.php');
-        $this->newLine();
-        $this->line('Add the following to your routes/web.php to activate the reader UI:');
-        $this->line("  require __DIR__.'/canvas-ui.php';");
-        $this->newLine();
-        $this->line('HasCanvasAccess on your User model is optional — the sample reader does not require it.');
-        $this->line('Post show routes use Canvas\\Http\\Middleware\\Session to prune analytics session keys.');
+        return self::SUCCESS;
     }
 
-    private function publishController(): void
+    private function publishController(): int
     {
         $target = app_path('Http/Controllers/Canvas/CanvasUiController.php');
 
         if (file_exists($target) && ! $this->option('force')) {
-            $this->warn('app/Http/Controllers/Canvas/CanvasUiController.php already exists. Use --force to overwrite.');
+            $this->skipped[] = 'app/Http/Controllers/Canvas/CanvasUiController.php';
 
-            return;
+            return TaskResult::Skipped->value;
         }
 
         if (! is_dir(dirname($target))) {
@@ -57,21 +85,21 @@ class UiCommand extends Command
         $contents = file_get_contents($target);
         file_put_contents($target, str_replace('{{namespace}}', app()->getNamespace(), $contents));
 
-        $this->info('Published CanvasUiController.');
+        return TaskResult::Success->value;
     }
 
-    private function publishRoutes(): void
+    private function publishRoutes(): int
     {
         $target = base_path('routes/canvas-ui.php');
 
         if (file_exists($target) && ! $this->option('force')) {
-            $this->warn('routes/canvas-ui.php already exists. Use --force to overwrite.');
+            $this->skipped[] = 'routes/canvas-ui.php';
 
-            return;
+            return TaskResult::Skipped->value;
         }
 
         copy(dirname(__DIR__, 2).'/resources/stubs/routes/canvas-ui.stub', $target);
 
-        $this->info('Published routes/canvas-ui.php.');
+        return TaskResult::Success->value;
     }
 }

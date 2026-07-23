@@ -42,6 +42,12 @@ class UsersCommand extends Command
             ->values()
             ->all();
 
+        if ($rows === []) {
+            $this->components->info('No users have Canvas access yet.');
+
+            return self::SUCCESS;
+        }
+
         $this->table(['Name', 'Email', 'Username', 'Role', 'Language', 'Timezone'], $rows);
 
         return self::SUCCESS;
@@ -54,7 +60,10 @@ class UsersCommand extends Command
         $canvasUser = CanvasUser::query()->firstWhere('user_id', $user->getKey());
 
         if ($canvasUser === null) {
-            $this->error(sprintf('%s does not have Canvas access.', (string) data_get($user, 'email', '')));
+            $this->components->error(sprintf(
+                '%s does not have Canvas access.',
+                (string) data_get($user, 'email', ''),
+            ));
 
             return self::FAILURE;
         }

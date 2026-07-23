@@ -13,3 +13,6 @@ phpunit.xml
 /build
 /public/build
 /resources/dist/canvas.hot
+
+# Local agent / project rules (not shipped)
+AGENTS.md

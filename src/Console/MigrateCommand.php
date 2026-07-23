@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Canvas\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Console\View\TaskResult;
 
 class MigrateCommand extends Command
 {
@@ -14,12 +15,18 @@ class MigrateCommand extends Command
 
     public function handle(): int
     {
-        $this->callSilent('migrate', [
-            '--path' => 'vendor/austintoddj/canvas/database/migrations',
-            '--force' => (bool) $this->option('force'),
-        ]);
+        $this->components->task('Running Canvas migrations', function (): int {
+            $exitCode = $this->callSilent('migrate', [
+                '--path' => 'vendor/austintoddj/canvas/database/migrations',
+                '--force' => (bool) $this->option('force'),
+            ]);
 
-        $this->info('Canvas migrations complete.');
+            return $exitCode === self::SUCCESS
+                ? TaskResult::Success->value
+                : TaskResult::Failure->value;
+        });
+
+        $this->components->info('Canvas migrations complete.');
 
         return self::SUCCESS;
     }

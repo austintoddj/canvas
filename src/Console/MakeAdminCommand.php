@@ -25,13 +25,13 @@ class MakeAdminCommand extends Command
         $email = (string) data_get($user, 'email', '');
 
         if ($previousRole) {
-            $this->info(sprintf(
+            $this->components->info(sprintf(
                 'Updated %s from %s to Admin.',
                 $email,
                 $previousRole->label(),
             ));
         } else {
-            $this->info(sprintf('Assigned Admin to %s.', $email));
+            $this->components->info(sprintf('Assigned Admin to %s.', $email));
         }
 
         return self::SUCCESS;

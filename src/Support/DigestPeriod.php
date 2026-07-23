@@ -35,14 +35,25 @@ final readonly class DigestPeriod
         return $this->end->copy()->utc();
     }
 
-    public function formattedStart(): string
+    public function formattedStart(?string $locale = null): string
     {
-        return $this->start->format('M j');
+        return $this->formatDate($this->start, $locale);
     }
 
-    public function formattedEnd(): string
+    public function formattedEnd(?string $locale = null): string
     {
-        return $this->end->format('M j');
+        return $this->formatDate($this->end, $locale);
+    }
+
+    private function formatDate(CarbonInterface $date, ?string $locale): string
+    {
+        $carbon = Carbon::instance($date->copy());
+
+        if (filled($locale)) {
+            $carbon->locale(Localization::resolveTranslationLocale($locale));
+        }
+
+        return $carbon->translatedFormat('M j');
     }
 
     private static function resolveTimezone(?string $timezone): string

@@ -5,20 +5,19 @@ declare(strict_types=1);
 namespace Canvas\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class WeeklyDigest extends Mailable
+class WeeklyDigest extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     /**
-     * Create a new message instance.
-     *
      * @param  array<int, array<string, mixed>>  $posts
-     * @param  array<string, mixed>  $totals
+     * @param  array{views: int, visits: int}  $totals
      */
     public function __construct(
         public readonly string $userName,
@@ -29,23 +28,16 @@ class WeeklyDigest extends Mailable
         public readonly string $timezone = 'UTC',
     ) {}
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: sprintf('%s: %s - %s',
-                __('canvas::app.stats_for_your_posts'),
-                $this->startDate,
-                $this->endDate,
-            ),
+            subject: __('canvas::app.digest.subject', [
+                'start' => $this->startDate,
+                'end' => $this->endDate,
+            ]),
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(

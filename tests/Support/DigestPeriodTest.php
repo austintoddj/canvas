@@ -43,3 +43,16 @@ it('exposes utc boundaries for database queries', function (): void {
     expect($period->startUtc()->toDateTimeString())->toBe('2026-06-22 05:00:00');
     expect($period->endUtc()->toDateTimeString())->toBe('2026-06-30 04:59:59');
 });
+
+it('formats dates with a translation locale when provided', function (): void {
+    Carbon::setTestNow(Carbon::parse('2026-06-29 12:00:00', 'UTC'));
+
+    $period = DigestPeriod::forTimezone('UTC');
+
+    $english = $period->formattedStart('en');
+    $spanish = $period->formattedStart('es');
+
+    expect($english)->not->toBeEmpty();
+    expect($spanish)->not->toBeEmpty();
+    expect($period->formattedEnd('en'))->not->toBeEmpty();
+});

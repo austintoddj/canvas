@@ -4,7 +4,10 @@ use Canvas\CanvasServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
 
 it('registers the weekly digest schedule when mail is enabled', function (): void {
-    config(['canvas.mail.enabled' => true]);
+    config([
+        'canvas.mail.enabled' => true,
+        'app.timezone' => 'UTC',
+    ]);
 
     $provider = new CanvasServiceProvider($this->app);
 
@@ -15,16 +18,18 @@ it('registers the weekly digest schedule when mail is enabled', function (): voi
     /** @var Schedule $schedule */
     $schedule = $this->app->make(Schedule::class);
 
-    $matched = collect($schedule->events())->contains(function ($event): bool {
+    $event = collect($schedule->events())->first(function ($event): bool {
         $command = (string) ($event->command ?? '');
         $description = (string) ($event->description ?? '');
 
         return str_contains($command, 'canvas:digest')
-            || str_contains($description, 'canvas:digest')
-            || str_contains($command, 'digest');
+            || str_contains($description, 'canvas:digest');
     });
 
-    expect($matched)->toBeTrue();
+    expect($event)->not->toBeNull();
+    expect((string) $event->expression)->toContain('8');
+    expect((string) $event->expression)->toContain('1');
+    expect((string) $event->timezone)->toBe('UTC');
 });
 
 it('does not register the digest schedule when mail is disabled', function (): void {

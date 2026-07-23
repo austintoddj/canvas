@@ -47,7 +47,7 @@ it('exits successfully and outputs the publishing message', function (): void {
     TestCase::withSharedTestbenchLock(function (): void {
         $this->artisan('canvas:publish')
             ->assertExitCode(0)
-            ->expectsOutput('Publishing complete.');
+            ->expectsOutputToContain('Publishing complete');
     });
 });
 
