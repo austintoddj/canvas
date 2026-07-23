@@ -6,7 +6,7 @@ If you're fixing docs, translations, bugs, or features, please open a pull reque
 
 ## Before you start
 
-- Use PHP 8.2+ and a Laravel major supported by the package (see `composer.json` and CI).
+- Use PHP 8.3+ and a Laravel major supported by the package (see `composer.json` and CI).
 - CI runs JavaScript checks on **Node 22** — match that locally when possible.
 - Read `readme.md` for install basics.
 - Host contracts, clean-break install, and the support matrix live in [`UPGRADE.md`](UPGRADE.md).

@@ -25,8 +25,8 @@ Canvas reads identity from your application's user model and stores author profi
 
 ## Requirements
 
-- PHP 8.2+
-- Laravel 11, 12, or 13
+- PHP 8.3+
+- Laravel 12 or 13
 - Working authentication for the guard Canvas uses (`web` by default)
 
 ## Installation

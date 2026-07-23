@@ -6,6 +6,7 @@ use Canvas\Tests\Stubs\CustomValidatorFormRequest;
 use Canvas\Tests\Stubs\ExampleFormRequest;
 use Canvas\Tests\Stubs\NoAuthorizeFormRequest;
 use Canvas\Tests\Stubs\UnauthorizedFormRequest;
+use Illuminate\Foundation\Http\Attributes\FailOnUnknownFields;
 
 afterEach(function (): void {
     FormRequest::flushState();
@@ -102,6 +103,10 @@ it('configures validation behaviour from foundation attributes', function (): vo
 });
 
 it('rejects unknown fields when the fail-on-unknown attribute is present', function (): void {
+    if (! class_exists(FailOnUnknownFields::class)) {
+        $this->markTestSkipped('Foundation FailOnUnknownFields attribute is not available in this Laravel version.');
+    }
+
     assertFormRequestInvalid(
         AttributedFormRequest::class,
         [

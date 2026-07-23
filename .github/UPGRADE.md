@@ -462,11 +462,11 @@ Telescope (or similar) may still show the mailable as **queued** after a success
 
 ### Support window
 
-Canvas 7 supports:
+Canvas 7 requires PHP 8.3+ and Laravel 12 or 13. Laravel 11 and PHP 8.2 are not supported.
 
-| Runtime     | Versions                             |
-| ----------- | ------------------------------------ |
-| **PHP**     | 8.2+ (CI matrix: 8.2, 8.3, 8.4, 8.5) |
-| **Laravel** | 11, 12, and 13                       |
+| Runtime     | Versions                        |
+| ----------- | ------------------------------- |
+| **PHP**     | 8.3+ (CI matrix: 8.3, 8.4, 8.5) |
+| **Laravel** | 12 and 13                       |
 
-CI excludes combinations the framework does not support (PHP 8.5 × Laravel 11; PHP 8.2 × Laravel 13). Treat `composer.json` and `.github/workflows/tests.yml` as the live source of truth.
+Treat `composer.json` and `.github/workflows/tests.yml` as the live source of truth.
