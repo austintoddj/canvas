@@ -79,7 +79,7 @@ To publish assets automatically after Composer updates, add this to your applica
 
 ## Contributing
 
-Thank you for considering contributing to Canvas! The [contribution guide can be found here](https://github.com/austintoddj/canvas/blob/master/.github/CONTRIBUTING.md).
+Thank you for considering contributing to Canvas! The [contribution guide can be found here](https://github.com/austintoddj/canvas/blob/main/.github/CONTRIBUTING.md).
 
 ## Testing
 
