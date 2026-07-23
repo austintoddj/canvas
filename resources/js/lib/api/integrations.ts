@@ -16,12 +16,7 @@ export type AiIntegrationStatus = {
     enabled_at: string | null;
 };
 
-export type WebhookEventId =
-    | 'post.published'
-    | 'post.scheduled'
-    | 'post.updated'
-    | 'post.unpublished'
-    | 'post.deleted';
+export type WebhookEventId = 'post.published' | 'post.scheduled' | 'post.updated' | 'post.unpublished' | 'post.deleted';
 
 export type WebhookEventOption = {
     id: WebhookEventId | string;

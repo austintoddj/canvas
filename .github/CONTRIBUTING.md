@@ -7,10 +7,13 @@ If you're fixing docs, translations, bugs, or features, please open a pull reque
 ## Before you start
 
 - Use PHP 8.2+ and a Laravel major supported by the package (see `composer.json` and CI).
+- CI runs JavaScript checks on **Node 22** — match that locally when possible.
 - Read `readme.md` for install basics.
-- Host contracts and upgrade details live in `UPGRADE.md`.
+- Host contracts, clean-break install, and the support matrix live in [`UPGRADE.md`](UPGRADE.md).
 - Search for existing patterns before adding a new layer or abstraction.
-- Translations go under `resources/lang`.
+- Translations go under `resources/lang` (see [Language catalog](#language-catalog) below).
+- Follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+- Security vulnerabilities: report privately per [`SECURITY.md`](SECURITY.md) — do not open public issues for vulns.
 
 ## Local Laravel app
 
@@ -53,16 +56,31 @@ If you want to work locally, use a Laravel app with a sibling Canvas checkout:
 ## Before opening a pull request
 
 - Run `npm run typecheck`, `npm run lint`, and `npm test`
-- Run `npm run build` and commit updated assets in `resources/dist`
+- Run `npm run build` and **commit** updated assets in `resources/dist` — hosts serve published package assets; CI does not rebuild dist for them
 - Run `composer pint` (or `composer pint:test` to check without fixing)
 - Run `composer lint` (PHPStan)
 - Run `composer test:ci` to match the PHP matrix locally
 
-Once you've made your changes, create a pull request from your fork to the `develop` branch of the project repository.
+Once you've made your changes, create a pull request from your fork to the `develop` branch of the project repository. For large majors, work may land on a version branch (e.g. `v7`) first; open PRs against the branch maintainers are merging, defaulting to `develop` unless the issue or PR says otherwise.
+
+## Language catalog
+
+UI copy lives under `resources/lang`. **A feature that introduces or changes UI strings is not complete until the full catalog is updated.**
+
+| Rule                        | Detail                                                                                                                                                |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Source of truth**         | `resources/lang/en/app.php`                                                                                                                           |
+| **Every other locale**      | Same key set as `en` — no missing keys, no extra keys                                                                                                 |
+| **New / updated keys**      | Add or update the key in **every** `resources/lang/{locale}/app.php` with a **real translation** for that language — not a copy of the English string |
+| **Allowed English overlap** | Only true cognates, loanwords, brands, or identical short words (e.g. `SEO`, `URL`, `API`, `Unsplash`, `Canvas`, `Avatar`, `OK`)                      |
+| **Removed / renamed keys**  | Apply in **every** locale file in the same change                                                                                                     |
+| **Proof**                   | `composer test -- --filter=LocalizationTest` must pass (key parity). Also spot-check that new strings are not English clones in non-`en` files        |
+
+Do not leave English placeholders or “translate later” TODOs for other locales.
 
 ## Before a release
 
 - Run the full quality gate: `composer pint:test`, `composer lint`, `composer test:ci`, `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` when SPA assets change
 - Regenerate coverage once with `composer test:coverage` (or `test:coverage:html`) and do not claim percentages without a fresh run
 - Smoke the admin SPA on a path install: install → grant access → draft/schedule/publish → pending promote/discard → Organize taxonomy → media upload/delete → roles → integrations
-- Keep locale key sets in lockstep with `resources/lang/en` (enforced by `LocalizationTest`). New `en` keys must be added to every other locale file — English placeholders are fine until a proper translation lands
+- Finish the [language catalog](#language-catalog) for any UI copy changes — key parity alone is not enough

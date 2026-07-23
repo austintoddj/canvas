@@ -18,10 +18,16 @@ Canvas is an open-source publishing platform for [Laravel](https://laravel.com).
 - Distraction-free editor with tags, topics, and media uploads
 - Monthly trends and reader insights
 - Contributor, Editor, and Admin roles
-- Integrations: Unsplash, AI writing, and outbound webhooks
+- Integrations: Unsplash, AI writing, outbound webhooks, and weekly digest
 - Optional starter reader frontend via `canvas:ui`
 
 Canvas reads identity from your application's user model and stores author profiles and access in `canvas_users`. Configuration lives in `config/canvas.php` after install.
+
+## Requirements
+
+- PHP 8.2+
+- Laravel 11, 12, or 13
+- Working authentication for the guard Canvas uses (`web` by default)
 
 ## Installation
 
@@ -51,7 +57,10 @@ Add `require __DIR__.'/canvas-ui.php';` to `routes/web.php`. Published views liv
 
 ## Upgrading
 
-Canvas follows [Semantic Versioning](https://semver.org). **Major releases may be clean breaks** (no in-place data upgrade) — always read the [upgrade guide](.github/UPGRADE.md) before updating.
+Canvas follows [Semantic Versioning](https://semver.org) and increments versions as `MAJOR.MINOR.PATCH`.
+
+- **Major** versions may contain breaking changes — follow the [upgrade guide](.github/UPGRADE.md) for a step-by-step breakdown.
+- **Minor** and **patch** versions should never contain breaking changes, so you can safely update by following the steps below.
 
 ```bash
 composer update austintoddj/canvas
@@ -67,8 +76,6 @@ To publish assets automatically after Composer updates, add this to your applica
     }
 }
 ```
-
-For Canvas 7 specifically: drop prior `canvas_*` tables and install fresh per the upgrade guide.
 
 ## Contributing
 

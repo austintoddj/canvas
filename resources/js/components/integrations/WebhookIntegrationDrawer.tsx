@@ -10,11 +10,7 @@ import { SideDrawer } from '@/components/SideDrawer';
 import { Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { ApiError, ValidationError, apiErrorCode } from '@/lib/api';
-import {
-    integrationsApi,
-    type IntegrationsStatus,
-    type WebhookEventOption,
-} from '@/lib/api/integrations';
+import { integrationsApi, type IntegrationsStatus, type WebhookEventOption } from '@/lib/api/integrations';
 import { toast } from '@/lib/toast';
 
 type WebhookIntegrationDrawerProps = {
@@ -76,9 +72,7 @@ export function WebhookIntegrationDrawer({
 
             setUrl(initialUrl ?? '');
             const options = availableEvents.length > 0 ? availableEvents : DEFAULT_EVENTS;
-            setEvents(
-                initialEvents.length > 0 ? initialEvents : options.map((option) => option.id)
-            );
+            setEvents(initialEvents.length > 0 ? initialEvents : options.map((option) => option.id));
             setPlainSecret(null);
             setFieldErrors({});
             setSaving(false);
@@ -228,9 +222,7 @@ export function WebhookIntegrationDrawer({
                 const code = apiErrorCode(error);
 
                 if (code === 'webhooks_not_configured') {
-                    toast.error(
-                        t('integrations.webhooks_not_configured', 'Configure webhooks before sending a test.')
-                    );
+                    toast.error(t('integrations.webhooks_not_configured', 'Configure webhooks before sending a test.'));
                 } else if (code === 'webhooks_test_failed' || error.status === 502) {
                     toast.error(t('integrations.webhooks_test_failed', 'The test webhook could not be delivered.'));
                 } else {
@@ -364,7 +356,9 @@ export function WebhookIntegrationDrawer({
                         }}
                     >
                         <Fieldset>
-                            <Legend className="sr-only">{t('integrations.webhooks_settings', 'Webhook settings')}</Legend>
+                            <Legend className="sr-only">
+                                {t('integrations.webhooks_settings', 'Webhook settings')}
+                            </Legend>
                             <FieldGroup className="space-y-5">
                                 {plainSecret ? (
                                     <div
@@ -372,10 +366,7 @@ export function WebhookIntegrationDrawer({
                                         data-webhook-plain-secret="true"
                                     >
                                         <Text className="text-sm font-medium text-zinc-950 dark:text-white">
-                                            {t(
-                                                'integrations.webhooks_secret_once_title',
-                                                'Copy your signing secret'
-                                            )}
+                                            {t('integrations.webhooks_secret_once_title', 'Copy your signing secret')}
                                         </Text>
                                         <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
                                             {t(
@@ -386,7 +377,12 @@ export function WebhookIntegrationDrawer({
                                         <code className="mt-1 block break-all font-mono text-xs text-zinc-800 dark:text-zinc-200">
                                             {plainSecret}
                                         </code>
-                                        <Button type="button" outline className="mt-1" onClick={() => void copySecret()}>
+                                        <Button
+                                            type="button"
+                                            outline
+                                            className="mt-1"
+                                            onClick={() => void copySecret()}
+                                        >
                                             {t('integrations.webhooks_copy_secret', 'Copy secret')}
                                         </Button>
                                     </div>
@@ -481,12 +477,7 @@ export function WebhookIntegrationDrawer({
                     )}
                 </AlertDescription>
                 <AlertActions>
-                    <Button
-                        type="button"
-                        plain
-                        disabled={clearing}
-                        onClick={() => setConfirmDisconnectOpen(false)}
-                    >
+                    <Button type="button" plain disabled={clearing} onClick={() => setConfirmDisconnectOpen(false)}>
                         {t('common.cancel')}
                     </Button>
                     <Button type="button" color="red" disabled={clearing} onClick={() => void confirmDisconnect()}>

@@ -9,6 +9,7 @@
     - [Install or reinstall checklist](#install-or-reinstall-checklist)
     - [Architecture](#architecture)
     - [Breaking changes](#breaking-changes)
+    - [Publishing model](#publishing-model)
     - [`canvas_users` schema](#canvas_users-schema)
     - [Configuration](#configuration)
     - [Integrations](#integrations)
@@ -176,13 +177,13 @@ event(new Canvas\Events\PostViewed(
 
 Canvas dispatches Laravel events when a post’s **public snapshot** changes (never on pending-only autosave). Hosts may listen with zero webhook configuration:
 
-| Event class | When |
-| --- | --- |
-| `Canvas\Events\PostPublished` | Snapshot becomes live (`published_at` ≤ now) |
-| `Canvas\Events\PostScheduled` | Snapshot gains a future `published_at` |
-| `Canvas\Events\PostUpdated` | Live or scheduled snapshot content changes while staying public |
+| Event class                     | When                                                                             |
+| ------------------------------- | -------------------------------------------------------------------------------- |
+| `Canvas\Events\PostPublished`   | Snapshot becomes live (`published_at` ≤ now)                                     |
+| `Canvas\Events\PostScheduled`   | Snapshot gains a future `published_at`                                           |
+| `Canvas\Events\PostUpdated`     | Live or scheduled snapshot content changes while staying public                  |
 | `Canvas\Events\PostUnpublished` | `published_at` cleared (or live moved to scheduled; paired with `PostScheduled`) |
-| `Canvas\Events\PostDeleted` | Soft-deleted |
+| `Canvas\Events\PostDeleted`     | Soft-deleted                                                                     |
 
 ```php
 use Canvas\Events\PostPublished;
@@ -224,11 +225,22 @@ Event::listen(PostPublished::class, function (PostPublished $event): void {
 ```
 
 - Top-level `id` is the **host** user primary key (stock Laravel: bigint).
-- Top-level `avatar_url` is the resolved absolute URL, or empty when using initials in the UI.
+- Top-level `avatar_url` is the resolved absolute URL, or **`null`** when using initials in the UI.
 - Canvas-specific fields live under nested `canvas` (when `canvasUser` is loaded).
 - `role` is an integer enum: `1` Contributor, `2` Editor, `3` Admin.
 - UI appearance is `theme` (`system` / `light` / `dark`).
 - `POST /api/users/{id}` upserts profile data via `SyncCanvasUser`; initial grant requires a `role` when no `canvas_users` row exists.
+
+### Publishing model
+
+How writes relate to what readers and host apps see:
+
+- **Drafts and scheduled posts** — autosave writes the row directly.
+- **Live posts** — autosave writes `pending` JSON only so the public snapshot stays stable.
+- **Update** (`promote: true`) — writes the pending snapshot live and clears `pending`.
+- **Discard** — restores the live snapshot and clears `pending`.
+- **Public / host readers** (including optional `canvas:ui`) must use the live columns only — **never** `pending`.
+- Domain events and outbound webhooks fire only on **public snapshot** mutations (see [Post lifecycle domain events](#post-lifecycle-domain-events) and [Webhooks](#webhooks)), never on pending-only autosave or discard.
 
 #### Database
 
@@ -273,7 +285,7 @@ Hybrid storage: typed columns for queryable fields; `preferences` JSON for long-
 
 ### Configuration
 
-Confirm these settings in `config/canvas.php`:
+Confirm these settings in `config/canvas.php` (publish with `php artisan vendor:publish --tag=canvas-config` if needed):
 
 ```php
 'user_model' => env('CANVAS_USER_MODEL', 'App\Models\User'),
@@ -282,10 +294,18 @@ Confirm these settings in `config/canvas.php`:
 'locales' => ($locales = env('CANVAS_LOCALES')) ? array_values(array_filter(array_map('trim', explode(',', $locales)))) : [],
 ```
 
-- **`user_model`** — host Eloquent class Canvas reads identity from.
-- **`guard`** — applied as `auth:{guard}` on all Canvas routes.
-- **`middleware`** — additional middleware (e.g. `web`) applied before auth.
-- **`locales`** — optional comma-separated restriction (`CANVAS_LOCALES=en,es`). Canvas discovers locales from package and published translation directories; codes without translation files are ignored.
+| Key               | Env                      | Default / notes                                                                                                                |
+| ----------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `user_model`      | `CANVAS_USER_MODEL`      | `App\Models\User` — host Eloquent class Canvas reads identity from                                                             |
+| `guard`           | `CANVAS_GUARD`           | `web` — applied as `auth:{guard}` on all Canvas routes                                                                         |
+| `middleware`      | —                        | `['web']` — additional middleware applied before auth                                                                          |
+| `locales`         | `CANVAS_LOCALES`         | empty = full package catalog; comma-separated codes restrict the picker (`en,es`). Codes without translation files are ignored |
+| `domain`          | `CANVAS_DOMAIN`          | `null` — optional subdomain for the admin SPA                                                                                  |
+| `path`            | `CANVAS_PATH`            | `canvas` → admin at `/canvas` by default                                                                                       |
+| `storage_disk`    | `CANVAS_STORAGE_DISK`    | `public` — disk for media uploads                                                                                              |
+| `storage_path`    | `CANVAS_STORAGE_PATH`    | `canvas` — path prefix on that disk                                                                                            |
+| `upload_filesize` | `CANVAS_UPLOAD_FILESIZE` | `3145728` (3 MB)                                                                                                               |
+| `mail.enabled`    | `CANVAS_MAIL_ENABLED`    | `false` — weekly author digest (see [Weekly digest](#weekly-digest))                                                           |
 
 Your host app owns login, logout, and password reset for the configured guard.
 
@@ -305,52 +325,52 @@ Outbound HTTPS notifications for post lifecycle changes (Zapier, Make, n8n, Slac
 
 **Events (subscribable):**
 
-| Event id | Domain event |
-| --- | --- |
-| `post.published` | `PostPublished` |
-| `post.scheduled` | `PostScheduled` |
-| `post.updated` | `PostUpdated` |
+| Event id           | Domain event      |
+| ------------------ | ----------------- |
+| `post.published`   | `PostPublished`   |
+| `post.scheduled`   | `PostScheduled`   |
+| `post.updated`     | `PostUpdated`     |
 | `post.unpublished` | `PostUnpublished` |
-| `post.deleted` | `PostDeleted` |
+| `post.deleted`     | `PostDeleted`     |
 
 `webhook.test` is only used by the admin test button (not a subscription option).
 
 **Delivery:**
 
-| Item | Value |
-| --- | --- |
-| Method | `POST` |
-| Content-Type | `application/json` |
-| `User-Agent` | `Canvas-Webhooks/1.0` |
-| `Canvas-Event` | Event id (e.g. `post.published`) |
-| `Canvas-Delivery-Id` | UUID for this delivery |
-| `Canvas-Signature` | `t={unix},v1={hex}` — HMAC-SHA256 of `{timestamp}.{rawBody}` with the signing secret |
-| Success | HTTP 2xx (lifecycle jobs retry: 3 attempts, backoff 30s / 2m / 10m) |
-| URL rules | HTTPS only; private/reserved IPs blocked |
+| Item                 | Value                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| Method               | `POST`                                                                               |
+| Content-Type         | `application/json`                                                                   |
+| `User-Agent`         | `Canvas-Webhooks/1.0`                                                                |
+| `Canvas-Event`       | Event id (e.g. `post.published`)                                                     |
+| `Canvas-Delivery-Id` | UUID for this delivery                                                               |
+| `Canvas-Signature`   | `t={unix},v1={hex}` — HMAC-SHA256 of `{timestamp}.{rawBody}` with the signing secret |
+| Success              | HTTP 2xx (lifecycle jobs retry: 3 attempts, backoff 30s / 2m / 10m)                  |
+| URL rules            | HTTPS only; private/reserved IPs blocked                                             |
 
 **Payload** (`api_version: 1`) includes post metadata (id, slug, title, summary, published_at, featured image, SEO meta, topic/tags, author). It does **not** include the full HTML body.
 
 ```json
 {
-  "api_version": 1,
-  "event": "post.published",
-  "delivery_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "created_at": "2026-07-22T15:04:05+00:00",
-  "data": {
-    "id": "…",
-    "slug": "…",
-    "title": "…",
-    "summary": "…",
-    "published_at": "…",
-    "featured_image": "…",
-    "featured_image_caption": "…",
-    "meta": {},
-    "topic": { "name": "…", "slug": "…" },
-    "tags": [{ "name": "…", "slug": "…" }],
-    "author": { "id": 1, "name": "Jane", "username": "jane" },
-    "created_at": "…",
-    "updated_at": "…"
-  }
+    "api_version": 1,
+    "event": "post.published",
+    "delivery_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "created_at": "2026-07-22T15:04:05+00:00",
+    "data": {
+        "id": "…",
+        "slug": "…",
+        "title": "…",
+        "summary": "…",
+        "published_at": "…",
+        "featured_image": "…",
+        "featured_image_caption": "…",
+        "meta": {},
+        "topic": { "name": "…", "slug": "…" },
+        "tags": [{ "name": "…", "slug": "…" }],
+        "author": { "id": 1, "name": "Jane", "username": "jane" },
+        "created_at": "…",
+        "updated_at": "…"
+    }
 }
 ```
 
@@ -368,16 +388,14 @@ Or use `Canvas\Support\WebhookSigner::verify($secret, $rawBody, $header)`.
 
 **Queue:** lifecycle delivery uses `DeliverWebhookJob` (`ShouldQueue`) — same host pattern as weekly digest mail. **Send test** runs that same job via `dispatchSync` so the admin UI gets an immediate success/failure.
 
-| Host setup | Lifecycle webhooks |
-| --- | --- |
-| `QUEUE_CONNECTION=sync` (Laravel default) | Delivered inline when events fire — no worker process |
-| `database` / `redis` / `sqs` / etc. | Run `queue:work` (or Horizon). Without a worker, jobs stay pending after publish |
+| Host setup                                | Lifecycle webhooks                                                               |
+| ----------------------------------------- | -------------------------------------------------------------------------------- |
+| `QUEUE_CONNECTION=sync` (Laravel default) | Delivered inline when events fire — no worker process                            |
+| `database` / `redis` / `sqs` / etc.       | Run `queue:work` (or Horizon). Without a worker, jobs stay pending after publish |
 
 **Scheduled go-live limitation:** A post with a future `published_at` becomes reader-visible when time passes **without** another write. Canvas does **not** automatically fire `post.published` at that instant. You receive `post.scheduled` when the future date is set. Exact go-live hooks can listen for schedule set, poll, or wait until a future poller lands.
 
 **Fire rules:** No deliveries for pending-only autosave, discard pending, or draft-only edits. Only true public snapshot mutations (and soft-delete).
-
-Implementation tracker: [`.github/docs/WEBHOOKS.md`](docs/WEBHOOKS.md).
 
 ### Access model
 
@@ -389,6 +407,15 @@ Canvas access is a row in `canvas_users`, not a flag on the host user:
 
 `canvas:remove-access` and `UserController@destroy` only delete `canvas_users`. Host `users` rows and authored content are preserved; posts retain their `user_id`.
 
+| Capability                            | Contributor | Editor | Admin |
+| ------------------------------------- | ----------- | ------ | ----- |
+| Access admin (`canvas_users` row)     | ✓           | ✓      | ✓     |
+| Own posts & media                     | ✓           | ✓      | ✓     |
+| All posts & media                     |             | ✓      | ✓     |
+| Users (`manage-users`)                |             |        | ✓     |
+| Organize taxonomy (`manage-taxonomy`) |             |        | ✓     |
+| Integrations (`manage-integrations`)  |             |        | ✓     |
+
 ### Smoke checks
 
 ```bash
@@ -397,34 +424,37 @@ php artisan canvas:users your@email.com
 ```
 
 1. Sign in via the host app (guard from `CANVAS_GUARD`).
-2. Visit `/canvas` — must **not** be 403 (requires a `canvas_users` row).
+2. Visit `/canvas` (or your configured `path`) — must **not** be 403 (requires a `canvas_users` row).
 3. Confirm the SPA boot payload includes `user.avatar_url` and nested `user.canvas` (including `user.canvas.theme`).
 4. Create or open a post — author, topic, and tags behave as expected.
+5. _(Optional)_ With Integrations configured: Unsplash/AI readiness booleans in the boot payload; Webhooks **Send test** returns success against your receiver.
 
-**Digest:** opted-in users (`canvas_users.digest = true`) should have a valid **IANA** `timezone` on `canvas_users`. Empty timezones fall back to app timezone.
+**Digest:** opted-in users (`canvas_users.digest = true`) should have a valid **IANA** `timezone` on `canvas_users`. Empty timezones fall back to app timezone. With `CANVAS_MAIL_ENABLED=true`, confirm `php artisan schedule:list` shows `canvas:digest`.
 
 ### Troubleshooting
 
-| Symptom                            | Likely cause                                         | Fix                                                                |
-| ---------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------ |
-| 403 on `/canvas` after login       | No `canvas_users` row for the authenticated user     | `canvas:make-admin` or `canvas:assign-role`                        |
-| 403 with valid session             | Wrong guard                                          | Set `CANVAS_GUARD` to your app's guard                             |
-| 403 on admin user routes           | Authenticated user is not an Admin in `canvas_users` | `canvas:make-admin` or assign role via `canvas:assign-role`        |
-| Locale validation fails on save    | Locale not translated                                | Publish lang files or restrict `CANVAS_LOCALES` to available codes |
-| FK error on `canvas_users.user_id` | Host user does not exist                             | Create the host user first, then grant Canvas access               |
-| Webhook test works but publish never hits the URL | Queue worker not running (non-`sync` driver), or event not subscribed | Run `php artisan queue:work` (or use `QUEUE_CONNECTION=sync`); confirm **Published** (etc.) is selected under Events |
-| Webhook test fails | URL unreachable or non-2xx | Fix the receiver; Send test runs the delivery job synchronously for immediate feedback |
-| Webhook secret lost after configure | Plain secret is shown once | Rotate secret in Integrations and update your receiver |
+| Symptom                                           | Likely cause                                                                     | Fix                                                                                                                                                                 |
+| ------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 403 on `/canvas` after login                      | No `canvas_users` row for the authenticated user                                 | `canvas:make-admin` or `canvas:assign-role`                                                                                                                         |
+| 403 with valid session                            | Wrong guard                                                                      | Set `CANVAS_GUARD` to your app's guard                                                                                                                              |
+| 403 on admin user routes                          | Authenticated user is not an Admin in `canvas_users`                             | `canvas:make-admin` or assign role via `canvas:assign-role`                                                                                                         |
+| Locale validation fails on save                   | Locale not translated                                                            | Publish lang files or restrict `CANVAS_LOCALES` to available codes                                                                                                  |
+| FK error on `canvas_users.user_id`                | Host user does not exist                                                         | Create the host user first, then grant Canvas access                                                                                                                |
+| Digest never sends                                | Scheduler not running, mail disabled, user not opted in, or queue worker missing | Enable `CANVAS_MAIL_ENABLED`; set `digest` + IANA `timezone` on `canvas_users`; run host cron for `schedule:run`; run a queue worker unless `QUEUE_CONNECTION=sync` |
+| Webhook test works but publish never hits the URL | Queue worker not running (non-`sync` driver), or event not subscribed            | Run `php artisan queue:work` (or use `QUEUE_CONNECTION=sync`); confirm **Published** (etc.) is selected under Events                                                |
+| Webhook test fails                                | URL unreachable or non-2xx                                                       | Fix the receiver; Send test runs the delivery job synchronously for immediate feedback                                                                              |
+| Webhook secret lost after configure               | Plain secret is shown once                                                       | Rotate secret in Integrations and update your receiver                                                                                                              |
 
 ### Weekly digest
 
-When `canvas.mail.enabled` is true, **`Canvas\CanvasServiceProvider`** schedules `canvas:digest` for **Mondays at 08:00** in `config('app.timezone')` — hosts do not register this themselves. Each recipient’s reporting window uses their `canvas_users.timezone` (`DigestPeriod`); timezone affects which activity falls in the week, not when the scheduler fires. Silent weeks (no views or visitors) do not send mail.
+When `canvas.mail.enabled` is true (`CANVAS_MAIL_ENABLED`), **`Canvas\CanvasServiceProvider`** registers `canvas:digest` for **Mondays at 08:00** in `config('app.timezone')` — hosts do not register the command themselves, but **must run Laravel’s scheduler** (typical host cron: `* * * * * php artisan schedule:run`) or the digest never fires. Each recipient’s reporting window uses their `canvas_users.timezone` (`DigestPeriod`); timezone affects which activity falls in the week, not when the scheduler fires. Silent weeks (no views or visitors) do not send mail.
 
 Digest mailables implement Laravel’s `ShouldQueue`. Delivery follows the host queue and mail config:
 
 | Host setup                                | What you need                                                                                  |
 | ----------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `QUEUE_CONNECTION=sync` (Laravel default) | Nothing extra — digests send inline when the command runs                                      |
+| Scheduler                                 | Host cron (or equivalent) running `php artisan schedule:run` every minute                      |
+| `QUEUE_CONNECTION=sync` (Laravel default) | Nothing extra for the queue — digests send inline when the command runs                        |
 | `database` / `redis` / `sqs` / etc.       | A queue worker (`queue:work`, Horizon, …). Without one, jobs stay pending and no mail goes out |
 | Mail transport                            | Normal host `MAIL_*` / `MAIL_MAILER` (SMTP, log, SES, …)                                       |
 
@@ -432,4 +462,11 @@ Telescope (or similar) may still show the mailable as **queued** after a success
 
 ### Support window
 
-Canvas targets current Laravel major + previous (PHP floor matching the oldest supported major). See `composer.json` and `.github/workflows/tests.yml` for the live matrix.
+Canvas 7 supports:
+
+| Runtime     | Versions                             |
+| ----------- | ------------------------------------ |
+| **PHP**     | 8.2+ (CI matrix: 8.2, 8.3, 8.4, 8.5) |
+| **Laravel** | 11, 12, and 13                       |
+
+CI excludes combinations the framework does not support (PHP 8.5 × Laravel 11; PHP 8.2 × Laravel 13). Treat `composer.json` and `.github/workflows/tests.yml` as the live source of truth.
