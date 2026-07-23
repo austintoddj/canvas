@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'कैनवस की संपत्तियाँ स्थापित संस्करण के साथ अद्यतित नहीं हैं।',
+    'assets_are_not_up_to_date' => 'आपका एडमिन UI पुराना है',
+    'assets_docs_link' => 'टिप: इसे अपनी Composer स्क्रिप्ट में जोड़ें और फिर कभी न देखें',
     'from' => 'से',
     'hello' => 'नमस्ते',
     'min' => 'मिन',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => 'आपकी पोस्ट के आँकड़े',
     'this_week' => 'इस सप्ताह',
     'to' => 'को',
-    'to_update_run' => 'अद्यतन करने के लिए, चलाएँ:',
+    'to_update_run' => 'इस सर्वर का Canvas पैकेज प्रकाशित संस्करण से नया है — एक त्वरित सिंक इसे ठीक कर देगा:',
     'views' => 'दृश्य',
     'visits' => 'दौरा',
     'your_posts_received' => 'आपके पोस्ट प्राप्त हुए:',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => 'अभी कोई रैंकिंग नहीं',
     'dashboard.most_viewed_hint' => 'चयनित सीमा में दृश्यों के अनुसार',
     'dashboard.most_viewed_hint_range' => 'दृश्यों के अनुसार :range',
+    'dashboard.needs_attention' => 'ध्यान देने की आवश्यकता',
     'dashboard.pending_badge' => 'अप्रकाशित संपादन',
     'dashboard.pipeline_drafts' => 'प्रगति में',
     'dashboard.pipeline_drafts_empty' => 'अभी कोई ड्राफ़्ट नहीं',

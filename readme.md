@@ -57,6 +57,16 @@ composer update austintoddj/canvas
 php artisan canvas:publish
 ```
 
+To publish assets automatically after Composer updates, add this to your application’s `composer.json`:
+
+```json
+{
+    "scripts": {
+        "post-update-cmd": ["@php artisan canvas:publish --ansi"]
+    }
+}
+```
+
 For Canvas 7 specifically: drop prior `canvas_*` tables and install fresh per the upgrade guide.
 
 ## Contributing

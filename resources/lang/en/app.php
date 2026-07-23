@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'Canvas assets need republishing',
+    'assets_are_not_up_to_date' => 'Your admin UI is out of date',
+    'assets_docs_link' => 'Tip: add this to your Composer script and never see this again',
     'from' => 'From',
     'hello' => 'Hello',
     'min' => 'min',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => 'Stats for your posts',
     'this_week' => 'this week',
     'to' => 'to',
-    'to_update_run' => 'The admin UI doesn’t match this package version. Run this on the server:',
+    'to_update_run' => 'This server\'s Canvas package is newer than what\'s published — a quick sync will fix it:',
     'views' => 'Views',
     'visits' => 'Visitors',
     'your_posts_received' => 'your posts received:',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => 'No ranking yet',
     'dashboard.most_viewed_hint' => 'By views in the selected range',
     'dashboard.most_viewed_hint_range' => ':range by views',
+    'dashboard.needs_attention' => 'Needs attention',
     'dashboard.pending_badge' => 'Unpublished edits',
     'dashboard.pipeline_drafts' => 'In progress',
     'dashboard.pipeline_drafts_empty' => 'No drafts right now',

@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'Canvas 的资源与安装的版本不是最新的。',
+    'assets_are_not_up_to_date' => '您的管理界面已过期',
+    'assets_docs_link' => '提示：将其加入 Composer 脚本，以后就不会再看到',
     'from' => '从',
     'hello' => '你好',
     'min' => '分钟',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => '您的帖子的统计信息',
     'this_week' => '本星期',
     'to' => '到',
-    'to_update_run' => '要更新，请运行：',
+    'to_update_run' => '此服务器上的 Canvas 包比已发布的版本更新 — 快速同步即可修复：',
     'views' => '意见',
     'visits' => '访问量',
     'your_posts_received' => '您收到的帖子：',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => '暂无排名',
     'dashboard.most_viewed_hint' => '按所选范围内的浏览量',
     'dashboard.most_viewed_hint_range' => '按浏览量的 :range',
+    'dashboard.needs_attention' => '需要关注',
     'dashboard.pending_badge' => '未发布的编辑',
     'dashboard.pipeline_drafts' => '进行中',
     'dashboard.pipeline_drafts_empty' => '当前没有草稿',

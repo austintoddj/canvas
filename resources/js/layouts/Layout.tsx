@@ -1,5 +1,4 @@
 import { AnimatedOutlet } from '@/components/AnimatedOutlet';
-import { AssetsOutdatedCallout } from '@/components/AssetsOutdatedCallout';
 import { Avatar } from '@/components/avatar';
 import { CommandPalette } from '@/components/CommandPalette';
 import { QuillIcon } from '@/components/QuillIcon';
@@ -192,7 +191,7 @@ function UserDropdownContent({
 }
 
 export default function Layout() {
-    const { user, t, boot } = useCanvas();
+    const { user, t } = useCanvas();
     const { canManageTaxonomy, canManageUsers, canManageIntegrations } = usePermissions();
     const { pathname } = useLocation();
     const { posts: recentPosts } = useRecentPosts(5);
@@ -294,28 +293,19 @@ export default function Layout() {
                                     <SidebarLabel>{t('nav.media')}</SidebarLabel>
                                 </SidebarItem>
                                 {canManageTaxonomy ? (
-                                    <SidebarItem
-                                        href="/organize"
-                                        current={pathname.startsWith('/organize')}
-                                    >
+                                    <SidebarItem href="/organize" current={pathname.startsWith('/organize')}>
                                         <IconStack2 data-slot="icon" />
                                         <SidebarLabel>{t('nav.organize')}</SidebarLabel>
                                     </SidebarItem>
                                 ) : null}
                                 {canManageUsers ? (
-                                    <SidebarItem
-                                        href="/users"
-                                        current={pathname.startsWith('/users')}
-                                    >
+                                    <SidebarItem href="/users" current={pathname.startsWith('/users')}>
                                         <IconUsers data-slot="icon" />
                                         <SidebarLabel>{t('nav.users')}</SidebarLabel>
                                     </SidebarItem>
                                 ) : null}
                                 {canManageIntegrations ? (
-                                    <SidebarItem
-                                        href="/integrations"
-                                        current={pathname.startsWith('/integrations')}
-                                    >
+                                    <SidebarItem href="/integrations" current={pathname.startsWith('/integrations')}>
                                         <IconBuildingStore data-slot="icon" />
                                         <SidebarLabel>{t('nav.integrations')}</SidebarLabel>
                                     </SidebarItem>
@@ -365,11 +355,6 @@ export default function Layout() {
                     </Sidebar>
                 }
             >
-                {boot.assetsUpToDate === false ? (
-                    <div className="mb-8">
-                        <AssetsOutdatedCallout />
-                    </div>
-                ) : null}
                 <AnimatedOutlet />
             </SidebarLayout>
         </>

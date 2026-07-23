@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'Le risorse per Canvas non sono aggiornate con la versione installata.',
+    'assets_are_not_up_to_date' => 'La tua interfaccia admin non è aggiornata',
+    'assets_docs_link' => 'Suggerimento: aggiungi questo allo script Composer e non lo vedrai più',
     'from' => 'Da',
     'hello' => 'Ciao',
     'min' => 'min',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => 'Statistiche per i tuoi post',
     'this_week' => 'questa settimana',
     'to' => 'A',
-    'to_update_run' => 'Per aggiornare, esegui:',
+    'to_update_run' => 'Il pacchetto Canvas su questo server è più recente di quanto pubblicato — una sincronizzazione rapida lo risolverà:',
     'views' => 'Viste',
     'visits' => 'Visite',
     'your_posts_received' => 'i tuoi post hanno ricevuto:',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => 'Ancora nessuna classifica',
     'dashboard.most_viewed_hint' => 'Per visualizzazioni nell’intervallo selezionato',
     'dashboard.most_viewed_hint_range' => ':range per visualizzazioni',
+    'dashboard.needs_attention' => 'Richiede attenzione',
     'dashboard.pending_badge' => 'Modifiche non pubblicate',
     'dashboard.pipeline_drafts' => 'In corso',
     'dashboard.pipeline_drafts_empty' => 'Nessuna bozza al momento',

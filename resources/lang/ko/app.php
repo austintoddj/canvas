@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'Canvas 자산이 설치된 버전에 따라 최신 상태가 아닙니다.',
+    'assets_are_not_up_to_date' => '관리 UI가 오래되었습니다',
+    'assets_docs_link' => '팁: Composer 스크립트에 추가하면 다시 보지 않아도 됩니다',
     'from' => '에서',
     'hello' => '안녕하세요',
     'min' => '분',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => '게시물 통계',
     'this_week' => '이번 주',
     'to' => '에게',
-    'to_update_run' => '업데이트하려면 다음을 실행하세요.',
+    'to_update_run' => '이 서버의 Canvas 패키지가 게시된 것보다 최신입니다 — 빠른 동기화로 해결할 수 있습니다:',
     'views' => '조회수',
     'visits' => '방문',
     'your_posts_received' => '귀하의 게시물이 수신되었습니다:',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => '아직 순위 없음',
     'dashboard.most_viewed_hint' => '선택한 기간의 조회수 기준',
     'dashboard.most_viewed_hint_range' => '조회수 기준 :range',
+    'dashboard.needs_attention' => '주의가 필요합니다',
     'dashboard.pending_badge' => '미게시 편집',
     'dashboard.pipeline_drafts' => '진행 중',
     'dashboard.pipeline_drafts_empty' => '지금 초안이 없습니다',

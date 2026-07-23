@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'Ресурсы Canvas не соответствуют установленной версии.',
+    'assets_are_not_up_to_date' => 'Ваш интерфейс администратора устарел',
+    'assets_docs_link' => 'Совет: добавьте это в скрипт Composer и больше не увидите это',
     'from' => 'От',
     'hello' => 'Привет',
     'min' => 'мин',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => 'Статистика ваших постов',
     'this_week' => 'На этой неделе',
     'to' => 'к',
-    'to_update_run' => 'Для обновления запустите:',
+    'to_update_run' => 'Пакет Canvas на этом сервере новее опубликованного — быстрая синхронизация это исправит:',
     'views' => 'Просмотры',
     'visits' => 'Посещения',
     'your_posts_received' => 'Ваши сообщения получили:',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => 'Пока нет рейтинга',
     'dashboard.most_viewed_hint' => 'По просмотрам за выбранный период',
     'dashboard.most_viewed_hint_range' => ':range по просмотрам',
+    'dashboard.needs_attention' => 'Требует внимания',
     'dashboard.pending_badge' => 'Неопубликованные правки',
     'dashboard.pipeline_drafts' => 'В работе',
     'dashboard.pipeline_drafts_empty' => 'Сейчас нет черновиков',

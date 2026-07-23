@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'Nội dung của Canvas không được cập nhật với phiên bản đã cài đặt.',
+    'assets_are_not_up_to_date' => 'Giao diện quản trị của bạn đã lỗi thời',
+    'assets_docs_link' => 'Mẹo: thêm vào script Composer và không bao giờ thấy lại',
     'from' => 'Từ',
     'hello' => 'Xin chào',
     'min' => 'phút',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => 'Số liệu thống kê cho bài viết của bạn',
     'this_week' => 'tuần này',
     'to' => 'ĐẾN',
-    'to_update_run' => 'Để cập nhật, hãy chạy:',
+    'to_update_run' => 'Gói Canvas trên máy chủ này mới hơn bản đã xuất bản — đồng bộ nhanh sẽ khắc phục:',
     'views' => 'Lượt xem',
     'visits' => 'lượt truy cập',
     'your_posts_received' => 'bài viết của bạn đã nhận được:',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => 'Chưa có xếp hạng',
     'dashboard.most_viewed_hint' => 'Theo lượt xem trong khoảng đã chọn',
     'dashboard.most_viewed_hint_range' => ':range theo lượt xem',
+    'dashboard.needs_attention' => 'Cần chú ý',
     'dashboard.pending_badge' => 'Chỉnh sửa chưa xuất bản',
     'dashboard.pipeline_drafts' => 'Đang thực hiện',
     'dashboard.pipeline_drafts_empty' => 'Hiện không có bản nháp',

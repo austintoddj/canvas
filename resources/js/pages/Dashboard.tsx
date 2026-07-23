@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { DashboardEmptyVisual } from '@/components/analytics/DashboardEmptyVisual';
+import { AssetsOutdatedCallout } from '@/components/AssetsOutdatedCallout';
 import { Button } from '@/components/button';
 import { ContentReveal } from '@/components/ContentReveal';
 import { DashboardAudience } from '@/components/dashboard/DashboardAudience';
@@ -9,6 +10,7 @@ import { DashboardPipeline } from '@/components/dashboard/DashboardPipeline';
 import { DashboardRecentPosts } from '@/components/dashboard/DashboardRecentPosts';
 import { EmptyState } from '@/components/EmptyState';
 import { EmptyStateReveal } from '@/components/EmptyStateReveal';
+import { Subheading } from '@/components/heading';
 import { PageHeader } from '@/components/PageHeader';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Skeleton } from '@/components/Skeleton';
@@ -66,7 +68,7 @@ function DashboardSkeleton() {
 }
 
 export default function Dashboard() {
-    const { t, user } = useCanvas();
+    const { t, user, boot } = useCanvas();
     const { canViewAllPosts } = usePermissions();
     const [searchParams, setSearchParams] = useSearchParams();
     const scope = parseDashboardScope(searchParams.get('scope'));
@@ -202,6 +204,13 @@ export default function Dashboard() {
                     <PillNavItem value="user">{t('dashboard.scope_mine')}</PillNavItem>
                     <PillNavItem value="all">{t('dashboard.scope_all')}</PillNavItem>
                 </PillNav>
+            ) : null}
+
+            {boot.assetsUpToDate === false ? (
+                <section className="space-y-3" data-dashboard-needs-attention="true">
+                    <Subheading level={2}>{t('dashboard.needs_attention')}</Subheading>
+                    <AssetsOutdatedCallout />
+                </section>
             ) : null}
 
             {error ? <ErrorText>{error}</ErrorText> : null}

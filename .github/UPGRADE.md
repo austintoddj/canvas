@@ -316,11 +316,11 @@ When `canvas.mail.enabled` is true, **`Canvas\CanvasServiceProvider`** schedules
 
 Digest mailables implement Laravel’s `ShouldQueue`. Delivery follows the host queue and mail config:
 
-| Host setup | What you need |
-| --- | --- |
-| `QUEUE_CONNECTION=sync` (Laravel default) | Nothing extra — digests send inline when the command runs |
-| `database` / `redis` / `sqs` / etc. | A queue worker (`queue:work`, Horizon, …). Without one, jobs stay pending and no mail goes out |
-| Mail transport | Normal host `MAIL_*` / `MAIL_MAILER` (SMTP, log, SES, …) |
+| Host setup                                | What you need                                                                                  |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `QUEUE_CONNECTION=sync` (Laravel default) | Nothing extra — digests send inline when the command runs                                      |
+| `database` / `redis` / `sqs` / etc.       | A queue worker (`queue:work`, Horizon, …). Without one, jobs stay pending and no mail goes out |
+| Mail transport                            | Normal host `MAIL_*` / `MAIL_MAILER` (SMTP, log, SES, …)                                       |
 
 Telescope (or similar) may still show the mailable as **queued** after a successful worker run — that reflects the queue path, not a stuck send.
 

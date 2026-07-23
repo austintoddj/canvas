@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'Aset untuk Canvas tidak mutakhir dengan versi yang diinstal.',
+    'assets_are_not_up_to_date' => 'UI admin Anda sudah usang',
+    'assets_docs_link' => 'Tip: tambahkan ini ke skrip Composer Anda dan jangan pernah melihat ini lagi',
     'from' => 'Dari',
     'hello' => 'Halo',
     'min' => 'menit',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => 'Statistik untuk postingan Anda',
     'this_week' => 'minggu ini',
     'to' => 'ke',
-    'to_update_run' => 'Untuk memperbarui, jalankan:',
+    'to_update_run' => 'Paket Canvas di server ini lebih baru daripada yang dipublikasikan — sinkronisasi cepat akan memperbaikinya:',
     'views' => 'Tampilan',
     'visits' => 'Kunjungan',
     'your_posts_received' => 'kiriman Anda diterima:',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => 'Belum ada peringkat',
     'dashboard.most_viewed_hint' => 'Berdasarkan tayangan pada rentang yang dipilih',
     'dashboard.most_viewed_hint_range' => ':range berdasarkan tayangan',
+    'dashboard.needs_attention' => 'Perlu perhatian',
     'dashboard.pending_badge' => 'Suntingan belum diterbitkan',
     'dashboard.pipeline_drafts' => 'Sedang dikerjakan',
     'dashboard.pipeline_drafts_empty' => 'Tidak ada draf saat ini',

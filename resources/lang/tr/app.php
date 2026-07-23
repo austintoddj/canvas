@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'Canvas varlıkları yüklü sürümle güncel değil.',
+    'assets_are_not_up_to_date' => 'Yönetim arayüzünüz güncel değil',
+    'assets_docs_link' => 'İpucu: bunu Composer betiğinize ekleyin ve bir daha görmeyin',
     'from' => 'İtibaren',
     'hello' => 'Merhaba',
     'min' => 'dk.',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => 'Gönderileriniz için istatistikler',
     'this_week' => 'Bu hafta',
     'to' => 'ile',
-    'to_update_run' => 'Güncellemek için şunu çalıştırın:',
+    'to_update_run' => 'Bu sunucudaki Canvas paketi yayımlanandan daha yeni — hızlı bir eşitleme bunu düzeltir:',
     'views' => 'Görünümler',
     'visits' => 'Ziyaretler',
     'your_posts_received' => 'alınan gönderileriniz:',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => 'Henüz sıralama yok',
     'dashboard.most_viewed_hint' => 'Seçilen aralıktaki görüntülemeye göre',
     'dashboard.most_viewed_hint_range' => 'görüntülemeye göre :range',
+    'dashboard.needs_attention' => 'İlgi gerekiyor',
     'dashboard.pending_badge' => 'Yayımlanmamış düzenlemeler',
     'dashboard.pipeline_drafts' => 'Devam ediyor',
     'dashboard.pipeline_drafts_empty' => 'Şu an taslak yok',

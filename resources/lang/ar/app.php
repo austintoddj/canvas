@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'أصول Canvas ليست محدثة مع الإصدار المثبت.',
+    'assets_are_not_up_to_date' => 'واجهة الإدارة لديك قديمة',
+    'assets_docs_link' => 'نصيحة: أضف هذا إلى سكربت Composer ولن ترى هذا مرة أخرى',
     'from' => 'من',
     'hello' => 'مرحبًا',
     'min' => 'دقيقة',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => 'إحصائيات مشاركاتك',
     'this_week' => '.هذا الاسبوع',
     'to' => 'ل',
-    'to_update_run' => 'للتحديث قم بتشغيل:',
+    'to_update_run' => 'حزمة Canvas على هذا الخادم أحدث مما هو منشور — مزامنة سريعة ستصلح ذلك:',
     'views' => 'وجهات النظر',
     'visits' => 'الزيارات',
     'your_posts_received' => 'مشاركاتك المستلمة:',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => 'لا ترتيب بعد',
     'dashboard.most_viewed_hint' => 'حسب المشاهدات في النطاق المحدد',
     'dashboard.most_viewed_hint_range' => ':range حسب المشاهدات',
+    'dashboard.needs_attention' => 'يحتاج إلى انتباه',
     'dashboard.pending_badge' => 'تعديلات غير منشورة',
     'dashboard.pipeline_drafts' => 'قيد العمل',
     'dashboard.pipeline_drafts_empty' => 'لا مسودات حاليًا',

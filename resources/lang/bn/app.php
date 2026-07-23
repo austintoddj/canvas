@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'ক্যানভাসের সম্পদগুলি ইনস্টল করা সংস্করণের সাথে আপ-টু-ডেট নয়।',
+    'assets_are_not_up_to_date' => 'আপনার অ্যাডমিন UI পুরনো',
+    'assets_docs_link' => 'টিপ: এটি আপনার Composer স্ক্রিপ্টে যোগ করুন এবং আর কখনো দেখবেন না',
     'from' => 'থেকে',
     'hello' => 'হ্যালো',
     'min' => 'মিনিট',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => 'আপনার পোস্টের জন্য পরিসংখ্যান',
     'this_week' => 'এই সপ্তাহে',
     'to' => 'থেকে',
-    'to_update_run' => 'আপডেট করতে, চালান:',
+    'to_update_run' => 'এই সার্ভারের Canvas প্যাকেজ প্রকাশিত সংস্করণের চেয়ে নতুন — একটি দ্রুত সিঙ্ক এটি ঠিক করবে:',
     'views' => 'ভিউ',
     'visits' => 'ভিজিট',
     'your_posts_received' => 'আপনার পোস্ট গৃহীত:',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => 'এখনও কোনো র‌্যাঙ্কিং নেই',
     'dashboard.most_viewed_hint' => 'নির্বাচিত পরিসরে দর্শন অনুযায়ী',
     'dashboard.most_viewed_hint_range' => 'দর্শন অনুযায়ী :range',
+    'dashboard.needs_attention' => 'মনোযোগ প্রয়োজন',
     'dashboard.pending_badge' => 'অপ্রকাশিত সম্পাদনা',
     'dashboard.pipeline_drafts' => 'চলমান',
     'dashboard.pipeline_drafts_empty' => 'এখন কোনো খসড়া নেই',

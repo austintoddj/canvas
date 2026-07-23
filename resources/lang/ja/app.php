@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'Canvas のアセットは、インストールされているバージョンでは最新ではありません。',
+    'assets_are_not_up_to_date' => '管理 UI が最新ではありません',
+    'assets_docs_link' => 'ヒント: これを Composer スクリプトに追加すれば、二度と表示されません',
     'from' => 'から',
     'hello' => 'こんにちは',
     'min' => '分',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => '投稿の統計',
     'this_week' => '今週',
     'to' => 'に',
-    'to_update_run' => '更新するには、次を実行します。',
+    'to_update_run' => 'このサーバーの Canvas パッケージは公開済みのものより新しいです — すばやく同期すれば解決します:',
     'views' => 'ビュー',
     'visits' => '訪問',
     'your_posts_received' => 'あなたの投稿が受信されました:',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => 'まだランキングがありません',
     'dashboard.most_viewed_hint' => '選択した期間の閲覧数',
     'dashboard.most_viewed_hint_range' => '閲覧数による :range',
+    'dashboard.needs_attention' => '対応が必要です',
     'dashboard.pending_badge' => '未公開の編集',
     'dashboard.pipeline_drafts' => '進行中',
     'dashboard.pipeline_drafts_empty' => '下書きはありません',

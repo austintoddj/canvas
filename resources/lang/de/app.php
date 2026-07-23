@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'Die Assets für Canvas sind mit der installierten Version nicht auf dem neuesten Stand.',
+    'assets_are_not_up_to_date' => 'Ihre Admin-Oberfläche ist veraltet',
+    'assets_docs_link' => 'Tipp: Fügen Sie dies Ihrem Composer-Skript hinzu und sehen Sie das nie wieder',
     'from' => 'Aus',
     'hello' => 'Hallo',
     'min' => 'Min.',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => 'Statistiken für Ihre Beiträge',
     'this_week' => 'diese Woche',
     'to' => 'Zu',
-    'to_update_run' => 'Führen Sie zum Aktualisieren Folgendes aus:',
+    'to_update_run' => 'Das Canvas-Paket auf diesem Server ist neuer als die veröffentlichte Version — eine kurze Synchronisierung behebt das:',
     'views' => 'Ansichten',
     'visits' => 'Besuche',
     'your_posts_received' => 'Ihre Beiträge erhalten:',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => 'Noch keine Rangliste',
     'dashboard.most_viewed_hint' => 'Nach Aufrufen im gewählten Zeitraum',
     'dashboard.most_viewed_hint_range' => ':range nach Aufrufen',
+    'dashboard.needs_attention' => 'Benötigt Aufmerksamkeit',
     'dashboard.pending_badge' => 'Unveröffentlichte Änderungen',
     'dashboard.pipeline_drafts' => 'In Arbeit',
     'dashboard.pipeline_drafts_empty' => 'Keine Entwürfe im Moment',

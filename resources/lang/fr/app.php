@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'assets_are_not_up_to_date' => 'Les ressources de Canvas ne sont pas à jour avec la version installée.',
+    'assets_are_not_up_to_date' => 'Votre interface d’administration est obsolète',
+    'assets_docs_link' => 'Astuce : ajoutez ceci à votre script Composer et ne le revoyez plus jamais',
     'from' => 'Depuis',
     'hello' => 'Bonjour',
     'min' => 'min',
@@ -11,7 +12,7 @@ return [
     'stats_for_your_posts' => 'Statistiques pour vos publications',
     'this_week' => 'cette semaine',
     'to' => 'à',
-    'to_update_run' => 'Pour mettre à jour, exécutez :',
+    'to_update_run' => 'Le package Canvas de ce serveur est plus récent que la version publiée — une synchronisation rapide corrigera cela :',
     'views' => 'Vues',
     'visits' => 'Visites',
     'your_posts_received' => 'vos messages reçus :',
@@ -85,6 +86,7 @@ return [
     'dashboard.most_viewed_empty_title' => 'Pas encore de classement',
     'dashboard.most_viewed_hint' => 'Par vues sur la période sélectionnée',
     'dashboard.most_viewed_hint_range' => ':range par vues',
+    'dashboard.needs_attention' => 'Nécessite une attention',
     'dashboard.pending_badge' => 'Modifications non publiées',
     'dashboard.pipeline_drafts' => 'En cours',
     'dashboard.pipeline_drafts_empty' => 'Aucun brouillon pour le moment',
