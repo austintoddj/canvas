@@ -1,99 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Models;
 
 use Canvas\Database\Factories\TopicFactory;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @use HasFactory<TopicFactory>
+ */
 class Topic extends Model
 {
+    /** @use HasFactory<TopicFactory> */
     use HasFactory;
+
     use SoftDeletes;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'canvas_topics';
 
-    /**
-     * The attributes that aren't mass assignable.
-     *
-     * @var array
-     */
+    /** @var list<string> */
     protected $guarded = [];
 
-    /**
-     * The primary key for the model.
-     *
-     * @var string
-     */
-    protected $primaryKey = 'id';
-
-    /**
-     * The "type" of the auto-incrementing ID.
-     *
-     * @var string
-     */
     protected $keyType = 'string';
 
-    /**
-     * Indicates if the IDs are auto-incrementing.
-     *
-     * @var bool
-     */
     public $incrementing = false;
 
-    /**
-     * The number of models to return for pagination.
-     *
-     * @var int
-     */
     protected $perPage = 10;
 
-    /**
-     * Create a new factory instance for the model.
-     */
-    protected static function newFactory(): Factory
+    /** @var array<string, string> */
+    protected $casts = [
+        'user_id' => 'integer',
+    ];
+
+    protected static function newFactory(): TopicFactory
     {
         return TopicFactory::new();
     }
 
     /**
-     * Get the posts relationship.
+     * @return HasMany<Post, $this>
      */
-    public function posts(): BelongsToMany
+    public function posts(): HasMany
     {
-        // TODO: This should be a hasMany() relationship?
-
-        return $this->belongsToMany(Post::class, 'canvas_posts_topics', 'topic_id', 'post_id');
+        return $this->hasMany(Post::class, 'topic_id');
     }
 
     /**
-     * Get the user relationship.
+     * @return BelongsTo<Model, $this>
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        /** @var class-string<Model> $userModel */
+        $userModel = config('canvas.user_model');
+
+        return $this->belongsTo($userModel);
     }
 
-    /**
-     * The "booting" method of the model.
-     *
-     * @return void
-     */
-    protected static function boot()
+    protected static function booted(): void
     {
-        parent::boot();
-
-        static::deleting(function (self $topic) {
-            $topic->posts()->detach();
+        static::deleting(function (self $topic): void {
+            $topic->posts()->update(['topic_id' => null]);
         });
     }
 }

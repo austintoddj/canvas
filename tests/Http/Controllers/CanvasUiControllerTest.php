@@ -1,0 +1,466 @@
+<?php
+
+use App\Http\Controllers\Canvas\CanvasUiController;
+use Canvas\Enums\Role;
+use Canvas\Events\PostViewed;
+use Canvas\Http\Middleware\Session;
+use Canvas\Models\CanvasUser;
+use Canvas\Models\Post;
+use Canvas\Models\Tag;
+use Canvas\Models\Topic;
+use Canvas\Tests\Models\BareUser;
+use Canvas\Tests\Models\User;
+use Canvas\Tests\TestCase;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Route;
+
+beforeEach(function (): void {
+    TestCase::acquireCanvasUiScaffoldLock();
+
+    $controllerPath = app_path('Http/Controllers/Canvas/CanvasUiController.php');
+    $viewsPath = resource_path('views/vendor/canvas/ui');
+
+    if (! is_file($controllerPath) || ! is_dir($viewsPath)) {
+        $this->artisan('canvas:ui', ['--force' => true]);
+    }
+
+    if (! class_exists(CanvasUiController::class, false)) {
+        if (function_exists('opcache_invalidate')) {
+            opcache_invalidate($controllerPath, true);
+        }
+
+        require_once $controllerPath;
+    }
+
+    Route::prefix('canvas-ui')->middleware(['web'])->group(function (): void {
+        Route::get('/', [CanvasUiController::class, 'index'])
+            ->name('canvas-ui.index');
+
+        Route::get('/feed', [CanvasUiController::class, 'feed'])
+            ->name('canvas-ui.feed');
+
+        Route::get('/tags', [CanvasUiController::class, 'tags'])
+            ->name('canvas-ui.tags');
+
+        Route::get('/topics', [CanvasUiController::class, 'topics'])
+            ->name('canvas-ui.topics');
+
+        Route::get('/tags/{slug}', [CanvasUiController::class, 'tag'])
+            ->name('canvas-ui.tag');
+
+        Route::get('/topics/{slug}', [CanvasUiController::class, 'topic'])
+            ->name('canvas-ui.topic');
+
+        Route::get('/@{username}', [CanvasUiController::class, 'author'])
+            ->where('username', '[A-Za-z0-9_-]+')
+            ->name('canvas-ui.author');
+
+        Route::get('/{slug}', [CanvasUiController::class, 'show'])
+            ->middleware(Session::class)
+            ->name('canvas-ui.show');
+    });
+});
+
+afterEach(function (): void {
+    TestCase::releaseCanvasUiScaffoldLock();
+});
+
+it('shows a paginated listing of published posts only', function (): void {
+    Post::factory()->count(3)->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => null,
+    ]);
+
+    $response = $this->get('canvas-ui')
+        ->assertSuccessful()
+        ->assertViewIs('canvas::ui.index')
+        ->assertViewHas('posts');
+
+    $this->assertSame(3, $response->viewData('posts')->total());
+});
+
+it('shows a single published post', function (): void {
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $this->get("canvas-ui/{$post->slug}")
+        ->assertSuccessful()
+        ->assertViewIs('canvas::ui.show')
+        ->assertViewHas('post', fn ($p) => $p->id === $post->id);
+});
+
+it('emits seo meta tags with fallbacks on the post page', function (): void {
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+        'title' => 'Reader SEO Post',
+        'summary' => 'A plain summary for crawlers.',
+        'featured_image' => 'https://cdn.example.com/hero.jpg',
+        'meta' => null,
+    ]);
+
+    $canonical = route('canvas-ui.show', $post->slug);
+
+    $this->get("canvas-ui/{$post->slug}")
+        ->assertSuccessful()
+        ->assertSee('<meta name="description" content="A plain summary for crawlers.">', false)
+        ->assertSee('<link rel="canonical" href="'.$canonical.'">', false)
+        ->assertSee('<meta property="og:title" content="Reader SEO Post">', false)
+        ->assertSee('<meta property="og:image" content="https://cdn.example.com/hero.jpg">', false)
+        ->assertSee('"@type":"Article"', false)
+        ->assertSee('"headline":"Reader SEO Post"', false);
+});
+
+it('prefers post meta overrides for seo tags', function (): void {
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+        'title' => 'Display Title',
+        'summary' => 'Display summary',
+        'meta' => [
+            'title' => 'Custom SEO Title',
+            'description' => 'Custom SEO description.',
+            'canonical_link' => 'https://example.com/custom-canonical',
+        ],
+    ]);
+
+    $this->get("canvas-ui/{$post->slug}")
+        ->assertSuccessful()
+        ->assertSee('<title>Custom SEO Title —', false)
+        ->assertSee('<meta name="description" content="Custom SEO description.">', false)
+        ->assertSee('<link rel="canonical" href="https://example.com/custom-canonical">', false)
+        ->assertSee('<meta property="og:title" content="Custom SEO Title">', false);
+});
+
+it('serves an rss feed of published posts only', function (): void {
+    Post::factory()->count(2)->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => null,
+        'title' => 'Draft Should Not Appear In Feed',
+    ]);
+
+    $response = $this->get('canvas-ui/feed')
+        ->assertSuccessful()
+        ->assertHeader('Content-Type', 'application/rss+xml; charset=UTF-8');
+
+    $content = $response->getContent();
+
+    expect($content)
+        ->toContain('<rss version="2.0">')
+        ->toContain('<channel>')
+        ->toContain(route('canvas-ui.index'))
+        ->not->toContain('Draft Should Not Appear In Feed');
+
+    expect(substr_count($content, '<item>'))->toBe(2);
+});
+
+it('limits the rss feed to twenty posts', function (): void {
+    Post::factory()->count(25)->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $content = $this->get('canvas-ui/feed')
+        ->assertSuccessful()
+        ->getContent();
+
+    expect(substr_count($content, '<item>'))->toBe(20);
+});
+
+it('discovers the rss feed from the layout', function (): void {
+    $this->get('canvas-ui')
+        ->assertSuccessful()
+        ->assertSee('type="application/rss+xml"', false)
+        ->assertSee(route('canvas-ui.feed'), false)
+        ->assertSee('>RSS</a>', false);
+});
+
+it('returns 404 for a draft post', function (): void {
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => null,
+    ]);
+
+    $this->get("canvas-ui/{$post->slug}")->assertNotFound();
+});
+
+it('returns 404 for a non-existent post slug', function (): void {
+    $this->get('canvas-ui/does-not-exist')->assertNotFound();
+});
+
+it('fires the PostViewed event when a published post is viewed', function (): void {
+    Event::fake(PostViewed::class);
+
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $this->get("canvas-ui/{$post->slug}")->assertSuccessful();
+
+    Event::assertDispatched(PostViewed::class, fn ($e) => $e->post->id === $post->id);
+});
+
+it('shows a tag page with published posts only', function (): void {
+    $tag = Tag::factory()->create(['user_id' => $this->admin->id]);
+
+    $published = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $draft = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => null,
+    ]);
+
+    $tag->posts()->attach([$published->id, $draft->id]);
+
+    $response = $this->get("canvas-ui/tags/{$tag->slug}")
+        ->assertSuccessful()
+        ->assertViewIs('canvas::ui.tag')
+        ->assertViewHas('tag')
+        ->assertViewHas('posts');
+
+    $this->assertSame(1, $response->viewData('posts')->total());
+});
+
+it('returns 404 for a non-existent tag', function (): void {
+    $this->get('canvas-ui/tags/no-such-tag')->assertNotFound();
+});
+
+it('shows a topic page with published posts only', function (): void {
+    $topic = Topic::factory()->create(['user_id' => $this->admin->id]);
+
+    Post::factory()->count(2)->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+        'topic_id' => $topic->id,
+    ]);
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => null,
+        'topic_id' => $topic->id,
+    ]);
+
+    $response = $this->get("canvas-ui/topics/{$topic->slug}")
+        ->assertSuccessful()
+        ->assertViewIs('canvas::ui.topic')
+        ->assertViewHas('topic')
+        ->assertViewHas('posts');
+
+    $this->assertSame(2, $response->viewData('posts')->total());
+});
+
+it('returns 404 for a non-existent topic', function (): void {
+    $this->get('canvas-ui/topics/no-such-topic')->assertNotFound();
+});
+
+it('shows an author page with published posts only', function (): void {
+    $username = $this->admin->canvasUser->username;
+
+    Post::factory()->count(2)->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => null,
+    ]);
+
+    $response = $this->get("canvas-ui/@{$username}")
+        ->assertSuccessful()
+        ->assertViewIs('canvas::ui.author')
+        ->assertViewHas('user', fn ($user) => $user->id === $this->admin->id)
+        ->assertViewHas('posts');
+
+    $this->assertSame(2, $response->viewData('posts')->total());
+});
+
+it('returns 404 for an unknown author username', function (): void {
+    $this->get('canvas-ui/@no-such-author')->assertNotFound();
+});
+
+it('renders author avatars on the index from canvas_users avatar urls', function (): void {
+    $avatarUrl = 'https://cdn.example.com/authors/custom-avatar.jpg';
+    $this->admin->canvasUser->update(['avatar' => $avatarUrl]);
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $response = $this->get('canvas-ui')->assertSuccessful();
+
+    expect($response->getContent())->toContain($avatarUrl);
+});
+
+it('renders author avatars on the post page from canvas_users avatar urls', function (): void {
+    $avatarUrl = 'https://cdn.example.com/authors/custom-avatar.jpg';
+    $this->admin->canvasUser->update(['avatar' => $avatarUrl]);
+
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $response = $this->get("canvas-ui/{$post->slug}")->assertSuccessful();
+
+    expect($response->getContent())->toContain($avatarUrl);
+});
+
+it('renders initials when the author has no avatar url', function (): void {
+    $this->admin->canvasUser->update(['avatar' => null]);
+    $this->admin->update(['name' => 'Ada Lovelace']);
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $response = $this->get('canvas-ui')->assertSuccessful();
+
+    expect($response->getContent())
+        ->toContain('AL')
+        ->not->toContain('gravatar.com');
+});
+
+it('links author names to the author page when a username is set', function (): void {
+    $username = $this->admin->canvasUser->username;
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $this->get('canvas-ui')
+        ->assertSuccessful()
+        ->assertSee(route('canvas-ui.author', $username), false);
+});
+
+it('shows a tags index with published post counts', function (): void {
+    $tag = Tag::factory()->create(['user_id' => $this->admin->id, 'name' => 'Alpha']);
+
+    $published = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $draft = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => null,
+    ]);
+
+    $tag->posts()->attach([$published->id, $draft->id]);
+
+    $this->get('canvas-ui/tags')
+        ->assertSuccessful()
+        ->assertViewIs('canvas::ui.tags')
+        ->assertViewHas('tags')
+        ->assertSee('Alpha')
+        ->assertSee('1 post');
+});
+
+it('shows a topics index with published post counts', function (): void {
+    $topic = Topic::factory()->create(['user_id' => $this->admin->id, 'name' => 'Engineering']);
+
+    Post::factory()->count(2)->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+        'topic_id' => $topic->id,
+    ]);
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => null,
+        'topic_id' => $topic->id,
+    ]);
+
+    $this->get('canvas-ui/topics')
+        ->assertSuccessful()
+        ->assertViewIs('canvas::ui.topics')
+        ->assertViewHas('topics')
+        ->assertSee('Engineering')
+        ->assertSee('2 posts');
+});
+
+it('shows social links on the author page', function (): void {
+    $this->admin->canvasUser->update([
+        'social' => ['x' => 'canvaswriter'],
+    ]);
+
+    $this->get('canvas-ui/@'.$this->admin->canvasUser->username)
+        ->assertSuccessful()
+        ->assertSee('https://x.com/canvaswriter', false);
+});
+
+it('shows authors on tag listing pages', function (): void {
+    $tag = Tag::factory()->create(['user_id' => $this->admin->id]);
+
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    $tag->posts()->attach($post->id);
+
+    $this->get("canvas-ui/tags/{$tag->slug}")
+        ->assertSuccessful()
+        ->assertSee($this->admin->name);
+});
+
+// Invariant: sample reader works with bare host users (no HasCanvasAccess)
+it('renders the reader for bare host users without canvas relations', function (): void {
+    config()->set('canvas.user_model', BareUser::class);
+
+    $host = User::factory()->create([
+        'name' => 'Bare Reader Author',
+        'email' => 'bare-reader@example.com',
+    ]);
+
+    CanvasUser::factory()->create([
+        'user_id' => $host->id,
+        'role' => Role::Contributor,
+        'username' => 'bare-reader',
+        'avatar' => 'https://cdn.example.com/bare-avatar.jpg',
+        'summary' => 'Writes without a trait',
+    ]);
+
+    $post = Post::factory()->create([
+        'user_id' => $host->id,
+        'published_at' => now()->subDay(),
+        'title' => 'Bare Host Post',
+    ]);
+
+    $this->get('canvas-ui')
+        ->assertSuccessful()
+        ->assertSee('Bare Host Post')
+        ->assertSee('Bare Reader Author')
+        ->assertSee('https://cdn.example.com/bare-avatar.jpg');
+
+    $this->get("canvas-ui/{$post->slug}")
+        ->assertSuccessful()
+        ->assertSee('Bare Host Post')
+        ->assertSee('Bare Reader Author');
+
+    $this->get('canvas-ui/@bare-reader')
+        ->assertSuccessful()
+        ->assertViewIs('canvas::ui.author')
+        ->assertSee('Bare Reader Author')
+        ->assertSee('Writes without a trait')
+        ->assertSee('Bare Host Post');
+});

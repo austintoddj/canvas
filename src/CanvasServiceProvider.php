@@ -4,21 +4,43 @@ declare(strict_types=1);
 
 namespace Canvas;
 
+use Canvas\Console\AssignRoleCommand;
 use Canvas\Console\DigestCommand;
 use Canvas\Console\InstallCommand;
+use Canvas\Console\MakeAdminCommand;
 use Canvas\Console\MigrateCommand;
 use Canvas\Console\PublishCommand;
+use Canvas\Console\RemoveAccessCommand;
 use Canvas\Console\UiCommand;
-use Canvas\Console\UserCommand;
+use Canvas\Console\UsersCommand;
+use Canvas\Contracts\WebhookEndpointRepository;
+use Canvas\Events\PostDeleted;
+use Canvas\Events\PostPublished;
+use Canvas\Events\PostScheduled;
+use Canvas\Events\PostUnpublished;
+use Canvas\Events\PostUpdated;
 use Canvas\Events\PostViewed;
 use Canvas\Http\Requests\FormRequest;
 use Canvas\Listeners\CaptureView;
 use Canvas\Listeners\CaptureVisit;
-use Canvas\Models\User;
+use Canvas\Listeners\DispatchOutboundWebhooks;
+use Canvas\Models\CanvasUser;
+use Canvas\Models\Media;
+use Canvas\Models\Post;
+use Canvas\Policies\MediaPolicy;
+use Canvas\Policies\PostPolicy;
+use Canvas\Policies\UserPolicy;
+use Canvas\Support\MediaService;
+use Canvas\Support\MediaStorage;
+use Canvas\Support\SettingsRepository;
+use Canvas\Support\SettingsWebhookEndpointRepository;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Validation\ValidatesWhenResolved;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -30,8 +52,16 @@ class CanvasServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/canvas.php', 'canvas');
+
+        $this->app->singleton(MediaStorage::class, static fn (): MediaStorage => MediaStorage::make());
+        $this->app->singleton(MediaService::class);
+        $this->app->singleton(SettingsRepository::class);
+        $this->app->singleton(WebhookEndpointRepository::class, SettingsWebhookEndpointRepository::class);
     }
 
+    /**
+     * @throws BindingResolutionException
+     */
     public function boot(): void
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'canvas');
@@ -41,10 +71,14 @@ class CanvasServiceProvider extends ServiceProvider
         $this->configureCommands();
         $this->registerFormRequests();
         $this->registerMigrations();
-        $this->registerAuthDriver();
+        $this->registerGates();
         $this->registerEvents();
+        $this->registerScheduler();
     }
 
+    /**
+     * @throws BindingResolutionException
+     */
     private function registerEvents(): void
     {
         $mappings = [
@@ -52,14 +86,46 @@ class CanvasServiceProvider extends ServiceProvider
                 CaptureView::class,
                 CaptureVisit::class,
             ],
+            PostPublished::class => [
+                DispatchOutboundWebhooks::class,
+            ],
+            PostScheduled::class => [
+                DispatchOutboundWebhooks::class,
+            ],
+            PostUpdated::class => [
+                DispatchOutboundWebhooks::class,
+            ],
+            PostUnpublished::class => [
+                DispatchOutboundWebhooks::class,
+            ],
+            PostDeleted::class => [
+                DispatchOutboundWebhooks::class,
+            ],
         ];
 
         /** @var Dispatcher $events */
         $events = $this->app->make(Dispatcher::class);
 
         foreach ($mappings as $event => $listeners) {
-            $events->listen($event, $listeners);
+            foreach ($listeners as $listener) {
+                $events->listen($event, $listener);
+            }
         }
+    }
+
+    private function registerScheduler(): void
+    {
+        if (! config('canvas.mail.enabled')) {
+            return;
+        }
+
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            $schedule->command('canvas:digest')
+                ->weekly()
+                ->mondays()
+                ->at('08:00')
+                ->timezone(config('app.timezone'));
+        });
     }
 
     /**
@@ -67,6 +133,12 @@ class CanvasServiceProvider extends ServiceProvider
      */
     private function configureRoutes(): void
     {
+        Route::bind('user', function (mixed $value): mixed {
+            $userModel = config('canvas.user_model');
+
+            return $userModel::query()->findOrFail($value);
+        });
+
         Route::middleware(config('canvas.middleware'))
             ->domain(config('canvas.domain'))
             ->prefix(config('canvas.path'))
@@ -85,12 +157,15 @@ class CanvasServiceProvider extends ServiceProvider
         }
 
         $this->commands([
+            AssignRoleCommand::class,
             DigestCommand::class,
             InstallCommand::class,
             MigrateCommand::class,
+            MakeAdminCommand::class,
             PublishCommand::class,
+            RemoveAccessCommand::class,
             UiCommand::class,
-            UserCommand::class,
+            UsersCommand::class,
         ]);
     }
 
@@ -102,20 +177,25 @@ class CanvasServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
-    /**
-     * Register the package's authentication driver.
-     */
-    private function registerAuthDriver(): void
+    private function registerGates(): void
     {
-        $this->app['config']->set('auth.providers.canvas_users', [
-            'driver' => 'eloquent',
-            'model' => User::class,
-        ]);
+        Gate::policy(Media::class, MediaPolicy::class);
+        Gate::policy(Post::class, PostPolicy::class);
 
-        $this->app['config']->set('auth.guards.canvas', [
-            'driver' => 'session',
-            'provider' => 'canvas_users',
-        ]);
+        $userModel = config('canvas.user_model');
+        Gate::policy($userModel, UserPolicy::class);
+
+        Gate::define('manage-users', static function ($user): bool {
+            return CanvasUser::isAdmin($user);
+        });
+
+        Gate::define('manage-taxonomy', static function ($user): bool {
+            return CanvasUser::isAdmin($user);
+        });
+
+        Gate::define('manage-integrations', static function ($user): bool {
+            return CanvasUser::isAdmin($user);
+        });
     }
 
     /**
@@ -142,7 +222,7 @@ class CanvasServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../public' => public_path('vendor/canvas'),
+                __DIR__.'/../resources/dist' => public_path('vendor/canvas'),
             ], 'canvas-assets');
 
             $this->publishes([
@@ -154,10 +234,8 @@ class CanvasServiceProvider extends ServiceProvider
             ], 'canvas-lang');
 
             $this->publishes([
-                __DIR__.'/../resources/stubs/providers/CanvasServiceProvider.stub' => app_path(
-                    'Providers/CanvasServiceProvider.php'
-                ),
-            ], 'canvas-provider');
+                __DIR__.'/../resources/views/ui' => resource_path('views/vendor/canvas/ui'),
+            ], 'canvas-ui-views');
         }
     }
 }

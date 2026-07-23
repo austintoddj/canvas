@@ -4,112 +4,152 @@ use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 
-it('lets a contributor search only their own posts', function (): void {
-    Post::factory()->count(3)->create([
-        'user_id' => $this->contributor->id,
-    ]);
-
-    Post::factory()->create([
-        'user_id' => $this->admin->id,
-    ]);
+it('returns only a contributors own posts', function (): void {
+    Post::factory()->count(3)->create(['user_id' => $this->contributor->id]);
+    Post::factory()->create(['user_id' => $this->admin->id]);
 
     $response = $this->actingAs($this->contributor, 'canvas')
-        ->getJson('canvas/api/search/posts')
-        ->assertSuccessful()
-        ->assertJsonCount(3);
+        ->getJson('canvas/api/search')
+        ->assertSuccessful();
 
-    $this->assertArrayHasKey('id', $response[0]);
-    $this->assertArrayHasKey('title', $response[0]);
-    $this->assertArrayHasKey('name', $response[0]);
-    $this->assertArrayHasKey('type', $response[0]);
-    $this->assertSame('Post', $response[0]['type']);
-    $this->assertArrayHasKey('route', $response[0]);
-    $this->assertSame('edit-post', $response[0]['route']);
+    $response->assertJsonCount(3);
+    $response->assertJsonFragment(['type' => 'Post']);
+    $response->assertJsonMissingPath('0.name');
+    $response->assertJsonStructure(['*' => ['id', 'title', 'type', 'route']]);
 });
-it('lets an editor search all posts', function (): void {
-    Post::factory()->count(3)->create([
-        'user_id' => $this->editor->id,
-    ]);
 
-    Post::factory()->create([
-        'user_id' => $this->contributor->id,
-    ]);
+it('returns all posts for an editor', function (): void {
+    Post::factory()->count(3)->create(['user_id' => $this->editor->id]);
+    Post::factory()->create(['user_id' => $this->contributor->id]);
 
     $response = $this->actingAs($this->editor, 'canvas')
-        ->getJson('canvas/api/search/posts')
-        ->assertSuccessful()
-        ->assertJsonCount(4);
+        ->getJson('canvas/api/search')
+        ->assertSuccessful();
 
-    $this->assertArrayHasKey('id', $response[0]);
-    $this->assertArrayHasKey('title', $response[0]);
-    $this->assertArrayHasKey('name', $response[0]);
-    $this->assertArrayHasKey('type', $response[0]);
-    $this->assertSame('Post', $response[0]['type']);
-    $this->assertArrayHasKey('route', $response[0]);
-    $this->assertSame('edit-post', $response[0]['route']);
+    expect(collect($response->json())->where('type', 'Post'))->toHaveCount(4);
 });
-it('lets an admin search all posts', function (): void {
-    Post::factory()->count(3)->create([
-        'user_id' => $this->editor->id,
-    ]);
 
-    Post::factory()->create([
-        'user_id' => $this->contributor->id,
-    ]);
+it('returns all posts for an admin', function (): void {
+    Post::factory()->count(3)->create(['user_id' => $this->editor->id]);
+    Post::factory()->create(['user_id' => $this->contributor->id]);
 
     $response = $this->actingAs($this->admin, 'canvas')
-        ->getJson('canvas/api/search/posts')
-        ->assertSuccessful()
-        ->assertJsonCount(4);
+        ->getJson('canvas/api/search')
+        ->assertSuccessful();
 
-    $this->assertArrayHasKey('id', $response[0]);
-    $this->assertArrayHasKey('title', $response[0]);
-    $this->assertArrayHasKey('name', $response[0]);
-    $this->assertArrayHasKey('type', $response[0]);
-    $this->assertSame('Post', $response[0]['type']);
-    $this->assertArrayHasKey('route', $response[0]);
-    $this->assertSame('edit-post', $response[0]['route']);
+    expect(collect($response->json())->where('type', 'Post'))->toHaveCount(4);
 });
-it('lets an admin search all tags', function (): void {
+
+it('includes tags and topics for an admin', function (): void {
     Tag::factory()->count(2)->create();
-
-    $response = $this->actingAs($this->admin, 'canvas')
-        ->getJson('canvas/api/search/tags')
-        ->assertSuccessful()
-        ->assertJsonCount(2);
-
-    $this->assertArrayHasKey('id', $response[0]);
-    $this->assertArrayHasKey('name', $response[0]);
-    $this->assertArrayHasKey('type', $response[0]);
-    $this->assertSame('Tag', $response[0]['type']);
-    $this->assertArrayHasKey('route', $response[0]);
-    $this->assertSame('edit-tag', $response[0]['route']);
-});
-it('lets an admin search all topics', function (): void {
     Topic::factory()->count(3)->create();
 
     $response = $this->actingAs($this->admin, 'canvas')
-        ->getJson('canvas/api/search/topics')
-        ->assertSuccessful()
-        ->assertJsonCount(3);
+        ->getJson('canvas/api/search')
+        ->assertSuccessful();
 
-    $this->assertArrayHasKey('id', $response[0]);
-    $this->assertArrayHasKey('name', $response[0]);
-    $this->assertArrayHasKey('type', $response[0]);
-    $this->assertSame('Topic', $response[0]['type']);
-    $this->assertArrayHasKey('route', $response[0]);
-    $this->assertSame('edit-topic', $response[0]['route']);
+    $response->assertJsonFragment(['type' => 'Tag']);
+    $response->assertJsonFragment(['type' => 'Topic']);
 });
-it('lets an admin search all users', function (): void {
-    $response = $this->actingAs($this->admin, 'canvas')
-        ->getJson('canvas/api/search/users')
-        ->assertSuccessful()
-        ->assertJsonCount(3);
 
-    $this->assertArrayHasKey('id', $response[0]);
-    $this->assertArrayHasKey('name', $response[0]);
-    $this->assertArrayHasKey('type', $response[0]);
-    $this->assertSame('User', $response[0]['type']);
-    $this->assertArrayHasKey('route', $response[0]);
-    $this->assertSame('edit-user', $response[0]['route']);
+it('excludes tags and topics for a contributor', function (): void {
+    Tag::factory()->count(2)->create();
+    Topic::factory()->count(2)->create();
+
+    $response = $this->actingAs($this->contributor, 'canvas')
+        ->getJson('canvas/api/search')
+        ->assertSuccessful();
+
+    $response->assertJsonMissingPath('0.type');
+    collect($response->json())->each(fn ($item) => expect($item['type'])->not->toBeIn(['Tag', 'Topic', 'User']));
+});
+
+it('includes users with email for an admin', function (): void {
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/search')
+        ->assertSuccessful();
+
+    $users = collect($response->json())->where('type', 'User');
+
+    expect($users)->not->toBeEmpty();
+    $users->each(fn ($user) => expect($user)->toHaveKeys([
+        'id',
+        'name',
+        'email',
+        'username',
+        'avatar_url',
+        'type',
+        'route',
+    ]));
+});
+
+it('filters users by username for an admin', function (): void {
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/search?q='.$this->editor->username)
+        ->assertSuccessful()
+        ->assertJsonFragment([
+            'id' => $this->editor->id,
+            'type' => 'User',
+        ]);
+});
+
+it('excludes users for a contributor', function (): void {
+    $response = $this->actingAs($this->contributor, 'canvas')
+        ->getJson('canvas/api/search')
+        ->assertSuccessful();
+
+    $users = collect($response->json())->where('type', 'User');
+
+    expect($users)->toBeEmpty();
+});
+
+it('filters posts by query at the database level', function (): void {
+    Post::factory()->create(['title' => 'Hello World', 'user_id' => $this->admin->id]);
+    Post::factory()->create(['title' => 'Goodbye World', 'user_id' => $this->admin->id]);
+    Post::factory()->create(['title' => 'Unrelated', 'user_id' => $this->admin->id]);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/search?q=World')
+        ->assertSuccessful();
+
+    $posts = collect($response->json())->where('type', 'Post');
+
+    expect($posts)->toHaveCount(2);
+    $posts->each(fn ($post) => expect($post['title'])->toContain('World'));
+});
+
+it('returns no results when query matches nothing', function (): void {
+    Post::factory()->create(['title' => 'Hello World', 'user_id' => $this->admin->id]);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/search?q=zzznomatch')
+        ->assertSuccessful();
+
+    expect($response->json())->toBeEmpty();
+});
+
+it('returns all results when query is empty', function (): void {
+    Post::factory()->count(3)->create(['user_id' => $this->admin->id]);
+    Tag::factory()->count(2)->create();
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/search?q=')
+        ->assertSuccessful();
+
+    expect(collect($response->json())->where('type', 'Post'))->toHaveCount(3);
+    expect(collect($response->json())->where('type', 'Tag'))->toHaveCount(2);
+});
+
+it('filters results by type', function (): void {
+    Post::factory()->count(3)->create(['user_id' => $this->admin->id]);
+    Tag::factory()->count(2)->create();
+    Topic::factory()->count(4)->create();
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/search?type=tag')
+        ->assertSuccessful();
+
+    expect(collect($response->json())->where('type', 'Tag'))->toHaveCount(2);
+    expect(collect($response->json())->where('type', 'Post'))->toBeEmpty();
+    expect(collect($response->json())->where('type', 'Topic'))->toBeEmpty();
 });

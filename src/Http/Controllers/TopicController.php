@@ -1,28 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Controllers;
 
 use Canvas\Http\Requests\TopicRequest;
 use Canvas\Models\Topic;
+use Canvas\Support\TaxonomyIndexQuery;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 
 class TopicController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(
-            Topic::query()
-                ->select('id', 'name', 'created_at')
-                ->latest()
-                ->withCount('posts')
-                ->paginate(), 200
-        );
+        $query = Topic::query()
+            ->select('id', 'name', 'created_at')
+            ->withCount('posts');
+
+        TaxonomyIndexQuery::apply($query, $request);
+
+        return response()->json($query->paginate(), 200);
     }
 
     /**
@@ -31,36 +35,38 @@ class TopicController extends Controller
     public function create(): JsonResponse
     {
         return response()->json(Topic::query()->make([
-            'id' => Uuid::uuid4()->toString(),
+            'id' => (string) Str::uuid(),
         ]), 200);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(TopicRequest $request, $id): JsonResponse
+    public function store(TopicRequest $request, string $id): JsonResponse
     {
         $data = $request->validated();
+        $user = $request->user(config('canvas.guard'));
 
         $topic = Topic::query()->find($id);
+        $created = $topic === null;
 
         if (! $topic) {
             if ($topic = Topic::onlyTrashed()->firstWhere('slug', $data['slug'])) {
                 $topic->restore();
+                $topic->fill($data);
+                $topic->save();
 
                 return response()->json($topic->refresh(), 201);
-            } else {
-                $topic = new Topic(['id' => $id]);
             }
+
+            $topic = new Topic(['id' => $id]);
         }
 
         $topic->fill($data);
-
-        $topic->user_id = $topic->user_id ?? request()->user('canvas')->id;
-
+        $topic->user_id = $topic->user_id ?? $user->id;
         $topic->save();
 
-        return response()->json($topic->refresh(), 201);
+        return response()->json($topic->refresh(), $created ? 201 : 200);
     }
 
     /**

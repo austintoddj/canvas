@@ -1,31 +1,50 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Controllers;
 
-use Canvas\Canvas;
+use Canvas\Actions\SyncCanvasUser;
+use Canvas\Http\Requests\UserLookupRequest;
 use Canvas\Http\Requests\UserRequest;
-use Canvas\Models\User;
+use Canvas\Http\Resources\CanvasUserResource;
+use Canvas\Http\Resources\UserResource;
+use Canvas\Models\CanvasUser;
+use Canvas\Models\Post;
+use Canvas\Support\AuthorAvatar;
+use Canvas\Support\CanvasUserAttributes;
+use Canvas\Support\HostUser;
 use Exception;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Hash;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Facades\Gate;
 
 class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(): AnonymousResourceCollection
     {
-        return response()->json(
-            User::query()
-                ->select('id', 'name', 'email', 'avatar', 'role')
-                ->latest()
-                ->withCount('posts')
-                ->paginate(), 200
+        $userModel = HostUser::modelClass();
+        $hostTable = (new $userModel)->getTable();
+
+        $canvasUsers = CanvasUser::query()
+            ->with(['user' => fn ($query) => $query->select('id', 'name', 'email')])
+            ->join($hostTable, 'canvas_users.user_id', '=', "{$hostTable}.id")
+            ->orderByDesc("{$hostTable}.created_at")
+            ->select('canvas_users.*')
+            ->withPostsCount()
+            ->paginate();
+
+        $canvasUsers->through(
+            fn (CanvasUser $canvasUser): mixed => UserResource::hostUserFromCanvasUser($canvasUser),
         );
+
+        return UserResource::collection($canvasUsers);
     }
 
     /**
@@ -33,87 +52,111 @@ class UserController extends Controller
      */
     public function create(): JsonResponse
     {
-        return response()->json(User::query()->make([
-            'id' => Uuid::uuid4()->toString(),
-            'role' => User::CONTRIBUTOR,
-        ]), 200);
+        return response()->json([
+            'canvas' => CanvasUserResource::defaults(),
+        ], 200);
+    }
+
+    /**
+     * Look up a host user by email or id for granting Canvas access.
+     */
+    public function lookup(UserLookupRequest $request): JsonResponse
+    {
+        $identifier = $request->identifier();
+
+        if ($identifier === '') {
+            abort(404);
+        }
+
+        $user = HostUser::findByIdentifier($identifier);
+
+        if ($user === null) {
+            abort(404);
+        }
+
+        $email = (string) data_get($user, 'email', '');
+        $canvasUser = CanvasUser::query()->find($user->getKey());
+
+        return response()->json([
+            'id' => $user->getKey(),
+            'name' => data_get($user, 'name'),
+            'email' => $email,
+            'avatar_url' => AuthorAvatar::url($canvasUser?->avatar),
+            'has_canvas_access' => $canvasUser !== null,
+            'role' => $canvasUser?->role?->value,
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(UserRequest $request, $id): JsonResponse
+    public function store(UserRequest $request, SyncCanvasUser $syncCanvasUser, int|string $id): JsonResponse
     {
-        $data = $request->validated();
+        $currentUser = request()->user(config('canvas.guard'));
 
-        $user = User::query()->find($id);
+        $user = HostUser::modelClass()::query()->find($id);
 
         if (! $user) {
-            if ($user = User::onlyTrashed()->firstWhere('email', $data['email'])) {
-                $user->restore();
-
-                return response()->json([
-                    'user' => $user->refresh(),
-                    'i18n' => collect(trans('canvas::app', [], $user->locale))->toJson(),
-                ], 201);
-            } else {
-                $user = new User([
-                    'id' => $id,
-                ]);
-            }
+            abort(404);
         }
 
-        if (! Arr::has($data, 'locale') || ! in_array($data['locale'], Canvas::availableLanguageCodes())) {
-            $data['locale'] = config('app.fallback_locale');
-        }
+        Gate::forUser($currentUser)->authorize('update', $user);
 
-        $user->fill($data);
+        $validated = $request->validated();
+        $isSelf = (string) $currentUser->getKey() === (string) $user->getKey();
 
-        if (Arr::has($data, 'password')) {
-            $user->password = Hash::make($data['password']);
-        }
+        // Admins manage other users' access only. Authors own their own profile fields.
+        $payload = $isSelf
+            ? Arr::except($validated, CanvasUserAttributes::ACCESS)
+            : Arr::only($validated, CanvasUserAttributes::ACCESS);
 
-        $user->save();
+        $created = $syncCanvasUser((string) $user->getKey(), $payload, CanvasUser::isAdmin($currentUser));
+
+        $canvasUser = CanvasUser::query()->findOrFail($user->getKey());
+        $user->setRelation('canvasUser', $canvasUser);
 
         return response()->json([
-            'user' => $user->refresh(),
-            'i18n' => collect(trans('canvas::app', [], $user->locale))->toJson(),
-        ], 201);
+            'user' => UserResource::make($user),
+        ], $created ? 201 : 200);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(User $user): JsonResponse
+    public function show(Model $user): UserResource
     {
-        $user->loadCount('posts');
+        $canvasUser = CanvasUser::query()
+            ->with(['user' => fn ($query) => $query->select('id', 'name', 'email')])
+            ->withPostsCount()
+            ->findOrFail($user->getKey());
 
-        return response()->json($user, 200);
+        return UserResource::make(UserResource::hostUserFromCanvasUser($canvasUser));
     }
 
     /**
      * Display the specified relationship.
      */
-    public function posts(User $user): JsonResponse
+    public function posts(Model $user): JsonResponse
     {
-        return response()->json($user->posts()->withCount('views')->paginate(), 200);
+        return response()->json(
+            Post::query()
+                ->where('user_id', $user->getKey())
+                ->withCount('views')
+                ->paginate(),
+            200,
+        );
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @return mixed
-     *
      * @throws Exception
      */
-    public function destroy(User $user)
+    public function destroy(Model $user): JsonResponse
     {
-        // Prevent a user from deleting their own account
-        if (request()->user('canvas')->id === $user->id) {
-            return response()->json(null, 403);
-        }
+        Gate::forUser(request()->user(config('canvas.guard')))->authorize('delete', $user);
 
-        $user->delete();
+        CanvasUser::query()->where('user_id', $user->getKey())->delete();
 
         return response()->json(null, 204);
     }

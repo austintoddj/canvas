@@ -1,43 +1,53 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Requests;
 
+use Canvas\Models\Post;
 use Illuminate\Validation\Rule;
 
 class PostRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
+        $user = $this->user(config('canvas.guard'));
+        $postId = $this->route('id');
+        $post = is_string($postId) ? Post::query()->find($postId) : null;
+        $ownerId = $post instanceof Post ? $post->user_id : data_get($user, 'id');
+
+        // First store creates the row — title required. Later updates may clear the
+        // title; lists render empty titles as “Untitled post” without storing that label.
+        $titleRules = $post === null ? ['required', 'string'] : ['nullable', 'string'];
+
+        if ($post !== null && filled($this->input('published_at')) && $this->boolean('promote')) {
+            $titleRules = ['required', 'string'];
+        }
+
         return [
             'slug' => [
                 'required',
                 'alpha_dash',
-                Rule::unique('canvas_posts')->where(function ($query) {
-                    return $query->where('slug', request('slug'))->where('user_id', request()->user('canvas')->id);
-                })->ignore(request('id'))->whereNull('deleted_at'),
+                Rule::unique('canvas_posts')->where(function ($query) use ($ownerId) {
+                    return $query->where('slug', $this->input('slug'))->where('user_id', $ownerId);
+                })->ignore(is_string($postId) ? $postId : null)->whereNull('deleted_at'),
             ],
-            'title' => 'required',
+            'title' => $titleRules,
             'summary' => 'nullable|string',
             'body' => 'nullable|string',
             'published_at' => 'nullable|date',
             'featured_image' => 'nullable|string',
             'featured_image_caption' => 'nullable|string',
             'meta' => 'nullable|array',
+            'promote' => 'sometimes|boolean',
         ];
     }
 }

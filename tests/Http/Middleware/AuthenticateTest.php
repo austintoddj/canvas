@@ -1,16 +1,14 @@
 <?php
 
-use Canvas\Models\Post;
-use Canvas\Models\Tag;
-use Canvas\Models\Topic;
-use Canvas\Models\User;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Facades\Route;
 
-dataset('protectedRoutes', [
+dataset('authenticateProtectedRoutes', [
     ['GET', 'canvas'],
     ['GET', 'canvas/api'],
-    ['POST', 'canvas/api/uploads'],
-    ['DELETE', 'canvas/api/uploads'],
+    ['GET', 'canvas/api/media'],
+    ['GET', 'canvas/api/media/create'],
+    ['POST', 'canvas/api/media/{id}'],
+    ['DELETE', 'canvas/api/media/{media}'],
     ['GET', 'canvas/api/posts'],
     ['GET', 'canvas/api/posts/create'],
     ['GET', 'canvas/api/posts/{post}'],
@@ -31,6 +29,7 @@ dataset('protectedRoutes', [
     ['DELETE', 'canvas/api/topics/{topic}'],
     ['GET', 'canvas/api/users'],
     ['GET', 'canvas/api/users/create'],
+    ['GET', 'canvas/api/users/lookup'],
     ['GET', 'canvas/api/users/{user}'],
     ['GET', 'canvas/api/users/{user}/posts'],
     ['POST', 'canvas/api/users/{id}'],
@@ -41,26 +40,26 @@ dataset('protectedRoutes', [
     ['GET', 'canvas/api/search/users'],
 ]);
 
+function authenticateRoutePlaceholders(): array
+{
+    return [
+        '{id}' => '11111111-1111-1111-1111-111111111111',
+        '{media}' => '22222222-2222-2222-2222-222222222222',
+        '{post}' => '33333333-3333-3333-3333-333333333333',
+        '{tag}' => '44444444-4444-4444-4444-444444444444',
+        '{topic}' => '55555555-5555-5555-5555-555555555555',
+        '{user}' => '66666666-6666-6666-6666-666666666666',
+    ];
+}
+
+beforeEach(function (): void {
+    Route::get('/login', fn () => 'login')->name('login');
+});
+
 it('redirects unauthenticated users to login', function ($method, $endpoint): void {
-    $endpoint = strtr($endpoint, [
-        '{id}' => Uuid::uuid4()->toString(),
-        '{post}' => Post::factory()->create()->id,
-        '{tag}' => Tag::factory()->create()->id,
-        '{topic}' => Topic::factory()->create()->id,
-        '{user}' => User::factory()->create()->id,
-    ]);
+    $endpoint = strtr($endpoint, authenticateRoutePlaceholders());
 
     $this->assertGuest()
         ->call($method, $endpoint)
-        ->assertRedirect(route('canvas.login'));
-})->with('protectedRoutes');
-
-it('redirects authenticated users to canvas', function (): void {
-    $this->actingAs($this->admin, 'canvas')
-        ->get(route('canvas.login'))
-        ->assertRedirect(config('canvas.path'));
-
-    $this->actingAs($this->admin, 'canvas')
-        ->get('canvas/api')
-        ->assertSuccessful();
-});
+        ->assertRedirect('/login');
+})->with('authenticateProtectedRoutes');

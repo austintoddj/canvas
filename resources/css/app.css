@@ -1,0 +1,582 @@
+@import 'tailwindcss';
+
+/* Class-based dark mode — toggled via applyTheme() on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+    --font-sans--font-feature-settings: 'cv11';
+
+    /* App chrome — prefer these over one-off zinc/red soups in pages */
+    --color-canvas-bg: var(--color-zinc-100);
+    --color-canvas-bg-dark: var(--color-zinc-950);
+    --color-canvas-panel: var(--color-white);
+    --color-canvas-panel-dark: var(--color-zinc-900);
+
+    --color-canvas-border: color-mix(in oklab, var(--color-zinc-950) 10%, transparent);
+    --color-canvas-border-dark: color-mix(in oklab, white 10%, transparent);
+
+    --color-canvas-fg: var(--color-zinc-950);
+    --color-canvas-fg-dark: var(--color-white);
+    --color-canvas-muted: var(--color-zinc-500);
+    --color-canvas-muted-dark: var(--color-zinc-400);
+
+    --color-canvas-danger: var(--color-red-600);
+    --color-canvas-danger-dark: var(--color-red-400);
+    --color-canvas-focus: var(--color-blue-500);
+
+    --ease-canvas-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --duration-canvas-content: 150ms;
+    --duration-canvas-empty: 200ms;
+}
+
+/* RTL: keep body editor stats and utility rows readable without full logical-class migration. */
+[dir='rtl'] [data-post-body-stats='true'] {
+    flex-direction: row-reverse;
+}
+
+[dir='rtl'] [data-post-body-toolbar='true'] {
+    flex-direction: row-reverse;
+}
+
+/* Pointer on clickables (Vercel-style affordance); component classes can still override when needed. */
+@layer base {
+    html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
+    body {
+        touch-action: manipulation;
+    }
+
+    a[href],
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']),
+    label[for],
+    summary {
+        cursor: pointer;
+    }
+
+    button:disabled,
+    [aria-disabled='true'] {
+        cursor: not-allowed;
+    }
+
+    /* Floor for bare controls; utility classes (text-3xl, sm:text-sm, …) still win. */
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+    textarea,
+    select {
+        font-size: 1rem;
+    }
+}
+
+/* TipTap post body surface */
+.canvas-post-body {
+    color: var(--color-zinc-800);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+}
+
+.dark .canvas-post-body {
+    color: var(--color-zinc-100);
+}
+
+.canvas-post-body > * + * {
+    margin-top: 0.75em;
+}
+
+.canvas-post-body h1 {
+    font-size: 1.875rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.canvas-post-body h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.canvas-post-body h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.canvas-post-body ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+}
+
+.canvas-post-body ol {
+    list-style: decimal;
+    padding-left: 1.5rem;
+}
+
+.canvas-post-body blockquote {
+    border-left: 3px solid color-mix(in oklab, var(--color-zinc-950) 15%, transparent);
+    padding-left: 1rem;
+    color: var(--color-zinc-500);
+}
+
+.dark .canvas-post-body blockquote {
+    border-left-color: color-mix(in oklab, white 20%, transparent);
+    color: var(--color-zinc-400);
+}
+
+.canvas-post-body a {
+    color: var(--color-blue-600);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.dark .canvas-post-body a {
+    color: var(--color-blue-400);
+}
+
+.canvas-post-body p.is-editor-empty:first-child::before {
+    color: var(--color-zinc-400);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+}
+
+.dark .canvas-post-body p.is-editor-empty:first-child::before {
+    color: var(--color-zinc-500);
+}
+
+.canvas-post-body mark {
+    border-radius: 0.2em;
+    background-color: color-mix(in oklab, var(--color-amber-300) 70%, transparent);
+    padding: 0.05em 0.15em;
+}
+
+.dark .canvas-post-body mark {
+    background-color: color-mix(in oklab, var(--color-amber-400) 35%, transparent);
+    color: inherit;
+}
+
+/* Fenced code blocks — dark panel in both themes (TipTap docs–style) */
+.canvas-post-body pre,
+.canvas-post-body pre.canvas-post-body-code {
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid color-mix(in oklab, var(--color-zinc-950) 12%, transparent);
+    background-color: #18181b;
+    color: #e4e4e7;
+    padding: 0.875rem 1rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    tab-size: 2;
+}
+
+.dark .canvas-post-body pre,
+.dark .canvas-post-body pre.canvas-post-body-code {
+    border-color: color-mix(in oklab, white 10%, transparent);
+    background-color: #09090b;
+    color: #e4e4e7;
+}
+
+.canvas-post-body code {
+    border-radius: 0.25rem;
+    background-color: color-mix(in oklab, var(--color-zinc-950) 6%, transparent);
+    padding: 0.1em 0.3em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.dark .canvas-post-body code {
+    background-color: color-mix(in oklab, white 8%, transparent);
+}
+
+/* Must beat `.dark .canvas-post-body code` so fenced blocks stay clean panels */
+.canvas-post-body pre code,
+.dark .canvas-post-body pre code,
+.canvas-post-body pre.canvas-post-body-code code,
+.dark .canvas-post-body pre.canvas-post-body-code code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* AI rewrite / field decorations (body ProseMirror + SEO form fields) */
+.canvas-post-body .canvas-ai-rewrite-pending,
+.canvas-post-body .canvas-ai-rewrite-settled {
+    border-radius: 0.2em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+.canvas-post-body .canvas-ai-rewrite-pending,
+.canvas-ai-field-pending {
+    color: color-mix(in oklab, var(--color-zinc-950) 72%, var(--color-violet-700));
+    background: linear-gradient(
+        105deg,
+        color-mix(in oklab, var(--color-violet-500) 8%, transparent) 0%,
+        color-mix(in oklab, var(--color-violet-400) 22%, transparent) 42%,
+        color-mix(in oklab, var(--color-fuchsia-400) 18%, transparent) 58%,
+        color-mix(in oklab, var(--color-violet-500) 8%, transparent) 100%
+    );
+    background-size: 220% 100%;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-violet-500) 12%, transparent);
+    animation: canvas-ai-rewrite-shimmer 1.4s ease-in-out infinite;
+}
+
+.dark .canvas-post-body .canvas-ai-rewrite-pending,
+.dark .canvas-ai-field-pending {
+    color: color-mix(in oklab, white 82%, var(--color-violet-300));
+    background: linear-gradient(
+        105deg,
+        color-mix(in oklab, var(--color-violet-400) 14%, transparent) 0%,
+        color-mix(in oklab, var(--color-violet-300) 28%, transparent) 42%,
+        color-mix(in oklab, var(--color-fuchsia-300) 22%, transparent) 58%,
+        color-mix(in oklab, var(--color-violet-400) 14%, transparent) 100%
+    );
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-violet-300) 18%, transparent);
+}
+
+/* Form control wrappers use before: pseudo for white fill — hide while AI is working */
+.canvas-ai-field-pending::before,
+.canvas-ai-field-settled::before {
+    opacity: 0;
+}
+
+.canvas-ai-field-pending,
+.canvas-ai-field-settled {
+    border-radius: 0.5rem;
+}
+
+.canvas-post-body .canvas-ai-rewrite-settled,
+.canvas-ai-field-settled {
+    background-color: color-mix(in oklab, var(--color-violet-400) 28%, transparent);
+    animation: canvas-ai-rewrite-settle 0.75s ease-out forwards;
+}
+
+.dark .canvas-post-body .canvas-ai-rewrite-settled,
+.dark .canvas-ai-field-settled {
+    background-color: color-mix(in oklab, var(--color-violet-300) 26%, transparent);
+}
+
+@keyframes canvas-ai-rewrite-shimmer {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: -100% 0;
+    }
+}
+
+@keyframes canvas-ai-rewrite-settle {
+    0% {
+        background-color: color-mix(in oklab, var(--color-violet-400) 32%, transparent);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .canvas-post-body .canvas-ai-rewrite-pending,
+    .canvas-ai-field-pending {
+        animation: none;
+        background: color-mix(in oklab, var(--color-violet-500) 16%, transparent);
+        box-shadow: none;
+    }
+
+    .dark .canvas-post-body .canvas-ai-rewrite-pending,
+    .dark .canvas-ai-field-pending {
+        background: color-mix(in oklab, var(--color-violet-400) 22%, transparent);
+    }
+
+    .canvas-post-body .canvas-ai-rewrite-settled,
+    .canvas-ai-field-settled {
+        animation: none;
+        background-color: transparent;
+    }
+}
+
+/* Body toolbar: soft fade when primary tools may overflow (below md) */
+@media (max-width: 767px) {
+    [data-post-body-toolbar-scroll='true'] {
+        mask-image: linear-gradient(to right, #000 0%, #000 calc(100% - 1.25rem), transparent 100%);
+    }
+
+    [dir='rtl'] [data-post-body-toolbar-scroll='true'] {
+        mask-image: linear-gradient(to left, #000 0%, #000 calc(100% - 1.25rem), transparent 100%);
+    }
+}
+
+.canvas-post-body hr {
+    border: 0;
+    border-top: 1px solid color-mix(in oklab, var(--color-zinc-950) 12%, transparent);
+    margin: 1.5em 0;
+}
+
+.dark .canvas-post-body hr {
+    border-top-color: color-mix(in oklab, white 14%, transparent);
+}
+
+.canvas-post-body ul[data-type='taskList'] {
+    list-style: none;
+    padding-left: 0;
+}
+
+.canvas-post-body ul[data-type='taskList'] li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.canvas-post-body ul[data-type='taskList'] li > label {
+    margin-top: 0.35em;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.canvas-post-body ul[data-type='taskList'] li > div {
+    flex: 1;
+    min-width: 0;
+}
+
+.canvas-post-body img.canvas-post-body-image,
+.canvas-post-body .canvas-post-body-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin-top: 0.75em;
+    margin-bottom: 0.75em;
+}
+
+.canvas-post-body img.canvas-post-body-image + p.canvas-post-body-image-credit,
+.canvas-post-body p.canvas-post-body-image-credit,
+.canvas-post-body p[data-canvas-image-credit='true'] {
+    margin-top: -0.35em;
+    margin-bottom: 0.75em;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    text-align: center;
+    color: var(--color-canvas-muted, #71717a);
+}
+
+.dark .canvas-post-body img.canvas-post-body-image + p.canvas-post-body-image-credit,
+.dark .canvas-post-body p.canvas-post-body-image-credit,
+.dark .canvas-post-body p[data-canvas-image-credit='true'] {
+    color: var(--color-canvas-muted-dark, #a1a1aa);
+}
+
+.canvas-post-body [style*='text-align: center'] {
+    text-align: center;
+}
+
+.canvas-post-body [style*='text-align: right'] {
+    text-align: right;
+}
+
+.canvas-post-body [style*='text-align: left'] {
+    text-align: left;
+}
+
+.canvas-post-body .tableWrapper {
+    overflow-x: auto;
+    margin: 0.75em 0;
+}
+
+.canvas-post-body table.canvas-post-body-table,
+.canvas-post-body table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    overflow: hidden;
+    margin: 0;
+}
+
+.canvas-post-body table td,
+.canvas-post-body table th {
+    min-width: 1.5em;
+    border: 1px solid color-mix(in oklab, var(--color-zinc-950) 12%, transparent);
+    padding: 0.5rem 0.75rem;
+    vertical-align: top;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.dark .canvas-post-body table td,
+.dark .canvas-post-body table th {
+    border-color: color-mix(in oklab, white 14%, transparent);
+}
+
+.canvas-post-body table th {
+    font-weight: 600;
+    background-color: color-mix(in oklab, var(--color-zinc-950) 4%, transparent);
+    text-align: left;
+}
+
+.dark .canvas-post-body table th {
+    background-color: color-mix(in oklab, white 6%, transparent);
+}
+
+.canvas-post-body table .selectedCell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklab, var(--color-blue-500) 12%, transparent);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.canvas-post-body table .column-resize-handle {
+    position: absolute;
+    right: -2px;
+    top: 0;
+    bottom: -2px;
+    width: 4px;
+    background-color: var(--color-blue-500);
+    pointer-events: none;
+}
+
+.canvas-post-body.resize-cursor {
+    cursor: col-resize;
+}
+
+.canvas-post-body div[data-youtube-video],
+.canvas-post-body .canvas-post-body-youtube {
+    margin: 1em 0;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    aspect-ratio: 16 / 9;
+    background: color-mix(in oklab, var(--color-zinc-950) 6%, transparent);
+}
+
+.dark .canvas-post-body div[data-youtube-video],
+.dark .canvas-post-body .canvas-post-body-youtube {
+    background: color-mix(in oklab, white 6%, transparent);
+}
+
+.canvas-post-body div[data-youtube-video] iframe,
+.canvas-post-body .canvas-post-body-youtube iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.canvas-post-body .canvas-post-body-embed,
+.canvas-post-body div[data-canvas-embed] {
+    margin: 1em 0;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background: color-mix(in oklab, var(--color-zinc-950) 6%, transparent);
+}
+
+.dark .canvas-post-body .canvas-post-body-embed,
+.dark .canvas-post-body div[data-canvas-embed] {
+    background: color-mix(in oklab, white 6%, transparent);
+}
+
+.canvas-post-body .canvas-post-body-embed--vimeo,
+.canvas-post-body div[data-canvas-embed='vimeo'] {
+    aspect-ratio: 16 / 9;
+}
+
+.canvas-post-body .canvas-post-body-embed--x,
+.canvas-post-body div[data-canvas-embed='x'] {
+    min-height: 12rem;
+}
+
+.canvas-post-body .canvas-post-body-embed iframe,
+.canvas-post-body div[data-canvas-embed] iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 12rem;
+    border: 0;
+}
+
+.canvas-post-body .canvas-post-body-embed--vimeo iframe,
+.canvas-post-body div[data-canvas-embed='vimeo'] iframe {
+    min-height: 0;
+}
+
+/* lowlight / highlight.js tokens — tuned for dark code panels */
+.canvas-post-body pre code.hljs,
+.canvas-post-body pre .hljs {
+    display: block;
+    overflow-x: auto;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+}
+
+.canvas-post-body pre .hljs-comment,
+.canvas-post-body pre .hljs-quote {
+    color: #71717a;
+    font-style: italic;
+}
+
+.canvas-post-body pre .hljs-keyword,
+.canvas-post-body pre .hljs-selector-tag,
+.canvas-post-body pre .hljs-addition {
+    color: #c4b5fd;
+}
+
+.canvas-post-body pre .hljs-number,
+.canvas-post-body pre .hljs-string,
+.canvas-post-body pre .hljs-meta .hljs-meta-string,
+.canvas-post-body pre .hljs-literal,
+.canvas-post-body pre .hljs-doctag,
+.canvas-post-body pre .hljs-regexp {
+    color: #6ee7b7;
+}
+
+.canvas-post-body pre .hljs-title,
+.canvas-post-body pre .hljs-section,
+.canvas-post-body pre .hljs-name,
+.canvas-post-body pre .hljs-selector-id,
+.canvas-post-body pre .hljs-selector-class {
+    color: #93c5fd;
+}
+
+.canvas-post-body pre .hljs-attribute,
+.canvas-post-body pre .hljs-attr,
+.canvas-post-body pre .hljs-variable,
+.canvas-post-body pre .hljs-template-variable,
+.canvas-post-body pre .hljs-class .hljs-title,
+.canvas-post-body pre .hljs-type {
+    color: #fcd34d;
+}
+
+.canvas-post-body pre .hljs-symbol,
+.canvas-post-body pre .hljs-bullet,
+.canvas-post-body pre .hljs-subst,
+.canvas-post-body pre .hljs-meta,
+.canvas-post-body pre .hljs-meta .hljs-keyword,
+.canvas-post-body pre .hljs-selector-attr,
+.canvas-post-body pre .hljs-selector-pseudo,
+.canvas-post-body pre .hljs-link {
+    color: #f9a8d4;
+}
+
+.canvas-post-body pre .hljs-built_in,
+.canvas-post-body pre .hljs-deletion {
+    color: #fca5a5;
+}
+
+.canvas-post-body pre .hljs-emphasis {
+    font-style: italic;
+}
+
+.canvas-post-body pre .hljs-strong {
+    font-weight: 700;
+}
+
+.canvas-post-body pre .hljs-punctuation,
+.canvas-post-body pre .hljs-operator {
+    color: #a1a1aa;
+}

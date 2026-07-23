@@ -1,102 +1,143 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Controllers;
 
+use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
-use Canvas\Models\User;
+use Canvas\Support\AuthorAvatar;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 
 class SearchController extends Controller
 {
-    /**
-     * Display the specified resource.
-     */
-    public function posts(): JsonResponse
+    private const RESULTS_PER_TYPE = 10;
+
+    public function index(Request $request): JsonResponse
     {
-        $posts = Post::query()
+        $user = $request->user(config('canvas.guard'));
+        $query = $request->string('q')->trim()->toString();
+        $type = $request->string('type')->trim()->lower()->toString();
+
+        $results = collect();
+
+        if ($type === '' || $type === 'post') {
+            $results->push(...$this->searchPosts($user, $query));
+        }
+
+        if (Gate::forUser($user)->allows('manage-taxonomy')) {
+            if ($type === '' || $type === 'tag') {
+                $results->push(...$this->searchTags($query));
+            }
+
+            if ($type === '' || $type === 'topic') {
+                $results->push(...$this->searchTopics($query));
+            }
+        }
+
+        if (Gate::forUser($user)->allows('manage-users') && ($type === '' || $type === 'user')) {
+            $results->push(...$this->searchUsers($query));
+        }
+
+        return response()->json($results->values());
+    }
+
+    /**
+     * @return list<array{id: string, title: string, type: string, route: string}>
+     */
+    private function searchPosts(mixed $user, string $query): array
+    {
+        $canViewAll = Gate::forUser($user)->allows('viewAll', Post::class);
+
+        return Post::query()
             ->select('id', 'title')
-            ->when(request()->user('canvas')->isContributor, function (Builder $query) {
-                return $query->where('user_id', request()->user('canvas')->id);
-            }, function (Builder $query) {
-                return $query;
+            ->when(! $canViewAll, fn (Builder $q) => $q->where('user_id', data_get($user, 'id')))
+            ->when($query !== '', fn (Builder $q) => $q->where('title', 'like', "%{$query}%"))
+            ->latest()
+            ->limit(self::RESULTS_PER_TYPE)
+            ->get()
+            ->map(fn (Post $post) => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'type' => 'Post',
+                'route' => 'edit-post',
+            ])
+            ->all();
+    }
+
+    /**
+     * @return list<array{id: string, name: string, type: string, route: string}>
+     */
+    private function searchTags(string $query): array
+    {
+        return Tag::query()
+            ->select('id', 'name')
+            ->when($query !== '', fn (Builder $q) => $q->where('name', 'like', "%{$query}%"))
+            ->latest()
+            ->limit(self::RESULTS_PER_TYPE)
+            ->get()
+            ->map(fn (Tag $tag) => [
+                'id' => $tag->id,
+                'name' => $tag->name,
+                'type' => 'Tag',
+                'route' => 'edit-tag',
+            ])
+            ->all();
+    }
+
+    /**
+     * @return list<array{id: string, name: string, type: string, route: string}>
+     */
+    private function searchTopics(string $query): array
+    {
+        return Topic::query()
+            ->select('id', 'name')
+            ->when($query !== '', fn (Builder $q) => $q->where('name', 'like', "%{$query}%"))
+            ->latest()
+            ->limit(self::RESULTS_PER_TYPE)
+            ->get()
+            ->map(fn (Topic $topic) => [
+                'id' => $topic->id,
+                'name' => $topic->name,
+                'type' => 'Topic',
+                'route' => 'edit-topic',
+            ])
+            ->all();
+    }
+
+    /**
+     * @return list<array{id: int, name: mixed, email: mixed, username: string|null, avatar_url: string, type: string, route: string}>
+     */
+    private function searchUsers(string $query): array
+    {
+        return CanvasUser::query()
+            ->with(['user' => fn ($query) => $query->select('id', 'name', 'email')])
+            ->when($query !== '', function (Builder $builder) use ($query): void {
+                $builder->where(function (Builder $nested) use ($query): void {
+                    $nested->where('username', 'like', "%{$query}%")
+                        ->orWhereHas('user', function (Builder $user) use ($query): void {
+                            $user->where('name', 'like', "%{$query}%");
+                        });
+                });
             })
-            ->latest()
-            ->get();
-
-        // TODO: Can ->map() drop into the above query?
-
-        $posts->map(function ($post) {
-            $post['name'] = $post->title;
-            $post['type'] = 'Post';
-            $post['route'] = 'edit-post';
-
-            return $post;
-        });
-
-        return response()->json(collect($posts)->toArray(), 200);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function tags(): JsonResponse
-    {
-        $tags = Tag::query()
-            ->select('id', 'name')
-            ->latest()
-            ->get();
-
-        $tags->map(function ($tag) {
-            $tag['type'] = 'Tag';
-            $tag['route'] = 'edit-tag';
-
-            return $tag;
-        });
-
-        return response()->json(collect($tags)->toArray(), 200);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function topics(): JsonResponse
-    {
-        $topics = Topic::query()
-            ->select('id', 'name')
-            ->latest()
-            ->get();
-
-        $topics->map(function ($topic) {
-            $topic['type'] = 'Topic';
-            $topic['route'] = 'edit-topic';
-
-            return $topic;
-        });
-
-        return response()->json(collect($topics)->toArray(), 200);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function users(): JsonResponse
-    {
-        $users = User::query()
-            ->select('id', 'name', 'email')
-            ->latest()
-            ->get();
-
-        $users->map(function ($user) {
-            $user['type'] = 'User';
-            $user['route'] = 'edit-user';
-
-            return $user;
-        });
-
-        return response()->json(collect($users)->toArray(), 200);
+            ->latest('user_id')
+            ->limit(self::RESULTS_PER_TYPE)
+            ->get()
+            ->map(fn (CanvasUser $canvasUser) => [
+                'id' => $canvasUser->user_id,
+                'name' => data_get($canvasUser->user, 'name'),
+                'email' => data_get($canvasUser->user, 'email'),
+                'username' => $canvasUser->username,
+                'avatar_url' => AuthorAvatar::url($canvasUser->avatar),
+                'type' => 'User',
+                'route' => 'edit-user',
+            ])
+            ->all();
     }
 }

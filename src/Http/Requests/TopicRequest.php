@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Requests;
 
 use Illuminate\Validation\Rule;
@@ -13,15 +15,15 @@ class TopicRequest extends FormRequest
      */
     public function authorize()
     {
-        return $this->user('canvas')->isAdmin;
+        return $this->user(config('canvas.guard'))->can('manage-taxonomy');
     }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'name' => 'required',
@@ -29,7 +31,7 @@ class TopicRequest extends FormRequest
                 'required',
                 'alpha_dash',
                 Rule::unique('canvas_topics')->where(function ($query) {
-                    return $query->where('slug', request('slug'))->where('user_id', request()->user('canvas')->id);
+                    return $query->where('slug', request('slug'))->where('user_id', request()->user(config('canvas.guard'))->id);
                 })->ignore(request('id'))->whereNull('deleted_at'),
             ],
         ];

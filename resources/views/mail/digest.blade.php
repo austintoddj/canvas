@@ -1,27 +1,41 @@
-@component('mail::message')
+<x-mail::message>
 
-# {{ trans('canvas::app.your_weekly_writer_summary_for', [], $data['locale']) }} {{ $data['endDate'] }}
+# {{ __('canvas::app.hello') }}, {{ $userName }}
 
-{{ trans('canvas::app.from', [], $data['locale']) }} {{ $data['startDate'] }} {{ trans('canvas::app.to', [], $data['locale']) }} {{ $data['endDate'] }} {{ trans('canvas::app.your_posts_received', [], $data['locale']) }}
+{{ __('canvas::app.your_weekly_writer_summary_for') }} **{{ $startDate }}** – **{{ $endDate }}**.
 
-# {{ trans('canvas::app.views', [], $data['locale']) }}
-## +{{ $data['totals']['views']  }}
+<x-mail::panel>
+**+{{ number_format($totals['views']) }}** {{ __('canvas::app.views') }} &nbsp;·&nbsp; **+{{ number_format($totals['visits']) }}** {{ __('canvas::app.visits') }}
+</x-mail::panel>
 
-# {{ trans('canvas::app.visits', [], $data['locale']) }}
-## +{{ $data['totals']['visits']  }}
+---
 
-@component('mail::table')
-|                                                                   | {{ trans('canvas::app.visits', [], $data['locale']) }}       | {{ trans('canvas::app.views', [], $data['locale']) }} |
-| ----------------------------------------------------------------- | --------------------------------------------------------: | --------------------------------------------------:|
-@foreach($data['posts'] as $post)
-| *{{ \Illuminate\Support\Str::limit($post['title'], 40, '...') }}* | **+{{ number_format($post['visits_count']) }}**           | **+{{ number_format($post['views_count']) }}**     |
-@endforeach
-@endcomponent
+@forelse($posts as $post)
+@php
+    $title = is_string($post['title'] ?? null) ? trim($post['title']) : '';
+    $displayTitle = $title !== '' ? $title : __('canvas::app.editor.untitled_post');
+@endphp
+**[{{ $displayTitle }}]({{ url(config('canvas.path').'/posts/'.$post['id'].'/stats') }})**
 
-@component('mail::button', ['url' => url(config('canvas.path'))])
-{{ trans('canvas::app.see_all_stats', [], $data['locale']) }}
-@endcomponent
+@if(!empty($post['summary']))
+{{ \Illuminate\Support\Str::limit($post['summary'], 140) }}
 
-Thanks,<br>
+@endif
++{{ number_format($post['views_count']) }} {{ __('canvas::app.views') }} &nbsp;·&nbsp; +{{ number_format($post['visits_count']) }} {{ __('canvas::app.visits') }} &nbsp;·&nbsp; {{ $post['read_time'] }}
+
+---
+
+@empty
+_{{ __('canvas::app.digest.empty') }}_
+
+---
+
+@endforelse
+
+<x-mail::button :url="url(config('canvas.path'))">
+{{ __('canvas::app.see_all_stats') }}
+</x-mail::button>
+
+{{ __('canvas::app.digest.thanks') }},<br>
 {{ config('app.name') }}
-@endcomponent
+</x-mail::message>

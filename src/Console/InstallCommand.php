@@ -1,34 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Console;
 
-use Canvas\Models\User;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Console\View\TaskResult;
 
 class InstallCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'canvas:install';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Install the Canvas components and resources';
 
-    /**
-     * Create a new console command instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         parent::__construct();
@@ -38,58 +22,39 @@ class InstallCommand extends Command
         }
     }
 
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle()
+    public function handle(): int
     {
-        $this->callSilent('vendor:publish', ['--tag' => 'canvas-provider']);
-        $this->callSilent('vendor:publish', ['--tag' => 'canvas-assets']);
-        $this->callSilent('vendor:publish', ['--tag' => 'canvas-config']);
-        $this->callSilent('canvas:migrate');
+        $this->components->info('Installing Canvas.');
 
-        if (! app()->runningUnitTests()) {
-            $this->installCanvasServiceProvider();
-        }
+        $this->components->task('Publishing assets', fn (): int => $this->runSilentTask(
+            'vendor:publish',
+            ['--tag' => 'canvas-assets'],
+        ));
 
-        $this->createDefaultUser($email = 'email@example.com', $password = 'password');
+        $this->components->task('Publishing configuration', fn (): int => $this->runSilentTask(
+            'vendor:publish',
+            ['--tag' => 'canvas-config'],
+        ));
 
-        $this->info('Installation complete.');
-        $this->table(['Default Email', 'Default Password'], [[$email, $password]]);
-        $this->info('First things first, head to <comment>'.route('canvas.login').'</comment> and update your credentials.');
-    }
+        $this->components->task('Running migrations', fn (): int => $this->runSilentTask('canvas:migrate'));
 
-    /**
-     * Create a new default user.
-     *
-     * @return void
-     */
-    protected function createDefaultUser(string $email, string $password)
-    {
-        User::create([
-            'id' => Uuid::uuid4()->toString(),
-            'name' => 'Example User',
-            'email' => $email,
-            'password' => Hash::make($password),
-            'role' => User::ADMIN,
+        $this->newLine();
+        $this->components->info('Installation complete.');
+        $this->components->bulletList([
+            'Create or sign in to a user account in your application',
+            'php artisan canvas:make-admin your@email.com',
         ]);
+
+        return self::SUCCESS;
     }
 
     /**
-     * Register the Canvas service provider in the application configuration file.
-     *
-     * @return void
+     * @param  array<string, mixed>  $parameters
      */
-    protected function installCanvasServiceProvider()
+    private function runSilentTask(string $command, array $parameters = []): int
     {
-        if (! Str::contains($appConfig = file_get_contents(config_path('app.php')), 'App\\Providers\\CanvasServiceProvider::class')) {
-            file_put_contents(config_path('app.php'), str_replace(
-                "App\\Providers\RouteServiceProvider::class,",
-                "App\\Providers\RouteServiceProvider::class,".PHP_EOL."        App\Providers\CanvasServiceProvider::class,",
-                $appConfig
-            ));
-        }
+        return $this->callSilent($command, $parameters) === self::SUCCESS
+            ? TaskResult::Success->value
+            : TaskResult::Failure->value;
     }
 }

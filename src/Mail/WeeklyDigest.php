@@ -1,47 +1,47 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class WeeklyDigest extends Mailable
+class WeeklyDigest extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     /**
-     * Data to pass to the email.
-     *
-     * @var array
+     * @param  array<int, array<string, mixed>>  $posts
+     * @param  array{views: int, visits: int}  $totals
      */
-    public $data;
+    public function __construct(
+        public readonly string $userName,
+        public readonly array $posts,
+        public readonly array $totals,
+        public readonly string $startDate,
+        public readonly string $endDate,
+        public readonly string $timezone = 'UTC',
+    ) {}
 
-    /**
-     * Create a new message instance.
-     *
-     * @return void
-     */
-    public function __construct(array $data)
+    public function envelope(): Envelope
     {
-        $this->data = $data;
+        return new Envelope(
+            subject: __('canvas::app.digest.subject', [
+                'start' => $this->startDate,
+                'end' => $this->endDate,
+            ]),
+        );
     }
 
-    /**
-     * Build the message.
-     *
-     * @return $this
-     */
-    public function build()
+    public function content(): Content
     {
-        $subject = sprintf('%s: %s - %s',
-            trans('canvas::app.stats_for_your_posts', [], $this->data['locale']),
-            $this->data['startDate'],
-            $this->data['endDate']
+        return new Content(
+            markdown: 'canvas::mail.digest',
         );
-
-        return $this->subject($subject)
-            ->from(config('mail.from.address'), config('mail.from.name'))
-            ->markdown('canvas::mail.digest');
     }
 }

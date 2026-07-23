@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Requests;
 
+use Canvas\Enums\Role;
+use Canvas\Support\Localization;
 use Illuminate\Validation\Rule;
 
 class UserRequest extends FormRequest
@@ -16,30 +20,52 @@ class UserRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $normalized = [];
+
+        foreach (['username', 'summary', 'avatar', 'website', 'locale', 'timezone'] as $field) {
+            if ($this->has($field) && $this->input($field) === '') {
+                $normalized[$field] = null;
+            }
+        }
+
+        if ($normalized !== []) {
+            $this->merge($normalized);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'name' => 'required|string',
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('canvas_users')->where(function ($query) {
-                    return $query->where('email', request('email'));
-                })->ignore(request('id'))->whereNull('deleted_at'),
+            'username' => [
+                'nullable',
+                'alpha_dash',
+                'max:255',
+                Rule::unique('canvas_users', 'username')->ignore($this->route('id'), 'user_id'),
             ],
-            'username' => 'nullable|alpha_dash|unique:canvas_users,username,'.request('id'),
-            'password' => 'sometimes|nullable|min:8|confirmed',
-            'summary' => 'nullable|string',
-            'avatar' => 'nullable|string',
-            'dark_mode' => 'nullable|bool',
+            'summary' => 'nullable|string|max:5000',
+            'avatar' => 'nullable|url|max:255',
+            'website' => 'nullable|url|max:255',
+            'social' => 'nullable|array',
+            'social.*' => 'nullable|string|max:255',
+            'locale' => [
+                'nullable',
+                'string',
+                Rule::in(Localization::availableLanguageCodes()),
+            ],
+            'timezone' => 'nullable|timezone:all',
+            'theme' => 'nullable|in:system,light,dark',
             'digest' => 'nullable|bool',
-            'locale' => 'nullable|string',
-            'role' => 'nullable|integer',
+            'preferences' => 'nullable|array',
+            'preferences.onboarding' => 'nullable|array',
+            'preferences.onboarding.complete' => 'nullable|bool',
+            'role' => ['nullable', 'integer', Rule::in(Role::values())],
         ];
     }
 }

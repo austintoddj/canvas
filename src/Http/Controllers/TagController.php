@@ -1,28 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Controllers;
 
 use Canvas\Http\Requests\TagRequest;
 use Canvas\Models\Tag;
+use Canvas\Support\TaxonomyIndexQuery;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 
 class TagController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(
-            Tag::query()
-                ->select('id', 'name', 'created_at')
-                ->latest()
-                ->withCount('posts')
-                ->paginate(), 200
-        );
+        $query = Tag::query()
+            ->select('id', 'name', 'created_at')
+            ->withCount('posts');
+
+        TaxonomyIndexQuery::apply($query, $request);
+
+        return response()->json($query->paginate(), 200);
     }
 
     /**
@@ -31,36 +35,38 @@ class TagController extends Controller
     public function create(): JsonResponse
     {
         return response()->json(Tag::query()->make([
-            'id' => Uuid::uuid4()->toString(),
+            'id' => (string) Str::uuid(),
         ]), 200);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(TagRequest $request, $id): JsonResponse
+    public function store(TagRequest $request, string $id): JsonResponse
     {
         $data = $request->validated();
+        $user = $request->user(config('canvas.guard'));
 
         $tag = Tag::query()->find($id);
+        $created = $tag === null;
 
         if (! $tag) {
             if ($tag = Tag::onlyTrashed()->firstWhere('slug', $data['slug'])) {
                 $tag->restore();
+                $tag->fill($data);
+                $tag->save();
 
                 return response()->json($tag->refresh(), 201);
-            } else {
-                $tag = new Tag(['id' => $id]);
             }
+
+            $tag = new Tag(['id' => $id]);
         }
 
         $tag->fill($data);
-
-        $tag->user_id = $tag->user_id ?? request()->user('canvas')->id;
-
+        $tag->user_id = $tag->user_id ?? $user->id;
         $tag->save();
 
-        return response()->json($tag->refresh(), 201);
+        return response()->json($tag->refresh(), $created ? 201 : 200);
     }
 
     /**

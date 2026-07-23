@@ -1,176 +1,86 @@
 # Contributing Guide
 
-Thank you for considering contributing to Canvas! One of the ongoing goals for Canvas is to make it as accessible as possible. If you come across any translation mistakes or issues and want to make a contribution, please [create a pull request](https://github.com/austintoddj/canvas/pulls). If you don't see your native language included in the `resources/lang` directory, feel free to add it.
+Thank you for considering a contribution to Canvas.
 
-- [OS Tools](#before-you-get-started)
-- [Setup](#setup)
-	- [Git](#git)
-	- [Database](#database)
-	- [Directories](#directories)
-	- [Installation](#installation)
-	- [Developing](#developing)
+If you're fixing docs, translations, bugs, or features, please open a pull request and keep it focused on one change.
 
-## Before you get started
+## Before you start
 
-- Make sure the [Vue DevTools](https://chrome.google.com/webstore/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd?hl=en) extension is installed in your Chrome browser
-- Add the following function from [Caleb Porzio](https://calebporzio.com/bash-alias-composer-link-use-local-folders-as-composer-dependancies/) to your `~/.bashrc`, `~/.bash_profile` or `~/.zshrc`:
+- Use PHP 8.3+ and a Laravel major supported by the package (see `composer.json` and CI).
+- CI runs JavaScript checks on **Node 22** — match that locally when possible.
+- Read `readme.md` for install basics.
+- Host contracts, clean-break install, and the support matrix live in [`UPGRADE.md`](UPGRADE.md).
+- Search for existing patterns before adding a new layer or abstraction.
+- Translations go under `resources/lang` (see [Language catalog](#language-catalog) below).
+- Follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+- Security vulnerabilities: report privately per [`SECURITY.md`](SECURITY.md) — do not open public issues for vulns.
 
-```bash
-composer-link() {composer config repositories.local '{"type": "path", "url": "'$1'"}' --file composer.json}
-```
+## Local Laravel app
 
-## Setup
+If you want to work locally, use a Laravel app with a sibling Canvas checkout:
 
-You can open a completely prebuilt, ready-to-code development environment using Gitpod.
+1. From the root of your Laravel app, add the local Canvas checkout as a Composer path repository:
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/austintoddj/canvas/tree/master)
+    ```bash
+    composer config repositories.canvas '{"type": "path", "url": "../canvas"}' --file composer.json
+    ```
 
-Alternatively, see instructions below to manually setting up an environment on your own machine.
+2. Require Canvas and finish the install:
 
-### Git
+    ```bash
+    composer require austintoddj/canvas @dev
+    php artisan canvas:install
+    php artisan storage:link
+    ```
 
-Fork the project on [https://github.com/austintoddj/canvas](https://github.com/austintoddj/canvas) to your own account. Then clone the fork with the following command:
+3. To avoid re-publishing frontend assets every time you make a change, symlink the Canvas package build output into your Laravel app instead:
 
-```bash
-git clone https://github.com/your-account/canvas.git
-```
+    ```bash
+    rm -rf public/vendor/canvas
+    ln -s "$(cd .. && pwd)/canvas/resources/dist" public/vendor/canvas
+    ```
 
-In an adjacent directory from where you cloned the repo, create a new Laravel project with the following command:
+    Package builds land in `resources/dist` (including `assets`, `manifest.json`, and the `canvas.hot` file from the Vite dev server). Hosts still serve them from `public/vendor/canvas` after publish or this symlink.
 
-```bash
-composer create-project --prefer-dist laravel/laravel blog
-```
+4. From the Canvas package directory, start the Vite dev server:
 
-### Database
+    ```bash
+    npm install
+    npm run dev
+    ```
 
-The fastest way to get a database up and running is to issue the following command:
+    Canvas uses Laravel's Vite integration: the package writes builds to `resources/dist`, while production base URLs stay `/vendor/canvas/...` so they match the host publish path. Running `npm run dev` starts the dev server and writes `resources/dist/canvas.hot` — that file tells Canvas to serve assets from the dev server rather than the production build. For a production-style build, run `npm run build` instead.
 
-```bash
-touch database/database.sqlite
-```
+5. Adjust `/canvas` if your folder layout is different.
 
-Now update your `.env` file to reflect the new database:
+## Before opening a pull request
 
-```php
-DB_CONNECTION=sqlite
-```
+- Run `npm run typecheck`, `npm run lint`, and `npm test`
+- Run `npm run build` and **commit** updated assets in `resources/dist` — hosts serve published package assets; CI does not rebuild dist for them
+- Run `composer pint` (or `composer pint:test` to check without fixing)
+- Run `composer lint` (PHPStan)
+- Run `composer test:ci` to match the PHP matrix locally
 
-### Directories
+Once you've made your changes, create a pull request from your fork to the `develop` branch of the project repository. For large majors, work may land on a version branch (e.g. `v7`) first; open PRs against the branch maintainers are merging, defaulting to `develop` unless the issue or PR says otherwise.
 
-From your Laravel app, link the local version of Canvas using the `composer-link()` function:
+## Language catalog
 
-```bash
-composer-link ../canvas/
-composer require austintoddj/canvas @dev
-```
+UI copy lives under `resources/lang`. **A feature that introduces or changes UI strings is not complete until the full catalog is updated.**
 
-### Installation
+| Rule                        | Detail                                                                                                                                                |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Source of truth**         | `resources/lang/en/app.php`                                                                                                                           |
+| **Every other locale**      | Same key set as `en` — no missing keys, no extra keys                                                                                                 |
+| **New / updated keys**      | Add or update the key in **every** `resources/lang/{locale}/app.php` with a **real translation** for that language — not a copy of the English string |
+| **Allowed English overlap** | Only true cognates, loanwords, brands, or identical short words (e.g. `SEO`, `URL`, `API`, `Unsplash`, `Canvas`, `Avatar`, `OK`)                      |
+| **Removed / renamed keys**  | Apply in **every** locale file in the same change                                                                                                     |
+| **Proof**                   | `composer test -- --filter=LocalizationTest` must pass (key parity). Also spot-check that new strings are not English clones in non-`en` files        |
 
-Now that the projects are linked, run the following installation steps:
+Do not leave English placeholders or “translate later” TODOs for other locales.
 
-```bash
-# Install the Canvas package
-php artisan canvas:install
+## Before a release
 
-# Link the storage directory
-php artisan storage:link
-```
-
-Statistics are a core component to the app, so it's best to have a large dataset in place when developing. To
- generate some, add the following factories to your Laravel app:
-
-```php
-<?php
-
-namespace Database\Factories;
-
-use Illuminate\Database\Eloquent\Factories\Factory;
-
-class CanvasVisitFactory extends Factory
-{
-    /**
-     * The name of the factory's corresponding model.
-     *
-     * @var string
-     */
-    protected $model = \Canvas\Models\Visit::class;
-
-    /**
-     * Define the model's default state.
-     *
-     * @return array
-     */
-    public function definition()
-    {
-        return [
-            'post_id' => \Canvas\Models\Post::all()->pluck('id')->random(),
-            'ip' => $this->faker->ipv4,
-            'agent' => $this->faker->userAgent,
-            'referer' => $this->faker->url,
-            'created_at' => today()->subDays(rand(0, 60))->toDateTimeString(),
-            'updated_at' => today()->subDays(rand(0, 60))->toDateTimeString(),
-        ];
-    }
-}
-```
-
-```php
-<?php
-
-namespace Database\Factories;
-
-use Illuminate\Database\Eloquent\Factories\Factory;
-
-class CanvasViewFactory extends Factory
-{
-    /**
-     * The name of the factory's corresponding model.
-     *
-     * @var string
-     */
-    protected $model = \Canvas\Models\View::class;
-
-    /**
-     * Define the model's default state.
-     *
-     * @return array
-     */
-    public function definition()
-    {
-        return [
-            'post_id' => \Canvas\Models\Post::all()->pluck('id')->random(),
-            'ip' => $this->faker->ipv4,
-            'agent' => $this->faker->userAgent,
-            'referer' => $this->faker->url,
-            'created_at' => today()->subDays(rand(0, 60))->toDateTimeString(),
-            'updated_at' => today()->subDays(rand(0, 60))->toDateTimeString(),
-        ];
-    }
-}
-
-```
-
-In the `run()` method of the `DatabaseSeeder`:
-
-```php
-\Database\Factories\CanvasViewFactory::new()->count(850)->create();
-\Database\Factories\CanvasVisitFactory::new()->count(500)->create();
-```
-
-You can now run `php artisan db:seed` and you will have a substantial amount of views for each post.
-
-### Developing
-
-Instead of making and compiling frontend changes in the package, then having to re-publish the assets in the
- Laravel app again and again, we can utilize a symlink: 
-
-```bash
-# remove the existing assets from the Laravel app
-rm -rf public/vendor/canvas/*
-
-# go inside the empty directory and create a symlink
-cd public/vendor/canvas
-ln -s ../../../../canvas/public/* .
-```
-
-Once you've made your changes, [create a pull request](https://github.com/austintoddj/canvas/compare) from your fork to the `develop` branch of the project repository.
+- Run the full quality gate: `composer pint:test`, `composer lint`, `composer test:ci`, `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` when SPA assets change
+- Regenerate coverage once with `composer test:coverage` (or `test:coverage:html`) and do not claim percentages without a fresh run
+- Smoke the admin SPA on a path install: install → grant access → draft/schedule/publish → pending promote/discard → Organize taxonomy → media upload/delete → roles → integrations
+- Finish the [language catalog](#language-catalog) for any UI copy changes — key parity alone is not enough

@@ -11,3 +11,9 @@ phpunit.xml
 .phpunit.result.cache
 /.phpunit.cache
 /build
+/public/build
+/resources/dist/canvas.hot
+/storage
+
+# Local agent / project rules (not shipped)
+AGENTS.md

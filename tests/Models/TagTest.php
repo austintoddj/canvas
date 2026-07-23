@@ -2,9 +2,30 @@
 
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
-use Canvas\Models\User;
+use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
+it('allows a user to save a tag slug', function (): void {
+    $data = [
+        'name' => 'A new tag',
+        'slug' => 'a-new-tag',
+    ];
+
+    $tag = Tag::factory()->create([
+        'user_id' => $this->admin->id,
+    ]);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("/canvas/api/tags/{$tag->id}", $data)
+        ->assertSuccessful();
+
+    $this->assertDatabaseHas('canvas_tags', [
+        'id' => $response->original['id'],
+        'slug' => $response->original['slug'],
+        'user_id' => $response->original['user_id'],
+    ]);
+});
 
 it('allows tags to share the same slug across different users', function (): void {
     $data = [
@@ -12,25 +33,20 @@ it('allows tags to share the same slug across different users', function (): voi
         'slug' => 'a-new-tag',
     ];
 
-    $primaryTag = Tag::factory()->create([
+    Tag::factory()->create([
         'user_id' => $this->admin->id,
-    ]);
-    $response = $this->actingAs($this->admin, 'canvas')->postJson("/canvas/api/tags/{$primaryTag->id}", $data);
-
-    $this->assertDatabaseHas('canvas_tags', [
-        'id' => $response->original['id'],
-        'slug' => $response->original['slug'],
-        'user_id' => $response->original['user_id'],
+        'name' => $data['name'],
+        'slug' => $data['slug'],
     ]);
 
-    $secondaryAdmin = User::factory()->create([
-        'role' => User::ADMIN,
-    ]);
+    $secondaryAdmin = User::factory()->admin()->create();
     $secondaryTag = Tag::factory()->create([
         'user_id' => $secondaryAdmin->id,
     ]);
 
-    $response = $this->actingAs($secondaryAdmin, 'canvas')->postJson("/canvas/api/tags/{$secondaryTag->id}", $data);
+    $response = $this->actingAs($secondaryAdmin, 'canvas')
+        ->postJson("/canvas/api/tags/{$secondaryTag->id}", $data)
+        ->assertSuccessful();
 
     $this->assertDatabaseHas('canvas_tags', [
         'id' => $response->original['id'],

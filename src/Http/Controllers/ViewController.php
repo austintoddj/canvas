@@ -1,34 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Controllers;
 
-use Canvas\Canvas;
-use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Contracts\View\Factory;
+use Canvas\Support\FrontendBootData;
+use Canvas\Support\Localization;
 use Illuminate\Routing\Controller;
 use Illuminate\View\View;
 
 class ViewController extends Controller
 {
-    /**
-     * Handle the incoming request.
-     *
-     * @return Application|Factory|View
-     */
-    public function __invoke()
+    public function __invoke(): View
     {
-        return view('canvas::layout')->with([
-            'jsVars' => [
-                'languageCodes' => Canvas::availableLanguageCodes(),
-                'maxUpload' => config('canvas.upload_filesize'),
-                'path' => Canvas::basePath(),
-                'roles' => Canvas::availableRoles(),
-                'timezone' => config('app.timezone'),
-                'translations' => Canvas::availableTranslations(request()->user('canvas')->locale),
-                'unsplash' => config('canvas.unsplash.access_key'),
-                'user' => request()->user('canvas'),
-                'version' => Canvas::installedVersion(),
-            ],
+        $user = request()->user(config('canvas.guard'));
+        $jsVars = FrontendBootData::forUser($user);
+        $locale = Localization::resolveLocale(data_get($jsVars, 'user.canvas.locale'));
+
+        app()->setLocale(Localization::resolveTranslationLocale($locale));
+
+        return view('canvas::layout', [
+            'jsVars' => $jsVars,
+            'htmlLang' => str_replace('_', '-', $locale),
+            'htmlDir' => Localization::isRightToLeftLanguage($locale) ? 'rtl' : 'ltr',
         ]);
     }
 }

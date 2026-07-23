@@ -4,7 +4,7 @@ use Canvas\Models\Post;
 use Canvas\Models\Topic;
 use Canvas\Models\View;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 
 it('lists all topics', function (): void {
     Topic::factory()->count(2)->create();
@@ -18,6 +18,27 @@ it('lists all topics', function (): void {
     $this->assertInstanceOf(LengthAwarePaginator::class, $response->getOriginalContent());
 
     $this->assertCount(2, $response->getOriginalContent());
+});
+
+it('filters topics by search and sorts by name', function (): void {
+    Topic::factory()->create(['name' => 'Zebra', 'slug' => 'zebra']);
+    Topic::factory()->create(['name' => 'Alpha Notes', 'slug' => 'alpha-notes']);
+    Topic::factory()->create(['name' => 'Beta', 'slug' => 'beta']);
+
+    $search = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/topics?search=Alpha')
+        ->assertSuccessful()
+        ->getOriginalContent();
+
+    expect($search)->toHaveCount(1);
+    expect($search->first()->name)->toBe('Alpha Notes');
+
+    $sorted = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/topics?sort=name')
+        ->assertSuccessful()
+        ->getOriginalContent();
+
+    expect($sorted->pluck('name')->all())->toBe(['Alpha Notes', 'Beta', 'Zebra']);
 });
 it('returns data for creating a topic', function (): void {
     $response = $this->actingAs($this->admin, 'canvas')
@@ -37,13 +58,11 @@ it('returns existing topic data', function (): void {
 });
 it('lists posts for a topic', function (): void {
     $topic = Topic::factory()->create();
-    $post = Post::factory()->create();
+    $post = Post::factory()->create(['topic_id' => $topic->id]);
 
     View::factory()->create([
         'post_id' => $post->id,
     ]);
-
-    $topic->posts()->sync([$post->id]);
 
     $response = $this->actingAs($this->admin, 'canvas')
         ->getJson("canvas/api/topics/{$topic->id}/posts")
@@ -62,14 +81,14 @@ it('returns not found for unknown topics', function (): void {
 });
 it('stores a new topic', function (): void {
     $data = [
-        'id' => Uuid::uuid4()->toString(),
+        'id' => (string) Str::uuid(),
         'name' => 'A new topic',
         'slug' => 'a-new-topic',
     ];
 
     $response = $this->actingAs($this->admin, 'canvas')
         ->postJson("canvas/api/topics/{$data['id']}", $data)
-        ->assertSuccessful();
+        ->assertCreated();
 
     $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
 
@@ -77,7 +96,7 @@ it('stores a new topic', function (): void {
 });
 it('restores deleted topics when refreshed', function (): void {
     $deletedTopic = Topic::factory()->create([
-        'id' => Uuid::uuid4()->toString(),
+        'id' => (string) Str::uuid(),
         'name' => 'A deleted topic',
         'slug' => 'a-deleted-topic',
         'user_id' => $this->editor->id,
@@ -85,14 +104,14 @@ it('restores deleted topics when refreshed', function (): void {
     ]);
 
     $data = [
-        'id' => Uuid::uuid4()->toString(),
+        'id' => (string) Str::uuid(),
         'name' => $deletedTopic->name,
         'slug' => $deletedTopic->slug,
     ];
 
     $response = $this->actingAs($this->admin, 'canvas')
         ->postJson("canvas/api/topics/{$data['id']}", $data)
-        ->assertSuccessful();
+        ->assertCreated();
 
     $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
 
@@ -108,7 +127,7 @@ it('updates an existing topic', function (): void {
 
     $response = $this->actingAs($this->admin, 'canvas')
         ->postJson("canvas/api/topics/{$topic->id}", $data)
-        ->assertSuccessful();
+        ->assertOk();
 
     $this->assertInstanceOf(Topic::class, $response->getOriginalContent()->first());
 
@@ -122,19 +141,17 @@ it('invalid slugs are validated', function (): void {
             'name' => 'A new topic',
             'slug' => 'a new.slug',
         ])
-        ->assertStatus(422)
-        ->assertJsonStructure([
-            'errors' => [
-                'slug',
-            ],
-        ]);
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['slug']);
 });
-it('deletes an existing topic', function (): void {
-    $topic = Topic::factory()->create();
-
+it('returns not found when deleting unknown topics', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->deleteJson('canvas/api/topics/not-a-topic')
         ->assertNotFound();
+});
+
+it('deletes an existing topic', function (): void {
+    $topic = Topic::factory()->create();
 
     $this->actingAs($this->admin, 'canvas')
         ->deleteJson("canvas/api/topics/{$topic->id}")
@@ -148,30 +165,20 @@ it('deletes an existing topic', function (): void {
 });
 it('desyncs the post relationship', function (): void {
     $topic = Topic::factory()->create();
-    $post = Post::factory()->create();
+    $post = Post::factory()->create(['topic_id' => $topic->id]);
 
-    $topic->posts()->sync([$post->id]);
-
-    $this->assertDatabaseHas('canvas_posts_topics', [
-        'post_id' => $post->id,
+    $this->assertDatabaseHas('canvas_posts', [
+        'id' => $post->id,
         'topic_id' => $topic->id,
     ]);
 
     $this->assertCount(1, $topic->posts);
 
-    $this->actingAs($this->admin, 'canvas')
-        ->deleteJson("canvas/api/posts/{$post->id}")
-        ->assertSuccessful()
-        ->assertNoContent();
+    $topic->delete();
 
-    $this->assertSoftDeleted('canvas_posts', [
+    $this->assertDatabaseHas('canvas_posts', [
         'id' => $post->id,
-        'slug' => $post->slug,
-    ]);
-
-    $this->assertDatabaseMissing('canvas_posts_topics', [
-        'post_id' => $post->id,
-        'topic_id' => $topic->id,
+        'topic_id' => null,
     ]);
 
     $this->assertCount(0, $topic->refresh()->posts);

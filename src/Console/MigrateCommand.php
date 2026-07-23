@@ -1,37 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Console\View\TaskResult;
 
 class MigrateCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'canvas:migrate { --force : Force the operation to run when in production }';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Run Canvas migrations';
+    protected $description = 'Run the Canvas package migrations';
 
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle()
+    public function handle(): int
     {
-        $this->callSilent('migrate', [
-            '--path' => 'vendor/austintoddj/canvas/database/migrations',
-            '--force' => $this->option('force') ?? true,
-        ]);
+        $this->components->task('Running Canvas migrations', function (): int {
+            $exitCode = $this->callSilent('migrate', [
+                '--path' => 'vendor/austintoddj/canvas/database/migrations',
+                '--force' => (bool) $this->option('force'),
+            ]);
 
-        $this->info('Migration complete.');
+            return $exitCode === self::SUCCESS
+                ? TaskResult::Success->value
+                : TaskResult::Failure->value;
+        });
+
+        $this->components->info('Canvas migrations complete.');
+
+        return self::SUCCESS;
     }
 }

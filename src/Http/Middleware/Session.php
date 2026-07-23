@@ -1,38 +1,45 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Date;
+use Symfony\Component\HttpFoundation\Response;
 
 class Session
 {
     /**
      * Handle the incoming request.
-     *
-     * @return Response
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        $viewedPosts = collect(session()->get('viewed_posts'));
-        $visitedPosts = collect(session()->get('visited_posts'));
+        if (session()->has('viewed_posts')) {
+            /** @var array<string|int, int|string> $viewedPosts */
+            $viewedPosts = session()->get('viewed_posts', []);
 
-        if ($viewedPosts->isNotEmpty()) {
-            $viewedPosts->each(function ($timestamp, $id) {
-                if ($timestamp < now()->subSeconds(3600)->timestamp) {
-                    session()->forget("viewed_posts.{$id}");
-                }
-            });
+            $stale = collect($viewedPosts)
+                ->filter(fn (int|string $timestamp): bool => (int) $timestamp < now()->subHour()->timestamp)
+                ->keys()
+                ->map(fn (string|int $id): string => "viewed_posts.{$id}")
+                ->all();
+
+            session()->forget($stale);
         }
 
-        if ($visitedPosts->isNotEmpty()) {
-            $visitedPosts->each(function ($item, $id) {
-                if (! Date::createFromTimestamp($item['timestamp'])->isToday()) {
-                    session()->forget("visited_posts.{$id}");
-                }
-            });
+        if (session()->has('visited_posts')) {
+            /** @var array<string|int, array{timestamp: int|string}> $visitedPosts */
+            $visitedPosts = session()->get('visited_posts', []);
+
+            $stale = collect($visitedPosts)
+                ->filter(fn (array $item): bool => ! Date::createFromTimestamp((int) $item['timestamp'])->isToday())
+                ->keys()
+                ->map(fn (string|int $id): string => "visited_posts.{$id}")
+                ->all();
+
+            session()->forget($stale);
         }
 
         return $next($request);

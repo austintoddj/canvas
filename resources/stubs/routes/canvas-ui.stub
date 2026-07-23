@@ -1,0 +1,20 @@
+<?php
+
+use App\Http\Controllers\Canvas\CanvasUiController;
+use Canvas\Http\Middleware\Session;
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('canvas-ui')->middleware(['web'])->group(function (): void {
+    Route::get('/', [CanvasUiController::class, 'index'])->name('canvas-ui.index');
+    Route::get('/feed', [CanvasUiController::class, 'feed'])->name('canvas-ui.feed');
+    Route::get('/tags', [CanvasUiController::class, 'tags'])->name('canvas-ui.tags');
+    Route::get('/topics', [CanvasUiController::class, 'topics'])->name('canvas-ui.topics');
+    Route::get('/tags/{slug}', [CanvasUiController::class, 'tag'])->name('canvas-ui.tag');
+    Route::get('/topics/{slug}', [CanvasUiController::class, 'topic'])->name('canvas-ui.topic');
+    Route::get('/@{username}', [CanvasUiController::class, 'author'])
+        ->where('username', '[A-Za-z0-9_-]+')
+        ->name('canvas-ui.author');
+    Route::get('/{slug}', [CanvasUiController::class, 'show'])
+        ->middleware(Session::class)
+        ->name('canvas-ui.show');
+});

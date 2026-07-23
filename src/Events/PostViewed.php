@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Canvas\Events;
 
 use Canvas\Models\Post;
@@ -7,17 +9,12 @@ use Canvas\Models\Post;
 class PostViewed
 {
     /**
-     * The post instance.
-     *
-     * @var Post
-     */
-    public $post;
-
-    /**
      * Create a new event instance.
      */
-    public function __construct(Post $post)
-    {
-        $this->post = $post;
-    }
+    public function __construct(
+        public readonly Post $post,
+        public readonly string $ip,
+        public readonly ?string $agent,
+        public readonly ?string $referer,
+    ) {}
 }

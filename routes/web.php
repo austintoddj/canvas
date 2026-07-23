@@ -1,50 +1,55 @@
 <?php
 
-use Canvas\Http\Controllers\Auth\AuthenticatedSessionController;
-use Canvas\Http\Controllers\Auth\NewPasswordController;
-use Canvas\Http\Controllers\Auth\PasswordResetLinkController;
+use Canvas\Http\Controllers\AiRewriteController;
+use Canvas\Http\Controllers\IntegrationsController;
+use Canvas\Http\Controllers\MediaController;
 use Canvas\Http\Controllers\PostController;
 use Canvas\Http\Controllers\SearchController;
 use Canvas\Http\Controllers\StatsController;
 use Canvas\Http\Controllers\TagController;
 use Canvas\Http\Controllers\TopicController;
-use Canvas\Http\Controllers\UploadsController;
+use Canvas\Http\Controllers\TranslationsController;
+use Canvas\Http\Controllers\UnsplashController;
 use Canvas\Http\Controllers\UserController;
 use Canvas\Http\Controllers\ViewController;
-use Canvas\Http\Middleware\Admin;
-use Canvas\Http\Middleware\Authenticate;
+use Canvas\Http\Middleware\Authorize;
+use Canvas\Http\Middleware\EagerLoadCanvasUser;
 use Illuminate\Support\Facades\Route;
 
-Route::controller(AuthenticatedSessionController::class)->group(function (): void {
-    // Login routes...
-    Route::get('login', 'create')->name('canvas.login');
-    Route::post('login', 'store');
-
-    // Logout routes...
-    Route::post('logout', 'destroy')->name('canvas.logout');
-});
-
-Route::controller(PasswordResetLinkController::class)->group(function (): void {
-    // Forgot password routes...
-    Route::get('forgot-password', 'create')->name('canvas.password.request');
-    Route::post('forgot-password', 'store')->name('canvas.password.email');
-});
-
-Route::controller(NewPasswordController::class)->group(function (): void {
-    // Reset password routes...
-    Route::get('reset-password/{token}', 'create')->name('canvas.password.reset');
-    Route::post('reset-password', 'store')->name('canvas.password.update');
-});
-
-Route::middleware([Authenticate::class])->group(function (): void {
+Route::middleware([
+    'auth:'.config('canvas.guard'),
+    EagerLoadCanvasUser::class,
+    Authorize::class,
+])->group(function (): void {
     Route::prefix('api')->group(function (): void {
         // Stats routes...
         Route::get('stats', StatsController::class);
 
-        // Upload routes...
-        Route::prefix('uploads')->controller(UploadsController::class)->group(function (): void {
-            Route::post('/', 'store');
-            Route::delete('/', 'destroy');
+        // Translations routes...
+        Route::get('translations/{locale}', TranslationsController::class);
+
+        // Unsplash routes...
+        Route::get('unsplash', UnsplashController::class);
+
+        // AI writing (any Canvas user)...
+        Route::post('ai/rewrite', AiRewriteController::class)->middleware('throttle:30,1');
+
+        // Integrations (admin)...
+        Route::prefix('integrations')->middleware(['can:manage-integrations'])->group(function (): void {
+            Route::get('/', [IntegrationsController::class, 'show']);
+            Route::put('/', [IntegrationsController::class, 'update']);
+            Route::post('webhooks/test', [IntegrationsController::class, 'testWebhook'])
+                ->middleware('throttle:10,1');
+        });
+
+        // Media routes...
+        Route::prefix('media')->controller(MediaController::class)->group(function (): void {
+            Route::get('/', 'index');
+            Route::get('create', 'create');
+            Route::get('{media}', 'show');
+            Route::post('{id}', 'store');
+            Route::put('{media}', 'update');
+            Route::delete('{media}', 'destroy');
         });
 
         // Post routes...
@@ -53,12 +58,13 @@ Route::middleware([Authenticate::class])->group(function (): void {
             Route::get('create', 'create');
             Route::get('{post}/stats', 'stats');
             Route::get('{post}', 'show');
+            Route::post('{post}/discard', 'discard');
             Route::post('{id}', 'store');
             Route::delete('{post}', 'destroy');
         });
 
         // Tag routes...
-        Route::prefix('tags')->middleware([Admin::class])->controller(TagController::class)->group(function (): void {
+        Route::prefix('tags')->middleware(['can:manage-taxonomy'])->controller(TagController::class)->group(function (): void {
             Route::get('/', 'index');
             Route::get('create', 'create');
             Route::get('{tag}/posts', 'posts');
@@ -68,7 +74,7 @@ Route::middleware([Authenticate::class])->group(function (): void {
         });
 
         // Topic routes...
-        Route::prefix('topics')->middleware([Admin::class])->controller(TopicController::class)->group(function (): void {
+        Route::prefix('topics')->middleware(['can:manage-taxonomy'])->controller(TopicController::class)->group(function (): void {
             Route::get('/', 'index');
             Route::get('create', 'create');
             Route::get('{topic}/posts', 'posts');
@@ -79,21 +85,17 @@ Route::middleware([Authenticate::class])->group(function (): void {
 
         // User routes...
         Route::prefix('users')->controller(UserController::class)->group(function (): void {
-            Route::get('/', 'index')->middleware([Admin::class]);
-            Route::get('create', 'create')->middleware([Admin::class]);
+            Route::get('/', 'index')->middleware(['can:manage-users']);
+            Route::get('create', 'create')->middleware(['can:manage-users']);
+            Route::get('lookup', 'lookup')->middleware(['can:manage-users']);
             Route::get('{user}/posts', 'posts');
             Route::get('{user}', 'show');
             Route::post('{id}', 'store');
-            Route::delete('{user}', 'destroy')->middleware([Admin::class]);
+            Route::delete('{user}', 'destroy')->middleware(['can:manage-users']);
         });
 
         // Search routes...
-        Route::prefix('search')->controller(SearchController::class)->group(function (): void {
-            Route::get('posts', 'posts');
-            Route::get('tags', 'tags')->middleware([Admin::class]);
-            Route::get('topics', 'topics')->middleware([Admin::class]);
-            Route::get('users', 'users')->middleware([Admin::class]);
-        });
+        Route::get('search', [SearchController::class, 'index']);
     });
 
     // Catch-all route...
