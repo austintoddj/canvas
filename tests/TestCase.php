@@ -78,6 +78,42 @@ abstract class TestCase extends OrchestraTestCase
         }
     }
 
+    /**
+     * Hold-for-duration lock for canvas:ui scaffold paths (controller, views, routes).
+     * UiCommandTest and CanvasUiControllerTest must share this so parallel workers
+     * never install vs delete the same Testbench app files concurrently.
+     *
+     * @var resource|null
+     */
+    private static $canvasUiScaffoldLock = null;
+
+    public static function acquireCanvasUiScaffoldLock(): void
+    {
+        if (self::$canvasUiScaffoldLock !== null) {
+            return;
+        }
+
+        $lock = fopen(sys_get_temp_dir().'/canvas-test-ui.lock', 'c');
+
+        if ($lock === false) {
+            return;
+        }
+
+        flock($lock, LOCK_EX);
+        self::$canvasUiScaffoldLock = $lock;
+    }
+
+    public static function releaseCanvasUiScaffoldLock(): void
+    {
+        if (self::$canvasUiScaffoldLock === null) {
+            return;
+        }
+
+        flock(self::$canvasUiScaffoldLock, LOCK_UN);
+        fclose(self::$canvasUiScaffoldLock);
+        self::$canvasUiScaffoldLock = null;
+    }
+
     protected function setUp(): void
     {
         $this->ensurePublishedConfigExists();

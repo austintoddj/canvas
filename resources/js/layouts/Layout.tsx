@@ -193,7 +193,7 @@ function UserDropdownContent({
 
 export default function Layout() {
     const { user, t, boot } = useCanvas();
-    const { canManageTaxonomy, canManageUsers, canManageSettings } = usePermissions();
+    const { canManageTaxonomy, canManageUsers, canManageIntegrations } = usePermissions();
     const { pathname } = useLocation();
     const { posts: recentPosts } = useRecentPosts(5);
     const { mode, setMode } = useTheme();
@@ -296,11 +296,7 @@ export default function Layout() {
                                 {canManageTaxonomy ? (
                                     <SidebarItem
                                         href="/organize"
-                                        current={
-                                            pathname.startsWith('/organize') ||
-                                            pathname.startsWith('/tags') ||
-                                            pathname.startsWith('/topics')
-                                        }
+                                        current={pathname.startsWith('/organize')}
                                     >
                                         <IconStack2 data-slot="icon" />
                                         <SidebarLabel>{t('nav.organize')}</SidebarLabel>
@@ -308,17 +304,17 @@ export default function Layout() {
                                 ) : null}
                                 {canManageUsers ? (
                                     <SidebarItem
-                                        href="/settings/users"
-                                        current={pathname.startsWith('/settings/users')}
+                                        href="/users"
+                                        current={pathname.startsWith('/users')}
                                     >
                                         <IconUsers data-slot="icon" />
                                         <SidebarLabel>{t('nav.users')}</SidebarLabel>
                                     </SidebarItem>
                                 ) : null}
-                                {canManageSettings ? (
+                                {canManageIntegrations ? (
                                     <SidebarItem
-                                        href="/settings/integrations"
-                                        current={pathname.startsWith('/settings/integrations')}
+                                        href="/integrations"
+                                        current={pathname.startsWith('/integrations')}
                                     >
                                         <IconBuildingStore data-slot="icon" />
                                         <SidebarLabel>{t('nav.integrations')}</SidebarLabel>

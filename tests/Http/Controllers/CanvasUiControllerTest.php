@@ -10,35 +10,26 @@ use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Canvas\Tests\Models\BareUser;
 use Canvas\Tests\Models\User;
+use Canvas\Tests\TestCase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 
 beforeEach(function (): void {
-    static $controllerLoaded = false;
+    TestCase::acquireCanvasUiScaffoldLock();
 
-    if (! $controllerLoaded) {
-        $controllerPath = app_path('Http/Controllers/Canvas/CanvasUiController.php');
-        $lock = fopen(sys_get_temp_dir().'/canvas-test-ui.lock', 'c');
+    $controllerPath = app_path('Http/Controllers/Canvas/CanvasUiController.php');
+    $viewsPath = resource_path('views/vendor/canvas/ui');
 
-        if ($lock !== false) {
-            flock($lock, LOCK_EX);
+    if (! is_file($controllerPath) || ! is_dir($viewsPath)) {
+        $this->artisan('canvas:ui', ['--force' => true]);
+    }
+
+    if (! class_exists(CanvasUiController::class, false)) {
+        if (function_exists('opcache_invalidate')) {
+            opcache_invalidate($controllerPath, true);
         }
 
-        try {
-            $this->artisan('canvas:ui', ['--force' => true]);
-
-            if (function_exists('opcache_invalidate')) {
-                opcache_invalidate($controllerPath, true);
-            }
-
-            require_once $controllerPath;
-            $controllerLoaded = true;
-        } finally {
-            if ($lock !== false) {
-                flock($lock, LOCK_UN);
-                fclose($lock);
-            }
-        }
+        require_once $controllerPath;
     }
 
     Route::prefix('canvas-ui')->middleware(['web'])->group(function (): void {
@@ -68,6 +59,10 @@ beforeEach(function (): void {
             ->middleware(Session::class)
             ->name('canvas-ui.show');
     });
+});
+
+afterEach(function (): void {
+    TestCase::releaseCanvasUiScaffoldLock();
 });
 
 it('shows a paginated listing of published posts only', function (): void {

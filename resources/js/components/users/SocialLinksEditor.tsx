@@ -21,7 +21,7 @@ import {
     SOCIAL_PLACEHOLDERS,
     emptySocial,
     type SocialFieldKey,
-} from '@/lib/settings/profile';
+} from '@/lib/users/profile';
 import {
     IconBrandBluesky,
     IconBrandFacebook,

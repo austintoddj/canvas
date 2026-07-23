@@ -107,12 +107,10 @@ class PostController extends Controller
         $post->user_id ??= data_get($user, 'id');
         $post->clearPending();
 
-        $allowTaxonomyCreate = $post->published_at !== null;
-
-        $post->topic_id = $this->resolveTopicId($topicInput, $user, $allowTaxonomyCreate);
+        $post->topic_id = $this->resolveTopicId($topicInput);
         $post->save();
 
-        $post->tags()->sync($this->resolveTagsForSync($tagsInput, $user, $allowTaxonomyCreate));
+        $post->tags()->sync($this->resolveTagsForSync($tagsInput));
 
         return response()->json($this->postPayload($post->refresh()), $created ? 201 : 200);
     }
@@ -158,7 +156,10 @@ class PostController extends Controller
         $this->ensurePostIsVisibleToCurrentUser($post);
 
         if (! $post->published) {
-            throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
+            return response()->json([
+                'message' => trans('canvas::app.stats.published_only'),
+                'code' => 'stats_published_only',
+            ], 422);
         }
 
         $locale = data_get(request()->user(config('canvas.guard')), 'locale');
@@ -259,37 +260,20 @@ class PostController extends Controller
     }
 
     /**
-     * Resolve tag IDs for sync. Unknown slugs create rows only when publishing.
+     * Resolve tag IDs for sync. Unknown slugs are ignored — mint tags in Organize.
      *
      * @param  array<int, array{name: string, slug: string}>  $tagInputs
      * @return list<string>
      */
-    private function resolveTagsForSync(array $tagInputs, mixed $user, bool $allowCreate): array
+    private function resolveTagsForSync(array $tagInputs): array
     {
         $existing = Tag::query()->get(['id', 'name', 'slug']);
 
         return collect($tagInputs)
-            ->map(function (array $item) use ($existing, $user, $allowCreate): ?string {
+            ->map(function (array $item) use ($existing): ?string {
                 $match = $existing->firstWhere('slug', $item['slug']);
 
-                if ($match !== null) {
-                    return (string) $match->id;
-                }
-
-                if (! $allowCreate) {
-                    return null;
-                }
-
-                $created = Tag::query()->create([
-                    'id' => (string) Str::uuid(),
-                    'name' => $item['name'],
-                    'slug' => $item['slug'],
-                    'user_id' => data_get($user, 'id'),
-                ]);
-
-                $existing->push($created);
-
-                return (string) $created->id;
+                return $match !== null ? (string) $match->id : null;
             })
             ->filter()
             ->values()
@@ -297,11 +281,11 @@ class PostController extends Controller
     }
 
     /**
-     * Resolve a topic ID. Unknown slugs create a row only when publishing.
+     * Resolve a topic ID. Unknown slugs are ignored — mint topics in Organize.
      *
      * @param  array<int, array{name: string, slug: string}>  $topicInput
      */
-    private function resolveTopicId(array $topicInput, mixed $user, bool $allowCreate): ?string
+    private function resolveTopicId(array $topicInput): ?string
     {
         $input = collect($topicInput)->first();
 
@@ -311,19 +295,6 @@ class PostController extends Controller
 
         $match = Topic::query()->firstWhere('slug', $input['slug']);
 
-        if ($match !== null) {
-            return (string) $match->id;
-        }
-
-        if (! $allowCreate) {
-            return null;
-        }
-
-        return (string) Topic::query()->create([
-            'id' => (string) Str::uuid(),
-            'name' => $input['name'],
-            'slug' => $input['slug'],
-            'user_id' => data_get($user, 'id'),
-        ])->id;
+        return $match !== null ? (string) $match->id : null;
     }
 }

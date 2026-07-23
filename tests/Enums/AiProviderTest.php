@@ -27,3 +27,15 @@ it('exposes fast defaults and expert presets', function (AiProvider $provider, s
 it('exposes string values for validation', function (): void {
     expect(AiProvider::values())->toBe(['xai', 'openai', 'anthropic']);
 });
+
+it('maps provider base urls', function (): void {
+    expect(AiProvider::Xai->baseUrl())->toBe('https://api.x.ai/v1')
+        ->and(AiProvider::OpenAi->baseUrl())->toBe('https://api.openai.com/v1')
+        ->and(AiProvider::Anthropic->baseUrl())->toBe('https://api.anthropic.com');
+});
+
+it('maps provider console urls for integrations help', function (): void {
+    expect(AiProvider::Xai->consoleUrl())->toBe('https://console.x.ai')
+        ->and(AiProvider::OpenAi->consoleUrl())->toBe('https://platform.openai.com/api-keys')
+        ->and(AiProvider::Anthropic->consoleUrl())->toBe('https://console.anthropic.com/settings/keys');
+});

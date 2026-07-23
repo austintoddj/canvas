@@ -1,8 +1,17 @@
 <?php
 
 use Canvas\Enums\Role;
+use Canvas\Models\CanvasUser;
 use Canvas\Tests\Models\User;
 use Illuminate\Support\Facades\Artisan;
+
+it('reports when no users have canvas access', function (): void {
+    CanvasUser::query()->delete();
+
+    Artisan::call('canvas:users');
+
+    expect(Artisan::output())->toContain('No users have Canvas access yet.');
+});
 
 it('lists only canvas users with their roles', function (): void {
     $admin = User::factory()->admin()->create(['name' => 'Admin User']);

@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
     formatTaxonomyDate,
-    legacyTaxonomyRedirectPath,
     organizeIndexPath,
     parseOrganizeListFilters,
     parseTaxonomyListFilters,
@@ -17,7 +16,7 @@ import {
 } from '@/lib/taxonomy/list';
 
 describe('taxonomy list helpers', () => {
-    it('parses filters, paths, deep links, and legacy organize redirects', () => {
+    it('parses filters, paths, and organize deep links', () => {
         expect(parseTaxonomyListFilters(new URLSearchParams())).toEqual({
             page: 1,
             search: '',
@@ -49,9 +48,6 @@ describe('taxonomy list helpers', () => {
         expect(topicsIndexPath()).toBe('/organize');
         expect(tagsDetailPath('id-1')).toBe('/organize?tab=tags&detail=id-1');
         expect(topicsDetailPath('id-2')).toBe('/organize?detail=id-2');
-        expect(legacyTaxonomyRedirectPath('tags', new URLSearchParams('page=2&detail=x'))).toBe(
-            '/organize?tab=tags&page=2&detail=x'
-        );
 
         expect(taxonomyIndexQueryParams({ page: 1, search: '', sort: 'newest' })).toEqual({});
         expect(taxonomyIndexQueryParams({ page: 5, search: 'php', sort: 'posts' })).toEqual({

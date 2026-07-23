@@ -43,7 +43,7 @@ jobs:
               run: npm test
 
     php-quality:
-        name: PHP (style)
+        name: PHP (style + analyse)
         runs-on: ubuntu-latest
 
         steps:
@@ -71,6 +71,9 @@ jobs:
 
             - name: Check code style
               run: composer pint:test
+
+            - name: Run static analysis
+              run: composer lint
 
     php:
         name: Laravel ${{ matrix.laravel }} on PHP ${{ matrix.php }}

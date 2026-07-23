@@ -14,16 +14,16 @@ describe('users list helpers', () => {
     it('parses filters, paths, and detail deep links', () => {
         expect(parseUsersListFilters(new URLSearchParams())).toEqual({ page: 1 });
         expect(parseUsersListFilters(new URLSearchParams('page=2'))).toEqual({ page: 2 });
-        expect(usersIndexPath({ page: 1 })).toBe('/settings/users');
-        expect(usersIndexPath({ page: 3 })).toBe('/settings/users?page=3');
+        expect(usersIndexPath({ page: 1 })).toBe('/users');
+        expect(usersIndexPath({ page: 3 })).toBe('/users?page=3');
         expect(usersIndexQueryParams({ page: 1 })).toEqual({});
         expect(usersIndexQueryParams({ page: 4 })).toEqual({ page: 4 });
         expect(userDetailId(new URLSearchParams())).toBeNull();
         expect(userDetailId(new URLSearchParams('detail=42'))).toBe('42');
         expect(setUserDetailParam(new URLSearchParams('page=2'), 7).get('detail')).toBe('7');
         expect(setUserDetailParam(new URLSearchParams('detail=9'), null).get('detail')).toBeNull();
-        expect(usersDetailPath(12)).toBe('/settings/users?detail=12');
-        expect(usersDetailPath(12, 3)).toBe('/settings/users?detail=12&page=3');
+        expect(usersDetailPath(12)).toBe('/users?detail=12');
+        expect(usersDetailPath(12, 3)).toBe('/users?detail=12&page=3');
     });
 
     it('normalizes Laravel ResourceCollection and LengthAwarePaginator JSON', () => {

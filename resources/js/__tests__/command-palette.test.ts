@@ -58,12 +58,12 @@ describe('command palette helpers', () => {
         const contributor = {
             canManageTaxonomy: false,
             canManageUsers: false,
-            canManageSettings: false,
+            canManageIntegrations: false,
         };
         const admin = {
             canManageTaxonomy: true,
             canManageUsers: true,
-            canManageSettings: true,
+            canManageIntegrations: true,
         };
 
         const contributorPages = filterNavigationPages('', contributor).map((page) => page.id);
@@ -95,12 +95,12 @@ describe('command palette helpers', () => {
                 page: {
                     id: 'integrations',
                     label: 'Integrations',
-                    path: '/settings/integrations',
+                    path: '/integrations',
                     keywords: [],
-                    requires: 'settings',
+                    requires: 'integrations',
                 },
             })
-        ).toBe('/settings/integrations');
+        ).toBe('/integrations');
 
         expect(
             paletteItemPath({

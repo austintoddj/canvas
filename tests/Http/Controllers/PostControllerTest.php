@@ -332,7 +332,8 @@ describe('when fetching post stats', function (): void {
 
         $this->actingAs($this->admin, 'canvas')
             ->getJson("canvas/api/posts/{$post->id}/stats")
-            ->assertNotFound();
+            ->assertStatus(422)
+            ->assertJsonPath('code', 'stats_published_only');
     });
     it('scheduled posts do not display stats', function (): void {
         $post = Post::factory()->create([
@@ -341,7 +342,8 @@ describe('when fetching post stats', function (): void {
 
         $this->actingAs($this->admin, 'canvas')
             ->getJson("canvas/api/posts/{$post->id}/stats")
-            ->assertNotFound();
+            ->assertStatus(422)
+            ->assertJsonPath('code', 'stats_published_only');
     });
     it('returns not found for unknown posts', function (): void {
         $this->actingAs($this->admin, 'canvas')
@@ -726,7 +728,7 @@ describe('when storing and updating posts', function (): void {
 });
 
 describe('when syncing taxonomy', function (): void {
-    it('creates new tags when the post is published', function (): void {
+    it('ignores unknown tags when the post is published', function (): void {
         $post = Post::factory()->create();
 
         $data = [
@@ -755,11 +757,9 @@ describe('when syncing taxonomy', function (): void {
                 'slug' => $data['slug'],
             ]);
 
-        $this->assertCount(2, $post->fresh()->tags);
-        $this->assertDatabaseHas('canvas_tags', ['slug' => 'a-new-tag']);
-        $this->assertDatabaseHas('canvas_posts_tags', [
-            'post_id' => $post->id,
-        ]);
+        $this->assertCount(0, $post->fresh()->tags);
+        $this->assertDatabaseMissing('canvas_tags', ['slug' => 'a-new-tag']);
+        $this->assertDatabaseMissing('canvas_tags', ['slug' => 'another-tag']);
     });
 
     it('does not create tags while the post is a draft', function (): void {
@@ -874,7 +874,7 @@ describe('when syncing taxonomy', function (): void {
         expect($post->fresh()->tags)->toHaveCount(0);
     });
 
-    it('creates a new topic when the post is published', function (): void {
+    it('ignores an unknown topic when the post is published', function (): void {
         $post = Post::factory()->create();
 
         $data = [
@@ -899,8 +899,8 @@ describe('when syncing taxonomy', function (): void {
                 'slug' => $data['slug'],
             ]);
 
-        $this->assertInstanceOf(Topic::class, $post->refresh()->topic);
-        $this->assertDatabaseHas('canvas_topics', ['slug' => 'a-new-topic']);
+        $this->assertNull($post->refresh()->topic_id);
+        $this->assertDatabaseMissing('canvas_topics', ['slug' => 'a-new-topic']);
     });
 
     it('does not create a topic while the post is a draft', function (): void {

@@ -1,7 +1,7 @@
 <?php
 
 use Canvas\Http\Controllers\AiRewriteController;
-use Canvas\Http\Controllers\IntegrationSettingsController;
+use Canvas\Http\Controllers\IntegrationsController;
 use Canvas\Http\Controllers\MediaController;
 use Canvas\Http\Controllers\PostController;
 use Canvas\Http\Controllers\SearchController;
@@ -34,10 +34,10 @@ Route::middleware([
         // AI writing (any Canvas user)...
         Route::post('ai/rewrite', AiRewriteController::class)->middleware('throttle:30,1');
 
-        // Integration settings (admin)...
-        Route::prefix('settings/integrations')->middleware(['can:manage-settings'])->group(function (): void {
-            Route::get('/', [IntegrationSettingsController::class, 'show']);
-            Route::put('/', [IntegrationSettingsController::class, 'update']);
+        // Integrations (admin)...
+        Route::prefix('integrations')->middleware(['can:manage-integrations'])->group(function (): void {
+            Route::get('/', [IntegrationsController::class, 'show']);
+            Route::put('/', [IntegrationsController::class, 'update']);
         });
 
         // Media routes...

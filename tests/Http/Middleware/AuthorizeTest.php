@@ -75,3 +75,54 @@ it('authorizes bare hosts from the eager-loaded canvasUser relation without a se
 
     expect($response->getContent())->toBe('ok');
 });
+
+it('forbids users with a loaded null canvasUser relation', function (): void {
+    $user = User::factory()->create();
+    $user->setRelation('canvasUser', null);
+
+    $request = Request::create('/canvas/api/posts', 'GET');
+    $request->setUserResolver(fn () => $user);
+
+    try {
+        (new Authorize)->handle($request, fn () => response('ok'));
+        expect(false)->toBeTrue('Expected 403 when the loaded canvasUser relation is null.');
+    } catch (HttpException $exception) {
+        expect($exception->getStatusCode())->toBe(403);
+    }
+});
+
+it('allows users with canvas access via the canvasUser relation method', function (): void {
+    $user = User::factory()->admin()->create();
+    $user->unsetRelation('canvasUser');
+
+    expect($user->relationLoaded('canvasUser'))->toBeFalse();
+
+    $request = Request::create('/canvas/api/posts', 'GET');
+    $request->setUserResolver(fn () => $user);
+
+    $response = (new Authorize)->handle($request, fn () => response('ok'));
+
+    expect($response->getContent())->toBe('ok');
+});
+
+it('allows bare hosts with a canvas_users row without an eager-loaded relation', function (): void {
+    useBareUserModel();
+
+    $host = User::factory()->create();
+    CanvasUser::factory()->create([
+        'user_id' => $host->id,
+        'role' => Role::Contributor,
+    ]);
+
+    $bareUser = bareUser($host->id);
+
+    expect($bareUser->relationLoaded('canvasUser'))->toBeFalse()
+        ->and(method_exists($bareUser, 'canvasUser'))->toBeFalse();
+
+    $request = Request::create('/canvas/api/posts', 'GET');
+    $request->setUserResolver(fn () => $bareUser);
+
+    $response = (new Authorize)->handle($request, fn () => response('ok'));
+
+    expect($response->getContent())->toBe('ok');
+});

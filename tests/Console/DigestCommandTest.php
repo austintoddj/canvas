@@ -195,6 +195,57 @@ it('uses the recipients timezone for digest periods and stats windows', function
     });
 });
 
+it('exits successfully when there are no published authors', function (): void {
+    Mail::fake();
+
+    Post::factory()->create([
+        'user_id' => null,
+        'published_at' => now()->subWeek(),
+    ]);
+
+    $this->artisan('canvas:digest')->assertSuccessful();
+
+    Mail::assertNothingOutgoing();
+});
+
+it('skips digest recipients without a host user or complete contact details', function (): void {
+    Mail::fake();
+
+    $softDeletedHost = User::factory()->create([
+        'name' => 'Gone Author',
+        'email' => 'gone@example.com',
+    ]);
+    $blankContact = User::factory()->create([
+        'name' => '',
+        'email' => 'blank-contact@example.com',
+    ]);
+
+    foreach ([$softDeletedHost, $blankContact] as $host) {
+        CanvasUser::factory()->create([
+            'user_id' => $host->id,
+            'role' => Role::Contributor,
+            'digest' => true,
+            'locale' => 'en',
+            'timezone' => 'UTC',
+        ]);
+
+        $post = Post::factory()->create([
+            'user_id' => $host->id,
+            'published_at' => now()->subWeek(),
+        ]);
+
+        $post->views()->createMany(
+            View::factory()->count(2)->make()->toArray()
+        );
+    }
+
+    $softDeletedHost->delete();
+
+    $this->artisan('canvas:digest')->assertSuccessful();
+
+    Mail::assertNothingOutgoing();
+});
+
 // Invariant: digest is a core package path and must not require HasCanvasAccess / canvasUser on the host model
 it('sends digest emails for bare host users without canvas relations', function (): void {
     Mail::fake();

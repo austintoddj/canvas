@@ -39,8 +39,8 @@ export function canManageTaxonomy(user: UserResource): boolean {
     return isAdmin(user);
 }
 
-/** Gate: `manage-settings` — Admin only. */
-export function canManageSettings(user: UserResource): boolean {
+/** Gate: `manage-integrations` — Admin only. */
+export function canManageIntegrations(user: UserResource): boolean {
     return isAdmin(user);
 }
 

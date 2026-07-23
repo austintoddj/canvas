@@ -127,31 +127,12 @@ export function organizeIndexPath(filters: Partial<OrganizeListFilters> & { deta
     return query === '' ? '/organize' : `/organize?${query}`;
 }
 
-/** @deprecated Prefer organizeIndexPath — kept for redirect helpers and BC. */
-export function taxonomyDetailPath(basePath: '/tags' | '/topics', itemId: string): string {
-    const tab: OrganizeTab = basePath === '/tags' ? 'tags' : 'topics';
-
-    return organizeIndexPath({ tab, detail: itemId });
-}
-
 export function tagsDetailPath(itemId: string): string {
     return organizeIndexPath({ tab: 'tags', detail: itemId });
 }
 
 export function topicsDetailPath(itemId: string): string {
     return organizeIndexPath({ tab: 'topics', detail: itemId });
-}
-
-/** @deprecated Prefer organizeIndexPath. */
-export function taxonomyIndexPath(basePath: '/tags' | '/topics', filters: Partial<TaxonomyListFilters> = {}): string {
-    const tab: OrganizeTab = basePath === '/tags' ? 'tags' : 'topics';
-
-    return organizeIndexPath({
-        tab,
-        page: filters.page,
-        search: filters.search,
-        sort: filters.sort,
-    });
 }
 
 export function tagsIndexPath(filters: Partial<TaxonomyListFilters> = {}): string {
@@ -171,18 +152,5 @@ export function taxonomyIndexQueryParams(filters: TaxonomyListFilters): TagsInde
 }
 
 export { formatListDate as formatTaxonomyDate } from '@/lib/format-list-date';
-
-export function legacyTaxonomyRedirectPath(kind: OrganizeTab, searchParams: URLSearchParams, itemId?: string): string {
-    const filters = parseTaxonomyListFilters(searchParams);
-    const detail = itemId ?? taxonomyDetailId(searchParams);
-
-    return organizeIndexPath({
-        tab: kind,
-        page: filters.page,
-        search: filters.search,
-        sort: filters.sort,
-        detail,
-    });
-}
 
 export type { TagsIndexParams, TopicsIndexParams };

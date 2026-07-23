@@ -10,6 +10,8 @@ it('normalizes handles and builds profile urls', function (): void {
     expect(SocialProfiles::normalizeHandle('github', 'https://github.com/canvas/'))->toBe('canvas');
     expect(SocialProfiles::normalizeHandle('medium', 'https://medium.com/@writer'))->toBe('writer');
     expect(SocialProfiles::normalizeHandle('bluesky', 'https://bsky.app/profile/ada.bsky.social'))->toBe('ada.bsky.social');
+    expect(SocialProfiles::normalizeHandle('github', 'github.com/canvas'))->toBe('canvas');
+    expect(SocialProfiles::normalizeHandle('x', ''))->toBe('');
 
     expect(SocialProfiles::profileUrl('x', '@ada'))->toBe('https://x.com/ada');
     expect(SocialProfiles::profileUrl('medium', 'writer'))->toBe('https://medium.com/@writer');
@@ -22,6 +24,7 @@ it('normalizes social maps and drops unknown platforms', function (): void {
         'github' => '',
         'myspace' => 'legacy',
         0 => 'ignored',
+        'instagram' => ['not', 'a', 'string'],
     ]))->toBe([
         'x' => 'ada',
     ]);

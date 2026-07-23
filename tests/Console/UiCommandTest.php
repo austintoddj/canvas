@@ -1,11 +1,22 @@
 <?php
 
+use Canvas\Tests\TestCase;
 use Illuminate\Support\Facades\File;
+
+beforeEach(function (): void {
+    TestCase::acquireCanvasUiScaffoldLock();
+
+    File::deleteDirectory(app_path('Http/Controllers/Canvas'));
+    File::delete(base_path('routes/canvas-ui.php'));
+    File::deleteDirectory(resource_path('views/vendor/canvas/ui'));
+});
 
 afterEach(function (): void {
     File::deleteDirectory(app_path('Http/Controllers/Canvas'));
     File::delete(base_path('routes/canvas-ui.php'));
     File::deleteDirectory(resource_path('views/vendor/canvas/ui'));
+
+    TestCase::releaseCanvasUiScaffoldLock();
 });
 
 it('exits successfully and outputs the install message', function (): void {

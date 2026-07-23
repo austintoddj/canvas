@@ -152,6 +152,164 @@ it('clears existing pending when a later autosave matches the live snapshot', fu
         ->and($post->fresh()->has_pending_changes)->toBeFalse();
 });
 
+it('reconciles no-op pending blobs and leaves real diffs intact', function (): void {
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => 'Live summary',
+        'body' => '<p>Live body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => null,
+        'published_at' => now()->subDay(),
+        'pending' => [
+            'title' => 'Live Title',
+            'slug' => 'live-slug',
+            'summary' => 'Live summary',
+            'body' => '<p>Live body</p>',
+            'featured_image' => null,
+            'featured_image_caption' => null,
+            'meta' => null,
+            'tags' => [],
+            'topic' => null,
+        ],
+    ]);
+
+    $post->reconcileNoOpPending();
+
+    expect($post->fresh()->pending)->toBeNull()
+        ->and($post->fresh()->has_pending_changes)->toBeFalse();
+
+    $post->update([
+        'pending' => [
+            'title' => 'Different pending',
+            'slug' => 'live-slug',
+            'summary' => 'Live summary',
+            'body' => '<p>Live body</p>',
+            'featured_image' => null,
+            'featured_image_caption' => null,
+            'meta' => null,
+            'tags' => [],
+            'topic' => null,
+        ],
+    ]);
+
+    $post->refresh()->reconcileNoOpPending();
+
+    expect($post->fresh()->pending['title'])->toBe('Different pending');
+});
+
+it('builds pending payloads with topic and tag snapshots', function (): void {
+    $post = Post::factory()->create([
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => ['title' => 'SEO'],
+    ]);
+
+    $payload = $post->buildPendingPayload(
+        ['title' => 'Pending Title'],
+        [
+            ['name' => 'Laravel', 'slug' => 'laravel'],
+            ['name' => 'Missing slug'],
+        ],
+        [
+            ['name' => 'Engineering', 'slug' => 'engineering'],
+        ],
+    );
+
+    expect($payload)->toMatchArray([
+        'title' => 'Pending Title',
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Body</p>',
+        'meta' => ['title' => 'SEO'],
+        'tags' => [
+            ['name' => 'Laravel', 'slug' => 'laravel'],
+        ],
+        'topic' => [
+            'name' => 'Engineering',
+            'slug' => 'engineering',
+        ],
+    ]);
+});
+
+it('does not treat pending as matching live when meta or taxonomy differs', function (): void {
+    $tag = Tag::factory()->create(['slug' => 'laravel', 'name' => 'Laravel']);
+    $topic = Topic::factory()->create(['slug' => 'engineering', 'name' => 'Engineering']);
+
+    $post = Post::factory()->create([
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => ['title' => 'Live SEO'],
+        'topic_id' => $topic->id,
+    ]);
+    $post->tags()->sync([$tag->id]);
+
+    $matching = $post->buildPendingPayload(
+        [
+            'title' => 'Live Title',
+            'slug' => 'live-slug',
+            'summary' => null,
+            'body' => '<p>Body</p>',
+            'featured_image' => null,
+            'featured_image_caption' => null,
+            'meta' => ['title' => 'Live SEO'],
+        ],
+        [['name' => 'Laravel', 'slug' => 'laravel']],
+        [['name' => 'Engineering', 'slug' => 'engineering']],
+    );
+
+    expect($post->pendingPayloadMatchesLive($matching))->toBeTrue();
+
+    $metaDiffers = $matching;
+    $metaDiffers['meta'] = ['title' => 'Different SEO'];
+
+    expect($post->pendingPayloadMatchesLive($metaDiffers))->toBeFalse();
+
+    $emptyMetaVsLive = $matching;
+    $emptyMetaVsLive['meta'] = null;
+
+    expect($post->pendingPayloadMatchesLive($emptyMetaVsLive))->toBeFalse();
+
+    $topicDiffers = $matching;
+    $topicDiffers['topic'] = ['name' => 'Other', 'slug' => 'other'];
+
+    expect($post->pendingPayloadMatchesLive($topicDiffers))->toBeFalse();
+});
+
+it('normalizes empty meta strings when comparing pending to live', function (): void {
+    $post = Post::factory()->create([
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => ['description' => null, 'title' => 'SEO'],
+    ]);
+
+    $pending = $post->buildPendingPayload([
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => ['title' => 'SEO', 'description' => ''],
+    ]);
+
+    expect($post->pendingPayloadMatchesLive($pending))->toBeTrue();
+});
+
 // Regression: GH-647 — slug uniqueness is scoped per user, not globally
 it('allows posts to share the same slug across different users', function (): void {
     $data = [

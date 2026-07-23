@@ -5,7 +5,7 @@ export type SearchEntityType = SearchResult['type'];
 export type SearchPermissionOptions = {
     canManageTaxonomy: boolean;
     canManageUsers: boolean;
-    canManageSettings?: boolean;
+    canManageIntegrations?: boolean;
 };
 
 export type ParsedSearchQuery =
@@ -16,7 +16,7 @@ export type NavigationPage = {
     label: string;
     path: string;
     keywords: string[];
-    requires?: 'taxonomy' | 'users' | 'settings';
+    requires?: 'taxonomy' | 'users' | 'integrations';
     /** When true, shown in the empty-query palette. Search still finds every page. */
     defaultVisible?: boolean;
 };
@@ -82,7 +82,7 @@ export const NAVIGATION_PAGES: NavigationPage[] = [
     {
         id: 'users',
         label: 'Users',
-        path: '/settings/users',
+        path: '/users',
         keywords: ['authors', 'people', 'team', 'access'],
         requires: 'users',
         defaultVisible: true,
@@ -90,9 +90,9 @@ export const NAVIGATION_PAGES: NavigationPage[] = [
     {
         id: 'integrations',
         label: 'Integrations',
-        path: '/settings/integrations',
-        keywords: ['settings', 'unsplash', 'api', 'connections', 'ai', 'grok', 'openai', 'claude', 'chatgpt'],
-        requires: 'settings',
+        path: '/integrations',
+        keywords: ['unsplash', 'api', 'connections', 'ai', 'grok', 'openai', 'claude', 'chatgpt'],
+        requires: 'integrations',
         defaultVisible: true,
     },
 ];
@@ -173,8 +173,8 @@ export function canAccessNavigationPage(page: NavigationPage, options: SearchPer
             return options.canManageTaxonomy;
         case 'users':
             return options.canManageUsers;
-        case 'settings':
-            return options.canManageSettings ?? false;
+        case 'integrations':
+            return options.canManageIntegrations ?? false;
         default:
             return true;
     }

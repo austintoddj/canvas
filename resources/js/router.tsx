@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 
 import Page, {
     Dashboard,
@@ -8,12 +8,8 @@ import Page, {
     PostsEditor,
     PostsIndex,
     PostsStats,
-    SettingsIntegrations,
-    SettingsUsersIndex,
-    TagsEditor,
-    TagsIndex,
-    TopicsEditor,
-    TopicsIndex,
+    IntegrationsIndex,
+    UsersIndex,
 } from '@/components/Page';
 import Layout from '@/layouts/Layout';
 
@@ -31,13 +27,8 @@ export const router = createBrowserRouter(
                 { path: 'media', element: <Page component={MediaIndex} /> },
                 { path: 'media/:id', element: <Page component={MediaShow} /> },
                 { path: 'organize', element: <Page component={OrganizeIndex} /> },
-                { path: 'tags', element: <Page component={TagsIndex} /> },
-                { path: 'tags/:id', element: <Page component={TagsEditor} /> },
-                { path: 'topics', element: <Page component={TopicsIndex} /> },
-                { path: 'topics/:id', element: <Page component={TopicsEditor} /> },
-                { path: 'settings', element: <Navigate to="/" replace /> },
-                { path: 'settings/users', element: <Page component={SettingsUsersIndex} /> },
-                { path: 'settings/integrations', element: <Page component={SettingsIntegrations} /> },
+                { path: 'users', element: <Page component={UsersIndex} /> },
+                { path: 'integrations', element: <Page component={IntegrationsIndex} /> },
             ],
         },
     ],

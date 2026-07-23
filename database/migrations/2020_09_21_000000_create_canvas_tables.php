@@ -12,6 +12,18 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::create('canvas_topics', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('slug');
+            $table->string('name');
+            $table->foreignId('user_id')->nullable()->index();
+            $table->timestamps();
+            $table->softDeletes();
+            $table->index('created_at');
+            $table->unique(['slug', 'user_id']);
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
+        });
+
         Schema::create('canvas_posts', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('slug');
@@ -29,21 +41,10 @@ return new class extends Migration
             $table->softDeletes();
             $table->unique(['slug', 'user_id']);
             $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('topic_id')->references('id')->on('canvas_topics')->nullOnDelete();
         });
 
         Schema::create('canvas_tags', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('slug');
-            $table->string('name');
-            $table->foreignId('user_id')->nullable()->index();
-            $table->timestamps();
-            $table->softDeletes();
-            $table->index('created_at');
-            $table->unique(['slug', 'user_id']);
-            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
-        });
-
-        Schema::create('canvas_topics', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('slug');
             $table->string('name');
@@ -127,12 +128,12 @@ return new class extends Migration
     {
         Schema::dropIfExists('canvas_posts');
         Schema::dropIfExists('canvas_tags');
-        Schema::dropIfExists('canvas_topics');
         Schema::dropIfExists('canvas_posts_tags');
         Schema::dropIfExists('canvas_views');
         Schema::dropIfExists('canvas_visits');
         Schema::dropIfExists('canvas_users');
         Schema::dropIfExists('canvas_media');
         Schema::dropIfExists('canvas_settings');
+        Schema::dropIfExists('canvas_topics');
     }
 };

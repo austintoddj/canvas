@@ -14,6 +14,7 @@ import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useMarkOnboardingComplete } from '@/hooks/useMarkOnboardingComplete';
 import { usePostAutosave } from '@/hooks/usePostAutosave';
+import { ApiError } from '@/lib/api';
 import { postsApi } from '@/lib/api/posts';
 import {
     canPublishForm,
@@ -28,6 +29,7 @@ import {
     unpublishFormState,
     type PostFormState,
 } from '@/lib/posts/form';
+import { redirectHomeWithError } from '@/lib/redirect-home';
 import { toast } from '@/lib/toast';
 import type { Post, TaxonomyOption } from '@/types/api';
 
@@ -339,8 +341,7 @@ export default function PostsEditor() {
                 }
 
                 if (!id) {
-                    setLoadError(t('stats.post_not_found'));
-                    setLoading(false);
+                    redirectHomeWithError(navigate, t('posts.not_found'));
                     return;
                 }
 
@@ -353,11 +354,18 @@ export default function PostsEditor() {
                     response.post.id,
                     postHasPendingChanges(response.post)
                 );
-            } catch {
-                if (!controller.signal.aborted) {
-                    setLoadError(t('editor.load_error'));
-                    setLoading(false);
+            } catch (caught) {
+                if (controller.signal.aborted) {
+                    return;
                 }
+
+                if (caught instanceof ApiError && caught.status === 404) {
+                    redirectHomeWithError(navigate, t('posts.not_found'));
+                    return;
+                }
+
+                setLoadError(t('editor.load_error'));
+                setLoading(false);
             }
         }
 

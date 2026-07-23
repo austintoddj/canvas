@@ -1,1 +1,0 @@
-import{f as e,r as t,t as n}from"./jsx-runtime-witVGegz.js";import{n as r}from"./list-C0Ox4xw1.js";var i=n();function a(){let[n]=e();return(0,i.jsx)(t,{to:r(`topics`,n),replace:!0})}export{a as default};

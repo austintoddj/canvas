@@ -8,6 +8,14 @@ it('exposes the curated language catalog', function (): void {
     expect($codes)->toHaveCount(20)
         ->and($codes)->toContain('en', 'ar-EG', 'zh', 'pt-BR', 'pt-PT', 'es-MX', 'es-ES', 'ja', 'ko', 'vi', 'bn')
         ->and($codes)->not->toContain('fa', 'bg', 'zh-CN', 'ar', 'es');
+
+    expect(Localization::catalog())->toHaveCount(20)
+        ->and(Localization::catalog()[0])->toMatchArray([
+            'code' => 'en',
+            'label' => 'English',
+            'translation' => 'en',
+            'rtl' => false,
+        ]);
 });
 
 it('returns language options with labels and rtl flags', function (): void {
@@ -49,6 +57,14 @@ it('resolves unsupported locales to a catalog fallback', function (): void {
         ->and(Localization::resolveLocale(null))->toBe('en')
         ->and(Localization::resolveLocale('zh-CN'))->toBe('en')
         ->and(Localization::resolveLocale('fa'))->toBe('en');
+});
+
+it('falls back to english when app fallback locale is not in the catalog', function (): void {
+    config()->set('app.fallback_locale', 'xx-NOT-REAL');
+    config()->set('app.locale', 'yy-NOT-REAL');
+
+    expect(Localization::resolveLocale('zz'))->toBe('en')
+        ->and(Localization::resolveTranslationLocale('zz'))->toBe('en');
 });
 
 it('resolves supported locales unchanged', function (): void {

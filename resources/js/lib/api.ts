@@ -20,6 +20,20 @@ export class ApiError extends Error {
     }
 }
 
+export function apiErrorCode(error: unknown): string | null {
+    if (!(error instanceof ApiError)) {
+        return null;
+    }
+
+    if (typeof error.body !== 'object' || error.body === null || !('code' in error.body)) {
+        return null;
+    }
+
+    const code = (error.body as { code: unknown }).code;
+
+    return typeof code === 'string' && code.trim() !== '' ? code : null;
+}
+
 export class UnauthorizedError extends ApiError {
     constructor(body: unknown) {
         super(401, body, 'Unauthorized');

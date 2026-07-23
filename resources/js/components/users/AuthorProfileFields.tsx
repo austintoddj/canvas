@@ -21,7 +21,7 @@ import { AvatarImagePicker } from '@/components/users/AvatarImagePicker';
 import { SocialLinksEditor } from '@/components/users/SocialLinksEditor';
 import { useCanvas } from '@/hooks/useCanvas';
 import type { LaravelValidationErrors } from '@/lib/api';
-import type { ProfileFormState, SocialFieldKey } from '@/lib/settings/profile';
+import type { ProfileFormState, SocialFieldKey } from '@/lib/users/profile';
 import { listTimezoneOptions, timezoneLabel, type TimezoneOption } from '@/lib/timezones';
 import type { LanguageOption } from '@/types/boot';
 import { IconCheck, IconChevronDown } from '@tabler/icons-react';

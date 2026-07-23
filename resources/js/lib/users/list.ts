@@ -29,7 +29,7 @@ export function setUserDetailParam(current: URLSearchParams, userId: string | nu
 }
 
 export function usersDetailPath(userId: string | number, page = 1): string {
-    return `/settings/users${buildQueryString({
+    return `/users${buildQueryString({
         detail: String(userId),
         page: page > 1 ? page : undefined,
     })}`;
@@ -81,7 +81,7 @@ export function usersIndexPath(filters: Partial<UsersListFilters> = {}): string 
         params.page = page;
     }
 
-    return `/settings/users${buildQueryString(params)}`;
+    return `/users${buildQueryString(params)}`;
 }
 
 export function usersIndexQueryParams(filters: UsersListFilters): UsersIndexParams {

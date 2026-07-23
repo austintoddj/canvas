@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     Role,
-    canManageSettings,
+    canManageIntegrations,
     canManageTaxonomy,
     canManageUsers,
     canViewAllMedia,
@@ -57,8 +57,8 @@ describe('permissions', () => {
         expect(canManageUsers(userWithRole(Role.Editor))).toBe(false);
         expect(canManageTaxonomy(userWithRole(Role.Admin))).toBe(true);
         expect(canManageTaxonomy(userWithRole(Role.Contributor))).toBe(false);
-        expect(canManageSettings(userWithRole(Role.Admin))).toBe(true);
-        expect(canManageSettings(userWithRole(Role.Editor))).toBe(false);
+        expect(canManageIntegrations(userWithRole(Role.Admin))).toBe(true);
+        expect(canManageIntegrations(userWithRole(Role.Editor))).toBe(false);
 
         expect(canViewAllPosts(userWithRole(Role.Editor))).toBe(true);
         expect(canViewAllPosts(userWithRole(Role.Admin))).toBe(true);

@@ -9,6 +9,7 @@ import {
     ValidationError,
     api,
     apiBaseUrl,
+    apiErrorCode,
     apiRequest,
     throwForStatus,
 } from '@/lib/api';
@@ -54,6 +55,10 @@ describe('api client', () => {
             expect(error).toBeInstanceOf(ValidationError);
             expect((error as ValidationError).errors).toEqual({ slug: ['The slug is taken.'] });
         }
+
+        expect(apiErrorCode(new ApiError(422, { code: 'stats_published_only' }))).toBe('stats_published_only');
+        expect(apiErrorCode(new ApiError(404, { message: 'Not found' }))).toBeNull();
+        expect(apiErrorCode(new Error('nope'))).toBeNull();
     });
 
     it('requests JSON with CSRF on writes and maps response errors', async () => {

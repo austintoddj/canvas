@@ -7,7 +7,7 @@ If you're fixing docs, translations, bugs, or features, please open a pull reque
 ## Before you start
 
 - Use PHP 8.2+ and a Laravel major supported by the package (see `composer.json` and CI).
-- Read `readme.md` for install basics and `Agents.md` for coding standards.
+- Read `readme.md` for install basics.
 - Host contracts and upgrade details live in `UPGRADE.md`.
 - Search for existing patterns before adding a new layer or abstraction.
 - Translations go under `resources/lang`.
@@ -59,3 +59,10 @@ If you want to work locally, use a Laravel app with a sibling Canvas checkout:
 - Run `composer test:ci` to match the PHP matrix locally
 
 Once you've made your changes, create a pull request from your fork to the `develop` branch of the project repository.
+
+## Before a release
+
+- Run the full quality gate: `composer pint:test`, `composer lint`, `composer test:ci`, `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` when SPA assets change
+- Regenerate coverage once with `composer test:coverage` (or `test:coverage:html`) and do not claim percentages without a fresh run
+- Smoke the admin SPA on a path install: install → grant access → draft/schedule/publish → pending promote/discard → Organize taxonomy → media upload/delete → roles → integrations
+- Keep locale key sets in lockstep with `resources/lang/en` (enforced by `LocalizationTest`). New `en` keys must be added to every other locale file — English placeholders are fine until a proper translation lands

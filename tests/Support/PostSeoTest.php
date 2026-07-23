@@ -11,6 +11,8 @@ it('strips html, truncates text, and finds the first image', function (): void {
     expect(PostSeo::firstImageSrc('<p>Text</p><img src="https://example.com/a.jpg" alt="A" />'))
         ->toBe('https://example.com/a.jpg');
     expect(PostSeo::firstImageSrc('<p>No images</p>'))->toBeNull();
+    expect(PostSeo::firstImageSrc(null))->toBeNull();
+    expect(PostSeo::firstImageSrc(''))->toBeNull();
 });
 
 it('resolves post SEO with meta overrides', function (): void {
@@ -101,4 +103,25 @@ it('uses first body image when featured image is missing', function (): void {
 
     expect(PostSeo::resolve($post, 'https://example.com/p')['image_url'])
         ->toBe('https://example.com/inline.jpg');
+});
+
+it('ignores non-string meta values when resolving seo fields', function (): void {
+    $post = Post::factory()->make([
+        'title' => 'Hello World',
+        'summary' => 'Summary',
+        'body' => '<p>Body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => [
+            'title' => 42,
+            'description' => ['not', 'a', 'string'],
+            'canonical_link' => true,
+        ],
+    ]);
+
+    expect(PostSeo::resolve($post, 'https://example.com/p'))->toMatchArray([
+        'title' => 'Hello World',
+        'description' => 'Summary',
+        'canonical_url' => 'https://example.com/p',
+    ]);
 });

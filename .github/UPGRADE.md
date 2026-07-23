@@ -212,7 +212,7 @@ event(new Canvas\Events\PostViewed(
 - `canvas_users.user_id` is the primary key and foreign key to `users.id`.
 - Host foreign keys use **stock Laravel bigint** (`unsignedBigInteger` / `foreignId`).
 - Content primary keys (posts, tags, topics, media) remain UUIDs.
-- Posts have a single `topic_id` (no multi-topic pivot table).
+- Posts have a single `topic_id` FK → `canvas_topics.id` (`nullOnDelete`; no multi-topic pivot).
 - `user_id` on posts, tags, topics, and media is nullable and references `users.id`.
 - **Custom host key types** or a non-`users` host table → fork the package migration once.
 
@@ -268,7 +268,7 @@ Your host app owns login, logout, and password reset for the configured guard.
 
 ### Integrations
 
-Unsplash and AI providers are configured in the admin SPA at **Integrations** (`/settings/integrations`), not via environment secrets for Unsplash.
+Unsplash and AI providers are configured in the admin SPA at **Integrations** (`/integrations`), not via environment secrets for Unsplash.
 
 - Access keys are stored encrypted in `canvas_settings`.
 - The SPA boot payload exposes integration readiness as booleans/flags, never raw secrets.

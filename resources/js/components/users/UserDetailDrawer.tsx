@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
 import { Avatar } from '@/components/avatar';
@@ -10,7 +11,7 @@ import { Text, ErrorText } from '@/components/text';
 import { AuthorProfileFields } from '@/components/users/AuthorProfileFields';
 import { RoleSelectDropdown } from '@/components/users/RoleSelectDropdown';
 import { useCanvas } from '@/hooks/useCanvas';
-import { ValidationError, type LaravelValidationErrors } from '@/lib/api';
+import { ApiError, ValidationError, type LaravelValidationErrors } from '@/lib/api';
 import { usersApi } from '@/lib/api/users';
 import type { RoleValue } from '@/lib/permissions';
 import {
@@ -23,7 +24,8 @@ import {
     withSerializedProfileLocale,
     type AdminUserFormState,
     type ProfileFormState,
-} from '@/lib/settings/profile';
+} from '@/lib/users/profile';
+import { redirectHomeWithError } from '@/lib/redirect-home';
 import { toast } from '@/lib/toast';
 import { defaultTimezone } from '@/lib/timezones';
 import { roleLabel, userInitials } from '@/lib/users/roles';
@@ -39,6 +41,7 @@ type UserDetailDrawerProps = {
 
 export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: UserDetailDrawerProps) {
     const { boot, user: currentUser, t, switchLocale, setUser: setBootUser } = useCanvas();
+    const navigate = useNavigate();
 
     const [user, setUser] = useState<UserResource | null>(null);
     const [accessForm, setAccessForm] = useState<AdminUserFormState | null>(null);
@@ -108,10 +111,18 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                     setBaseline(serializeAdminUserForm(nextAccess));
                 }
             })
-            .catch(() => {
-                if (!cancelled) {
-                    setError(t('users.load_user_error'));
+            .catch((caught: unknown) => {
+                if (cancelled || controller.signal.aborted) {
+                    return;
                 }
+
+                if (caught instanceof ApiError && caught.status === 404) {
+                    onClose();
+                    redirectHomeWithError(navigate, t('users.not_found'));
+                    return;
+                }
+
+                setError(t('users.load_user_error'));
             })
             .finally(() => {
                 if (!cancelled) {
@@ -123,7 +134,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
             cancelled = true;
             controller.abort();
         };
-    }, [boot.appTimezone, boot.defaultLocale, currentUser.id, open, t, userId]);
+    }, [boot.appTimezone, boot.defaultLocale, currentUser.id, navigate, onClose, open, t, userId]);
 
     const isDirty =
         isSelf && profileForm !== null

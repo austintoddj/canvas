@@ -132,6 +132,18 @@ it('returns 422 when ai is not configured', function (): void {
         ->assertJsonPath('code', AiWritingException::CodeNotConfigured);
 });
 
+it('returns 422 when ai has a provider but an empty api key', function (): void {
+    setAiIntegration(AiProvider::Xai, '');
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'improve',
+            'text' => 'Hello',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('code', AiWritingException::CodeNotConfigured);
+});
+
 it('maps rejected api keys to a clear error', function (): void {
     setAiIntegration(AiProvider::Xai, 'bad-key');
 
@@ -380,4 +392,134 @@ it('requires authentication for rewrite', function (): void {
         'action' => 'improve',
         'text' => 'Hello',
     ])->assertUnauthorized();
+});
+
+it('maps empty provider content to a clear error', function (): void {
+    setAiIntegration(AiProvider::Xai, 'xai-test-key');
+
+    Http::fake([
+        'api.x.ai/*' => Http::response([
+            'choices' => [
+                ['message' => ['content' => '   ']],
+            ],
+        ]),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'improve',
+            'text' => 'Hello',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('error', 'The AI provider returned an empty response.')
+        ->assertJsonPath('code', AiWritingException::CodeEmpty);
+});
+
+it('maps empty anthropic content to a clear error', function (): void {
+    setAiIntegration(AiProvider::Anthropic, 'anthropic-test-key');
+
+    Http::fake([
+        'api.anthropic.com/*' => Http::response([
+            'content' => [
+                ['type' => 'text', 'text' => ''],
+                ['type' => 'tool_use', 'text' => 'ignored'],
+            ],
+        ]),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'improve',
+            'text' => 'Hello',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('code', AiWritingException::CodeEmpty);
+});
+
+it('maps unexpected provider failures with a safe hint', function (): void {
+    setAiIntegration(AiProvider::Xai, 'xai-test-key');
+
+    Http::fake([
+        'api.x.ai/*' => Http::response([
+            'error' => ['message' => 'Upstream capacity exhausted'],
+        ], 500),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'improve',
+            'text' => 'Hello',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath(
+            'error',
+            'Could not complete the AI request. Try again. (Upstream capacity exhausted)'
+        )
+        ->assertJsonPath('code', AiWritingException::CodeFailed);
+});
+
+it('omits provider hints that look like secrets', function (): void {
+    setAiIntegration(AiProvider::Xai, 'xai-test-key');
+
+    Http::fake([
+        'api.x.ai/*' => Http::response([
+            'error' => ['message' => 'Invalid api key sk-abc123xyz'],
+        ], 500),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'improve',
+            'text' => 'Hello',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('error', 'Could not complete the AI request. Try again.')
+        ->assertJsonPath('code', AiWritingException::CodeFailed);
+});
+
+it('rejects unusable seo suggestions', function (array $content, string $message): void {
+    setAiIntegration(AiProvider::Xai, 'xai-test-key');
+
+    Http::fake([
+        'api.x.ai/*' => Http::response([
+            'choices' => [
+                ['message' => ['content' => $content['raw']]],
+            ],
+        ]),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'suggest_seo',
+            'text' => 'Title: Shipping posts',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('error', $message)
+        ->assertJsonPath('code', AiWritingException::CodeEmpty);
+})->with([
+    'plain text' => [['raw' => 'not json at all'], 'The AI provider returned an unusable SEO suggestion.'],
+    'embedded json missing fields' => [['raw' => 'Here you go: {"title":"Only title"}'], 'The AI provider returned an unusable SEO suggestion.'],
+    'empty strings' => [['raw' => '{"title":"  ","description":"  "}'], 'The AI provider returned an empty SEO suggestion.'],
+]);
+
+it('normalizes blank instruction and title before validation', function (): void {
+    setAiIntegration(AiProvider::Xai, 'xai-test-key');
+
+    Http::fake([
+        'api.x.ai/*' => Http::response([
+            'choices' => [
+                ['message' => ['content' => 'Cleaned.']],
+            ],
+        ]),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'improve',
+            'text' => 'Hello',
+            'instruction' => '',
+            'title' => '',
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('text', 'Cleaned.');
 });

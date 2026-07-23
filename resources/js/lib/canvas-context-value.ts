@@ -1,6 +1,6 @@
 import { createTranslator, parseTranslations, type TranslationReplacements } from '@/lib/i18n';
 import {
-    canManageSettings,
+    canManageIntegrations,
     canManageTaxonomy,
     canManageUsers,
     canViewAllMedia,
@@ -19,7 +19,7 @@ export type CanvasPermissions = {
     isAdmin: boolean;
     canManageUsers: boolean;
     canManageTaxonomy: boolean;
-    canManageSettings: boolean;
+    canManageIntegrations: boolean;
     canViewAllPosts: boolean;
     canViewAllMedia: boolean;
 };
@@ -50,7 +50,7 @@ export function buildPermissions(user: UserResource): CanvasPermissions {
         isAdmin: isAdmin(user),
         canManageUsers: canManageUsers(user),
         canManageTaxonomy: canManageTaxonomy(user),
-        canManageSettings: canManageSettings(user),
+        canManageIntegrations: canManageIntegrations(user),
         canViewAllPosts: canViewAllPosts(user),
         canViewAllMedia: canViewAllMedia(user),
     };

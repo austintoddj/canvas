@@ -169,7 +169,7 @@ class CanvasServiceProvider extends ServiceProvider
             return CanvasUser::isAdmin($user);
         });
 
-        Gate::define('manage-settings', static function ($user): bool {
+        Gate::define('manage-integrations', static function ($user): bool {
             return CanvasUser::isAdmin($user);
         });
     }

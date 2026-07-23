@@ -34,10 +34,10 @@ export type UpdateIntegrationsPayload = {
 
 export const integrationsApi = {
     show(signal?: AbortSignal) {
-        return api.get<IntegrationsStatus>('/settings/integrations', signal);
+        return api.get<IntegrationsStatus>('/integrations', signal);
     },
 
     update(payload: UpdateIntegrationsPayload, signal?: AbortSignal) {
-        return api.put<IntegrationsStatus>('/settings/integrations', payload, signal);
+        return api.put<IntegrationsStatus>('/integrations', payload, signal);
     },
 };

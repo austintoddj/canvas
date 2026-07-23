@@ -50,12 +50,14 @@ Add `require __DIR__.'/canvas-ui.php';` to `routes/web.php`. Published views liv
 
 ## Upgrading
 
-Canvas follows [Semantic Versioning](https://semver.org). Major releases may include breaking changes — see the [upgrade guide](.github/UPGRADE.md).
+Canvas follows [Semantic Versioning](https://semver.org). **Major releases may be clean breaks** (no in-place data upgrade) — always read the [upgrade guide](.github/UPGRADE.md) before updating.
 
 ```bash
-composer update
+composer update austintoddj/canvas
 php artisan canvas:publish
 ```
+
+For Canvas 7 specifically: drop prior `canvas_*` tables and install fresh per the upgrade guide.
 
 ## Contributing
 

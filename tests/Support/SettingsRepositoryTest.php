@@ -62,3 +62,12 @@ it('returns created_at for a setting row without decrypting', function (): void 
 
     expect($repository->createdAt(SettingKey::UnsplashAccessKey))->toBe($createdAt);
 });
+
+it('returns null when a secret setting cannot be decrypted', function (): void {
+    Setting::query()->create([
+        'key' => SettingKey::UnsplashAccessKey->value,
+        'value' => 'not-valid-ciphertext',
+    ]);
+
+    expect(app(SettingsRepository::class)->get(SettingKey::UnsplashAccessKey))->toBeNull();
+});

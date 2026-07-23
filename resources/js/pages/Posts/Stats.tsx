@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import MetricHero from '@/components/analytics/MetricHero';
 import RankedBarList from '@/components/analytics/RankedBarList';
@@ -13,9 +13,10 @@ import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { isInitialLoading, isRefreshing } from '@/lib/async-ui';
-import { ApiError } from '@/lib/api';
+import { ApiError, apiErrorCode } from '@/lib/api';
 import { postsApi } from '@/lib/api/posts';
 import { parseDailyGraph, rankedWithShare } from '@/lib/analytics';
+import { redirectHomeWithError } from '@/lib/redirect-home';
 import type { PostStatsResponse } from '@/types/api';
 import { IconArrowLeft } from '@tabler/icons-react';
 
@@ -39,11 +40,12 @@ function StatsSkeleton() {
 
 export default function PostsStats() {
     const { t } = useCanvas();
+    const navigate = useNavigate();
     const { id } = useParams();
     const postId = id ?? null;
     const [stats, setStats] = useState<PostStatsResponse | null>(null);
     const [loading, setLoading] = useState(postId !== null);
-    const [error, setError] = useState<string | null>(postId === null ? t('stats.post_not_found') : null);
+    const [error, setError] = useState<string | null>(null);
 
     const statsPageTitle =
         stats === null
@@ -53,6 +55,7 @@ export default function PostsStats() {
 
     useEffect(() => {
         if (postId === null) {
+            redirectHomeWithError(navigate, t('posts.not_found'));
             return;
         }
 
@@ -74,11 +77,22 @@ export default function PostsStats() {
                 }
             })
             .catch((caught: unknown) => {
-                if (!cancelled) {
-                    const notFound = caught instanceof ApiError && caught.status === 404;
-                    setError(notFound ? t('stats.published_only') : t('stats.load_error'));
-                    setStats(null);
+                if (cancelled || controller.signal.aborted) {
+                    return;
                 }
+
+                if (caught instanceof ApiError && caught.status === 404) {
+                    redirectHomeWithError(navigate, t('posts.not_found'));
+                    return;
+                }
+
+                if (apiErrorCode(caught) === 'stats_published_only') {
+                    redirectHomeWithError(navigate, t('stats.published_only'));
+                    return;
+                }
+
+                setError(t('stats.load_error'));
+                setStats(null);
             })
             .finally(() => {
                 if (!cancelled) {
@@ -90,7 +104,7 @@ export default function PostsStats() {
             cancelled = true;
             controller.abort();
         };
-    }, [postId, t]);
+    }, [navigate, postId, t]);
 
     const viewsSeries = useMemo(() => (stats ? parseDailyGraph(stats.graph.views) : []), [stats]);
     const visitsSeries = useMemo(() => (stats ? parseDailyGraph(stats.graph.visits) : []), [stats]);

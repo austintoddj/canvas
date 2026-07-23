@@ -78,9 +78,9 @@ export function CommandPalette({ open, onClose }: Props) {
         () => ({
             canManageTaxonomy: permissions.canManageTaxonomy,
             canManageUsers: permissions.canManageUsers,
-            canManageSettings: permissions.canManageSettings,
+            canManageIntegrations: permissions.canManageIntegrations,
         }),
-        [permissions.canManageTaxonomy, permissions.canManageUsers, permissions.canManageSettings]
+        [permissions.canManageTaxonomy, permissions.canManageUsers, permissions.canManageIntegrations]
     );
     const filterHints = useMemo(() => searchFilterHints(permissionOptions), [permissionOptions]);
     const restrictedEntity =

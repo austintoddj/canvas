@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
 import { Button } from '@/components/button';
@@ -7,9 +8,10 @@ import { Input } from '@/components/input';
 import { SideDrawer } from '@/components/SideDrawer';
 import { ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
-import { ValidationError, type LaravelValidationErrors } from '@/lib/api';
+import { ApiError, ValidationError, type LaravelValidationErrors } from '@/lib/api';
 import { tagsApi } from '@/lib/api/tags';
 import { topicsApi } from '@/lib/api/topics';
+import { redirectHomeWithError } from '@/lib/redirect-home';
 import {
     emptyTaxonomyForm,
     isSlugManuallyEdited,
@@ -42,6 +44,7 @@ type TaxonomyCopy = {
     subtitle: string;
     nameDescription: string;
     loadError: string;
+    notFound: string;
     saveError: string;
     deleteError: string;
     created: string;
@@ -66,6 +69,7 @@ export function TaxonomyDetailDrawer({
     onDeleted,
 }: TaxonomyDetailDrawerProps) {
     const { t } = useCanvas();
+    const navigate = useNavigate();
     const labels: TaxonomyCopy =
         kind === 'tag'
             ? {
@@ -74,6 +78,7 @@ export function TaxonomyDetailDrawer({
                   subtitle: t('taxonomy.tag_subtitle'),
                   nameDescription: t('taxonomy.tag_name_help'),
                   loadError: t('taxonomy.tag_load_error'),
+                  notFound: t('taxonomy.tag_not_found'),
                   saveError: t('taxonomy.tag_save_error'),
                   deleteError: t('taxonomy.tag_delete_error'),
                   created: t('taxonomy.tag_created'),
@@ -89,6 +94,7 @@ export function TaxonomyDetailDrawer({
                   subtitle: t('taxonomy.topic_subtitle'),
                   nameDescription: t('taxonomy.topic_name_help'),
                   loadError: t('taxonomy.topic_load_error'),
+                  notFound: t('taxonomy.topic_not_found'),
                   saveError: t('taxonomy.topic_save_error'),
                   deleteError: t('taxonomy.topic_delete_error'),
                   created: t('taxonomy.topic_created'),
@@ -173,11 +179,19 @@ export function TaxonomyDetailDrawer({
                 setIsNew(false);
                 setReady(true);
             })
-            .catch(() => {
-                if (!cancelled) {
-                    setError(labels.loadError);
-                    setReady(false);
+            .catch((caught: unknown) => {
+                if (cancelled || controller.signal.aborted) {
+                    return;
                 }
+
+                if (caught instanceof ApiError && caught.status === 404) {
+                    onClose();
+                    redirectHomeWithError(navigate, labels.notFound);
+                    return;
+                }
+
+                setError(labels.loadError);
+                setReady(false);
             })
             .finally(() => {
                 if (!cancelled) {
@@ -189,7 +203,7 @@ export function TaxonomyDetailDrawer({
             cancelled = true;
             controller.abort();
         };
-    }, [open, itemId, isNewProp, kind, labels.loadError]);
+    }, [open, itemId, isNewProp, kind, labels.loadError, labels.notFound, navigate, onClose]);
 
     useEffect(() => {
         if (!open || !ready || loading) {

@@ -428,6 +428,6 @@ export function searchResultPath(result: SearchResult): string {
         case 'edit-topic':
             return `/organize?tab=topics&detail=${encodeURIComponent(result.id)}`;
         case 'edit-user':
-            return `/settings/users?detail=${encodeURIComponent(String(result.id))}`;
+            return `/users?detail=${encodeURIComponent(String(result.id))}`;
     }
 }

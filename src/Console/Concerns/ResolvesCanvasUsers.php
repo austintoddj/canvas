@@ -12,11 +12,6 @@ use Illuminate\Support\Str;
 
 trait ResolvesCanvasUsers
 {
-    protected function userModel(): string
-    {
-        return HostUser::modelClass();
-    }
-
     protected function resolveUser(int|string $value): Model
     {
         return HostUser::findByIdentifierOrFail($value);

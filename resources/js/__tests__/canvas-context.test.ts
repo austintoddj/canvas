@@ -56,7 +56,7 @@ describe('buildCanvasContextValue', () => {
             isAdmin: false,
             canManageUsers: false,
             canManageTaxonomy: false,
-            canManageSettings: false,
+            canManageIntegrations: false,
             canViewAllPosts: true,
             canViewAllMedia: true,
         });
@@ -64,7 +64,7 @@ describe('buildCanvasContextValue', () => {
         const admin = buildCanvasContextValue(bootWithRole(Role.Admin)).permissions;
         expect(admin.canManageUsers).toBe(true);
         expect(admin.canManageTaxonomy).toBe(true);
-        expect(admin.canManageSettings).toBe(true);
+        expect(admin.canManageIntegrations).toBe(true);
 
         const contributor = buildCanvasContextValue(bootWithRole(Role.Contributor)).permissions;
         expect(contributor.isContributor).toBe(true);

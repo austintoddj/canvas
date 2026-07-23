@@ -2,15 +2,44 @@
 
 use Canvas\Http\Requests\PostRequest;
 use Canvas\Models\Post;
+use Illuminate\Support\Str;
 
-it('requires a slug and title', function (): void {
+it('requires a slug', function (): void {
     $post = Post::factory()->create(['user_id' => $this->admin->id]);
 
     assertFormRequestInvalid(
         PostRequest::class,
         [],
         $this->admin,
-        ['slug', 'title'],
+        ['slug'],
+        ['id' => $post->id],
+        "canvas/api/posts/{$post->id}",
+    );
+});
+
+it('requires a title when creating a post', function (): void {
+    $id = (string) Str::uuid();
+
+    assertFormRequestInvalid(
+        PostRequest::class,
+        ['slug' => 'new-post'],
+        $this->admin,
+        ['title'],
+        ['id' => $id],
+        "canvas/api/posts/{$id}",
+    );
+});
+
+it('allows clearing the title on an existing draft', function (): void {
+    $post = Post::factory()->draft()->create(['user_id' => $this->admin->id]);
+
+    assertFormRequestValid(
+        PostRequest::class,
+        [
+            'slug' => $post->slug,
+            'title' => null,
+        ],
+        $this->admin,
         ['id' => $post->id],
         "canvas/api/posts/{$post->id}",
     );

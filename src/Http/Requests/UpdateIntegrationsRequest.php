@@ -14,7 +14,7 @@ class UpdateIntegrationsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return Gate::forUser($this->user(config('canvas.guard')))->allows('manage-settings');
+        return Gate::forUser($this->user(config('canvas.guard')))->allows('manage-integrations');
     }
 
     /**

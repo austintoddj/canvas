@@ -9,12 +9,8 @@ export const PostsStats = lazy(() => import('@/pages/Posts/Stats'));
 export const MediaIndex = lazy(() => import('@/pages/Media/Index'));
 export const MediaShow = lazy(() => import('@/pages/Media/Show'));
 export const OrganizeIndex = lazy(() => import('@/pages/Organize/Index'));
-export const TagsIndex = lazy(() => import('@/pages/Tags/Index'));
-export const TagsEditor = lazy(() => import('@/pages/Tags/Editor'));
-export const TopicsIndex = lazy(() => import('@/pages/Topics/Index'));
-export const TopicsEditor = lazy(() => import('@/pages/Topics/Editor'));
-export const SettingsUsersIndex = lazy(() => import('@/pages/Settings/Users/Index'));
-export const SettingsIntegrations = lazy(() => import('@/pages/Settings/Integrations'));
+export const UsersIndex = lazy(() => import('@/pages/Users/Index'));
+export const IntegrationsIndex = lazy(() => import('@/pages/Integrations/Index'));
 
 export default function Page({ component: Component }: { component: ComponentType }) {
     return (
