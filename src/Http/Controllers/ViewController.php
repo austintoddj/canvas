@@ -19,7 +19,7 @@ class ViewController extends Controller
 
         app()->setLocale(Localization::resolveTranslationLocale($locale));
 
-        return view('canvas::layout')->with([
+        return view('canvas::layout', [
             'jsVars' => $jsVars,
             'htmlLang' => str_replace('_', '-', $locale),
             'htmlDir' => Localization::isRightToLeftLanguage($locale) ? 'rtl' : 'ltr',
