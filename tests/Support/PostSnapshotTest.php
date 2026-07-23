@@ -93,3 +93,32 @@ it('detects fingerprint changes when title changes', function (): void {
 
     expect($before->fingerprintEquals($after))->toBeFalse();
 });
+
+it('normalizes edge field types when building a snapshot from attributes', function (): void {
+    $snapshot = PostSnapshot::make([
+        'title' => ['not', 'a', 'string'],
+        'slug' => '',
+        'published_at' => 1_700_000_000,
+        'meta' => [
+            'nested' => [
+                'title' => '',
+                'keep' => 'yes',
+            ],
+            'z' => 1,
+            'a' => 2,
+        ],
+    ]);
+
+    expect($snapshot->title)->toBeNull()
+        ->and($snapshot->slug)->toBeNull()
+        ->and($snapshot->isDraft)->toBeTrue()
+        ->and($snapshot->publishedAt)->toBeNull()
+        ->and($snapshot->meta)->toBe([
+            'a' => 2,
+            'nested' => [
+                'keep' => 'yes',
+                'title' => null,
+            ],
+            'z' => 1,
+        ]);
+});

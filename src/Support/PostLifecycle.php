@@ -52,16 +52,8 @@ final class PostLifecycle
      */
     private static function sameVisibilityEvents(string $visibility, ?PostSnapshot $before, PostSnapshot $after): array
     {
-        if ($visibility === 'draft') {
+        if ($visibility === 'draft' || $before === null) {
             return [];
-        }
-
-        if ($before === null) {
-            return match ($visibility) {
-                'live' => [WebhookEvent::PostPublished],
-                'scheduled' => [WebhookEvent::PostScheduled],
-                default => [],
-            };
         }
 
         if ($before->fingerprintEquals($after)) {

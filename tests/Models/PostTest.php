@@ -310,6 +310,106 @@ it('normalizes empty meta strings when comparing pending to live', function (): 
     expect($post->pendingPayloadMatchesLive($pending))->toBeTrue();
 });
 
+it('ignores missing scalar keys when comparing pending to live', function (): void {
+    $post = Post::factory()->create([
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => 'Summary',
+        'body' => '<p>Body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => null,
+    ]);
+
+    expect($post->pendingPayloadMatchesLive([
+        'meta' => null,
+        'tags' => [],
+        'topic' => null,
+    ]))->toBeTrue();
+});
+
+it('compares non-array meta payloads with strict equality', function (): void {
+    $post = Post::factory()->create([
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => ['title' => 'SEO'],
+    ]);
+
+    expect($post->pendingPayloadMatchesLive([
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => 'not-an-array',
+        'tags' => [],
+        'topic' => null,
+    ]))->toBeFalse();
+});
+
+it('treats non-scalar pending field values as null when comparing to live', function (): void {
+    $post = Post::factory()->create([
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => null,
+    ]);
+
+    expect($post->pendingPayloadMatchesLive([
+        'title' => ['nested'],
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => null,
+        'tags' => [],
+        'topic' => null,
+    ]))->toBeFalse();
+});
+
+it('normalizes nested empty meta strings when comparing pending to live', function (): void {
+    $post = Post::factory()->create([
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => [
+            'open_graph' => [
+                'title' => null,
+                'description' => 'Desc',
+            ],
+        ],
+    ]);
+
+    expect($post->pendingPayloadMatchesLive([
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'summary' => null,
+        'body' => '<p>Body</p>',
+        'featured_image' => null,
+        'featured_image_caption' => null,
+        'meta' => [
+            'open_graph' => [
+                'title' => '',
+                'description' => 'Desc',
+            ],
+        ],
+        'tags' => [],
+        'topic' => null,
+    ]))->toBeTrue();
+});
+
 // Regression: GH-647 — slug uniqueness is scoped per user, not globally
 it('allows posts to share the same slug across different users', function (): void {
     $data = [

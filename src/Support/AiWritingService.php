@@ -83,9 +83,7 @@ final class AiWritingService
             'You are a writing assistant embedded in a blog editor.',
             $action->isSeoSuggest()
                 ? 'Return only the JSON object described in the task.'
-                : ($action->isGeneration()
-                    ? 'Return only the generated text as plain text.'
-                    : 'Return only the rewritten text as plain text.'),
+                : 'Return only the rewritten text as plain text.',
             'Do not wrap the result in quotes or markdown code fences.',
             'Do not add a preamble or explanation.',
             $action->instruction(),

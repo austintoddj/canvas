@@ -59,3 +59,16 @@ it('accepts a public https webhook configuration', function (): void {
         ->and($request->input('webhooks.events'))->toBe(['post.published', 'post.updated'])
         ->and($request->input('webhooks.rotate_secret'))->toBeTrue();
 });
+
+it('rejects rotating the webhook secret when no url is configured', function (): void {
+    assertFormRequestInvalid(
+        UpdateIntegrationsRequest::class,
+        [
+            'webhooks' => [
+                'rotate_secret' => true,
+            ],
+        ],
+        $this->admin,
+        ['webhooks.url'],
+    );
+});

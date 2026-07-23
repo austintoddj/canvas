@@ -29,3 +29,20 @@ it('ignores unknown and non-subscribable event ids', function (): void {
         ->and(Webhooks::subscribesTo(WebhookEvent::PostDeleted))->toBeFalse()
         ->and(Webhooks::subscribesTo(WebhookEvent::WebhookTest))->toBeFalse();
 });
+
+it('treats invalid event json as no subscriptions', function (): void {
+    app(SettingsRepository::class)->set(SettingKey::WebhookEvents, '{not-json');
+
+    expect(Webhooks::events())->toBe([])
+        ->and(Webhooks::eventValues())->toBe([])
+        ->and(Webhooks::configured())->toBeFalse();
+});
+
+it('skips non-string values inside the events list', function (): void {
+    app(SettingsRepository::class)->set(
+        SettingKey::WebhookEvents,
+        json_encode(['post.published', 42, null, true, 'post.updated'], JSON_THROW_ON_ERROR),
+    );
+
+    expect(Webhooks::eventValues())->toBe(['post.published', 'post.updated']);
+});

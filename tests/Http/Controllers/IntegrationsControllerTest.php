@@ -373,6 +373,32 @@ it('returns 422 when testing webhooks that are not configured', function (): voi
         ->assertJsonPath('code', 'webhooks_not_configured');
 });
 
+it('returns 422 when testing webhooks with a non-public stored url', function (): void {
+    configureWebhooks(url: 'https://127.0.0.1/hooks', events: ['post.published']);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/integrations/webhooks/test')
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'webhooks_url_invalid');
+});
+
+it('clears stored webhook events when null is sent without clearing the url', function (): void {
+    configureWebhooks(events: ['post.published', 'post.updated']);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'webhooks' => [
+                'events' => null,
+            ],
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('webhooks.configured', false)
+        ->assertJsonPath('webhooks.events', []);
+
+    expect(Webhooks::eventValues())->toBe([])
+        ->and(Webhooks::url())->toBe('https://example.com/hooks/canvas');
+});
+
 it('returns 502 when the test webhook endpoint fails', function (): void {
     Http::fake([
         'https://example.com/*' => Http::response('nope', 500),

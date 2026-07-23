@@ -27,3 +27,15 @@ it('rejects private and reserved ip targets', function (string $url): void {
     'link local' => 'https://169.254.169.254/hooks',
     'localhost name' => 'https://localhost/hooks',
 ]);
+
+it('rejects hosts that do not resolve in dns', function (): void {
+    expect(WebhookUrlValidator::isAllowed(
+        'https://this-host-definitely-does-not-exist-canvas-webhook-test.invalid/hooks',
+    ))->toBeFalse();
+});
+
+it('rejects urls longer than the max length', function (): void {
+    $url = 'https://example.com/'.str_repeat('a', 2100);
+
+    expect(WebhookUrlValidator::isAllowed($url))->toBeFalse();
+});
