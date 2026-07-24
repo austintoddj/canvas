@@ -174,29 +174,3 @@ export function mediaFilesFromList(fileList: FileList | File[] | null | undefine
 
     return Array.from(fileList).filter(isAllowedMediaFile);
 }
-
-/**
- * Prefer same-origin URLs for public-disk storage paths so images load when
- * APP_URL host/scheme differs from the browser origin (common local misconfig).
- */
-export function resolveMediaUrl(url: string | null | undefined): string {
-    if (url === null || url === undefined || url.trim() === '') {
-        return '';
-    }
-
-    if (typeof window === 'undefined') {
-        return url;
-    }
-
-    try {
-        const parsed = new URL(url, window.location.origin);
-
-        if (parsed.pathname.startsWith('/storage/')) {
-            return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
-        }
-
-        return parsed.toString();
-    } catch {
-        return url;
-    }
-}

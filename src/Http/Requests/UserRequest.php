@@ -6,6 +6,7 @@ namespace Canvas\Http\Requests;
 
 use Canvas\Enums\Role;
 use Canvas\Support\Localization;
+use Canvas\Support\MediaUrl;
 use Illuminate\Validation\Rule;
 
 class UserRequest extends FormRequest
@@ -30,6 +31,10 @@ class UserRequest extends FormRequest
             }
         }
 
+        if ($this->has('avatar') && is_string($this->input('avatar')) && $this->input('avatar') !== '') {
+            $normalized['avatar'] = MediaUrl::toStoredMediaReference($this->input('avatar'));
+        }
+
         if ($normalized !== []) {
             $this->merge($normalized);
         }
@@ -50,7 +55,26 @@ class UserRequest extends FormRequest
                 Rule::unique('canvas_users', 'username')->ignore($this->route('id'), 'user_id'),
             ],
             'summary' => 'nullable|string|max:5000',
-            'avatar' => 'nullable|url|max:255',
+            'avatar' => [
+                'nullable',
+                'string',
+                'max:255',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! is_string($value) || $value === '') {
+                        return;
+                    }
+
+                    if (MediaUrl::isPublicStorageReference($value)) {
+                        return;
+                    }
+
+                    if (filter_var($value, FILTER_VALIDATE_URL) !== false) {
+                        return;
+                    }
+
+                    $fail(__('validation.url', ['attribute' => $attribute]));
+                },
+            ],
             'website' => 'nullable|url|max:255',
             'social' => 'nullable|array',
             'social.*' => 'nullable|string|max:255',

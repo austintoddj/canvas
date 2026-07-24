@@ -109,6 +109,8 @@ If you skip this, `/canvas` still loads, admin routes still work, and Canvas sti
     php artisan view:clear
     ```
 
+    Set `APP_URL` to the exact URL you open in the browser (Herd `http://my-app.test`, not a leftover `http://localhost:8000`). Library media on the public disk is stored as root-relative `/storage/...` paths so admin thumbs load even when `APP_URL` is mis-set; Open Graph, webhooks, and similar absolute consumers still follow the request host / `APP_URL`.
+
 6. Grant Canvas access:
 
     ```bash
@@ -117,7 +119,7 @@ If you skip this, `/canvas` still loads, admin routes still work, and Canvas sti
     php artisan canvas:users
     ```
 
-7. Smoke-test `/canvas` while signed in as a user with a `canvas_users` row.
+7. Smoke-test `/canvas` while signed in as a user with a `canvas_users` row: upload media → set a featured image → confirm the posts index thumbnail and (if published) the public reader image load.
 
 ### Architecture
 
@@ -225,8 +227,8 @@ Event::listen(PostPublished::class, function (PostPublished $event): void {
 ```
 
 - Top-level `id` is the **host** user primary key (stock Laravel: bigint).
-- Top-level `avatar_url` is the resolved absolute URL, or **`null`** when using initials in the UI.
-- Canvas-specific fields live under nested `canvas` (when `canvasUser` is loaded).
+- Top-level `avatar_url` is the resolved avatar for display (root-relative public-disk path or absolute remote URL), or **`null`** when using initials in the UI.
+- Canvas-specific fields live under nested `canvas` (when `canvasUser` is loaded). `canvas.avatar` and `canvas.avatar_url` use the same stored form.
 - `role` is an integer enum: `1` Contributor, `2` Editor, `3` Admin.
 - UI appearance is `theme` (`system` / `light` / `dark`).
 - `POST /api/users/{id}` upserts profile data via `SyncCanvasUser`; initial grant requires a `role` when no `canvas_users` row exists.
@@ -255,6 +257,14 @@ How writes relate to what readers and host apps see:
 
 Canvas user API responses use `UserResource` / `CanvasUserResource` with **no data wrapper** (`$wrap = null` on those classes only). Canvas does **not** call global `JsonResource::withoutWrapping()`, so host application APIs keep Laravel’s default wrapping.
 
+#### Media URLs (public disk)
+
+- Library media `url`, post `featured_image` (library picks), and user `avatar` for public-disk files are **root-relative** (`/storage/canvas/images/...`), not absolute hosts derived from `APP_URL`.
+- Unsplash and other remote URLs remain absolute `https://…`.
+- Non-local disks (S3, CDN) still return absolute object URLs.
+- SEO / Open Graph and outbound webhooks expand local storage references to absolute URLs for external consumers.
+- Broken images with a working `storage:link` usually mean a missing symlink or a remote disk misconfiguration — not “set APP_URL for thumbs.” Still set `APP_URL` correctly for OG tags and webhooks.
+
 #### Media soft-delete
 
 `DELETE /api/media/{id}` soft-deletes the `canvas_media` row and **deletes the file from disk**. Restoring the model later will not restore the file — treat media destroy as permanent for storage.
@@ -267,21 +277,21 @@ Optional `canvas:ui` post routes should use `Canvas\Http\Middleware\Session` (al
 
 Hybrid storage: typed columns for queryable fields; `preferences` JSON for long-tail UI settings.
 
-| Column                      | Type                                    | Notes                                                                            |
-| --------------------------- | --------------------------------------- | -------------------------------------------------------------------------------- |
-| `user_id`                   | unsignedBigInteger, PK, FK → `users.id` | Same type as stock Laravel `users.id`; cascade delete                            |
-| `role`                      | tinyint                                 | `1` Contributor, `2` Editor, `3` Admin                                           |
-| `username`                  | string, nullable, unique                | Public author handle                                                             |
-| `summary`                   | text, nullable                          | Author bio                                                                       |
-| `avatar`                    | string, nullable                        | Absolute image URL (media library / Unsplash); empty → initials in UI            |
-| `website`                   | string, nullable                        |                                                                                  |
-| `social`                    | json, nullable                          | Key/value social links                                                           |
-| `locale`                    | string, nullable                        | Must be in available locales                                                     |
-| `timezone`                  | string, nullable                        | IANA timezone; used by `canvas:digest`                                           |
-| `theme`                     | string, nullable                        | UI preference: `system`, `light`, or `dark` (API defaults to `system` when null) |
-| `digest`                    | boolean, default `false`                | Weekly email opt-in                                                              |
-| `preferences`               | json, nullable                          | Merged with defaults; `onboarding.complete` today                                |
-| `created_at` / `updated_at` | timestamps                              |                                                                                  |
+| Column                      | Type                                    | Notes                                                                                                           |
+| --------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `user_id`                   | unsignedBigInteger, PK, FK → `users.id` | Same type as stock Laravel `users.id`; cascade delete                                                           |
+| `role`                      | tinyint                                 | `1` Contributor, `2` Editor, `3` Admin                                                                          |
+| `username`                  | string, nullable, unique                | Public author handle                                                                                            |
+| `summary`                   | text, nullable                          | Author bio                                                                                                      |
+| `avatar`                    | string, nullable                        | Image URL: root-relative `/storage/...` for library media, absolute for Unsplash/remote; empty → initials in UI |
+| `website`                   | string, nullable                        |                                                                                                                 |
+| `social`                    | json, nullable                          | Key/value social links                                                                                          |
+| `locale`                    | string, nullable                        | Must be in available locales                                                                                    |
+| `timezone`                  | string, nullable                        | IANA timezone; used by `canvas:digest`                                                                          |
+| `theme`                     | string, nullable                        | UI preference: `system`, `light`, or `dark` (API defaults to `system` when null)                                |
+| `digest`                    | boolean, default `false`                | Weekly email opt-in                                                                                             |
+| `preferences`               | json, nullable                          | Merged with defaults; `onboarding.complete` today                                                               |
+| `created_at` / `updated_at` | timestamps                              |                                                                                                                 |
 
 ### Configuration
 
@@ -348,7 +358,7 @@ Outbound HTTPS notifications for post lifecycle changes (Zapier, Make, n8n, Slac
 | Success              | HTTP 2xx (lifecycle jobs retry: 3 attempts, backoff 30s / 2m / 10m)                  |
 | URL rules            | HTTPS only; private/reserved IPs blocked                                             |
 
-**Payload** (`api_version: 1`) includes post metadata (id, slug, title, summary, published_at, featured image, SEO meta, topic/tags, author). It does **not** include the full HTML body.
+**Payload** (`api_version: 1`) includes post metadata (id, slug, title, summary, published_at, featured image, SEO meta, topic/tags, author). It does **not** include the full HTML body. Local public-disk featured images are **absolute** in the payload (expanded for external subscribers); remote URLs stay absolute as stored.
 
 ```json
 {

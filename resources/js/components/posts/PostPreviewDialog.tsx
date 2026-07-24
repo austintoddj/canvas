@@ -2,7 +2,6 @@ import { Avatar } from '@/components/avatar';
 import { Dialog, DialogBody, DialogCloseButton, DialogTitle } from '@/components/dialog';
 import { Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
-import { resolveMediaUrl } from '@/lib/media/list';
 import { bodyHtmlForEditor, parsePublishedAt, type PostFormState } from '@/lib/posts/form';
 import { userInitials } from '@/lib/users/roles';
 
@@ -30,7 +29,7 @@ export default function PostPreviewDialog({ open, form, onClose }: PostPreviewDi
     const bodyHtml = bodyHtmlForEditor(form.body);
     const hasBody = bodyHtml !== '';
     const featuredSrc =
-        form.featuredImage !== null && form.featuredImage.trim() !== '' ? resolveMediaUrl(form.featuredImage) : null;
+        form.featuredImage !== null && form.featuredImage.trim() !== '' ? form.featuredImage.trim() : null;
     const author = form.author;
     const authorName = (author?.name ?? '').trim();
     const displayName = authorName !== '' ? authorName : author !== null ? t('users.unknown', 'Unknown') : user.name;

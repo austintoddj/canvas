@@ -6,7 +6,6 @@ import { Description, Field, Fieldset, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import { Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
-import { resolveMediaUrl } from '@/lib/media/list';
 import type { PostFormState } from '@/lib/posts/form';
 import { IconPhoto } from '@tabler/icons-react';
 
@@ -42,7 +41,7 @@ export default function FeaturedImagePicker({ form, onChange, disabled = false }
             {form.featuredImage ? (
                 <div className="min-w-0 overflow-hidden rounded-lg border border-zinc-950/10 dark:border-white/10 dark:ring-1 dark:ring-white/5">
                     <img
-                        src={resolveMediaUrl(form.featuredImage)}
+                        src={form.featuredImage}
                         alt={form.featuredImageCaption ?? t('editor.featured_image')}
                         className="aspect-[1.91/1] w-full max-w-full object-cover"
                     />

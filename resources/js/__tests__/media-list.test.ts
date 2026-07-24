@@ -17,7 +17,6 @@ import {
     mediaMimeLabel,
     nextCommittedMediaSearch,
     parseMediaListFilters,
-    resolveMediaUrl,
 } from '@/lib/media/list';
 
 describe('media list helpers', () => {
@@ -68,10 +67,6 @@ describe('media list helpers', () => {
     });
 
     it('formats media display values and filters allowed uploads', () => {
-        expect(resolveMediaUrl('https://app.test/storage/canvas/images/a.jpg')).toBe(
-            `${window.location.origin}/storage/canvas/images/a.jpg`
-        );
-        expect(resolveMediaUrl('https://cdn.example.com/x.jpg')).toBe('https://cdn.example.com/x.jpg');
         expect(mediaDisplayName({ original_name: 'Hero.jpg', filename: 'abc.jpg', alt: 'Hero' })).toBe('Hero.jpg');
         expect(mediaDisplayName({ original_name: null, filename: 'abc.jpg', alt: 'Hero' })).toBe('Hero');
         expect(formatMediaBytes(1_572_864)).toBe('1.5 MB');

@@ -16,9 +16,7 @@ const hostDir =
 const baseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8765';
 
 if (!hostDir && process.env.PLAYWRIGHT_SKIP_WEBSERVER !== '1') {
-    console.warn(
-        'No E2E host directory found. Run `npm run e2e:prepare` (or set E2E_HOST_DIR) before e2e tests.'
-    );
+    console.warn('No E2E host directory found. Run `npm run e2e:prepare` (or set E2E_HOST_DIR) before e2e tests.');
 }
 
 export default defineConfig({

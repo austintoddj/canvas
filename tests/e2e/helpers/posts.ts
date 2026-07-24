@@ -203,7 +203,9 @@ export async function unpublishFromInspector(page: Page): Promise<void> {
 export async function openPreview(page: Page): Promise<void> {
     await page.locator('[data-post-preview-trigger]').click();
     // Dialog root may report as hidden during transitions; assert content instead.
-    await expect(page.locator('[data-post-preview-dialog="true"] h1, [data-post-preview-body="true"]').first()).toBeVisible({
+    await expect(
+        page.locator('[data-post-preview-dialog="true"] h1, [data-post-preview-body="true"]').first()
+    ).toBeVisible({
         timeout: 15_000,
     });
 }

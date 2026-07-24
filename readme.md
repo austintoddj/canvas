@@ -37,13 +37,15 @@ php artisan canvas:install
 php artisan storage:link
 ```
 
+Set `APP_URL` in your `.env` to the **exact URL you open in the browser** (for example `http://blog.test` on Laravel Herd, not a leftover `http://localhost:8000`). Local library media is stored as origin-safe `/storage/...` paths, so thumbs still load if `APP_URL` is wrong — but SEO tags, webhooks, and other absolute URLs use `APP_URL` / the current request host.
+
 Sign in to your application, then grant yourself access:
 
 ```bash
 php artisan canvas:make-admin your@email.com
 ```
 
-Visit `/canvas`.
+Visit `/canvas`. Smoke-check: upload an image, set it as a post’s featured image, and confirm the posts index thumbnail loads.
 
 ## Optional Frontend
 

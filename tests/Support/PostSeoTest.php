@@ -91,6 +91,22 @@ it('prefers featured image over first body image', function (): void {
         ->and($resolved['image_alt'])->toBe('Hero caption');
 });
 
+it('expands root-relative public storage featured images to absolute urls', function (): void {
+    config(['app.url' => 'http://blog.test']);
+
+    $post = Post::factory()->make([
+        'title' => 'Hello World',
+        'summary' => 'Summary',
+        'body' => null,
+        'featured_image' => '/storage/canvas/images/hero.jpg',
+        'featured_image_caption' => null,
+        'meta' => null,
+    ]);
+
+    expect(PostSeo::resolve($post, 'https://example.com/p')['image_url'])
+        ->toBe('http://blog.test/storage/canvas/images/hero.jpg');
+});
+
 it('uses first body image when featured image is missing', function (): void {
     $post = Post::factory()->make([
         'title' => 'Hello World',

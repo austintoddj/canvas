@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Canvas\Http\Requests;
 
 use Canvas\Models\Post;
+use Canvas\Support\MediaUrl;
 use Illuminate\Validation\Rule;
 
 class PostRequest extends FormRequest
@@ -12,6 +13,19 @@ class PostRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (! $this->has('featured_image')) {
+            return;
+        }
+
+        $this->merge([
+            'featured_image' => MediaUrl::toStoredMediaReference(
+                is_string($this->input('featured_image')) ? $this->input('featured_image') : null,
+            ),
+        ]);
     }
 
     /**

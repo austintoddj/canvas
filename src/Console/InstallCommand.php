@@ -43,6 +43,8 @@ class InstallCommand extends Command
         $this->components->bulletList([
             'Create or sign in to a user account in your application',
             'php artisan canvas:make-admin your@email.com',
+            'php artisan storage:link (if you have not already)',
+            'Set APP_URL in .env to the URL you open in the browser (e.g. http://blog.test)',
         ]);
 
         return self::SUCCESS;

@@ -6,7 +6,7 @@ import { JustifiedMediaGrid } from '@/components/media/JustifiedMediaGrid';
 import { Link } from '@/components/link';
 import { Text } from '@/components/text';
 import { JUSTIFIED_TARGET_ROW_HEIGHT_DIALOG, JUSTIFIED_TARGET_ROW_HEIGHT_PAGE } from '@/lib/media/layout';
-import { mediaDisplayName, resolveMediaUrl } from '@/lib/media/list';
+import { mediaDisplayName } from '@/lib/media/list';
 import type { Media } from '@/types/api';
 import { IconCheck, IconPhoto } from '@tabler/icons-react';
 
@@ -155,7 +155,7 @@ export function MediaGrid({
                         )}
                     >
                         <FadeInImage
-                            src={resolveMediaUrl(item.url)}
+                            src={item.url}
                             alt={item.alt ?? label}
                             className={clsx(
                                 'size-full object-cover transition-transform duration-300 ease-in-out motion-reduce:transition-none',

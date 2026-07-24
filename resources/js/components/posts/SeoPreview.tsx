@@ -1,6 +1,5 @@
 import { Subheading } from '@/components/heading';
 import { Text } from '@/components/text';
-import { resolveMediaUrl } from '@/lib/media/list';
 import { resolvePostSeo, type PostSeoInput } from '@/lib/seo';
 
 type SeoPreviewProps = {
@@ -33,11 +32,7 @@ function SocialPreview({ post }: SeoPreviewProps) {
     return (
         <div className="min-w-0 overflow-hidden rounded-lg border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-white/[0.03] dark:ring-1 dark:ring-white/5">
             {seo.imageUrl ? (
-                <img
-                    src={resolveMediaUrl(seo.imageUrl)}
-                    alt={seo.imageAlt}
-                    className="aspect-[1.91/1] w-full max-w-full object-cover"
-                />
+                <img src={seo.imageUrl} alt={seo.imageAlt} className="aspect-[1.91/1] w-full max-w-full object-cover" />
             ) : (
                 <div className="flex aspect-[1.91/1] items-center justify-center bg-zinc-100 text-sm text-zinc-500 dark:bg-white/[0.04] dark:text-zinc-400">
                     No image selected

@@ -141,7 +141,9 @@ it('stores uploaded media and persists the file', function (): void {
         ->and($response->getOriginalContent()->id)->toBe($id)
         ->and($response->getOriginalContent()->path)->toBe($path)
         ->and($response->getOriginalContent()->alt)->toBe('A photo')
-        ->and($response->getOriginalContent()->caption)->toBe('Caption text');
+        ->and($response->getOriginalContent()->caption)->toBe('Caption text')
+        ->and($response->getOriginalContent()->url)->toStartWith('/storage/')
+        ->and($response->getOriginalContent()->url)->not->toContain('http');
 
     Storage::disk(config('canvas.storage_disk'))->assertExists($path);
 
@@ -150,6 +152,25 @@ it('stores uploaded media and persists the file', function (): void {
         'path' => $path,
         'user_id' => $this->admin->id,
     ]);
+});
+
+it('returns root-relative media urls when the disk url bakes APP_URL', function (): void {
+    Storage::fake(config('canvas.storage_disk'), [
+        'url' => 'http://localhost:8000/storage',
+    ]);
+
+    $id = (string) Str::uuid();
+    $file = UploadedFile::fake()->image('photo.jpg');
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->postJson("canvas/api/media/{$id}", [
+            'file' => $file,
+        ])
+        ->assertCreated();
+
+    expect($response->json('url'))
+        ->toStartWith('/storage/')
+        ->not->toContain('localhost:8000');
 });
 
 it('does not store a file when replacing another users media is denied', function (): void {

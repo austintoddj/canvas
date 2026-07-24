@@ -54,7 +54,12 @@ test.describe('Integrations webhooks', () => {
         });
 
         // Re-open if the drawer closed after save-without-plain-secret path.
-        if (!(await page.locator('[data-integration-drawer="webhooks"]').isVisible().catch(() => false))) {
+        if (
+            !(await page
+                .locator('[data-integration-drawer="webhooks"]')
+                .isVisible()
+                .catch(() => false))
+        ) {
             await webhooksRow.getByRole('button', { name: /Configure|Manage/i }).click();
             await expect(page.locator('[data-integration-drawer="webhooks"]')).toBeVisible({ timeout: 10_000 });
         }

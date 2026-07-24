@@ -16,6 +16,13 @@ it('returns absolute avatar urls unchanged', function (): void {
     expect(AuthorAvatar::url($url))->toBe($url);
 });
 
+it('returns root-relative public storage avatars', function (): void {
+    expect(AuthorAvatar::url('/storage/canvas/images/avatar.jpg'))
+        ->toBe('/storage/canvas/images/avatar.jpg')
+        ->and(AuthorAvatar::url('http://localhost:8000/storage/canvas/images/avatar.jpg'))
+        ->toBe('/storage/canvas/images/avatar.jpg');
+});
+
 it('returns null for non-url avatar values', function (): void {
     expect(AuthorAvatar::url('not-a-url'))->toBeNull()
         ->and(AuthorAvatar::url(md5('user@example.com')))->toBeNull();

@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { bodyFromEditorHtml, bodyHtmlForEditor, normalizeBodyHtml, rewriteBodyImageSrcs } from '@/lib/posts/body';
+import { bodyFromEditorHtml, bodyHtmlForEditor, normalizeBodyHtml } from '@/lib/posts/body';
 import { postToFormState, toStorePayload } from '@/lib/posts/form';
 import type { Post } from '@/types/api';
 
@@ -36,16 +36,12 @@ describe('post body HTML', () => {
         expect(bodyHtmlForEditor('<p>Keep</p>')).toBe('<p>Keep</p>');
     });
 
-    it('rewrites public storage image srcs to the current browser origin for the editor', () => {
-        const html =
-            '<p><img src="https://app.test/storage/canvas/images/a.jpg" alt="A" class="canvas-post-body-image"></p>';
-        const expectedSrc = `${window.location.origin}/storage/canvas/images/a.jpg`;
+    it('passes library image srcs through unchanged for editor hydration', () => {
+        const rootRelative = '<p><img src="/storage/canvas/images/a.jpg" alt="A" class="canvas-post-body-image"></p>';
+        const remote = '<p><img src="https://cdn.example.com/x.jpg" alt=""></p>';
 
-        expect(rewriteBodyImageSrcs(html)).toContain(`src="${expectedSrc}"`);
-        expect(bodyHtmlForEditor(html)).toContain(`src="${expectedSrc}"`);
-        expect(rewriteBodyImageSrcs('<p><img src="https://cdn.example.com/x.jpg" alt=""></p>')).toContain(
-            'src="https://cdn.example.com/x.jpg"'
-        );
+        expect(bodyHtmlForEditor(rootRelative)).toBe(rootRelative);
+        expect(bodyHtmlForEditor(remote)).toBe(remote);
     });
 
     it('round-trips through form payload for autosave', () => {

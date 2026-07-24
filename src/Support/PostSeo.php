@@ -36,9 +36,11 @@ final class PostSeo
             ? $metaDescription
             : ($summary !== '' ? $summary : ($bodyDescription !== '' ? $bodyDescription : 'No description available.'));
 
-        $imageUrl = filled($post->featured_image)
+        $rawImage = filled($post->featured_image)
             ? (string) $post->featured_image
             : self::firstImageSrc($post->body);
+
+        $imageUrl = MediaUrl::absolute($rawImage);
 
         $imageAlt = trim((string) ($post->featured_image_caption ?? ''));
         if ($imageAlt === '') {

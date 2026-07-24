@@ -67,6 +67,44 @@ it('allows a user to save a post slug', function (): void {
     ]);
 });
 
+it('normalizes public storage featured images to root-relative on save', function (): void {
+    $post = Post::factory()->draft()->create([
+        'user_id' => $this->admin->id,
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson("/canvas/api/posts/{$post->id}", [
+            'slug' => $post->slug,
+            'title' => 'Featured image post',
+            'featured_image' => 'http://localhost:8000/storage/canvas/images/hero.jpg',
+        ])
+        ->assertSuccessful();
+
+    $this->assertDatabaseHas('canvas_posts', [
+        'id' => $post->id,
+        'featured_image' => '/storage/canvas/images/hero.jpg',
+    ]);
+});
+
+it('leaves external featured images absolute on save', function (): void {
+    $post = Post::factory()->draft()->create([
+        'user_id' => $this->admin->id,
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson("/canvas/api/posts/{$post->id}", [
+            'slug' => $post->slug,
+            'title' => 'Unsplash featured',
+            'featured_image' => 'https://images.unsplash.com/photo-1',
+        ])
+        ->assertSuccessful();
+
+    $this->assertDatabaseHas('canvas_posts', [
+        'id' => $post->id,
+        'featured_image' => 'https://images.unsplash.com/photo-1',
+    ]);
+});
+
 it('casts pending to an array and reports pending changes', function (): void {
     $post = Post::factory()->create([
         'pending' => [

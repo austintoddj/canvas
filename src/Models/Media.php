@@ -6,13 +6,13 @@ namespace Canvas\Models;
 
 use Canvas\Database\Factories\MediaFactory;
 use Canvas\Enums\MediaType;
+use Canvas\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @use HasFactory<MediaFactory>
@@ -71,7 +71,7 @@ class Media extends Model
     protected function url(): Attribute
     {
         return Attribute::get(
-            fn (): string => Storage::disk((string) config('canvas.storage_disk'))->url($this->path),
+            fn (): string => MediaUrl::forDiskPath((string) $this->path),
         );
     }
 

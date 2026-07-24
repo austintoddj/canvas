@@ -48,7 +48,9 @@ final class WebhookPayload
                 'published_at' => $post->published_at !== null
                     ? self::iso8601($post->published_at)
                     : null,
-                'featured_image' => $post->featured_image,
+                'featured_image' => MediaUrl::absolute(
+                    is_string($post->featured_image) ? $post->featured_image : null,
+                ),
                 'featured_image_caption' => $post->featured_image_caption,
                 'meta' => $meta,
                 'topic' => $topic !== null

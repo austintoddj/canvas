@@ -1,2 +1,2 @@
 providers:
-  - Canvas\CanvasServiceProvider
+    - Canvas\CanvasServiceProvider

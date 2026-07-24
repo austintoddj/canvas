@@ -1,5 +1,3 @@
-import { resolveMediaUrl } from '@/lib/media/list';
-
 /**
  * Normalize TipTap / contenteditable HTML for storage.
  * Empty documents become null so the API stores a clean draft body.
@@ -28,29 +26,13 @@ export function normalizeBodyHtml(html: string | null | undefined): string | nul
 }
 
 /**
- * Rewrite public-disk image `src` values so they load when APP_URL host/scheme
- * differs from the browser origin (common local misconfig).
- */
-export function rewriteBodyImageSrcs(html: string): string {
-    return html.replace(
-        /(<img\b[^>]*\bsrc=["'])([^"']+)(["'])/gi,
-        (_match, prefix: string, src: string, suffix: string) => {
-            return `${prefix}${resolveMediaUrl(src)}${suffix}`;
-        }
-    );
-}
-
-/**
  * HTML string suitable for TipTap `content` hydration.
+ *
+ * Public-disk media is stored as root-relative `/storage/...` paths, so the
+ * editor can use body HTML as-is without host rewriting.
  */
 export function bodyHtmlForEditor(body: string | null | undefined): string {
-    const normalized = normalizeBodyHtml(body);
-
-    if (normalized === null) {
-        return '';
-    }
-
-    return rewriteBodyImageSrcs(normalized);
+    return normalizeBodyHtml(body) ?? '';
 }
 
 /**

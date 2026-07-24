@@ -1,6 +1,7 @@
 <?php
 
 use Canvas\Models\Media;
+use Canvas\Support\MediaUrl;
 use Canvas\Support\Paths;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,7 +19,8 @@ it('exercises media factory storage and url generation end to end', function ():
 
     $retrieved = Media::query()->findOrFail($media->id);
 
-    expect($retrieved->url)->toBe(Storage::disk(config('canvas.storage_disk'))->url($path))
+    expect($retrieved->url)->toBe(MediaUrl::forDiskPath($path))
+        ->and($retrieved->url)->toStartWith('/storage/')
         ->and($retrieved->type)->toBe('image')
         ->and($retrieved->path)->toBe($path)
         ->and($retrieved->user_id)->toBe($this->admin->id);

@@ -58,7 +58,7 @@ final readonly class MediaStorage
 
     public function url(string $path): string
     {
-        return $this->disk->url($path);
+        return MediaUrl::forDiskPath($path, $this->diskName);
     }
 
     public function isValidPath(string $path): bool

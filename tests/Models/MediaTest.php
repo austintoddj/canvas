@@ -1,6 +1,7 @@
 <?php
 
 use Canvas\Models\Media;
+use Canvas\Support\MediaUrl;
 use Canvas\Support\Paths;
 use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,7 +25,23 @@ it('generates a url from the stored path', function (): void {
 
     $media = Media::factory()->create(['path' => $path]);
 
-    expect($media->url)->toBe(Storage::disk(config('canvas.storage_disk'))->url($path));
+    expect($media->url)->toBe(MediaUrl::forDiskPath($path))
+        ->and($media->url)->toStartWith('/storage/');
+});
+
+it('returns root-relative media urls when the disk url includes APP_URL', function (): void {
+    Storage::fake(config('canvas.storage_disk'), [
+        'url' => 'http://localhost:8000/storage',
+    ]);
+
+    $path = Paths::baseStoragePath().'/example.jpg';
+    Storage::disk(config('canvas.storage_disk'))->put($path, 'image-data');
+
+    $media = Media::factory()->create(['path' => $path]);
+
+    expect($media->url)
+        ->toBe('/storage/'.$path)
+        ->not->toContain('localhost:8000');
 });
 
 it('resolves the media type from the mime type', function (): void {

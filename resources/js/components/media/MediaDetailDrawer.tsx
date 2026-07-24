@@ -19,7 +19,6 @@ import {
     formatMediaDimensions,
     mediaDisplayName,
     mediaMimeLabel,
-    resolveMediaUrl,
 } from '@/lib/media/list';
 import { toast } from '@/lib/toast';
 import type { Media, MediaUpdatePayload } from '@/types/api';
@@ -238,7 +237,7 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                     <div className="flex flex-1 flex-col">
                         <div className="border-b border-zinc-950/5 bg-zinc-50 dark:border-white/10 dark:bg-white/[0.03]">
                             <img
-                                src={resolveMediaUrl(media.url)}
+                                src={media.url}
                                 alt={media.alt ?? mediaDisplayName(media)}
                                 className="max-h-64 w-full object-contain"
                             />

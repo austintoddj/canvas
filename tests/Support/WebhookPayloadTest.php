@@ -73,3 +73,21 @@ it('builds a minimal test payload', function (): void {
         ],
     ]);
 });
+
+it('absolute-izes public storage featured images for external consumers', function (): void {
+    config(['app.url' => 'http://blog.test']);
+
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'featured_image' => '/storage/canvas/images/hero.jpg',
+    ]);
+
+    $payload = WebhookPayload::forPost(
+        WebhookEvent::PostPublished,
+        $post->fresh(['tags', 'topic', 'user']),
+        'delivery-abs',
+    );
+
+    expect($payload['data']['featured_image'])
+        ->toBe('http://blog.test/storage/canvas/images/hero.jpg');
+});

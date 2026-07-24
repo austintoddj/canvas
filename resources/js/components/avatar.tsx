@@ -1,7 +1,6 @@
 import * as Headless from '@headlessui/react';
 import clsx from 'clsx';
 import React, { forwardRef, useState } from 'react';
-import { resolveMediaUrl } from '@/lib/media/list';
 import { TouchTarget } from './button';
 import { Link } from './link';
 
@@ -31,7 +30,7 @@ export function Avatar({
     className,
     ...props
 }: AvatarProps & React.ComponentPropsWithoutRef<'span'>) {
-    const resolvedSrc = resolveMediaUrl(src);
+    const imageSrc = (src ?? '').trim();
 
     return (
         <span
@@ -65,7 +64,7 @@ export function Avatar({
                     </text>
                 </svg>
             )}
-            {resolvedSrc !== '' ? <AvatarImage key={resolvedSrc} src={resolvedSrc} alt={alt} /> : null}
+            {imageSrc !== '' ? <AvatarImage key={imageSrc} src={imageSrc} alt={alt} /> : null}
         </span>
     );
 }

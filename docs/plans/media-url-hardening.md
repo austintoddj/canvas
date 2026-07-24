@@ -1,10 +1,12 @@
 # Implementation Plan: Media URL Hardening
 
-**Status:** Proposed  
+**Status:** Implemented (clean-break revision — no legacy absolute-host read rewrites)  
 **Repo:** `austintoddj/canvas`  
 **Triggered by:** Real install smoke test in a fresh host app (`blog`) on Laravel Herd  
 **Date:** 2026-07-24  
 **Priority:** Pre-release blocker for a confident GA / public beta
+
+> **Implementation note:** Shipped as origin-safe **root-relative** public-disk URLs at rest + absolute expansion for SEO/webhooks. Client `resolveMediaUrl` host-rewrite was **removed**, not centralized into `FadeInImage`. See session plan for the revised approach.
 
 ---
 
@@ -54,13 +56,13 @@ export function resolveMediaUrl(...)
 
 That helper is used in media grid, featured-image picker, previews, body rewrite, and avatars — but **not** on:
 
-| Surface | File | Behavior today |
-|--------|------|----------------|
-| Posts index thumbs | `resources/js/pages/Posts/Index.tsx` | raw `featured_image` |
+| Surface                | File                                                         | Behavior today       |
+| ---------------------- | ------------------------------------------------------------ | -------------------- |
+| Posts index thumbs     | `resources/js/pages/Posts/Index.tsx`                         | raw `featured_image` |
 | Dashboard recent posts | `resources/js/components/dashboard/DashboardRecentPosts.tsx` | raw `featured_image` |
-| Public reader views | `resources/views/ui/index.blade.php`, `show.blade.php` | raw `featured_image` |
-| SEO / OG | `src/Support/PostSeo.php` | raw `featured_image` |
-| Webhooks | `src/Support/WebhookPayload.php` | raw stored value |
+| Public reader views    | `resources/views/ui/index.blade.php`, `show.blade.php`       | raw `featured_image` |
+| SEO / OG               | `src/Support/PostSeo.php`                                    | raw `featured_image` |
+| Webhooks               | `src/Support/WebhookPayload.php`                             | raw stored value     |
 
 So the package knows the failure mode and still leaves primary navigation surfaces unprotected. That is a product confidence issue for release, not just “user misconfigured APP_URL.”
 
@@ -130,11 +132,11 @@ Render posts index
 
 Examples:
 
-| Kind | Store |
-|------|--------|
-| Library upload on `public` disk | `/storage/canvas/images/abc.jpg` |
-| Unsplash / remote URL | `https://images.unsplash.com/...` (unchanged absolute) |
-| Custom remote CDN already absolute and not `/storage/*` | leave absolute |
+| Kind                                                    | Store                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------ |
+| Library upload on `public` disk                         | `/storage/canvas/images/abc.jpg`                       |
+| Unsplash / remote URL                                   | `https://images.unsplash.com/...` (unchanged absolute) |
+| Custom remote CDN already absolute and not `/storage/*` | leave absolute                                         |
 
 **Rationale**
 
@@ -145,11 +147,11 @@ Examples:
 
 **Rejected alternatives**
 
-| Alternative | Why not now |
-|-------------|-------------|
-| Store only disk path (`canvas/images/abc.jpg`) and always resolve on read | Cleaner long-term, but wider API/contract change for webhooks, hosts reading raw columns, and body HTML |
-| Always absolute with request host at write time | Still wrong for queue workers / CLI rewrites; still breaks if content is later read under another domain |
-| Keep absolute + only client rewrite | Masks admin bugs; public Blade/SEO/webhooks still wrong |
+| Alternative                                                               | Why not now                                                                                              |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Store only disk path (`canvas/images/abc.jpg`) and always resolve on read | Cleaner long-term, but wider API/contract change for webhooks, hosts reading raw columns, and body HTML  |
+| Always absolute with request host at write time                           | Still wrong for queue workers / CLI rewrites; still breaks if content is later read under another domain |
+| Keep absolute + only client rewrite                                       | Masks admin bugs; public Blade/SEO/webhooks still wrong                                                  |
 
 ### Decision B — Resolve on the way out (defense in depth)
 
@@ -248,14 +250,14 @@ Wire through:
 
 1. Apply `resolveMediaUrl` inside `FadeInImage` so every consumer benefits.
 2. Audit remaining raw `<img src={...}>` / `src={thumb}` for media-like URLs:
-   - `pages/Posts/Index.tsx`
-   - `components/dashboard/DashboardRecentPosts.tsx`
-   - `components/media/ImageSourcePicker.tsx` (Unsplash + library previews)
-   - any other list thumbs found by search
+    - `pages/Posts/Index.tsx`
+    - `components/dashboard/DashboardRecentPosts.tsx`
+    - `components/media/ImageSourcePicker.tsx` (Unsplash + library previews)
+    - any other list thumbs found by search
 3. Keep explicit `resolveMediaUrl` at non-`FadeInImage` sites (FeaturedImagePicker, body, SEO preview) or route them through shared components.
 4. Vitest:
-   - unit coverage already exists for `resolveMediaUrl`
-   - add component-level test if the repo pattern supports it; otherwise assert helper still rewrites absolute `/storage/` hosts
+    - unit coverage already exists for `resolveMediaUrl`
+    - add component-level test if the repo pattern supports it; otherwise assert helper still rewrites absolute `/storage/` hosts
 5. Rebuild admin assets (`npm run build`) so published `resources/dist` includes the fix.
 
 #### Acceptance
@@ -279,20 +281,20 @@ Wire through:
 #### Tasks
 
 1. Add `Canvas\Support\MediaUrl` (or extend `MediaStorage`) with:
-   - root-relative generation for local public disk
-   - absolute expansion helper
-   - detection of public storage URLs/paths
+    - root-relative generation for local public disk
+    - absolute expansion helper
+    - detection of public storage URLs/paths
 2. Change `MediaStorage::url()` / `Media::url` accessor to return **display-safe** URLs (root-relative for local public assets).
 3. Ensure S3 / custom disks that only work with absolute object URLs still return usable absolute URLs (do not break remote disks).
 4. Normalize featured image **on write** in post save path (and avatar sync if applicable):
-   - if incoming URL is Canvas public storage (any host + `/storage/...` path, or known disk path), store root-relative form
-   - if Unsplash/external, store absolute unchanged
+    - if incoming URL is Canvas public storage (any host + `/storage/...` path, or known disk path), store root-relative form
+    - if Unsplash/external, store absolute unchanged
 5. When inserting library images into post body (frontend), prefer the media URL returned by API after PR 2 (root-relative).
 6. Pest tests:
-   - `MediaStorage` returns root-relative URL under default `public` disk + `APP_URL=http://localhost:8000`
-   - absolute helper expands with app url / request root
-   - external URLs untouched
-   - post store/update normalizes featured_image
+    - `MediaStorage` returns root-relative URL under default `public` disk + `APP_URL=http://localhost:8000`
+    - absolute helper expands with app url / request root
+    - external URLs untouched
+    - post store/update normalizes featured_image
 7. Media controller feature test: upload response `url` is root-relative for public disk.
 
 #### Acceptance
@@ -316,12 +318,12 @@ Wire through:
 #### Tasks
 
 1. `PostSeo::resolve()`:
-   - if featured image / first body image is local storage, emit absolute URL for OG/Twitter/JSON-LD using current request root or `app.url`
+    - if featured image / first body image is local storage, emit absolute URL for OG/Twitter/JSON-LD using current request root or `app.url`
 2. `WebhookPayload`:
-   - absolute-ize local storage featured images so external subscribers get fetchable URLs
+    - absolute-ize local storage featured images so external subscribers get fetchable URLs
 3. Optional `canvas:ui` Blade views:
-   - use a small Blade helper / view composer / `@php` call to `MediaUrl::normalizeForDisplay()` for `<img src>`
-   - absolute not required for browser img tags; root-relative is ideal
+    - use a small Blade helper / view composer / `@php` call to `MediaUrl::normalizeForDisplay()` for `<img src>`
+    - absolute not required for browser img tags; root-relative is ideal
 4. Avatar resolution paths: ensure admin + public author partials behave with root-relative avatars.
 5. Pest tests for `PostSeo` absolute expansion and webhook payload absoluteization.
 
@@ -341,22 +343,22 @@ Wire through:
 #### Tasks
 
 1. **readme.md** install section:
-   - set `APP_URL` to the exact URL you open in the browser (Herd `https://my-app.test`, not leftover `http://localhost:8000`)
-   - keep `php artisan storage:link`
+    - set `APP_URL` to the exact URL you open in the browser (Herd `https://my-app.test`, not leftover `http://localhost:8000`)
+    - keep `php artisan storage:link`
 2. **`.github/UPGRADE.md`**:
-   - smoke checks: upload → feature image → posts index thumb → public show image
-   - troubleshooting: broken images → verify symlink, `APP_URL`, and that URL path is `/storage/...`
-   - note root-relative storage URLs for library assets
+    - smoke checks: upload → feature image → posts index thumb → public show image
+    - troubleshooting: broken images → verify symlink, `APP_URL`, and that URL path is `/storage/...`
+    - note root-relative storage URLs for library assets
 3. **`canvas:install`** completion bullets:
-   - remind about `storage:link` and `APP_URL`
+    - remind about `storage:link` and `APP_URL`
 4. Optional: `canvas:doctor` (or extend an existing command) checks:
-   - `public/storage` link exists
-   - `APP_URL` host parses
-   - sample write/read on canvas storage disk (if safe)
+    - `public/storage` link exists
+    - `APP_URL` host parses
+    - sample write/read on canvas storage disk (if safe)
 5. Optional: `canvas:repair-media-urls --dry-run` to rewrite absolute local storage hosts in:
-   - `posts.featured_image`
-   - `canvas_users.avatar`
-   - optionally scan post bodies for `<img src="http://wrong-host/storage/...">`
+    - `posts.featured_image`
+    - `canvas_users.avatar`
+    - optionally scan post bodies for `<img src="http://wrong-host/storage/...">`
 6. Manual smoke checklist checked into docs (section below).
 
 #### Acceptance
@@ -374,21 +376,21 @@ Wire through:
 #### Tasks
 
 1. **PHP feature test** (preferred core):
-   - Configure `app.url` to `http://localhost:8000`
-   - Create media + post with featured image set from media URL helper
-   - Assert stored/normalized featured image is root-relative **or** that API list payload normalizes display URL
-   - Assert `PostSeo` absolute URL uses configured/request root, not a foreign host if input was foreign absolute `/storage/...`
+    - Configure `app.url` to `http://localhost:8000`
+    - Create media + post with featured image set from media URL helper
+    - Assert stored/normalized featured image is root-relative **or** that API list payload normalizes display URL
+    - Assert `PostSeo` absolute URL uses configured/request root, not a foreign host if input was foreign absolute `/storage/...`
 2. **JS unit test**:
-   - `resolveMediaUrl('http://localhost:8000/storage/canvas/images/a.jpg')` equals `` `${origin}/storage/canvas/images/a.jpg` ``
-   - already partially present; extend cases for root-relative input and protocol-relative if relevant
+    - `resolveMediaUrl('http://localhost:8000/storage/canvas/images/a.jpg')` equals `` `${origin}/storage/canvas/images/a.jpg` ``
+    - already partially present; extend cases for root-relative input and protocol-relative if relevant
 3. **Manual matrix** (document; not necessarily CI):
 
-| Host | APP_URL | Browser | Expected |
-|------|---------|---------|----------|
-| Herd `blog.test` | `http://blog.test` | `http://blog.test` | pass |
-| Herd `blog.test` | `http://localhost:8000` | `http://blog.test` | pass after this work |
-| `artisan serve` | `http://127.0.0.1:8000` | `http://127.0.0.1:8000` | pass |
-| `artisan serve` | `http://localhost:8000` | `http://127.0.0.1:8000` | pass after this work |
+| Host             | APP_URL                 | Browser                 | Expected             |
+| ---------------- | ----------------------- | ----------------------- | -------------------- |
+| Herd `blog.test` | `http://blog.test`      | `http://blog.test`      | pass                 |
+| Herd `blog.test` | `http://localhost:8000` | `http://blog.test`      | pass after this work |
+| `artisan serve`  | `http://127.0.0.1:8000` | `http://127.0.0.1:8000` | pass                 |
+| `artisan serve`  | `http://localhost:8000` | `http://127.0.0.1:8000` | pass after this work |
 
 4. Optional follow-up: Playwright/Dusk install smoke in a separate repo (`trycanvas` / demo app). Not blocking if Pest covers normalization contracts.
 
@@ -454,12 +456,12 @@ Wire through:
 
 ### Automated (required before merge of each PR)
 
-| Layer | Command | Focus |
-|-------|---------|--------|
-| PHP | `composer test` / `vendor/bin/pest --filter=Media` | storage URL shape, SEO, webhooks |
-| JS | `npm test` | `resolveMediaUrl` cases |
-| Assets | `npm run build` | dist updated with SPA fix |
-| Static | `composer lint` / existing CI | phpstan clean on new support class |
+| Layer  | Command                                            | Focus                              |
+| ------ | -------------------------------------------------- | ---------------------------------- |
+| PHP    | `composer test` / `vendor/bin/pest --filter=Media` | storage URL shape, SEO, webhooks   |
+| JS     | `npm test`                                         | `resolveMediaUrl` cases            |
+| Assets | `npm run build`                                    | dist updated with SPA fix          |
+| Static | `composer lint` / existing CI                      | phpstan clean on new support class |
 
 ### Manual smoke (required before calling the initiative done)
 
@@ -517,13 +519,13 @@ On a **fresh** host app (or reset content), with intentional misconfig first:
 
 ## 13. Suggested implementation order for a single engineer
 
-| Day | Focus |
-|-----|--------|
-| 0.5 | PR 1 SPA `FadeInImage` + rebuild assets + manual smoke |
-| 1 | PR 2 `MediaUrl` + MediaStorage + write normalization + Pest |
-| 0.5 | PR 3 SEO/webhooks/Blade |
+| Day | Focus                                                          |
+| --- | -------------------------------------------------------------- |
+| 0.5 | PR 1 SPA `FadeInImage` + rebuild assets + manual smoke         |
+| 1   | PR 2 `MediaUrl` + MediaStorage + write normalization + Pest    |
+| 0.5 | PR 3 SEO/webhooks/Blade                                        |
 | 0.5 | PR 4 docs/install messaging (+ optional doctor/repair if time) |
-| 0.5 | PR 5 harden tests + full manual matrix on clean host |
+| 0.5 | PR 5 harden tests + full manual matrix on clean host           |
 
 **Total estimate:** ~3 focused days including review polish.  
 **Minimum for reduced release anxiety:** PR 1 + PR 2 + tests + docs note.
@@ -541,34 +543,34 @@ On a **fresh** host app (or reset content), with intentional misconfig first:
 
 ## 15. Appendix — evidence from the failing host app
 
-| Check | Result |
-|-------|--------|
-| Symlink `public/storage` | Present → `storage/app/public` |
-| File on disk | Present JPEG under `canvas/images/` |
-| `GET http://blog.test/storage/canvas/images/...` | 200 |
-| `GET http://localhost:8000/storage/canvas/images/...` | unreachable |
-| DB `featured_image` | absolute `http://localhost:8000/storage/...` |
-| Host `.env` `APP_URL` | `http://localhost:8000` |
-| Package tests | green (do not model this mismatch on list thumbs) |
+| Check                                                 | Result                                            |
+| ----------------------------------------------------- | ------------------------------------------------- |
+| Symlink `public/storage`                              | Present → `storage/app/public`                    |
+| File on disk                                          | Present JPEG under `canvas/images/`               |
+| `GET http://blog.test/storage/canvas/images/...`      | 200                                               |
+| `GET http://localhost:8000/storage/canvas/images/...` | unreachable                                       |
+| DB `featured_image`                                   | absolute `http://localhost:8000/storage/...`      |
+| Host `.env` `APP_URL`                                 | `http://localhost:8000`                           |
+| Package tests                                         | green (do not model this mismatch on list thumbs) |
 
 ---
 
 ## 16. PR Plan summary
 
-| PR | Title | Depends on | Outcome |
-|----|-------|------------|---------|
-| 1 | fix(admin): resolve local storage thumbs via FadeInImage | — | Broken posts index fixed for legacy absolute URLs |
-| 2 | fix(media): origin-safe public disk URLs + write normalization | — | Stop writing wrong hosts into content |
-| 3 | fix(public): absolute SEO/webhook URLs; Blade-safe display | PR 2 | Readers + integrations correct |
-| 4 | docs: APP_URL/storage smoke + install tips | PR 1–3 | Installers avoid the trap |
-| 5 | test: host-mismatch regression coverage | PR 1–2 | Suite fails if this regresses |
+| PR  | Title                                                          | Depends on | Outcome                                           |
+| --- | -------------------------------------------------------------- | ---------- | ------------------------------------------------- |
+| 1   | fix(admin): resolve local storage thumbs via FadeInImage       | —          | Broken posts index fixed for legacy absolute URLs |
+| 2   | fix(media): origin-safe public disk URLs + write normalization | —          | Stop writing wrong hosts into content             |
+| 3   | fix(public): absolute SEO/webhook URLs; Blade-safe display     | PR 2       | Readers + integrations correct                    |
+| 4   | docs: APP_URL/storage smoke + install tips                     | PR 1–3     | Installers avoid the trap                         |
+| 5   | test: host-mismatch regression coverage                        | PR 1–2     | Suite fails if this regresses                     |
 
 ---
 
 ## 17. Key decisions (quick reference)
 
-1. **Root-relative for Canvas public-disk assets** at rest when possible.  
-2. **Absolute only where consumers need it** (OG, webhooks, remote disks).  
-3. **Client rewrite is mandatory in shared image components**, not optional per page.  
-4. **No required data migration** — normalize on read/write instead.  
+1. **Root-relative for Canvas public-disk assets** at rest when possible.
+2. **Absolute only where consumers need it** (OG, webhooks, remote disks).
+3. **Client rewrite is mandatory in shared image components**, not optional per page.
+4. **No required data migration** — normalize on read/write instead.
 5. **Wrong `APP_URL` remains a host misconfig**, but Canvas must not face-plant on the default Laravel starter value during first-run smoke tests.

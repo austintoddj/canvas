@@ -22,11 +22,7 @@ export default defineConfig({
             reporter: ['text', 'html', 'clover'],
             reportsDirectory: './coverage',
             include: ['resources/js/**/*.{ts,tsx}'],
-            exclude: [
-                'resources/js/__tests__/**',
-                'resources/js/types/**',
-                'resources/js/types.d.ts',
-            ],
+            exclude: ['resources/js/__tests__/**', 'resources/js/types/**', 'resources/js/types.d.ts'],
         },
     },
 });

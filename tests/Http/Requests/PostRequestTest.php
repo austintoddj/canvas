@@ -157,3 +157,19 @@ it('accepts nullable post fields', function (): void {
         "canvas/api/posts/{$post->id}",
     );
 });
+
+it('accepts root-relative public storage featured images', function (): void {
+    $post = Post::factory()->create(['user_id' => $this->admin->id]);
+
+    assertFormRequestValid(
+        PostRequest::class,
+        [
+            'slug' => 'valid-slug',
+            'title' => 'A new post',
+            'featured_image' => '/storage/canvas/images/hero.jpg',
+        ],
+        $this->admin,
+        ['id' => $post->id],
+        "canvas/api/posts/{$post->id}",
+    );
+});

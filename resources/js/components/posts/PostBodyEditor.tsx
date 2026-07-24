@@ -27,7 +27,6 @@ import { Textarea } from '@/components/textarea';
 import ImageSourcePicker from '@/components/media/ImageSourcePicker';
 import { useCanvas } from '@/hooks/useCanvas';
 import { aiApi, type AiRewriteAction } from '@/lib/api/ai';
-import { resolveMediaUrl } from '@/lib/media/list';
 import { buildUnsplashBodyInsertHtml } from '@/lib/media/unsplash-credit';
 import { AI_REWRITE_SETTLE_MS, rangeAfterPlainTextReplace } from '@/lib/posts/ai-rewrite-decoration';
 import { AI_WRITING_ACTIONS, rewriteErrorMessage, selectionText } from '@/lib/posts/ai-writing';
@@ -1139,7 +1138,7 @@ export default function PostBodyEditor({
                         return;
                     }
 
-                    const src = resolveMediaUrl(selection.url);
+                    const src = selection.url;
                     const alt = selection.alt ?? '';
                     const credit = selection.caption?.trim() ?? '';
 
