@@ -18,8 +18,6 @@ class UiCommand extends Command
 
     public function handle(): int
     {
-        $this->components->info('Installing Canvas reader UI.');
-
         $this->components->task('Publishing views', function (): int {
             $exitCode = $this->callSilent('vendor:publish', [
                 '--tag' => 'canvas-ui-views',
@@ -41,24 +39,17 @@ class UiCommand extends Command
             fn (): int => $this->publishRoutes(),
         );
 
+        $this->components->task(
+            'Registering routes',
+            fn (): int => $this->registerRoutesInWeb(),
+        );
+
         foreach ($this->skipped as $path) {
             $this->components->warn("{$path} already exists. Use --force to overwrite.");
         }
 
         $this->newLine();
-        $this->components->info('Canvas reader UI installed successfully.');
-
-        $this->components->twoColumnDetail('Views', 'resources/views/vendor/canvas/ui/');
-        $this->components->twoColumnDetail('Controller', 'app/Http/Controllers/Canvas/CanvasUiController.php');
-        $this->components->twoColumnDetail('Routes', 'routes/canvas-ui.php');
-
-        $this->newLine();
-        $this->line('  <fg=gray>Next steps</>');
-        $this->components->bulletList([
-            "Add require __DIR__.'/canvas-ui.php'; to routes/web.php",
-            'HasCanvasAccess on your User model is optional — the sample reader does not require it',
-            'Post show routes use Canvas\\Http\\Middleware\\Session to prune analytics session keys',
-        ]);
+        $this->line('  <fg=gray>Open</> /canvas-ui <fg=gray>in your browser.</>');
 
         return self::SUCCESS;
     }
@@ -99,6 +90,44 @@ class UiCommand extends Command
         }
 
         copy(dirname(__DIR__, 2).'/resources/stubs/routes/canvas-ui.stub', $target);
+
+        return TaskResult::Success->value;
+    }
+
+    private function registerRoutesInWeb(): int
+    {
+        $webPath = base_path('routes/web.php');
+
+        if (! is_file($webPath)) {
+            $this->components->warn('routes/web.php not found. Add require __DIR__.\'/canvas-ui.php\'; manually.');
+
+            return TaskResult::Skipped->value;
+        }
+
+        $contents = file_get_contents($webPath);
+
+        if ($contents === false) {
+            $this->components->warn('Unable to read routes/web.php. Add require __DIR__.\'/canvas-ui.php\'; manually.');
+
+            return TaskResult::Skipped->value;
+        }
+
+        if (str_contains($contents, 'canvas-ui.php')) {
+            return TaskResult::Skipped->value;
+        }
+
+        $require = "require __DIR__.'/canvas-ui.php';";
+        $trimmed = rtrim($contents);
+
+        $updated = $trimmed === ''
+            ? "<?php\n\n{$require}\n"
+            : $trimmed."\n\n{$require}\n";
+
+        if (file_put_contents($webPath, $updated) === false) {
+            $this->components->warn('Unable to update routes/web.php. Add require __DIR__.\'/canvas-ui.php\'; manually.');
+
+            return TaskResult::Skipped->value;
+        }
 
         return TaskResult::Success->value;
     }

@@ -9,6 +9,15 @@ beforeEach(function (): void {
     File::deleteDirectory(app_path('Http/Controllers/Canvas'));
     File::delete(base_path('routes/canvas-ui.php'));
     File::deleteDirectory(resource_path('views/vendor/canvas/ui'));
+
+    $webPath = base_path('routes/web.php');
+    $this->webRoutesBackup = is_file($webPath) ? file_get_contents($webPath) : null;
+
+    if (! is_dir(dirname($webPath))) {
+        mkdir(dirname($webPath), 0755, true);
+    }
+
+    file_put_contents($webPath, "<?php\n\n// host web routes\n");
 });
 
 afterEach(function (): void {
@@ -16,12 +25,20 @@ afterEach(function (): void {
     File::delete(base_path('routes/canvas-ui.php'));
     File::deleteDirectory(resource_path('views/vendor/canvas/ui'));
 
+    $webPath = base_path('routes/web.php');
+
+    if ($this->webRoutesBackup !== null) {
+        file_put_contents($webPath, $this->webRoutesBackup);
+    } elseif (is_file($webPath)) {
+        unlink($webPath);
+    }
+
     TestCase::releaseCanvasUiScaffoldLock();
 });
 
-it('exits successfully and outputs the install message', function (): void {
+it('exits successfully and points at the reader UI', function (): void {
     $this->artisan('canvas:ui')
-        ->expectsOutputToContain('Canvas reader UI installed successfully.')
+        ->expectsOutputToContain('/canvas-ui')
         ->assertExitCode(0);
 });
 
@@ -81,12 +98,6 @@ it('scaffolds a controller that does not require host canvasUser or posts relati
         ->toContain("where('user_id', \$canvasUser->user_id)");
 });
 
-it('mentions that HasCanvasAccess is optional', function (): void {
-    $this->artisan('canvas:ui', ['--force' => true])
-        ->expectsOutputToContain('HasCanvasAccess on your User model is optional')
-        ->assertExitCode(0);
-});
-
 it('scaffolds a controller that is syntactically valid PHP', function (): void {
     $this->artisan('canvas:ui');
 
@@ -130,6 +141,26 @@ it('creates the route stub with all named routes', function (): void {
     );
 });
 
+it('registers the canvas-ui routes require in routes/web.php', function (): void {
+    $this->artisan('canvas:ui')
+        ->assertExitCode(0);
+
+    $contents = file_get_contents(base_path('routes/web.php'));
+
+    expect($contents)
+        ->toContain("require __DIR__.'/canvas-ui.php';")
+        ->toContain('// host web routes');
+});
+
+it('does not duplicate the canvas-ui require on re-run', function (): void {
+    $this->artisan('canvas:ui')->assertExitCode(0);
+    $this->artisan('canvas:ui')->assertExitCode(0);
+
+    $contents = file_get_contents(base_path('routes/web.php'));
+
+    expect(substr_count($contents, 'canvas-ui.php'))->toBe(1);
+});
+
 it('warns when the controller already exists and --force is not passed', function (): void {
     $this->artisan('canvas:ui');
 
@@ -148,4 +179,14 @@ it('overwrites existing files when --force is passed', function (): void {
 
     $this->assertFileExists(app_path('Http/Controllers/Canvas/CanvasUiController.php'));
     $this->assertSame($firstContents, file_get_contents(app_path('Http/Controllers/Canvas/CanvasUiController.php')));
+});
+
+it('warns when routes/web.php is missing', function (): void {
+    unlink(base_path('routes/web.php'));
+
+    $this->artisan('canvas:ui')
+        ->expectsOutputToContain('routes/web.php not found')
+        ->assertExitCode(0);
+
+    $this->assertFileExists(base_path('routes/canvas-ui.php'));
 });

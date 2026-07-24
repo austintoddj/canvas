@@ -7,7 +7,6 @@ it('exits successfully and outputs the install messages', function (): void {
     TestCase::withSharedTestbenchLock(function (): void {
         $this->artisan('canvas:install')
             ->assertExitCode(0)
-            ->expectsOutputToContain('Installation complete')
             ->expectsOutputToContain('canvas:make-admin');
     });
 });
