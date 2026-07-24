@@ -21,8 +21,6 @@ Canvas is an open-source publishing platform for [Laravel](https://laravel.com).
 - Integrations: Unsplash, AI writing, outbound webhooks, and weekly digest
 - Optional starter reader frontend via `canvas:ui`
 
-Canvas reads identity from your application's user model and stores author profiles and access in `canvas_users`. Configuration lives in `config/canvas.php` after install.
-
 ## Requirements
 
 - PHP >= 8.3
@@ -53,7 +51,7 @@ Use the `canvas:ui` Artisan command to publish a starter reader frontend — Bla
 php artisan canvas:ui
 ```
 
-Add `require __DIR__.'/canvas-ui.php';` to `routes/web.php`. Published views live in `resources/views/vendor/canvas/ui/`.
+Visit `/canvas-ui`.
 
 ## Upgrading
 
