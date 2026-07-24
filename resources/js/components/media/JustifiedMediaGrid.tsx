@@ -99,7 +99,7 @@ export function JustifiedMediaGrid({
                               return (
                                   <div
                                       key={tile.id}
-                                      className="relative shrink-0 overflow-hidden"
+                                      className="relative shrink-0 overflow-hidden rounded-xl"
                                       style={{ width: tile.width, height: tile.height }}
                                   >
                                       {renderTile(tile, item)}

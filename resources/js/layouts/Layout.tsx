@@ -31,16 +31,18 @@ import {
 import { CloseMenuIcon, SidebarLayout } from '@/components/sidebar-layout';
 import { Toaster } from '@/components/Toaster';
 import { UserDetailDrawer } from '@/components/users/UserDetailDrawer';
+import { MobilePageActionProvider, useMobilePageActionState } from '@/contexts/MobilePageActionContext';
 import { useCanvas } from '@/hooks/useCanvas';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
 import { type ThemeMode, useTheme } from '@/hooks/useTheme';
+import { resolveMobilePageAction } from '@/lib/resolve-mobile-page-action';
 import { searchShortcutKeys } from '@/lib/platform';
 import { hostHomeUrl } from '@/lib/urls';
 import { userInitials } from '@/lib/users/roles';
 import * as Headless from '@headlessui/react';
 import clsx from 'clsx';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
     IconBook,
@@ -191,11 +193,31 @@ function UserDropdownContent({
 }
 
 export default function Layout() {
+    return (
+        <MobilePageActionProvider>
+            <LayoutShell />
+        </MobilePageActionProvider>
+    );
+}
+
+function LayoutShell() {
     const { user, t } = useCanvas();
     const { canManageTaxonomy, canManageUsers, canManageIntegrations } = usePermissions();
     const { pathname } = useLocation();
     const { posts: recentPosts } = useRecentPosts(5);
     const { mode, setMode } = useTheme();
+    const { contribution: mobilePageContribution } = useMobilePageActionState();
+    const mobilePageAction = useMemo(
+        () =>
+            resolveMobilePageAction({
+                pathname,
+                t,
+                contribution: mobilePageContribution,
+                canManageTaxonomy,
+                canManageUsers,
+            }),
+        [pathname, t, mobilePageContribution, canManageTaxonomy, canManageUsers]
+    );
     const [paletteOpen, setPaletteOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
 
@@ -231,6 +253,27 @@ export default function Layout() {
                             <NavbarItem onClick={openPalette} aria-label={t('nav.search')}>
                                 <IconSearch data-slot="icon" />
                             </NavbarItem>
+                            {mobilePageAction ? (
+                                typeof mobilePageAction.href === 'string' ? (
+                                    <NavbarItem
+                                        href={mobilePageAction.href}
+                                        aria-label={mobilePageAction.label}
+                                        data-mobile-page-action="true"
+                                    >
+                                        {mobilePageAction.icon}
+                                    </NavbarItem>
+                                ) : (
+                                    <NavbarItem
+                                        type="button"
+                                        aria-label={mobilePageAction.label}
+                                        disabled={mobilePageAction.disabled}
+                                        data-mobile-page-action="true"
+                                        onClick={mobilePageAction.onClick}
+                                    >
+                                        {mobilePageAction.icon}
+                                    </NavbarItem>
+                                )
+                            ) : null}
                             <Dropdown>
                                 <DropdownButton as={NavbarItem}>
                                     <Avatar src={user.avatar_url} initials={userInitials(user.name)} square />

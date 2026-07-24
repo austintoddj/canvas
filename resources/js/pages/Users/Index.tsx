@@ -27,6 +27,7 @@ import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useMobilePageAction } from '@/hooks/useMobilePageAction';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { usersApi } from '@/lib/api/users';
 import { formatListDate } from '@/lib/format-list-date';
@@ -195,13 +196,19 @@ export default function UsersIndex() {
     const refreshing = isRefreshing(loading, itemCount);
     const isEmpty = shouldShowEmpty(loading, itemCount);
     const { animateEmpty, animateContent } = useAsyncReveal(loading, itemCount);
+    /** Show through load; hide only when empty state owns the CTA. */
+    const showInviteAction = !isEmpty;
+    useMobilePageAction({
+        visible: showInviteAction,
+        onClick: () => setGrantOpen(true),
+    });
 
     return (
         <div className="space-y-8">
             <PageHeader
                 title={t('users.title')}
                 actions={
-                    !showInitialSkeleton && !isEmpty ? (
+                    showInviteAction ? (
                         <Button type="button" outline onClick={() => setGrantOpen(true)}>
                             <IconPlus data-slot="icon" />
                             {t('users.invite')}

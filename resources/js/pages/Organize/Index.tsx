@@ -29,6 +29,7 @@ import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useMobilePageAction } from '@/hooks/useMobilePageAction';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { tagsApi } from '@/lib/api/tags';
 import { topicsApi } from '@/lib/api/topics';
@@ -338,13 +339,23 @@ export default function OrganizeIndex() {
         itemCount,
         `${tab}:${filters.search}:${filters.sort}`
     );
+    /** Show through load; hide only when true empty owns the CTA. */
+    const showCreateAction = !showTrueEmpty;
+    useMobilePageAction({
+        visible: showCreateAction,
+        label: creating ? copy.creatingLabel : copy.newLabel,
+        disabled: creating,
+        onClick: () => {
+            void handleCreate();
+        },
+    });
 
     return (
         <div className="space-y-8">
             <PageHeader
                 title={t('organize.title')}
                 actions={
-                    !showInitialSkeleton && !showTrueEmpty ? (
+                    showCreateAction ? (
                         <Button type="button" outline disabled={creating} onClick={() => void handleCreate()}>
                             <IconPlus data-slot="icon" />
                             {creating ? copy.creatingLabel : copy.newLabel}

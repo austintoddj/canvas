@@ -15,7 +15,7 @@ export function PageHeader({ title, actions, children }: PageHeaderProps) {
                 <Heading>{title}</Heading>
                 {children}
             </div>
-            {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+            {actions ? <div className="hidden flex-wrap items-center gap-2 lg:flex">{actions}</div> : null}
         </div>
     );
 }

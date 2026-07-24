@@ -18,6 +18,7 @@ import { PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useMobilePageAction } from '@/hooks/useMobilePageAction';
 import { usePermissions } from '@/hooks/usePermissions';
 import { isInitialLoading, isRefreshing } from '@/lib/async-ui';
 import { statsApi } from '@/lib/api/stats';
@@ -181,8 +182,12 @@ export default function Dashboard() {
     const draftsCtaHref =
         presentation?.pipeline.drafts[0] !== undefined ? `/posts/${presentation.pipeline.drafts[0].id}` : undefined;
     const isCold = presentation?.audienceMode === 'cold';
-    /** One create affordance at a time: cold empty state owns Write; otherwise quiet header New post. */
-    const showHeaderNewPost = presentation !== null && !isCold;
+    /**
+     * One create affordance at a time: cold empty state owns Write.
+     * Show while loading (route chrome); hide only once cold is confirmed.
+     */
+    const showHeaderNewPost = presentation === null || !isCold;
+    useMobilePageAction({ visible: showHeaderNewPost });
 
     return (
         <div className="space-y-8">

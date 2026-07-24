@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/lib/api';
-import { AI_WRITING_ACTIONS, rewriteErrorCode, rewriteErrorMessage, selectionText } from '@/lib/posts/ai-writing';
+import {
+    AI_SELECTION_BLOCK_SEPARATOR,
+    AI_WRITING_ACTIONS,
+    plainTextToEditorContent,
+    rewriteErrorCode,
+    rewriteErrorMessage,
+    selectionText,
+} from '@/lib/posts/ai-writing';
 
 describe('ai writing helpers', () => {
     it('lists the preset rewrite actions', () => {
@@ -14,6 +21,35 @@ describe('ai writing helpers', () => {
 
     it('trims selection text for non-empty ranges', () => {
         expect(selectionText(0, 5, () => '  hello  ')).toBe('hello');
+    });
+
+    it('uses a blank-line block separator for multi-paragraph selections', () => {
+        expect(AI_SELECTION_BLOCK_SEPARATOR).toBe('\n\n');
+        expect(selectionText(0, 10, (from, to) => `A${AI_SELECTION_BLOCK_SEPARATOR}B`.slice(from, to))).toBe(
+            `A${AI_SELECTION_BLOCK_SEPARATOR}B`
+        );
+    });
+
+    it('maps blank-line plain text into multiple TipTap paragraphs', () => {
+        expect(plainTextToEditorContent('One.\n\nTwo.\n\nThree.')).toEqual([
+            { type: 'paragraph', content: [{ type: 'text', text: 'One.' }] },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Two.' }] },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Three.' }] },
+        ]);
+    });
+
+    it('collapses single newlines within a paragraph and ignores empty blocks', () => {
+        expect(plainTextToEditorContent('Line one\nstill one.\n\n\nNext block.')).toEqual([
+            { type: 'paragraph', content: [{ type: 'text', text: 'Line one still one.' }] },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Next block.' }] },
+        ]);
+    });
+
+    it('returns a single empty paragraph for blank AI output', () => {
+        expect(plainTextToEditorContent('   ')).toEqual([{ type: 'paragraph' }]);
+        expect(plainTextToEditorContent('Only one paragraph.')).toEqual([
+            { type: 'paragraph', content: [{ type: 'text', text: 'Only one paragraph.' }] },
+        ]);
     });
 
     it('reads provider error messages from api error bodies', () => {

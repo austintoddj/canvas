@@ -86,8 +86,13 @@ final class AiWritingService
                 : 'Return only the rewritten text as plain text.',
             'Do not wrap the result in quotes or markdown code fences.',
             'Do not add a preamble or explanation.',
+            $action->isSeoSuggest()
+                ? null
+                : 'Preserve paragraph structure: separate paragraphs with a blank line. Do not merge distinct paragraphs into one.',
             $action->instruction(),
         ];
+
+        $parts = array_values(array_filter($parts, static fn (?string $part): bool => $part !== null && $part !== ''));
 
         if ($action === AiWritingAction::Custom && filled($instruction)) {
             $parts[] = 'User instruction: '.$instruction;

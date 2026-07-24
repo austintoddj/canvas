@@ -143,33 +143,32 @@ export function MediaGrid({
                 const shellClassName = clsx(
                     'group/tile relative size-full overflow-hidden rounded-xl border bg-white text-left shadow-sm shadow-zinc-950/5 transition duration-200 dark:bg-zinc-800/60 dark:shadow-none',
                     isSelected
-                        ? 'border-blue-600/40 ring-2 ring-blue-600/25 dark:border-blue-400/45 dark:ring-blue-400/25'
+                        ? 'border-blue-600 ring-2 ring-inset ring-blue-600/30 dark:border-blue-400 dark:ring-blue-400/35'
                         : 'border-zinc-950/10 hover:border-zinc-950/20 hover:shadow-md hover:shadow-zinc-950/10 dark:border-white/10 dark:ring-1 dark:ring-white/5 dark:hover:border-white/20 dark:hover:bg-zinc-800/80 dark:hover:ring-white/10'
                 );
 
+                // Equal inset (not scale): scale() insets proportionally to each axis, so
+                // wide tiles get thicker side gaps than top/bottom. Absolute inset keeps
+                // the blue frame even. Radius stays on the photo frame at all times so
+                // corners never square-pop while animating in/out of selection.
                 const mediaSurface = (
                     <div
                         className={clsx(
-                            'relative size-full overflow-hidden bg-zinc-950/[0.03] transition duration-200 dark:bg-white/[0.03]',
-                            isSelected && 'bg-blue-600/5 dark:bg-blue-400/10'
+                            'relative size-full overflow-hidden bg-zinc-950/[0.03] transition-colors duration-200 dark:bg-white/[0.03]',
+                            isSelected && 'bg-blue-600/10 dark:bg-blue-400/15'
                         )}
                     >
-                        <FadeInImage
-                            src={item.url}
-                            alt={item.alt ?? label}
+                        <div
                             className={clsx(
-                                'size-full object-cover transition-transform duration-300 ease-in-out motion-reduce:transition-none',
+                                'absolute overflow-hidden rounded-[0.65rem]',
+                                'transition-[top,right,bottom,left,transform] duration-300 ease-in-out motion-reduce:transition-none',
                                 isSelected
-                                    ? 'scale-[0.92] rounded-sm'
-                                    : 'group-hover/tile:scale-[1.02] motion-reduce:group-hover/tile:scale-100'
+                                    ? 'inset-1.5'
+                                    : 'inset-0 group-hover/tile:scale-[1.02] motion-reduce:group-hover/tile:scale-100'
                             )}
-                        />
-                        {isSelected ? (
-                            <div
-                                className="pointer-events-none absolute inset-0 bg-blue-600/10 dark:bg-blue-400/15"
-                                aria-hidden="true"
-                            />
-                        ) : null}
+                        >
+                            <FadeInImage src={item.url} alt={item.alt ?? label} className="size-full object-cover" />
+                        </div>
                     </div>
                 );
 

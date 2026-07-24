@@ -1,6 +1,11 @@
+import type { JSONContent } from '@tiptap/core';
+
 import type { AiRewriteAction } from '@/lib/api/ai';
 
 export type AiWritingMenuAction = Exclude<AiRewriteAction, 'custom' | 'suggest_seo'>;
+
+/** Block separator when flattening a multi-node editor selection for AI. */
+export const AI_SELECTION_BLOCK_SEPARATOR = '\n\n';
 
 export const AI_WRITING_ACTIONS: { action: AiWritingMenuAction; labelKey: string }[] = [
     { action: 'improve', labelKey: 'editor.ai_improve' },
@@ -27,6 +32,39 @@ export function selectionText(from: number, to: number, textBetween: (from: numb
     }
 
     return textBetween(from, to).trim();
+}
+
+/**
+ * Map plain-text AI output into TipTap paragraph nodes.
+ * Blank lines separate paragraphs; single newlines within a block become spaces.
+ * Using JSON content (not a raw string) forces TipTap's block replace path so
+ * multi-paragraph rewrites do not collapse into one text node.
+ */
+export function plainTextToEditorContent(text: string): JSONContent[] {
+    const normalized = text.replace(/\r\n/g, '\n').trim();
+
+    if (normalized === '') {
+        return [{ type: 'paragraph' }];
+    }
+
+    const blocks = normalized
+        .split(/\n\s*\n+/)
+        .map((block) =>
+            block
+                .replace(/\n+/g, ' ')
+                .replace(/[ \t]+/g, ' ')
+                .trim()
+        )
+        .filter((block) => block !== '');
+
+    if (blocks.length === 0) {
+        return [{ type: 'paragraph' }];
+    }
+
+    return blocks.map((block) => ({
+        type: 'paragraph',
+        content: [{ type: 'text', text: block }],
+    }));
 }
 
 export function rewriteErrorCode(error: unknown): string | null {

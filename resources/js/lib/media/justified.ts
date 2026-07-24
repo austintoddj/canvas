@@ -50,7 +50,8 @@ function aspectRatio(item: JustifiedItem): number {
 
 /**
  * Pack images into justified rows (Google Photos style).
- * Every row — including the last — scales to fill container width flush.
+ * Full rows scale to fill container width flush. Short / last rows stay at
+ * target height and left-align so a sparse library never balloons to full width.
  */
 export function layoutJustifiedRows(
     items: readonly JustifiedItem[],
@@ -71,14 +72,19 @@ export function layoutJustifiedRows(
     let rowItems: JustifiedItem[] = [];
     let rowAspectSum = 0;
 
-    function flushRow(): void {
+    /**
+     * @param justify When true (rows closed because the next item did not fit),
+     * scale the row to fill container width. When false (trailing / only row),
+     * keep target height so sparse rows left-align instead of ballooning.
+     */
+    function flushRow(justify: boolean): void {
         if (rowItems.length === 0) {
             return;
         }
 
         const gapsWidth = gap * (rowItems.length - 1);
         const available = Math.max(containerWidth - gapsWidth, 1);
-        const height = available / rowAspectSum;
+        const height = justify ? available / rowAspectSum : targetRowHeight;
 
         rows.push({
             height,
@@ -104,14 +110,14 @@ export function layoutJustifiedRows(
         const nextWidthAtTarget = nextAspectSum * targetRowHeight + nextGaps;
 
         if (rowItems.length > 0 && nextWidthAtTarget > containerWidth) {
-            flushRow();
+            flushRow(true);
         }
 
         rowItems.push(item);
         rowAspectSum += ratio;
     }
 
-    flushRow();
+    flushRow(false);
 
     return rows;
 }

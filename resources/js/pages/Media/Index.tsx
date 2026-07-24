@@ -20,6 +20,7 @@ import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useMobilePageAction } from '@/hooks/useMobilePageAction';
 import { usePermissions } from '@/hooks/usePermissions';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { ALLOWED_MEDIA_MIME_TYPES, mediaApi, uploadMedia } from '@/lib/api/media';
@@ -556,6 +557,14 @@ export default function MediaIndex() {
             : uploading
               ? t('media.uploading')
               : null;
+    /** Show through load; hide only when empty library owns the CTA. */
+    const showUploadAction = !showEmptyLibrary;
+    useMobilePageAction({
+        visible: showUploadAction,
+        label: uploadLabel ?? undefined,
+        disabled: uploading,
+        onClick: openBrowse,
+    });
 
     return (
         <div
@@ -618,15 +627,10 @@ export default function MediaIndex() {
                 <PageHeader
                     title={t('media.title')}
                     actions={
-                        !showInitialSkeleton && !showEmptyLibrary ? (
+                        showUploadAction ? (
                             <Button type="button" outline disabled={uploading} onClick={openBrowse}>
                                 <IconUpload data-slot="icon" />
-                                {uploadLabel ?? (
-                                    <>
-                                        <span className="sm:hidden">{t('media.upload_short', 'Upload')}</span>
-                                        <span className="hidden sm:inline">{t('media.upload')}</span>
-                                    </>
-                                )}
+                                {uploadLabel ?? t('media.upload')}
                             </Button>
                         ) : undefined
                     }

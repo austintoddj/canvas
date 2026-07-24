@@ -16,11 +16,11 @@ enum AiWritingAction: string
     public function instruction(): string
     {
         return match ($this) {
-            self::Improve => 'Improve the writing quality: clarity, flow, and word choice. Keep the same meaning, tone, and approximate length.',
-            self::FixGrammar => 'Fix grammar, spelling, and punctuation only. Do not change style or meaning.',
-            self::Shorten => 'Make the text more concise while preserving the key points and voice.',
-            self::Expand => 'Expand the text slightly with useful detail or smoother transitions. Stay on topic and keep the voice.',
-            self::Custom => 'Follow the user instruction carefully while preserving the author\'s voice when possible.',
+            self::Improve => 'Improve the writing quality: clarity, flow, and word choice. Keep the same meaning, tone, approximate length, and paragraph breaks.',
+            self::FixGrammar => 'Fix grammar, spelling, and punctuation only. Do not change style, meaning, or paragraph breaks.',
+            self::Shorten => 'Make the text more concise while preserving the key points, voice, and paragraph structure.',
+            self::Expand => 'Expand the text slightly with useful detail or smoother transitions. Stay on topic, keep the voice, and keep distinct paragraphs separate (blank line between each).',
+            self::Custom => 'Follow the user instruction carefully while preserving the author\'s voice and paragraph structure when possible.',
             self::SuggestSeo => 'Create search snippet metadata for a blog post. Respond with a single JSON object only (no markdown fences, no extra keys) using this shape: {"title":"...","description":"..."}. "title" is a compelling SEO title of about 50–60 characters. "description" is a meta description of about 140–160 characters that summarizes the post clearly. Plain text values only — no quotes wrapping the whole response, no markdown.',
         };
     }

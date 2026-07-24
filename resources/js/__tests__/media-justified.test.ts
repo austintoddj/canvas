@@ -22,7 +22,7 @@ describe('layoutJustifiedRows', () => {
         expect(layoutJustifiedRows([{ id: 'a', width: 100, height: 100 }], -10)).toEqual([]);
     });
 
-    it('packs mixed aspects into full-width rows including the last row', () => {
+    it('packs mixed aspects into full-width rows; leaves a short last row at target height', () => {
         const items: JustifiedItem[] = [
             { id: '1', width: 1600, height: 900 },
             { id: '2', width: 900, height: 1200 },
@@ -32,12 +32,22 @@ describe('layoutJustifiedRows', () => {
         ];
         const containerWidth = 800;
         const gap = JUSTIFIED_GAP_PX;
-        const rows = layoutJustifiedRows(items, containerWidth, { targetRowHeight: 160, gap });
+        const targetRowHeight = 160;
+        const rows = layoutJustifiedRows(items, containerWidth, { targetRowHeight, gap });
 
         expect(rows.length).toBeGreaterThan(1);
 
-        for (const row of rows) {
-            expect(totalRowWidth(row.tiles, gap)).toBeCloseTo(containerWidth, 1);
+        for (let index = 0; index < rows.length; index++) {
+            const row = rows[index];
+            const isLast = index === rows.length - 1;
+            const width = totalRowWidth(row.tiles, gap);
+
+            if (isLast && width < containerWidth - 1) {
+                expect(row.height).toBeCloseTo(targetRowHeight, 5);
+                expect(width).toBeLessThan(containerWidth);
+            } else {
+                expect(width).toBeCloseTo(containerWidth, 1);
+            }
 
             for (const tile of row.tiles) {
                 expect(tile.height).toBeCloseTo(row.height, 5);
@@ -70,17 +80,40 @@ describe('layoutJustifiedRows', () => {
         }
     });
 
-    it('justifies a single-item row to the full container width', () => {
+    it('keeps a single-item row at target height instead of filling the container', () => {
+        const targetRowHeight = 150;
         const rows = layoutJustifiedRows([{ id: 'solo', width: 100, height: 100 }], 1000, {
-            targetRowHeight: 150,
+            targetRowHeight,
             gap: 12,
         });
 
         expect(rows).toHaveLength(1);
         expect(rows[0].tiles).toHaveLength(1);
-        expect(rows[0].tiles[0].width).toBeCloseTo(1000, 1);
-        expect(rows[0].tiles[0].height).toBeCloseTo(1000, 1);
-        expect(totalRowWidth(rows[0].tiles, 12)).toBeCloseTo(1000, 1);
+        expect(rows[0].tiles[0].height).toBeCloseTo(targetRowHeight, 5);
+        expect(rows[0].tiles[0].width).toBeCloseTo(targetRowHeight, 5);
+        expect(totalRowWidth(rows[0].tiles, 12)).toBeLessThan(1000);
+    });
+
+    it('left-aligns a short last row after justified full rows', () => {
+        // Wide landscape tiles: two fill a 800px row at 160px height; a third is short.
+        const items: JustifiedItem[] = [
+            { id: 'a', width: 1600, height: 900 },
+            { id: 'b', width: 1600, height: 900 },
+            { id: 'c', width: 1600, height: 900 },
+        ];
+        const containerWidth = 800;
+        const gap = JUSTIFIED_GAP_PX;
+        const targetRowHeight = 160;
+        const rows = layoutJustifiedRows(items, containerWidth, { targetRowHeight, gap });
+
+        expect(rows.length).toBeGreaterThanOrEqual(2);
+
+        const first = rows[0];
+        expect(totalRowWidth(first.tiles, gap)).toBeCloseTo(containerWidth, 1);
+
+        const last = rows[rows.length - 1];
+        expect(last.height).toBeCloseTo(targetRowHeight, 5);
+        expect(totalRowWidth(last.tiles, gap)).toBeLessThan(containerWidth);
     });
 });
 

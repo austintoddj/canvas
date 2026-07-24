@@ -26,6 +26,7 @@ import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useMobilePageAction } from '@/hooks/useMobilePageAction';
 import { usePermissions } from '@/hooks/usePermissions';
 import { invalidateRecentPosts } from '@/hooks/useRecentPosts';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
@@ -197,13 +198,16 @@ export default function PostsIndex() {
         pendingDelete === null || (pendingDelete.title ?? '').trim() === ''
             ? t('posts.this_post')
             : `“${(pendingDelete.title ?? '').trim()}”`;
+    /** Show through load; hide only when empty state owns the CTA. */
+    const showCreateAction = !isEmpty;
+    useMobilePageAction({ visible: showCreateAction });
 
     return (
         <div className="space-y-8">
             <PageHeader
                 title={t('posts.title')}
                 actions={
-                    !showInitialSkeleton && !isEmpty ? (
+                    showCreateAction ? (
                         <Button href="/posts/new" outline>
                             <IconPlus data-slot="icon" />
                             {t('posts.new')}

@@ -29,7 +29,13 @@ import { useCanvas } from '@/hooks/useCanvas';
 import { aiApi, type AiRewriteAction } from '@/lib/api/ai';
 import { buildUnsplashBodyInsertHtml } from '@/lib/media/unsplash-credit';
 import { AI_REWRITE_SETTLE_MS, rangeAfterPlainTextReplace } from '@/lib/posts/ai-rewrite-decoration';
-import { AI_WRITING_ACTIONS, rewriteErrorMessage, selectionText } from '@/lib/posts/ai-writing';
+import {
+    AI_SELECTION_BLOCK_SEPARATOR,
+    AI_WRITING_ACTIONS,
+    plainTextToEditorContent,
+    rewriteErrorMessage,
+    selectionText,
+} from '@/lib/posts/ai-writing';
 import { bodyFromEditorHtml, bodyHtmlForEditor } from '@/lib/posts/body';
 import { CODE_BLOCK_LANGUAGES, createPostEditorExtensions } from '@/lib/posts/editor-extensions';
 import { toast } from '@/lib/toast';
@@ -925,7 +931,9 @@ export default function PostBodyEditor({
         }
 
         const { from, to } = editor.state.selection;
-        const text = selectionText(from, to, (a, b) => editor.state.doc.textBetween(a, b, '\n'));
+        const text = selectionText(from, to, (a, b) =>
+            editor.state.doc.textBetween(a, b, AI_SELECTION_BLOCK_SEPARATOR)
+        );
 
         if (text === '') {
             toast.error(t('editor.ai_select_text'));
@@ -980,14 +988,16 @@ export default function PostBodyEditor({
                 return;
             }
 
+            const content = plainTextToEditorContent(next);
+
             editor
                 .chain()
                 .focus()
                 .setTextSelection({ from: selection.from, to: selection.to })
-                .insertContent(next)
+                .insertContent(content)
                 .run();
 
-            // Prefer live selection end after insert; plain-text length is a fallback.
+            // Prefer live selection end after block insert; plain-text length is a fallback.
             const settleFrom = selection.from;
             const settleTo = Math.max(settleFrom, editor.state.selection.to);
             const fallback = rangeAfterPlainTextReplace(selection.from, next);
