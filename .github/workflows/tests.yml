@@ -44,7 +44,7 @@ jobs:
 
             - name: Upload JS coverage
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               with:
                   name: js-coverage
                   path: |
@@ -123,7 +123,7 @@ jobs:
 
             - name: Upload JUnit report
               if: failure()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               with:
                   name: junit-php${{ matrix.php }}-laravel${{ matrix.laravel }}
                   path: build/junit.xml
@@ -163,7 +163,7 @@ jobs:
 
             - name: Upload PHP coverage
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               with:
                   name: php-coverage
                   path: build/coverage
@@ -199,7 +199,7 @@ jobs:
 
             - name: Upload host diagnostics on failure
               if: failure()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               with:
                   name: install-smoke-host-laravel${{ matrix.laravel }}
                   path: |
@@ -343,7 +343,7 @@ jobs:
 
             - name: Upload Playwright report
               if: failure()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               with:
                   name: playwright-report
                   path: |
