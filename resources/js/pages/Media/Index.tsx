@@ -572,6 +572,7 @@ export default function MediaIndex() {
                 multiple
                 className="hidden"
                 disabled={uploading}
+                data-media-file-input="true"
                 onChange={(event) => {
                     void handleFiles(mediaFilesFromList(event.target.files));
                     event.target.value = '';

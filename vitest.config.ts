@@ -15,6 +15,18 @@ export default defineConfig({
     },
     test: {
         environment: 'node',
-        include: ['resources/js/__tests__/**/*.test.ts'],
+        include: ['resources/js/__tests__/**/*.{test,spec}.{ts,tsx}'],
+        setupFiles: ['resources/js/__tests__/setup.ts'],
+        coverage: {
+            provider: 'v8',
+            reporter: ['text', 'html', 'clover'],
+            reportsDirectory: './coverage',
+            include: ['resources/js/**/*.{ts,tsx}'],
+            exclude: [
+                'resources/js/__tests__/**',
+                'resources/js/types/**',
+                'resources/js/types.d.ts',
+            ],
+        },
     },
 });

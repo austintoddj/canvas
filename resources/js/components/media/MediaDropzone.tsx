@@ -164,6 +164,7 @@ export function MediaDropzone({
                 multiple={multiple}
                 className="hidden"
                 disabled={isDisabled}
+                data-media-file-input="true"
                 onChange={(event) => {
                     emitFiles(mediaFilesFromList(event.target.files));
                     event.target.value = '';

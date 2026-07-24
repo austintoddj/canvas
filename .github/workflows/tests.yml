@@ -39,8 +39,18 @@ jobs:
             - name: Run linting
               run: npm run lint
 
-            - name: Run tests
-              run: npm test
+            - name: Run tests with coverage
+              run: npm run test:coverage
+
+            - name: Upload JS coverage
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: js-coverage
+                  path: |
+                      coverage
+                  if-no-files-found: ignore
+                  retention-days: 14
 
     php-quality:
         name: PHP (style + analyse)
@@ -110,3 +120,234 @@ jobs:
 
             - name: Run tests
               run: composer test:ci
+
+            - name: Upload JUnit report
+              if: failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: junit-php${{ matrix.php }}-laravel${{ matrix.laravel }}
+                  path: build/junit.xml
+                  if-no-files-found: ignore
+                  retention-days: 14
+
+    php-coverage:
+        name: PHP coverage
+        needs: php-quality
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: dom, curl, libxml, mbstring, zip
+                  tools: composer:v2
+                  coverage: pcov
+
+            - name: Cache Composer dependencies
+              uses: actions/cache@v5
+              with:
+                  path: vendor
+                  key: ${{ runner.os }}-php-coverage-8.4-laravel-12-${{ hashFiles('composer.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-php-coverage-8.4-laravel-12-
+
+            - name: Install PHP dependencies
+              run: composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^12"
+
+            - name: Run tests with coverage
+              run: composer test:coverage:html
+
+            - name: Upload PHP coverage
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: php-coverage
+                  path: build/coverage
+                  if-no-files-found: warn
+                  retention-days: 14
+
+    install-smoke:
+        name: Install smoke (Laravel ${{ matrix.laravel }})
+        needs: php-quality
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                laravel: [12, 13]
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: dom, curl, libxml, mbstring, zip, sqlite3, pdo_sqlite, fileinfo
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Run install smoke
+              env:
+                  KEEP_HOST: '1'
+                  HOST_DIR: ${{ runner.temp }}/canvas-host-l${{ matrix.laravel }}
+              run: bash bin/install-smoke.sh ${{ matrix.laravel }}
+
+            - name: Upload host diagnostics on failure
+              if: failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: install-smoke-host-laravel${{ matrix.laravel }}
+                  path: |
+                      ${{ runner.temp }}/canvas-host-l${{ matrix.laravel }}/composer.json
+                      ${{ runner.temp }}/canvas-host-l${{ matrix.laravel }}/composer.lock
+                      ${{ runner.temp }}/canvas-host-l${{ matrix.laravel }}/.env
+                      ${{ runner.temp }}/canvas-host-l${{ matrix.laravel }}/config/canvas.php
+                      ${{ runner.temp }}/canvas-host-l${{ matrix.laravel }}/storage/logs
+                      ${{ runner.temp }}/canvas-host-l${{ matrix.laravel }}/tests/Feature/CanvasInstallSmokeTest.php
+                  if-no-files-found: ignore
+                  retention-days: 7
+
+    php-database-mysql:
+        name: Database (mysql)
+        needs: php-quality
+        runs-on: ubuntu-latest
+
+        services:
+            mysql:
+                image: mysql:8.4
+                env:
+                    MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+                    MYSQL_DATABASE: canvas_test
+                ports:
+                    - 3306:3306
+                options: >-
+                    --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot"
+                    --health-interval=5s
+                    --health-timeout=5s
+                    --health-retries=20
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: dom, curl, libxml, mbstring, zip, pdo_mysql
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Install PHP dependencies
+              run: composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^12"
+
+            - name: Run database driver smoke tests
+              env:
+                  DB_CONNECTION: mysql
+                  DB_HOST: 127.0.0.1
+                  DB_PORT: 3306
+                  DB_DATABASE: canvas_test
+                  DB_USERNAME: root
+                  DB_PASSWORD: ''
+              run: composer test:database
+
+    php-database-pgsql:
+        name: Database (pgsql)
+        needs: php-quality
+        runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:16
+                env:
+                    POSTGRES_DB: canvas_test
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd="pg_isready -U postgres"
+                    --health-interval=5s
+                    --health-timeout=5s
+                    --health-retries=20
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: dom, curl, libxml, mbstring, zip, pdo_pgsql
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Install PHP dependencies
+              run: composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^12"
+
+            - name: Run database driver smoke tests
+              env:
+                  DB_CONNECTION: pgsql
+                  DB_HOST: 127.0.0.1
+                  DB_PORT: 5432
+                  DB_DATABASE: canvas_test
+                  DB_USERNAME: postgres
+                  DB_PASSWORD: postgres
+              run: composer test:database
+
+    e2e:
+        name: E2E (Playwright)
+        needs: php-quality
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: dom, curl, libxml, mbstring, zip, sqlite3, pdo_sqlite, fileinfo
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Setup Node
+              uses: actions/setup-node@v6
+              with:
+                  node-version: 22
+                  cache: npm
+
+            - name: Install JS dependencies
+              run: npm ci
+
+            - name: Install Playwright Chromium
+              run: npx playwright install chromium --with-deps
+
+            - name: Prepare host app
+              env:
+                  E2E_HOST_DIR: ${{ runner.temp }}/canvas-e2e-host
+              run: bash bin/e2e-prepare.sh 12
+
+            - name: Run Playwright tests
+              env:
+                  E2E_HOST_DIR: ${{ runner.temp }}/canvas-e2e-host
+                  CI: 'true'
+              run: npm run e2e
+
+            - name: Upload Playwright report
+              if: failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: playwright-report
+                  path: |
+                      playwright-report
+                      test-results
+                  if-no-files-found: ignore
+                  retention-days: 14

@@ -60,6 +60,7 @@ If you want to work locally, use a Laravel app with a sibling Canvas checkout:
 - Run `composer pint` (or `composer pint:test` to check without fixing)
 - Run `composer lint` (PHPStan)
 - Run `composer test:ci` to match the PHP matrix locally
+- Optional: `composer test:install-smoke` (real Laravel host install), `composer test:database` (driver group; set `DB_CONNECTION=mysql|pgsql` against a local server), and `npm run e2e:prepare && npm run e2e` (Playwright specs in `tests/e2e/`)
 
 Once you've made your changes, create a pull request from your fork to the `develop` branch of the project repository. For large majors, work may land on a version branch (e.g. `v7`) first; open PRs against the branch maintainers are merging, defaulting to `develop` unless the issue or PR says otherwise.
 
@@ -81,6 +82,6 @@ Do not leave English placeholders or “translate later” TODOs for other local
 ## Before a release
 
 - Run the full quality gate: `composer pint:test`, `composer lint`, `composer test:ci`, `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` when SPA assets change
-- Regenerate coverage once with `composer test:coverage` (or `test:coverage:html`) and do not claim percentages without a fresh run
-- Smoke the admin SPA on a path install: install → grant access → draft/schedule/publish → pending promote/discard → Organize taxonomy → media upload/delete → roles → integrations
+- Regenerate coverage once with `composer test:coverage` (or `test:coverage:html`; floor is 98%) and do not claim percentages without a fresh run
+- Prefer CI install-smoke + Playwright e2e for host confidence; still smoke the admin SPA manually when UI paths are hard to automate: media upload/delete → roles → integrations
 - Finish the [language catalog](#language-catalog) for any UI copy changes — key parity alone is not enough

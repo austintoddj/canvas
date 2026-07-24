@@ -4,6 +4,7 @@ namespace Canvas\Tests;
 
 use Canvas\CanvasServiceProvider;
 use Canvas\Tests\Models\User;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
@@ -136,14 +137,7 @@ abstract class TestCase extends OrchestraTestCase
 
         $config->set('view.paths', [dirname(__DIR__).'/resources/views']);
 
-        $config->set('database.default', 'sqlite');
-
-        $config->set('database.connections.sqlite', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => '',
-            'foreign_key_constraints' => true,
-        ]);
+        $this->configureTestDatabase($config);
 
         $config->set('auth.providers.canvas_users', [
             'driver' => 'eloquent',
@@ -165,6 +159,62 @@ abstract class TestCase extends OrchestraTestCase
         // Package test `users` table mirrors stock Laravel bigint keys (+ soft deletes for HasCanvasAccess tests).
         $this->loadMigrationsFrom(__DIR__.'/database/migrations');
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+    }
+
+    /**
+     * Default: SQLite :memory:. Override with DB_CONNECTION=mysql|pgsql for CI driver jobs.
+     *
+     * @param  Repository  $config
+     */
+    protected function configureTestDatabase(mixed $config): void
+    {
+        $driver = env('DB_CONNECTION', 'sqlite');
+
+        if ($driver === 'mysql') {
+            $config->set('database.default', 'mysql');
+            $config->set('database.connections.mysql', [
+                'driver' => 'mysql',
+                'host' => env('DB_HOST', '127.0.0.1'),
+                'port' => env('DB_PORT', '3306'),
+                'database' => env('DB_DATABASE', 'canvas_test'),
+                'username' => env('DB_USERNAME', 'root'),
+                'password' => env('DB_PASSWORD', ''),
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'prefix' => '',
+                'strict' => true,
+                'engine' => null,
+            ]);
+
+            return;
+        }
+
+        if ($driver === 'pgsql') {
+            $config->set('database.default', 'pgsql');
+            $config->set('database.connections.pgsql', [
+                'driver' => 'pgsql',
+                'host' => env('DB_HOST', '127.0.0.1'),
+                'port' => env('DB_PORT', '5432'),
+                'database' => env('DB_DATABASE', 'canvas_test'),
+                'username' => env('DB_USERNAME', 'postgres'),
+                'password' => env('DB_PASSWORD', 'postgres'),
+                'charset' => 'utf8',
+                'prefix' => '',
+                'prefix_indexes' => true,
+                'search_path' => 'public',
+                'sslmode' => 'prefer',
+            ]);
+
+            return;
+        }
+
+        $config->set('database.default', 'sqlite');
+        $config->set('database.connections.sqlite', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+        ]);
     }
 
     protected function ensurePublishedConfigExists(): void

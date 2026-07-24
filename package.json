@@ -9,7 +9,11 @@
         "format": "prettier --write .",
         "typecheck": "node node_modules/typescript-7/bin/tsc --noEmit",
         "test": "vitest run",
-        "test:watch": "vitest"
+        "test:coverage": "vitest run --coverage",
+        "test:watch": "vitest",
+        "e2e:prepare": "bash bin/e2e-prepare.sh",
+        "e2e": "playwright test",
+        "e2e:ui": "playwright test --ui"
     },
     "dependencies": {
         "@headlessui/react": "^2.2.10",
@@ -40,10 +44,16 @@
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@playwright/test": "^1.61.1",
         "@tailwindcss/vite": "^4.3.1",
+        "@testing-library/dom": "^10.4.1",
+        "@testing-library/jest-dom": "^7.0.0",
+        "@testing-library/react": "^16.3.2",
+        "@testing-library/user-event": "^14.6.1",
         "@types/react": "^19.2.17",
         "@types/react-dom": "^19.2.3",
         "@vitejs/plugin-react": "^6.0.3",
+        "@vitest/coverage-v8": "^4.1.10",
         "eslint": "^10.6.0",
         "eslint-plugin-jsx-a11y": "^6.10.2",
         "eslint-plugin-react-hooks": "^7.1.1",

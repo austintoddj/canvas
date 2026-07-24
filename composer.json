@@ -76,9 +76,11 @@
             "@php vendor/bin/pest"
         ],
         "test:parallel": "vendor/bin/pest --parallel",
-        "test:ci": "vendor/bin/pest --parallel --compact",
-        "test:coverage": "php -d memory_limit=1G -d xdebug.mode=coverage vendor/bin/pest --coverage --min=0",
-        "test:coverage:html": "php -d memory_limit=1G -d xdebug.mode=coverage vendor/bin/pest --coverage-html=build/coverage --coverage-clover=build/coverage/clover.xml",
+        "test:ci": "mkdir -p build && vendor/bin/pest --parallel --compact --log-junit=build/junit.xml",
+        "test:coverage": "php -d memory_limit=1G vendor/bin/pest --coverage --min=98",
+        "test:coverage:html": "php -d memory_limit=1G vendor/bin/pest --coverage-html=build/coverage --coverage-clover=build/coverage/clover.xml --min=98",
+        "test:database": "vendor/bin/pest --group=database --compact",
+        "test:install-smoke": "bash bin/install-smoke.sh",
         "pint": "pint",
         "pint:test": "pint --test",
         "pint:fix": "pint"

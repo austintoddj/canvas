@@ -197,6 +197,8 @@ export function MediaGrid({
                 } else if (onOpen) {
                     body = (
                         <button
+                            data-media-tile="true"
+                            data-media-id={item.id}
                             type="button"
                             className={openClassName}
                             aria-label={label}
@@ -219,6 +221,8 @@ export function MediaGrid({
                             type="button"
                             className={openClassName}
                             aria-label={label}
+                            data-media-tile="true"
+                            data-media-id={item.id}
                             onClick={() => onSelect?.(item)}
                         >
                             {mediaSurface}

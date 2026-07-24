@@ -14,6 +14,10 @@ phpunit.xml
 /public/build
 /resources/dist/canvas.hot
 /storage
-
-# Local agent / project rules (not shipped)
+/.e2e-host
+/.e2e-host-app
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
 AGENTS.md

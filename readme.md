@@ -25,8 +25,8 @@ Canvas reads identity from your application's user model and stores author profi
 
 ## Requirements
 
-- PHP 8.3+
-- Laravel 12 or 13
+- PHP >= 8.3
+- Laravel >= 12
 - Working authentication for the guard Canvas uses (`web` by default)
 
 ## Installation
@@ -47,7 +47,7 @@ Visit `/canvas`.
 
 ## Optional Frontend
 
-`canvas:ui` publishes a starter reader frontend — Blade views, a controller stub, and routes. It gets you a public blog at `/canvas-ui` without building one from scratch. Customize whatever you like!
+Use the `canvas:ui` Artisan command to publish a starter reader frontend — Blade views, a controller stub, and routes. It gets you a public blog at `/canvas-ui` without building one from scratch. Customize whatever you like!
 
 ```bash
 php artisan canvas:ui
