@@ -56,8 +56,8 @@ it('casts social and preferences as arrays', function (): void {
             'github' => 'canvas',
         ],
         'preferences' => [
-            'onboarding' => [
-                'complete' => true,
+            'example' => [
+                'enabled' => true,
             ],
         ],
     ]);

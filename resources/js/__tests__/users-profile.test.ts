@@ -34,7 +34,7 @@ const sampleUser: UserResource = {
         timezone: 'Europe/London',
         theme: 'dark',
         digest: true,
-        preferences: { onboarding: { complete: true } },
+        preferences: {},
     },
 };
 

@@ -89,14 +89,9 @@ it('rejects invalid theme values', function (): void {
         [
             'theme' => 'invalid',
             'digest' => 'yes',
-            'preferences' => [
-                'onboarding' => [
-                    'complete' => 'yes',
-                ],
-            ],
         ],
         $this->contributor,
-        ['theme', 'digest', 'preferences.onboarding.complete'],
+        ['theme', 'digest'],
         ['id' => $this->contributor->id],
         "canvas/api/users/{$this->contributor->id}",
     );
@@ -117,8 +112,8 @@ it('accepts a valid canvas profile payload', function (): void {
             'theme' => 'dark',
             'digest' => false,
             'preferences' => [
-                'onboarding' => [
-                    'complete' => true,
+                'example' => [
+                    'enabled' => true,
                 ],
             ],
             'role' => Role::Contributor->value,

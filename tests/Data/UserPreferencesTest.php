@@ -1,26 +1,21 @@
 <?php
 
 use Canvas\Data\UserPreferences;
-use Canvas\Enums\UserPreference;
 
-it('returns onboarding defaults', function (): void {
-    expect(UserPreferences::defaults())->toBe([
-        'onboarding' => [
-            'complete' => false,
-        ],
-    ]);
+it('returns empty defaults until concrete keys are introduced', function (): void {
+    expect(UserPreferences::defaults())->toBe([]);
 });
 
 it('resolves stored preferences against defaults', function (): void {
-    expect(UserPreferences::resolve(null))->toBe(UserPreferences::defaults());
+    expect(UserPreferences::resolve(null))->toBe([]);
 
     expect(UserPreferences::resolve([
-        'onboarding' => [
-            'complete' => true,
+        'example' => [
+            'enabled' => true,
         ],
     ]))->toBe([
-        'onboarding' => [
-            'complete' => true,
+        'example' => [
+            'enabled' => true,
         ],
     ]);
 });
@@ -28,43 +23,46 @@ it('resolves stored preferences against defaults', function (): void {
 it('merges incoming preferences without dropping existing values', function (): void {
     $merged = UserPreferences::merge(
         [
-            'onboarding' => [
-                'complete' => true,
+            'alpha' => [
+                'enabled' => true,
+            ],
+            'beta' => 'keep-me',
+        ],
+        [
+            'alpha' => [
+                'count' => 2,
             ],
         ],
-        [],
+    );
+
+    expect($merged)->toBe([
+        'alpha' => [
+            'enabled' => true,
+            'count' => 2,
+        ],
+        'beta' => 'keep-me',
+    ]);
+});
+
+it('merges partial nested updates without replacing sibling keys', function (): void {
+    $merged = UserPreferences::merge(
+        [
+            'example' => [
+                'enabled' => false,
+                'label' => 'kept',
+            ],
+        ],
+        [
+            'example' => [
+                'enabled' => true,
+            ],
+        ],
     );
 
     expect($merged)->toBe([
-        'onboarding' => [
-            'complete' => true,
+        'example' => [
+            'enabled' => true,
+            'label' => 'kept',
         ],
     ]);
-});
-
-it('merges partial onboarding updates', function (): void {
-    $merged = UserPreferences::merge(
-        [
-            'onboarding' => [
-                'complete' => false,
-            ],
-        ],
-        [
-            'onboarding' => [
-                'complete' => true,
-            ],
-        ],
-    );
-
-    expect($merged['onboarding']['complete'])->toBeTrue();
-});
-
-it('reports onboarding completion through the enum', function (): void {
-    $preferences = UserPreferences::resolve([
-        'onboarding' => [
-            'complete' => true,
-        ],
-    ]);
-
-    expect(UserPreference::Onboarding->isComplete($preferences))->toBeTrue();
 });

@@ -36,7 +36,7 @@ function userWithRole(role: number | null): UserResource {
                       timezone: 'UTC',
                       theme: 'system',
                       digest: false,
-                      preferences: { onboarding: { complete: true } },
+                      preferences: {},
                   },
     };
 }

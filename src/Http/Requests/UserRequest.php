@@ -87,8 +87,6 @@ class UserRequest extends FormRequest
             'theme' => 'nullable|in:system,light,dark',
             'digest' => 'nullable|bool',
             'preferences' => 'nullable|array',
-            'preferences.onboarding' => 'nullable|array',
-            'preferences.onboarding.complete' => 'nullable|bool',
             'role' => ['nullable', 'integer', Rule::in(Role::values())],
         ];
     }

@@ -10,9 +10,7 @@ export type CanvasProfile = {
     timezone: string;
     theme: 'system' | 'light' | 'dark';
     digest: boolean;
-    preferences: {
-        onboarding: { complete: boolean };
-    };
+    preferences: Record<string, unknown>;
     updated_at?: string | null;
 };
 

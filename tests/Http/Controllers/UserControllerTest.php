@@ -53,11 +53,7 @@ describe('when listing users', function (): void {
             'timezone' => config('app.timezone'),
             'theme' => 'system',
             'digest' => false,
-            'preferences' => [
-                'onboarding' => [
-                    'complete' => false,
-                ],
-            ],
+            'preferences' => [],
         ]);
     });
 
@@ -374,8 +370,8 @@ describe('when saving preferences', function (): void {
                 ],
                 'timezone' => 'America/Chicago',
                 'preferences' => [
-                    'onboarding' => [
-                        'complete' => true,
+                    'example' => [
+                        'enabled' => true,
                     ],
                 ],
             ])
@@ -387,8 +383,8 @@ describe('when saving preferences', function (): void {
         expect($canvasUser->social)->toBe(['x' => 'writer']);
         expect($canvasUser->timezone)->toBe('America/Chicago');
         expect($canvasUser->preferences)->toBe([
-            'onboarding' => [
-                'complete' => true,
+            'example' => [
+                'enabled' => true,
             ],
         ]);
     });

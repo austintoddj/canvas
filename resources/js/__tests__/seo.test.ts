@@ -44,7 +44,7 @@ function bootFixture(website: string | null = null): CanvasBoot {
                 timezone: 'UTC',
                 theme: 'system',
                 digest: false,
-                preferences: { onboarding: { complete: true } },
+                preferences: {},
             },
         },
     };

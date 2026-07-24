@@ -25,7 +25,7 @@ export function makeUser(role: number | null = Role.Admin, overrides: Partial<Us
                       timezone: 'UTC',
                       theme: 'system',
                       digest: false,
-                      preferences: { onboarding: { complete: true } },
+                      preferences: {},
                   },
         ...overrides,
     };

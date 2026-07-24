@@ -213,9 +213,7 @@ export type UserStorePayload = {
     timezone?: string | null;
     theme?: 'system' | 'light' | 'dark' | null;
     digest?: boolean | null;
-    preferences?: {
-        onboarding?: { complete?: boolean };
-    } | null;
+    preferences?: Record<string, unknown> | null;
     role?: number | null;
 };
 

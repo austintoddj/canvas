@@ -76,8 +76,17 @@ it('merges preferences without replacing the entire blob', function (): void {
 
     $syncCanvasUser($user->id, [
         'preferences' => [
-            'onboarding' => [
-                'complete' => true,
+            'alpha' => [
+                'enabled' => true,
+            ],
+            'beta' => 'keep-me',
+        ],
+    ], false);
+
+    $syncCanvasUser($user->id, [
+        'preferences' => [
+            'alpha' => [
+                'enabled' => false,
             ],
         ],
     ], false);
@@ -85,9 +94,10 @@ it('merges preferences without replacing the entire blob', function (): void {
     $canvasUser = CanvasUser::find($user->id);
 
     expect($canvasUser->preferences)->toBe([
-        'onboarding' => [
-            'complete' => true,
+        'alpha' => [
+            'enabled' => false,
         ],
+        'beta' => 'keep-me',
     ]);
 });
 

@@ -58,11 +58,7 @@ it('exposes canvas defaults for create forms', function (): void {
         'timezone' => config('app.timezone'),
         'theme' => 'system',
         'digest' => false,
-        'preferences' => [
-            'onboarding' => [
-                'complete' => false,
-            ],
-        ],
+        'preferences' => [],
     ]);
 });
 

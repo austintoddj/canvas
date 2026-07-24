@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Canvas\Data;
 
-use Canvas\Enums\UserPreference;
-
+/**
+ * Open-ended JSON preferences bag for canvas users.
+ *
+ * Defaults stay empty until a concrete preference key is introduced.
+ * Merge/resolve keep partial updates additive so future keys can be layered
+ * without replacing the whole blob.
+ */
 final class UserPreferences
 {
     /**
@@ -13,11 +18,7 @@ final class UserPreferences
      */
     public static function defaults(): array
     {
-        return [
-            UserPreference::Onboarding->value => [
-                'complete' => false,
-            ],
-        ];
+        return [];
     }
 
     /**

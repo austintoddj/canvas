@@ -34,7 +34,7 @@ function bootWithRole(role: number): CanvasBoot {
                 timezone: 'UTC',
                 theme: 'system',
                 digest: false,
-                preferences: { onboarding: { complete: true } },
+                preferences: {},
             },
         },
     };

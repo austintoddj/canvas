@@ -12,7 +12,6 @@ import { Skeleton } from '@/components/Skeleton';
 import { ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { useMarkOnboardingComplete } from '@/hooks/useMarkOnboardingComplete';
 import { usePostAutosave } from '@/hooks/usePostAutosave';
 import { invalidateRecentPosts } from '@/hooks/useRecentPosts';
 import { ApiError } from '@/lib/api';
@@ -80,7 +79,6 @@ export default function PostsEditor() {
     const bootstrappedPostId = useRef<string | null>(null);
     const allowLeaveRef = useRef(false);
     const syncBaselineRef = useRef<(snapshot: string) => void>(() => {});
-    const markOnboardingComplete = useMarkOnboardingComplete();
 
     const documentPage = form.title.trim() === '' ? t('editor.untitled_post') : form.title.trim();
     useDocumentTitle(loading ? t('posts.title') : documentPage);
@@ -91,47 +89,43 @@ export default function PostsEditor() {
 
     const autosaveEnabled = postId !== null && !loading && loadError === null;
 
-    const handleSaved = useCallback(
-        (post: Post) => {
-            setDraftPersisted(true);
-            setHasPendingChanges(postHasPendingChanges(post));
+    const handleSaved = useCallback((post: Post) => {
+        setDraftPersisted(true);
+        setHasPendingChanges(postHasPendingChanges(post));
 
-            setForm((current) => {
-                const nextPublishedAt = post.published_at ?? null;
+        setForm((current) => {
+            const nextPublishedAt = post.published_at ?? null;
 
-                if (nextPublishedAt !== null) {
-                    const nextTags = current.tags;
-                    const nextTopic = current.topic;
+            if (nextPublishedAt !== null) {
+                const nextTags = current.tags;
+                const nextTopic = current.topic;
 
-                    queueMicrotask(() => {
-                        setAvailableTags((tags) => mergeTaxonomyOptions(tags, nextTags));
-                        if (nextTopic !== null) {
-                            setAvailableTopics((topics) => mergeTaxonomyOptions(topics, [nextTopic]));
-                        }
-                    });
-                }
+                queueMicrotask(() => {
+                    setAvailableTags((tags) => mergeTaxonomyOptions(tags, nextTags));
+                    if (nextTopic !== null) {
+                        setAvailableTopics((topics) => mergeTaxonomyOptions(topics, [nextTopic]));
+                    }
+                });
+            }
 
-                // Normalize API datetime onto the form so publish/schedule always
-                // reflect the stored go-live time (not only when the string differs).
-                if (current.publishedAt === nextPublishedAt) {
-                    return current;
-                }
+            // Normalize API datetime onto the form so publish/schedule always
+            // reflect the stored go-live time (not only when the string differs).
+            if (current.publishedAt === nextPublishedAt) {
+                return current;
+            }
 
-                const next = {
-                    ...current,
-                    publishedAt: nextPublishedAt,
-                };
+            const next = {
+                ...current,
+                publishedAt: nextPublishedAt,
+            };
 
-                // Rebase before the form effect runs so API datetime echo does not
-                // clobber “Saved” with a false dirty/pending state.
-                syncBaselineRef.current(serializeFormState(next));
+            // Rebase before the form effect runs so API datetime echo does not
+            // clobber “Saved” with a false dirty/pending state.
+            syncBaselineRef.current(serializeFormState(next));
 
-                return next;
-            });
-            markOnboardingComplete();
-        },
-        [markOnboardingComplete]
-    );
+            return next;
+        });
+    }, []);
 
     const { saveStatus, fieldErrors, isDirty, resetBaseline, saveNow, syncBaseline } = usePostAutosave({
         postId,
