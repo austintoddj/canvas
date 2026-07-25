@@ -9,6 +9,7 @@ use Canvas\Events\PostPublished;
 use Canvas\Events\PostScheduled;
 use Canvas\Events\PostUnpublished;
 use Canvas\Events\PostUpdated;
+use Canvas\Support\Localization;
 
 enum WebhookEvent: string
 {
@@ -19,16 +20,22 @@ enum WebhookEvent: string
     case PostDeleted = 'post.deleted';
     case WebhookTest = 'webhook.test';
 
-    public function label(): string
+    public function label(?string $locale = null): string
     {
-        return match ($this) {
-            self::PostPublished => 'Published',
-            self::PostScheduled => 'Scheduled',
-            self::PostUpdated => 'Updated',
-            self::PostUnpublished => 'Unpublished',
-            self::PostDeleted => 'Deleted',
-            self::WebhookTest => 'Test',
+        $key = match ($this) {
+            self::PostPublished => 'integrations.webhooks_event_published',
+            self::PostScheduled => 'integrations.webhooks_event_scheduled',
+            self::PostUpdated => 'integrations.webhooks_event_updated',
+            self::PostUnpublished => 'integrations.webhooks_event_unpublished',
+            self::PostDeleted => 'integrations.webhooks_event_deleted',
+            self::WebhookTest => 'integrations.webhooks_event_test',
         };
+
+        $translationLocale = $locale === null
+            ? null
+            : Localization::resolveTranslationLocale($locale);
+
+        return (string) trans('canvas::app.'.$key, [], $translationLocale);
     }
 
     public static function fromDomainEvent(object $event): ?self
@@ -84,14 +91,16 @@ enum WebhookEvent: string
     /**
      * Catalog for admin UI / status payloads.
      *
+     * Labels are localized for display only — ids remain stable machine values.
+     *
      * @return list<array{id: string, label: string}>
      */
-    public static function subscribableOptions(): array
+    public static function subscribableOptions(?string $locale = null): array
     {
         return array_map(
             static fn (self $event): array => [
                 'id' => $event->value,
-                'label' => $event->label(),
+                'label' => $event->label($locale),
             ],
             self::subscribable(),
         );

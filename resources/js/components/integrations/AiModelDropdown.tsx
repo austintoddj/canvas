@@ -69,7 +69,9 @@ export function AiModelDropdown({
     const triggerLabel =
         value === 'custom'
             ? t('integrations.model_tier_custom', 'Custom')
-            : (selectedPreset?.label ?? t('integrations.model_tier_auto', 'Default'));
+            : selectedPreset !== undefined
+              ? t(selectedPreset.labelKey, selectedPreset.labelFallback)
+              : t('integrations.model_tier_auto', 'Default');
 
     const isDisabled = disabled || option === null;
 
@@ -102,7 +104,7 @@ export function AiModelDropdown({
                             className="!flex items-start"
                         >
                             <ModelOptionContent
-                                label={preset.label}
+                                label={t(preset.labelKey, preset.labelFallback)}
                                 description={presetDescription(preset, t)}
                                 sku={sku}
                                 selected={isSelected}

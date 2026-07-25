@@ -11,6 +11,7 @@ import {
     selectDropdownMenuClass,
     selectDropdownTriggerCompactClass,
 } from '@/components/dropdown';
+import { t } from '@/lib/i18n';
 import type { RoleValue } from '@/lib/permissions';
 import { ROLE_OPTIONS, roleLabel } from '@/lib/users/roles';
 import { IconCheck, IconChevronDown } from '@tabler/icons-react';
@@ -30,8 +31,9 @@ export function RoleSelectDropdown({
     labels,
     disabled = false,
     invalid = false,
-    emptyLabel = 'Select a role',
+    emptyLabel,
 }: RoleSelectDropdownProps) {
+    const resolvedEmptyLabel = emptyLabel ?? t('users.select_role', 'Select a role');
     const selectedLabel = value === null ? null : roleLabel(value, labels);
 
     return (
@@ -47,12 +49,12 @@ export function RoleSelectDropdown({
                     invalid && 'border-red-500 dark:border-red-600'
                 )}
             >
-                <span className="min-w-0 truncate text-left">{selectedLabel ?? emptyLabel}</span>
+                <span className="min-w-0 truncate text-left">{selectedLabel ?? resolvedEmptyLabel}</span>
                 <IconChevronDown data-slot="icon" className="shrink-0" />
             </DropdownButton>
             <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                 {ROLE_OPTIONS.map((option) => {
-                    const label = labels?.[option.value] ?? option.label;
+                    const label = labels?.[option.value] ?? t(option.labelKey, option.label);
                     const selected = value === option.value;
 
                     return (

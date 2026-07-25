@@ -5,6 +5,7 @@ import { FadeInImage } from '@/components/FadeInImage';
 import { JustifiedMediaGrid } from '@/components/media/JustifiedMediaGrid';
 import { Link } from '@/components/link';
 import { Text } from '@/components/text';
+import { t } from '@/lib/i18n';
 import { JUSTIFIED_TARGET_ROW_HEIGHT_DIALOG, JUSTIFIED_TARGET_ROW_HEIGHT_PAGE } from '@/lib/media/layout';
 import { mediaDisplayName } from '@/lib/media/list';
 import type { Media } from '@/types/api';
@@ -73,7 +74,7 @@ function MediaSelectCheck({
 
 export function MediaGrid({
     items,
-    emptyMessage = 'No images found.',
+    emptyMessage,
     className,
     showCaptions = false,
     compact = false,
@@ -84,6 +85,7 @@ export function MediaGrid({
     onToggleSelect,
     selectionDisabled = false,
 }: MediaGridProps) {
+    const resolvedEmptyMessage = emptyMessage ?? t('media.empty_images', 'No images found.');
     const justifiedItems = useMemo(
         () =>
             items.map((item) => ({
@@ -116,7 +118,9 @@ export function MediaGrid({
                 <span className="flex size-11 items-center justify-center rounded-full bg-zinc-950/5 text-zinc-400 dark:bg-white/10 dark:text-zinc-400">
                     <IconPhoto className="size-5" />
                 </span>
-                <Text className="mt-3 text-sm text-canvas-muted dark:text-canvas-muted-dark">{emptyMessage}</Text>
+                <Text className="mt-3 text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                    {resolvedEmptyMessage}
+                </Text>
             </div>
         );
     }

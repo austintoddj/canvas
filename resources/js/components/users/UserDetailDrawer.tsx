@@ -428,7 +428,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                                         {user.email}
                                     </Text>
                                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                                        {isSelf && roleDisplay && roleDisplay !== 'No access' ? (
+                                        {isSelf && user.canvas?.role != null && roleDisplay ? (
                                             <Badge color="zinc">{roleDisplay}</Badge>
                                         ) : null}
                                         <Text className="text-xs text-zinc-400 dark:text-zinc-500">{postsLabel}</Text>

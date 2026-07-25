@@ -27,10 +27,15 @@ final class AiWritingException extends RuntimeException
 
     public const string CodeFailed = 'ai_failed';
 
+    public const string CodeContextLength = 'ai_context_length';
+
+    public const string CodeQuotaExceeded = 'ai_quota_exceeded';
+
     public function __construct(
         string $message,
         public readonly string $errorCode = self::CodeFailed,
         ?Throwable $previous = null,
+        public readonly ?string $detail = null,
     ) {
         parent::__construct($message, 0, $previous);
     }

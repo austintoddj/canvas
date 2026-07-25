@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-witVGegz.js";import{Tt as t}from"./text-BsXTfKhU.js";var n=e();function r({soft:e=!1,className:r,...i}){return(0,n.jsx)(`hr`,{role:`presentation`,...i,className:t(r,`w-full border-t`,e&&`border-zinc-950/5 dark:border-white/5`,!e&&`border-zinc-950/10 dark:border-white/10`)})}export{r as t};

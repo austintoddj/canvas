@@ -6,7 +6,8 @@ export type AiModelPreset = {
     tier: Exclude<AiModelTier, 'custom'>;
     /** null means package default (Default tier). */
     model: string | null;
-    label: string;
+    labelKey: string;
+    labelFallback: string;
     descriptionKey: string;
     descriptionFallback: string;
 };
@@ -41,21 +42,24 @@ function buildPresets(defaultModel: string, expertModel: string): AiModelPreset[
         {
             tier: 'auto',
             model: null,
-            label: 'Default',
+            labelKey: 'integrations.model_tier_auto',
+            labelFallback: 'Default',
             descriptionKey: 'integrations.model_tier_auto_help',
             descriptionFallback: 'Provider default · recommended for rewrites and SEO',
         },
         {
             tier: 'fast',
             model: defaultModel,
-            label: 'Fast',
+            labelKey: 'integrations.model_tier_fast',
+            labelFallback: 'Fast',
             descriptionKey: 'integrations.model_tier_fast_help',
             descriptionFallback: 'Same as the provider default · optimized for speed',
         },
         {
             tier: 'expert',
             model: expertModel,
-            label: 'Expert',
+            labelKey: 'integrations.model_tier_expert',
+            labelFallback: 'Expert',
             descriptionKey: 'integrations.model_tier_expert_help',
             descriptionFallback: 'Higher-capacity model · better quality, can be slower',
         },

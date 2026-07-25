@@ -102,7 +102,8 @@ function TimezoneSelectDropdown({
     invalid?: boolean;
 }) {
     const { t } = useCanvas();
-    const catalog = useMemo(() => listTimezoneOptions(), []);
+    // Recompute when the translator changes (locale switch reloads dictionary).
+    const catalog = useMemo(() => listTimezoneOptions(), [t]);
 
     const options = useMemo((): TimezoneOption[] => {
         if (value !== '' && !catalog.some((zone) => zone.value === value)) {

@@ -17,10 +17,10 @@ export type OrganizeListFilters = TaxonomyListFilters & {
 
 export const TAXONOMY_SEARCH_DEBOUNCE_MS = 300;
 
-export const TAXONOMY_SORT_OPTIONS: { value: TaxonomyListSort; label: string }[] = [
-    { value: 'newest', label: 'Newest' },
-    { value: 'posts', label: 'Most posts' },
-    { value: 'name', label: 'Name' },
+export const TAXONOMY_SORT_OPTIONS: { value: TaxonomyListSort; labelKey: string }[] = [
+    { value: 'newest', labelKey: 'organize.sort_newest' },
+    { value: 'posts', labelKey: 'organize.sort_most_posts' },
+    { value: 'name', labelKey: 'organize.sort_name' },
 ];
 
 const SORT_VALUES = new Set<string>(TAXONOMY_SORT_OPTIONS.map((option) => option.value));

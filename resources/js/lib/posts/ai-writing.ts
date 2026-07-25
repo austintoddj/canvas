@@ -24,6 +24,8 @@ export const AI_ERROR_CODE_KEYS: Record<string, string> = {
     ai_model_not_found: 'editor.ai_model_not_found',
     ai_empty: 'editor.ai_empty_result',
     ai_failed: 'editor.ai_failed',
+    ai_context_length: 'editor.ai_context_length',
+    ai_quota_exceeded: 'editor.ai_quota_exceeded',
 };
 
 export function selectionText(from: number, to: number, textBetween: (from: number, to: number) => string): string {
@@ -83,6 +85,22 @@ export function rewriteErrorCode(error: unknown): string | null {
     return typeof code === 'string' && code.trim() !== '' ? code : null;
 }
 
+export function rewriteErrorDetail(error: unknown): string | null {
+    if (typeof error !== 'object' || error === null || !('body' in error)) {
+        return null;
+    }
+
+    const body = (error as { body: unknown }).body;
+
+    if (typeof body !== 'object' || body === null || !('detail' in body)) {
+        return null;
+    }
+
+    const detail = (body as { detail: unknown }).detail;
+
+    return typeof detail === 'string' && detail.trim() !== '' ? detail.trim() : null;
+}
+
 export function rewriteErrorMessage(
     error: unknown,
     fallback = 'Unable to rewrite selection.',
@@ -91,35 +109,38 @@ export function rewriteErrorMessage(
     const code = rewriteErrorCode(error);
     const codeKey = code !== null ? AI_ERROR_CODE_KEYS[code] : undefined;
 
+    let primary: string | null = null;
+
     if (codeKey !== undefined && translate !== undefined) {
-        return translate(codeKey, fallback);
-    }
+        primary = translate(codeKey, fallback);
+    } else if (typeof error === 'object' && error !== null && 'body' in error) {
+        const body = (error as { body: unknown }).body;
 
-    if (typeof error !== 'object' || error === null || !('body' in error)) {
-        return fallback;
-    }
-
-    const body = (error as { body: unknown }).body;
-
-    if (typeof body !== 'object' || body === null) {
-        return fallback;
-    }
-
-    if ('error' in body && typeof body.error === 'string' && body.error.trim() !== '') {
-        return body.error;
-    }
-
-    if ('errors' in body && typeof body.errors === 'object' && body.errors !== null) {
-        for (const messages of Object.values(body.errors as Record<string, unknown>)) {
-            if (Array.isArray(messages) && typeof messages[0] === 'string' && messages[0].trim() !== '') {
-                return messages[0];
+        if (typeof body === 'object' && body !== null) {
+            if ('error' in body && typeof body.error === 'string' && body.error.trim() !== '') {
+                primary = body.error.trim();
+            } else if ('errors' in body && typeof body.errors === 'object' && body.errors !== null) {
+                for (const messages of Object.values(body.errors as Record<string, unknown>)) {
+                    if (Array.isArray(messages) && typeof messages[0] === 'string' && messages[0].trim() !== '') {
+                        primary = messages[0].trim();
+                        break;
+                    }
+                }
+            } else if ('message' in body && typeof body.message === 'string' && body.message.trim() !== '') {
+                primary = body.message.trim();
             }
         }
     }
 
-    if ('message' in body && typeof body.message === 'string' && body.message.trim() !== '') {
-        return body.message;
+    if (primary === null) {
+        primary = fallback;
     }
 
-    return fallback;
+    const detail = rewriteErrorDetail(error);
+
+    if (detail !== null && !primary.toLowerCase().includes(detail.toLowerCase())) {
+        return `${primary} (${detail})`;
+    }
+
+    return primary;
 }

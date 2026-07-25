@@ -15,6 +15,7 @@ import {
 import { ErrorMessage, Field, FieldGroup } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import type { LaravelValidationErrors } from '@/lib/api';
+import { t } from '@/lib/i18n';
 import {
     SOCIAL_FIELD_KEYS,
     SOCIAL_LABELS,
@@ -126,7 +127,7 @@ function PlatformSelectDropdown({
                         <SelectedIcon aria-hidden className="size-4 shrink-0 text-zinc-500 dark:text-zinc-400" />
                     ) : null}
                     <span className="min-w-0 truncate text-left">
-                        {value === null ? 'Select platform' : SOCIAL_LABELS[value]}
+                        {value === null ? t('profile.select_platform') : SOCIAL_LABELS[value]}
                     </span>
                 </span>
                 <IconChevronDown data-slot="icon" className="shrink-0" />
@@ -226,7 +227,7 @@ export function SocialLinksEditor({ social, fieldErrors, onChange }: SocialLinks
                                     placeholder={row.platform === null ? 'username' : SOCIAL_PLACEHOLDERS[row.platform]}
                                     aria-label={
                                         row.platform === null
-                                            ? 'Social profile username'
+                                            ? t('profile.social_username')
                                             : `${SOCIAL_LABELS[row.platform]} username`
                                     }
                                 />
@@ -235,7 +236,7 @@ export function SocialLinksEditor({ social, fieldErrors, onChange }: SocialLinks
                                 <Button
                                     type="button"
                                     plain
-                                    aria-label="Remove social link"
+                                    aria-label={t('profile.remove_social_link')}
                                     className="shrink-0"
                                     onClick={() => removeRow(row.id)}
                                 >

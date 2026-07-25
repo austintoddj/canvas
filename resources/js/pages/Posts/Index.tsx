@@ -287,7 +287,7 @@ export default function PostsIndex() {
                                         key={post.id}
                                         className="group/list-row cursor-pointer hover:bg-zinc-950/5 dark:hover:bg-white/5"
                                         tabIndex={0}
-                                        aria-label={`Edit ${title}`}
+                                        aria-label={t('common.edit_aria', { name: title })}
                                         onClick={() => navigate(`/posts/${post.id}`)}
                                         onKeyDown={(event) => {
                                             if (event.key === 'Enter' || event.key === ' ') {

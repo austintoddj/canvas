@@ -47,10 +47,16 @@ class AiRewriteController extends Controller
                 $title,
             );
         } catch (AiWritingException $e) {
-            return response()->json([
+            $payload = [
                 'error' => $e->getMessage(),
                 'code' => $e->errorCode,
-            ], 422);
+            ];
+
+            if ($e->detail !== null && $e->detail !== '') {
+                $payload['detail'] = $e->detail;
+            }
+
+            return response()->json($payload, 422);
         }
 
         if ($writingAction->isSeoSuggest() && is_array($result)) {

@@ -1,5 +1,6 @@
 import { mergeAttributes, Node, nodePasteRule } from '@tiptap/core';
 
+import { t } from '@/lib/i18n';
 import {
     CANVAS_EMBED_PASTE_REGEX,
     embedAttrsFromPasteMatch,
@@ -97,7 +98,11 @@ export const CanvasEmbed = Node.create<CanvasEmbedOptions>({
                 'iframe',
                 {
                     src: embedSrc,
-                    title: provider === 'x' ? 'Embedded post' : 'Embedded video',
+                    // Display-only iframe title; ids/src stay machine-stable.
+                    title:
+                        provider === 'x'
+                            ? t('editor.embedded_post', 'Embedded post')
+                            : t('editor.embedded_video', 'Embedded video'),
                     loading: 'lazy',
                     frameborder: '0',
                     allowfullscreen: 'true',

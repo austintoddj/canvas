@@ -257,7 +257,7 @@ export default function UsersIndex() {
                                                 : 'group/list-row cursor-pointer hover:bg-zinc-950/5 dark:hover:bg-white/5'
                                         }
                                         tabIndex={0}
-                                        aria-label={`Edit ${user.name}`}
+                                        aria-label={t('common.edit_aria', { name: user.name })}
                                         data-selected={selected ? 'true' : undefined}
                                         onClick={() => openDetail(user.id)}
                                         onKeyDown={(event) => {

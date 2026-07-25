@@ -94,6 +94,16 @@ it('computes popular reading times and browser breakdowns from monthly views', f
         ->and($insights->topReferers)->toHaveKey($other)
         ->and($insights->topReferers)->toHaveKey('https://news.example.com');
 
+    $germanInsights = PostInsights::for($post, 'de');
+    $englishKeys = array_keys($insights->popularReadingTimes);
+    $germanKeys = array_keys($germanInsights->popularReadingTimes);
+
+    expect($germanKeys)->not->toBeEmpty()
+        ->and($germanKeys)->toHaveCount(count($englishKeys));
+
+    // German short times are typically 24h (09:00) without an English AM/PM suffix.
+    expect(implode(' ', $germanKeys))->not->toMatch('/\bAM\b|\bPM\b/');
+
     Carbon::setTestNow();
 });
 

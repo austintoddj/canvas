@@ -222,7 +222,9 @@ final class AiWritingService
             }
 
             $status = $response->status();
-            $retriable = in_array($status, [429, 502, 503], true);
+            // Retry transient rate limits / gateway errors, not quota/billing failures.
+            $retriable = in_array($status, [429, 502, 503], true)
+                && ! ($status === 429 && $this->looksLikeQuotaError($this->parseProviderError($response)));
 
             if ($retriable && $attempt <= self::MaxRetries) {
                 usleep(self::RetryDelayMicroseconds);
@@ -244,29 +246,47 @@ final class AiWritingService
         }
 
         $status = $response->status();
-        $providerHint = $this->providerErrorHint($response);
+        $parsed = $this->parseProviderError($response);
+        $detail = $parsed['detail'];
 
         if ($status === 401) {
             throw new AiWritingException(
                 'The AI API key was rejected. Re-paste the key in Integrations (without a “Bearer ” prefix).',
                 AiWritingException::CodeUnauthorized,
+                detail: $detail,
+            );
+        }
+
+        if ($this->looksLikeQuotaError($parsed)) {
+            throw new AiWritingException(
+                'The AI provider reports insufficient credits or quota. Check billing in the provider console, or switch provider in Integrations.',
+                AiWritingException::CodeQuotaExceeded,
+                detail: $detail,
+            );
+        }
+
+        if ($this->looksLikeContextLengthError($parsed)) {
+            throw new AiWritingException(
+                'Selection or post content is too long for this model. Shorten the text and try again.',
+                AiWritingException::CodeContextLength,
+                detail: $detail,
             );
         }
 
         if ($status === 403) {
             throw new AiWritingException(
                 'The AI provider denied access. Confirm API credits, region/team permissions, and model access'
-                .' in the provider console, or set a different model in Integrations.'
-                .($providerHint !== null ? ' '.$providerHint : ''),
+                .' in the provider console, or set a different model in Integrations.',
                 AiWritingException::CodeForbidden,
+                detail: $detail,
             );
         }
 
         if ($status === 404) {
             throw new AiWritingException(
-                'The AI model was not found. Set a valid model id in Integrations settings.'
-                .($providerHint !== null ? ' '.$providerHint : ''),
+                'The AI model was not found. Set a valid model id in Integrations settings.',
                 AiWritingException::CodeModelNotFound,
+                detail: $detail,
             );
         }
 
@@ -274,38 +294,94 @@ final class AiWritingService
             throw new AiWritingException(
                 'The AI provider rate limit was exceeded. Try again shortly.',
                 AiWritingException::CodeRateLimited,
+                detail: $detail,
             );
         }
 
         Log::warning('Canvas AI provider request failed.', [
             'status' => $status,
-            'hint' => $providerHint,
+            'detail' => $detail,
+            'provider_code' => $parsed['code'],
+            'provider_type' => $parsed['type'],
         ]);
 
         throw new AiWritingException(
-            'Could not complete the AI request. Try again.'
-            .($providerHint !== null ? ' '.$providerHint : ''),
+            'Could not complete the AI request. Try again.',
             AiWritingException::CodeFailed,
+            detail: $detail,
         );
     }
 
-    private function providerErrorHint(Response $response): ?string
+    /**
+     * @return array{detail: ?string, code: ?string, type: ?string, message: ?string}
+     */
+    private function parseProviderError(Response $response): array
     {
         $payload = $response->json();
 
         if (! is_array($payload)) {
-            return null;
+            return ['detail' => null, 'code' => null, 'type' => null, 'message' => null];
         }
 
-        $message = data_get($payload, 'error.message')
-            ?? data_get($payload, 'error')
-            ?? data_get($payload, 'message');
+        $error = $payload['error'] ?? null;
+        $code = null;
+        $type = null;
+        $message = null;
 
-        if (is_array($message)) {
-            $message = data_get($message, 'message') ?? data_get($message, 'type');
+        if (is_array($error)) {
+            $rawMessage = $error['message'] ?? null;
+            if (is_string($rawMessage)) {
+                $message = $rawMessage;
+            } elseif (is_array($rawMessage)) {
+                // Some gateways nest message as { message|type: "..." }.
+                $nestedMessage = $rawMessage['message'] ?? $rawMessage['type'] ?? null;
+                $message = is_string($nestedMessage) ? $nestedMessage : null;
+            }
+
+            $rawCode = $error['code'] ?? null;
+            $code = is_string($rawCode) ? $rawCode : null;
+            $rawType = $error['type'] ?? null;
+            $type = is_string($rawType) ? $rawType : null;
+        } elseif (is_string($error)) {
+            $message = $error;
         }
 
-        if (! is_string($message)) {
+        if ($message === null) {
+            $topMessage = $payload['message'] ?? null;
+            $message = is_string($topMessage) ? $topMessage : null;
+        }
+
+        if ($type === null) {
+            $topType = $payload['type'] ?? null;
+            $type = is_string($topType) ? $topType : null;
+        }
+
+        $message = is_string($message) ? trim($message) : null;
+        if ($message === '') {
+            $message = null;
+        }
+
+        $code = is_string($code) ? trim($code) : null;
+        if ($code === '') {
+            $code = null;
+        }
+
+        $type = is_string($type) ? trim($type) : null;
+        if ($type === '') {
+            $type = null;
+        }
+
+        return [
+            'detail' => $this->sanitizeProviderDetail($message),
+            'code' => $code,
+            'type' => $type,
+            'message' => $message,
+        ];
+    }
+
+    private function sanitizeProviderDetail(?string $message): ?string
+    {
+        if ($message === null) {
             return null;
         }
 
@@ -319,7 +395,87 @@ final class AiWritingService
             return null;
         }
 
-        return '('.$message.')';
+        return $message;
+    }
+
+    /**
+     * @param  array{detail: ?string, code: ?string, type: ?string, message: ?string}  $parsed
+     */
+    private function looksLikeQuotaError(array $parsed): bool
+    {
+        $haystack = strtolower(implode(' ', array_filter([
+            $parsed['code'],
+            $parsed['type'],
+            $parsed['message'],
+        ])));
+
+        if ($haystack === '') {
+            return false;
+        }
+
+        foreach ([
+            'insufficient_quota',
+            'billing_not_active',
+            'billing_hard_limit',
+            'insufficient credit',
+            'insufficient credits',
+            'insufficient quota',
+            'exceeded your current quota',
+            'credit balance',
+            'purchase credits',
+            'out of credits',
+            'out of quota',
+            'quota exceeded',
+            'payment required',
+        ] as $needle) {
+            if (str_contains($haystack, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array{detail: ?string, code: ?string, type: ?string, message: ?string}  $parsed
+     */
+    private function looksLikeContextLengthError(array $parsed): bool
+    {
+        $haystack = strtolower(implode(' ', array_filter([
+            $parsed['code'],
+            $parsed['type'],
+            $parsed['message'],
+        ])));
+
+        if ($haystack === '') {
+            return false;
+        }
+
+        foreach ([
+            'context_length_exceeded',
+            'context length',
+            'maximum context',
+            'max context',
+            'too many tokens',
+            'prompt is too long',
+            'request_too_large',
+            'request too large',
+            'token limit',
+            'max_tokens',
+            'exceeds the model',
+            'exceeds model',
+        ] as $needle) {
+            if (str_contains($haystack, $needle)) {
+                return true;
+            }
+        }
+
+        // e.g. "maximum number of tokens", "max tokens exceeded"
+        if (preg_match('/\b(max(imum)?\s+)?tokens?\b.*\b(exceed|limit|long|large)\b|\b(exceed|limit|long|large)\b.*\btokens?\b/i', $haystack) === 1) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

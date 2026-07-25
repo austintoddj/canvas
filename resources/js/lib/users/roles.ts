@@ -1,4 +1,11 @@
+import { t } from '@/lib/i18n';
 import { Role, type RoleValue } from '@/lib/permissions';
+
+const ROLE_LABEL_KEYS: Record<RoleValue, string> = {
+    [Role.Contributor]: 'users.role_contributor',
+    [Role.Editor]: 'users.role_editor',
+    [Role.Admin]: 'users.role_admin',
+};
 
 const DEFAULT_ROLE_LABELS: Record<RoleValue, string> = {
     [Role.Contributor]: 'Contributor',
@@ -6,15 +13,19 @@ const DEFAULT_ROLE_LABELS: Record<RoleValue, string> = {
     [Role.Admin]: 'Admin',
 };
 
-export const ROLE_OPTIONS: { value: RoleValue; label: string }[] = [
-    { value: Role.Contributor, label: DEFAULT_ROLE_LABELS[Role.Contributor] },
-    { value: Role.Editor, label: DEFAULT_ROLE_LABELS[Role.Editor] },
-    { value: Role.Admin, label: DEFAULT_ROLE_LABELS[Role.Admin] },
+export const ROLE_OPTIONS: { value: RoleValue; labelKey: string; label: string }[] = [
+    {
+        value: Role.Contributor,
+        labelKey: ROLE_LABEL_KEYS[Role.Contributor],
+        label: DEFAULT_ROLE_LABELS[Role.Contributor],
+    },
+    { value: Role.Editor, labelKey: ROLE_LABEL_KEYS[Role.Editor], label: DEFAULT_ROLE_LABELS[Role.Editor] },
+    { value: Role.Admin, labelKey: ROLE_LABEL_KEYS[Role.Admin], label: DEFAULT_ROLE_LABELS[Role.Admin] },
 ];
 
 export function roleLabel(role: number | null | undefined, labels?: Record<number, string>): string {
     if (role === null || role === undefined) {
-        return 'No access';
+        return t('users.no_access', 'No access');
     }
 
     if (labels !== undefined && labels[role] !== undefined) {
@@ -22,7 +33,7 @@ export function roleLabel(role: number | null | undefined, labels?: Record<numbe
     }
 
     if (role === Role.Contributor || role === Role.Editor || role === Role.Admin) {
-        return DEFAULT_ROLE_LABELS[role];
+        return t(ROLE_LABEL_KEYS[role], DEFAULT_ROLE_LABELS[role]);
     }
 
     return `Role ${role}`;

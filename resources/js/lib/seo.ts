@@ -78,18 +78,32 @@ export function getPublicBaseUrl(): string {
     return hostOrigin();
 }
 
-export function resolvePostSeo(input: PostSeoInput, publicBaseUrl: string = getPublicBaseUrl()): ResolvedSeo {
+export type PostSeoFallbacks = {
+    untitledPost?: string;
+    noDescription?: string;
+    featuredImage?: string;
+};
+
+export function resolvePostSeo(
+    input: PostSeoInput,
+    publicBaseUrl: string = getPublicBaseUrl(),
+    fallbacks?: PostSeoFallbacks
+): ResolvedSeo {
     const baseUrl = publicBaseUrl.replace(/\/$/, '');
     const slugSegment = input.slug === '' ? '…' : input.slug;
     const bodyDescription = truncate(stripHtml(input.body), 160);
 
     return {
-        title: input.meta?.title?.trim() || input.title.trim() || 'Untitled post',
+        title: input.meta?.title?.trim() || input.title.trim() || (fallbacks?.untitledPost ?? 'Untitled post'),
         description:
-            input.meta?.description?.trim() || input.summary.trim() || bodyDescription || 'No description available.',
+            input.meta?.description?.trim() ||
+            input.summary.trim() ||
+            bodyDescription ||
+            (fallbacks?.noDescription ?? 'No description available.'),
         canonicalUrl: input.meta?.canonical_link?.trim() || `${baseUrl}/posts/${slugSegment}`,
         imageUrl: input.featuredImage || firstImageSrc(input.body),
-        imageAlt: input.featuredImageCaption?.trim() || input.title.trim() || 'Featured image',
+        imageAlt:
+            input.featuredImageCaption?.trim() || input.title.trim() || (fallbacks?.featuredImage ?? 'Featured image'),
     };
 }
 

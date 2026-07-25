@@ -64,7 +64,7 @@ it('does not inject paragraph guidance into seo system prompts', function (): vo
     });
 });
 
-it('omits provider hints for non-json and unusable error payloads', function (mixed $body, string $expected): void {
+it('sanitizes provider detail without embedding it in the primary message', function (mixed $body, ?string $expectedDetail): void {
     setAiIntegration(AiProvider::Xai, 'xai-test-key');
 
     Http::fake([
@@ -75,13 +75,14 @@ it('omits provider hints for non-json and unusable error payloads', function (mi
         app(AiWritingService::class)->rewrite(AiWritingAction::Improve, 'Hello');
         expect(false)->toBeTrue('Expected AiWritingException.');
     } catch (AiWritingException $e) {
-        expect($e->getMessage())->toBe($expected)
-            ->and($e->errorCode)->toBe(AiWritingException::CodeFailed);
+        expect($e->getMessage())->toBe('Could not complete the AI request. Try again.')
+            ->and($e->errorCode)->toBe(AiWritingException::CodeFailed)
+            ->and($e->detail)->toBe($expectedDetail);
     }
 })->with([
-    'plain text body' => ['plain text failure', 'Could not complete the AI request. Try again.'],
-    'nested error type' => [['error' => ['message' => ['type' => 'capacity']]], 'Could not complete the AI request. Try again. (capacity)'],
-    'non-string error' => [['error' => 42], 'Could not complete the AI request. Try again.'],
-    'blank message' => [['error' => ['message' => '   ']], 'Could not complete the AI request. Try again.'],
-    'overlong message' => [['error' => ['message' => str_repeat('x', 201)]], 'Could not complete the AI request. Try again.'],
+    'plain text body' => ['plain text failure', null],
+    'nested error type' => [['error' => ['message' => ['type' => 'capacity']]], 'capacity'],
+    'non-string error' => [['error' => 42], null],
+    'blank message' => [['error' => ['message' => '   ']], null],
+    'overlong message' => [['error' => ['message' => str_repeat('x', 201)]], null],
 ]);

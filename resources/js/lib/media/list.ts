@@ -16,17 +16,17 @@ export type MediaListFilters = {
     page: number;
 };
 
-export const MEDIA_MIME_FILTERS: { value: MediaMimeFilter; label: string }[] = [
-    { value: '', label: 'All types' },
+export const MEDIA_MIME_FILTERS: { value: MediaMimeFilter; labelKey?: string; label?: string }[] = [
+    { value: '', labelKey: 'media.all_types' },
     { value: 'image/jpeg', label: 'JPEG' },
     { value: 'image/png', label: 'PNG' },
     { value: 'image/gif', label: 'GIF' },
     { value: 'image/webp', label: 'WebP' },
 ];
 
-export const MEDIA_SORT_OPTIONS: { value: MediaListSort; label: string }[] = [
-    { value: 'newest', label: 'Newest first' },
-    { value: 'oldest', label: 'Oldest first' },
+export const MEDIA_SORT_OPTIONS: { value: MediaListSort; labelKey: string }[] = [
+    { value: 'newest', labelKey: 'media.sort_newest' },
+    { value: 'oldest', labelKey: 'media.sort_oldest' },
 ];
 
 export const MEDIA_SEARCH_DEBOUNCE_MS = 300;
@@ -37,6 +37,7 @@ export const MEDIA_EMPTY_STATE_KEYS = {
     cta: 'media.empty_cta',
 } as const;
 
+/** @deprecated Prefer t('media.filtered_empty') at the call site. */
 export const MEDIA_FILTERED_EMPTY_MESSAGE = 'No media matches your filters.';
 
 const MIME_FILTER_VALUES = new Set<string>(MEDIA_MIME_FILTERS.map((filter) => filter.value));
@@ -152,7 +153,7 @@ export function formatMediaDate(value: string | null): string {
 export function mediaMimeLabel(mimeType: string): string {
     const match = MEDIA_MIME_FILTERS.find((filter) => filter.value !== '' && mimeType.startsWith(filter.value));
 
-    if (match) {
+    if (match?.label) {
         return match.label;
     }
 

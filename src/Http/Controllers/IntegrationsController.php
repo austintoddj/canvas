@@ -10,6 +10,7 @@ use Canvas\Enums\WebhookEvent;
 use Canvas\Http\Requests\UpdateIntegrationsRequest;
 use Canvas\Jobs\DeliverWebhookJob;
 use Canvas\Support\Ai;
+use Canvas\Support\Localization;
 use Canvas\Support\SettingsRepository;
 use Canvas\Support\Unsplash;
 use Canvas\Support\WebhookPayload;
@@ -223,7 +224,7 @@ class IntegrationsController extends Controller
             'enabled_at' => $webhooksConfigured
                 ? $this->settings->createdAt(SettingKey::WebhookUrl)
                 : null,
-            'available_events' => WebhookEvent::subscribableOptions(),
+            'available_events' => WebhookEvent::subscribableOptions($this->requestLocale()),
         ];
 
         if ($plainSecret !== null) {
@@ -249,5 +250,12 @@ class IntegrationsController extends Controller
             ],
             'webhooks' => $webhooks,
         ];
+    }
+
+    private function requestLocale(): ?string
+    {
+        $locale = data_get(request()->user(config('canvas.guard')), 'locale');
+
+        return is_string($locale) ? Localization::resolveLocale($locale) : null;
     }
 }

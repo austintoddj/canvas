@@ -13,13 +13,15 @@ export type ParsedSearchQuery =
 
 export type NavigationPage = {
     id: string;
-    label: string;
+    labelKey: string;
     path: string;
     keywords: string[];
     requires?: 'taxonomy' | 'users' | 'integrations';
     /** When true, shown in the empty-query palette. Search still finds every page. */
     defaultVisible?: boolean;
 };
+
+export type TranslateLabel = (key: string) => string;
 
 const ENTITY_PREFIXES: Record<string, SearchEntityType> = {
     '#': 'Tag',
@@ -31,67 +33,67 @@ const ENTITY_PREFIXES: Record<string, SearchEntityType> = {
 export const NAVIGATION_PAGES: NavigationPage[] = [
     {
         id: 'dashboard',
-        label: 'Dashboard',
+        labelKey: 'nav.dashboard',
         path: '/',
-        keywords: ['home', 'stats', 'overview'],
+        keywords: ['home', 'stats', 'overview', 'dashboard'],
         defaultVisible: true,
     },
     {
         id: 'posts',
-        label: 'Posts',
+        labelKey: 'nav.posts',
         path: '/posts',
-        keywords: ['articles', 'writing', 'blog'],
+        keywords: ['articles', 'writing', 'blog', 'posts'],
         defaultVisible: true,
     },
     {
         id: 'new-post',
-        label: 'New post',
+        labelKey: 'posts.new',
         path: '/posts/new',
-        keywords: ['create', 'write', 'compose'],
+        keywords: ['create', 'write', 'compose', 'new post'],
         defaultVisible: true,
     },
     {
         id: 'media',
-        label: 'Media',
+        labelKey: 'nav.media',
         path: '/media',
-        keywords: ['images', 'photos', 'library', 'uploads'],
+        keywords: ['images', 'photos', 'library', 'uploads', 'media'],
         defaultVisible: true,
     },
     {
         id: 'organize',
-        label: 'Organize',
+        labelKey: 'nav.organize',
         path: '/organize',
-        keywords: ['taxonomy'],
+        keywords: ['taxonomy', 'organize'],
         requires: 'taxonomy',
         defaultVisible: true,
     },
     {
         id: 'tags',
-        label: 'Tags',
+        labelKey: 'organize.tags',
         path: '/organize?tab=tags',
-        keywords: ['label', 'labels'],
+        keywords: ['label', 'labels', 'tags'],
         requires: 'taxonomy',
     },
     {
         id: 'topics',
-        label: 'Topics',
+        labelKey: 'organize.topics',
         path: '/organize?tab=topics',
-        keywords: ['categories', 'category'],
+        keywords: ['categories', 'category', 'topics'],
         requires: 'taxonomy',
     },
     {
         id: 'users',
-        label: 'Users',
+        labelKey: 'nav.users',
         path: '/users',
-        keywords: ['authors', 'people', 'team', 'access'],
+        keywords: ['authors', 'people', 'team', 'access', 'users'],
         requires: 'users',
         defaultVisible: true,
     },
     {
         id: 'integrations',
-        label: 'Integrations',
+        labelKey: 'nav.integrations',
         path: '/integrations',
-        keywords: ['unsplash', 'api', 'connections', 'ai', 'grok', 'openai', 'claude', 'chatgpt'],
+        keywords: ['unsplash', 'api', 'connections', 'ai', 'grok', 'openai', 'claude', 'chatgpt', 'integrations'],
         requires: 'integrations',
         defaultVisible: true,
     },
@@ -131,18 +133,21 @@ export type SearchFilterHint = {
     entityType: SearchEntityType;
 };
 
-export function searchFilterHints(options: SearchPermissionOptions): SearchFilterHint[] {
+export function searchFilterHints(
+    options: SearchPermissionOptions,
+    translate: TranslateLabel = (key) => key
+): SearchFilterHint[] {
     const hints: SearchFilterHint[] = [];
 
     if (options.canManageTaxonomy) {
         hints.push(
-            { prefix: '#', label: 'Tags', entityType: 'Tag' },
-            { prefix: '>', label: 'Topics', entityType: 'Topic' }
+            { prefix: '#', label: translate('palette.tags'), entityType: 'Tag' },
+            { prefix: '>', label: translate('palette.topics'), entityType: 'Topic' }
         );
     }
 
     if (options.canManageUsers) {
-        hints.push({ prefix: '@', label: 'Users', entityType: 'User' });
+        hints.push({ prefix: '@', label: translate('palette.users'), entityType: 'User' });
     }
 
     return hints;
@@ -183,7 +188,8 @@ export function canAccessNavigationPage(page: NavigationPage, options: SearchPer
 export function filterNavigationPages(
     term: string,
     options: SearchPermissionOptions,
-    pages: NavigationPage[] = NAVIGATION_PAGES
+    pages: NavigationPage[] = NAVIGATION_PAGES,
+    resolveLabel: TranslateLabel = (key) => key
 ): NavigationPage[] {
     const allowed = pages.filter((page) => canAccessNavigationPage(page, options));
     const normalized = term.trim().toLowerCase();
@@ -193,7 +199,9 @@ export function filterNavigationPages(
     }
 
     return allowed.filter((page) => {
-        if (page.label.toLowerCase().includes(normalized)) {
+        const label = resolveLabel(page.labelKey).toLowerCase();
+
+        if (label.includes(normalized)) {
             return true;
         }
 
@@ -207,9 +215,9 @@ export function paletteItemKey(item: PaletteItem): string {
     return item.kind === 'page' ? `page-${item.page.id}` : `entity-${item.result.type}-${item.result.id}`;
 }
 
-export function paletteItemLabel(item: PaletteItem): string {
+export function paletteItemLabel(item: PaletteItem, translate: TranslateLabel = (key) => key): string {
     if (item.kind === 'page') {
-        return item.page.label;
+        return translate(item.page.labelKey);
     }
 
     return item.result.type === 'Post' ? item.result.title : item.result.name;

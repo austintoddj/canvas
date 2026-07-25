@@ -71,7 +71,8 @@ export function loadTranslations(json: string): Translator {
 
 export function getTranslator(): Translator {
     if (activeTranslator === null) {
-        activeTranslator = loadTranslations(window.Canvas?.translations ?? '');
+        const json = typeof window !== 'undefined' ? (window.Canvas?.translations ?? '') : '';
+        activeTranslator = loadTranslations(json);
     }
 
     return activeTranslator;

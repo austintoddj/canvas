@@ -1,5 +1,8 @@
 import * as Headless from '@headlessui/react';
 import React, { useState } from 'react';
+
+import { t } from '@/lib/i18n';
+
 import { NavbarItem } from './navbar';
 
 function OpenMenuIcon() {
@@ -57,7 +60,7 @@ export function SidebarLayout({
             {/* Navbar on mobile */}
             <header className="flex items-center px-4 lg:hidden">
                 <div className="py-2.5">
-                    <NavbarItem onClick={() => setShowSidebar(true)} aria-label="Open navigation">
+                    <NavbarItem onClick={() => setShowSidebar(true)} aria-label={t('common.open_navigation')}>
                         <OpenMenuIcon />
                     </NavbarItem>
                 </div>

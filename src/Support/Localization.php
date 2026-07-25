@@ -43,14 +43,19 @@ final class Localization
     }
 
     /**
+     * Language picker rows. Labels are translated for the active UI locale
+     * (exonyms); catalog English labels remain the dictionary fallback.
+     *
      * @return list<array{code: string, label: string, rtl: bool}>
      */
-    public static function languageOptions(): array
+    public static function languageOptions(?string $uiLocale = null): array
     {
+        $translationLocale = self::resolveTranslationLocale($uiLocale);
+
         return array_map(
             static fn (array $entry): array => [
                 'code' => $entry['code'],
-                'label' => $entry['label'],
+                'label' => self::translatedLanguageLabel($entry['code'], $entry['label'], $translationLocale),
                 'rtl' => $entry['rtl'],
             ],
             self::filteredCatalog(),
@@ -146,7 +151,7 @@ final class Localization
         return false;
     }
 
-    public static function labelFor(?string $locale): ?string
+    public static function labelFor(?string $locale, ?string $uiLocale = null): ?string
     {
         if ($locale === null) {
             return null;
@@ -154,11 +159,34 @@ final class Localization
 
         foreach (self::CATALOG as $entry) {
             if ($entry['code'] === $locale) {
-                return $entry['label'];
+                return self::translatedLanguageLabel(
+                    $entry['code'],
+                    $entry['label'],
+                    self::resolveTranslationLocale($uiLocale),
+                );
             }
         }
 
         return null;
+    }
+
+    /**
+     * Catalog key for a selectable language code (e.g. locale.es-MX).
+     */
+    public static function languageLabelKey(string $code): string
+    {
+        return 'locale.'.$code;
+    }
+
+    private static function translatedLanguageLabel(string $code, string $fallback, string $translationLocale): string
+    {
+        $translated = trans('canvas::app.'.self::languageLabelKey($code), [], $translationLocale);
+
+        if (is_string($translated) && $translated !== '' && $translated !== self::languageLabelKey($code)) {
+            return $translated;
+        }
+
+        return $fallback;
     }
 
     /**

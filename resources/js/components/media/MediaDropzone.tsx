@@ -45,7 +45,11 @@ export function MediaDropzone({
     const isDisabled = disabled || uploading;
     const showDragging = dragging && !suppressDragHighlight;
     const resolvedLabel = label ?? t(multiple ? 'media.dropzone_multi' : 'media.dropzone_single');
-    const resolvedHint = hint ?? `JPG, PNG, GIF, or WebP · up to ${formatMediaBytes(getMaxUploadBytes())}`;
+    const resolvedHint =
+        hint ??
+        t('media.dropzone_hint', {
+            max: formatMediaBytes(getMaxUploadBytes()),
+        });
 
     function openPicker() {
         if (isDisabled) {

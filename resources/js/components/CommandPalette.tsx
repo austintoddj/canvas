@@ -82,7 +82,7 @@ export function CommandPalette({ open, onClose }: Props) {
         }),
         [permissions.canManageTaxonomy, permissions.canManageUsers, permissions.canManageIntegrations]
     );
-    const filterHints = useMemo(() => searchFilterHints(permissionOptions), [permissionOptions]);
+    const filterHints = useMemo(() => searchFilterHints(permissionOptions, (key) => t(key)), [permissionOptions, t]);
     const restrictedEntity =
         parsed.mode === 'search' &&
         parsed.entityType !== null &&
@@ -91,8 +91,8 @@ export function CommandPalette({ open, onClose }: Props) {
     const showPages = parsed.mode === 'search' && parsed.entityType === null && !restrictedEntity;
     const pageSearchTerm = parsed.mode === 'search' ? parsed.term : '';
     const pageResults = useMemo(
-        () => (showPages ? filterNavigationPages(pageSearchTerm, permissionOptions) : []),
-        [showPages, pageSearchTerm, permissionOptions]
+        () => (showPages ? filterNavigationPages(pageSearchTerm, permissionOptions, undefined, (key) => t(key)) : []),
+        [showPages, pageSearchTerm, permissionOptions, t]
     );
 
     useEffect(() => {
@@ -171,7 +171,7 @@ export function CommandPalette({ open, onClose }: Props) {
 
     const hasResults = pageItems.length > 0 || entityItems.length > 0;
     const emptyStateLabel =
-        parsed.mode === 'search' && parsed.entityType !== null ? groupLabels[parsed.entityType] : 'results';
+        parsed.mode === 'search' && parsed.entityType !== null ? groupLabels[parsed.entityType] : t('palette.results');
 
     return (
         <Headless.Dialog open={open} onClose={onClose} className="relative z-50">
@@ -212,7 +212,7 @@ export function CommandPalette({ open, onClose }: Props) {
                                 {pageItems.length > 0 && (
                                     <li>
                                         <p className="px-4 pb-1 pt-0.5 text-xs font-semibold text-zinc-400 uppercase tracking-wide dark:text-zinc-500">
-                                            Pages
+                                            {t('palette.pages')}
                                         </p>
                                         <ul>
                                             {pageItems.map((item) => (
@@ -225,7 +225,7 @@ export function CommandPalette({ open, onClose }: Props) {
                                 {showRecentPosts && entityItems.length > 0 && (
                                     <>
                                         <p className="px-4 pb-1 pt-2 text-xs font-semibold text-zinc-400 uppercase tracking-wide dark:text-zinc-500">
-                                            Recent Posts
+                                            {t('nav.recent_posts')}
                                         </p>
                                         {entityItems.map((item) => (
                                             <ResultItem key={paletteItemKey(item)} item={item} />
@@ -253,9 +253,11 @@ export function CommandPalette({ open, onClose }: Props) {
 
                         {parsed.mode === 'search' && restrictedEntity && (
                             <div className="px-6 py-14 text-center text-sm sm:px-14">
-                                <p className="font-semibold text-zinc-900 dark:text-white">Unavailable</p>
+                                <p className="font-semibold text-zinc-900 dark:text-white">
+                                    {t('palette.unavailable')}
+                                </p>
                                 <p className="mt-2 text-canvas-muted dark:text-canvas-muted-dark">
-                                    Your role cannot search {emptyStateLabel.toLowerCase()}.
+                                    {t('palette.restricted', { entity: emptyStateLabel })}
                                 </p>
                             </div>
                         )}
@@ -264,7 +266,7 @@ export function CommandPalette({ open, onClose }: Props) {
                             <div className="px-6 py-14 text-center text-sm sm:px-14">
                                 <p className="font-semibold text-zinc-900 dark:text-white">{t('palette.no_results')}</p>
                                 <p className="mt-2 text-canvas-muted dark:text-canvas-muted-dark">
-                                    Nothing matched &ldquo;{parsed.term}&rdquo;. Try a different search term.
+                                    {t('palette.nothing_matched', { term: parsed.term })}
                                 </p>
                             </div>
                         )}
@@ -276,10 +278,10 @@ export function CommandPalette({ open, onClose }: Props) {
                             parsed.entityType !== null && (
                                 <div className="px-6 py-14 text-center text-sm sm:px-14">
                                     <p className="font-semibold text-zinc-900 dark:text-white">
-                                        No {emptyStateLabel.toLowerCase()} yet
+                                        {t('palette.empty_entity', { entity: emptyStateLabel })}
                                     </p>
                                     <p className="mt-2 text-canvas-muted dark:text-canvas-muted-dark">
-                                        Create some {emptyStateLabel.toLowerCase()} to see them here.
+                                        {t('palette.empty_entity_hint', { entity: emptyStateLabel })}
                                     </p>
                                 </div>
                             )}
@@ -293,8 +295,9 @@ export function CommandPalette({ open, onClose }: Props) {
 }
 
 function ResultItem({ item }: { item: PaletteItem }) {
+    const { t } = useCanvas();
     const Icon = item.kind === 'page' ? (PAGE_ICONS[item.page.id] ?? IconSearch) : ENTITY_ICONS[item.result.type];
-    const meta = item.kind === 'page' ? 'Page' : item.result.type;
+    const meta = item.kind === 'page' ? t('palette.page') : item.result.type;
 
     return (
         <Headless.ComboboxOption
@@ -309,7 +312,7 @@ function ResultItem({ item }: { item: PaletteItem }) {
             }
         >
             <Icon className="size-5 shrink-0 text-zinc-400" />
-            <span className="flex-1 truncate text-sm">{paletteItemLabel(item)}</span>
+            <span className="flex-1 truncate text-sm">{paletteItemLabel(item, (key) => t(key))}</span>
             <span className="text-xs text-zinc-400 dark:text-zinc-500">{meta}</span>
         </Headless.ComboboxOption>
     );
@@ -318,26 +321,26 @@ function ResultItem({ item }: { item: PaletteItem }) {
 type FilterHint = ReturnType<typeof searchFilterHints>[number];
 
 function HelpPanel({ filterHints }: { filterHints: FilterHint[] }) {
+    const { t } = useCanvas();
+    const types = filterHints.map((hint) => hint.label).join(', ');
+
     return (
         <div className="border-b border-zinc-200 px-4 py-5 text-sm dark:border-white/10">
-            <p className="font-medium text-zinc-900 dark:text-white">Search tips</p>
+            <p className="font-medium text-zinc-900 dark:text-white">{t('palette.help_title')}</p>
             <ul className="mt-3 space-y-2 text-zinc-600 dark:text-zinc-300">
-                <li>
-                    Type to jump to pages or search posts
-                    {filterHints.length > 0
-                        ? `, ${filterHints.map((hint) => hint.label.toLowerCase()).join(', ')}`
-                        : ''}
-                    .
-                </li>
+                <li>{filterHints.length > 0 ? t('palette.help_type_with', { types }) : t('palette.help_type')}</li>
                 {filterHints.map((hint) => (
                     <li key={hint.entityType} className="flex items-center gap-2">
-                        <span>
-                            Start with <Kbd>{hint.prefix}</Kbd> to search {hint.label.toLowerCase()} only.
+                        <span className="inline-flex flex-wrap items-center gap-1">
+                            {t('palette.help_filter_before')} <Kbd>{hint.prefix}</Kbd>{' '}
+                            {t('palette.help_filter_after', { entity: hint.label })}
                         </span>
                     </li>
                 ))}
                 <li className="flex items-center gap-2">
-                    Press <Kbd>?</Kbd> anytime to show this help.
+                    <span className="inline-flex flex-wrap items-center gap-1">
+                        {t('palette.help_question_before')} <Kbd>?</Kbd> {t('palette.help_question_after')}
+                    </span>
                 </li>
             </ul>
         </div>
@@ -345,6 +348,8 @@ function HelpPanel({ filterHints }: { filterHints: FilterHint[] }) {
 }
 
 function CommandPaletteFooter({ filterHints }: { filterHints: FilterHint[] }) {
+    const { t } = useCanvas();
+
     return (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-zinc-200 bg-zinc-50 px-4 py-2.5 text-xs text-zinc-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400">
             {filterHints.length > 0 && (
@@ -359,20 +364,20 @@ function CommandPaletteFooter({ filterHints }: { filterHints: FilterHint[] }) {
             )}
             <span className="inline-flex items-center gap-1">
                 <Kbd>?</Kbd>
-                Help
+                {t('palette.help')}
             </span>
             <span className="ml-auto inline-flex items-center gap-3">
                 <span className="inline-flex items-center gap-1">
                     <KbdGroup keys={['↑', '↓']} />
-                    Navigate
+                    {t('palette.navigate')}
                 </span>
                 <span className="inline-flex items-center gap-1">
                     <Kbd>↵</Kbd>
-                    Select
+                    {t('palette.select')}
                 </span>
                 <span className="inline-flex items-center gap-1">
                     <Kbd>esc</Kbd>
-                    Close
+                    {t('palette.close')}
                 </span>
             </span>
         </div>

@@ -15,14 +15,16 @@ it('builds the frontend boot payload', function (): void {
 
     $bootData = FrontendBootData::forUser($this->admin);
 
+    $adminLocale = Localization::resolveLocale($this->admin->locale);
+
     expect($bootData)->toMatchArray([
-        'languages' => Localization::languageOptions(),
+        'languages' => Localization::languageOptions($adminLocale),
         'maxUpload' => UploadLimits::maxBytes(),
         'path' => Paths::basePath(),
-        'roles' => Role::options(),
+        'roles' => Role::options($adminLocale),
         'appTimezone' => config('app.timezone'),
         'defaultLocale' => Localization::resolveLocale(null),
-        'translations' => Localization::availableTranslations($this->admin->locale),
+        'translations' => Localization::availableTranslations($adminLocale),
         'unsplash' => true,
         'ai' => false,
         'assetsUpToDate' => true,

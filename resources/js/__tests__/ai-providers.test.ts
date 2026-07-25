@@ -12,7 +12,8 @@ describe('AI model presets', () => {
     it('ships Default / Fast / Expert presets for every provider', () => {
         for (const option of AI_PROVIDER_OPTIONS) {
             expect(option.presets.map((preset) => preset.tier)).toEqual(['auto', 'fast', 'expert']);
-            expect(option.presets[0]?.label).toBe('Default');
+            expect(option.presets[0]?.labelKey).toBe('integrations.model_tier_auto');
+            expect(option.presets[0]?.labelFallback).toBe('Default');
             expect(option.presets[0]?.model).toBeNull();
             expect(option.presets[1]?.model).toBe(option.defaultModel);
             expect(option.presets[2]?.model).toBe(option.expertModel);

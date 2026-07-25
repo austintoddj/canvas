@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/lib/api';
 import {
+    AI_ERROR_CODE_KEYS,
     AI_SELECTION_BLOCK_SEPARATOR,
     AI_WRITING_ACTIONS,
     plainTextToEditorContent,
     rewriteErrorCode,
+    rewriteErrorDetail,
     rewriteErrorMessage,
     selectionText,
 } from '@/lib/posts/ai-writing';
@@ -65,6 +67,36 @@ describe('ai writing helpers', () => {
             key === 'editor.ai_timeout' ? 'Took too long (translated)' : (fallback ?? key);
 
         expect(rewriteErrorMessage(error, 'fallback', translate)).toBe('Took too long (translated)');
+    });
+
+    it('appends provider detail to translated primary messages', () => {
+        const error = new ApiError(422, {
+            error: 'server message',
+            code: 'ai_context_length',
+            detail: "This model's maximum context length is 8192 tokens.",
+        });
+        const translate = (key: string, fallback?: string) =>
+            key === 'editor.ai_context_length' ? 'Text is too long for the model.' : (fallback ?? key);
+
+        expect(rewriteErrorDetail(error)).toBe("This model's maximum context length is 8192 tokens.");
+        expect(rewriteErrorMessage(error, 'fallback', translate)).toBe(
+            "Text is too long for the model. (This model's maximum context length is 8192 tokens.)"
+        );
+    });
+
+    it('does not double-append detail already present in the primary message', () => {
+        const error = new ApiError(422, {
+            error: 'Could not complete. (Upstream capacity exhausted)',
+            code: 'ai_failed',
+            detail: 'Upstream capacity exhausted',
+        });
+
+        expect(rewriteErrorMessage(error)).toBe('Could not complete. (Upstream capacity exhausted)');
+    });
+
+    it('maps context and quota codes through the catalog keys', () => {
+        expect(AI_ERROR_CODE_KEYS.ai_context_length).toBe('editor.ai_context_length');
+        expect(AI_ERROR_CODE_KEYS.ai_quota_exceeded).toBe('editor.ai_quota_exceeded');
     });
 
     it('reads Laravel validation field errors', () => {

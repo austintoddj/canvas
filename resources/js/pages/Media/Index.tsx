@@ -660,7 +660,7 @@ export default function MediaIndex() {
                             >
                                 {MEDIA_MIME_FILTERS.map((option) => (
                                     <option key={option.value || 'all'} value={option.value}>
-                                        {option.label}
+                                        {option.labelKey !== undefined ? t(option.labelKey) : (option.label ?? '')}
                                     </option>
                                 ))}
                             </Select>
@@ -674,7 +674,7 @@ export default function MediaIndex() {
                             >
                                 {MEDIA_SORT_OPTIONS.map((option) => (
                                     <option key={option.value} value={option.value}>
-                                        {option.label}
+                                        {t(option.labelKey)}
                                     </option>
                                 ))}
                             </Select>

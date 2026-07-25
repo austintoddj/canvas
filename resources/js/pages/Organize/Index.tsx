@@ -383,7 +383,7 @@ export default function OrganizeIndex() {
                     />
                 </Field>
                 <Field className="w-full sm:w-44">
-                    <Label className="sr-only">{t('organize.sort_label', 'Sort')}</Label>
+                    <Label className="sr-only">{t('organize.sort_label')}</Label>
                     <Select
                         name="taxonomy-sort"
                         value={filters.sort}
@@ -391,7 +391,7 @@ export default function OrganizeIndex() {
                     >
                         {TAXONOMY_SORT_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
-                                {option.label}
+                                {t(option.labelKey)}
                             </option>
                         ))}
                     </Select>
@@ -443,7 +443,7 @@ export default function OrganizeIndex() {
                                                 : 'group/list-row cursor-pointer hover:bg-zinc-950/5 dark:hover:bg-white/5'
                                         }
                                         tabIndex={0}
-                                        aria-label={`Edit ${name}`}
+                                        aria-label={t('common.edit_aria', { name })}
                                         data-selected={selected ? 'true' : undefined}
                                         onClick={() => openDetail(item.id)}
                                         onKeyDown={(event) => {

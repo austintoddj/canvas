@@ -24,12 +24,18 @@ describe('command palette helpers', () => {
         const contributor = { canManageTaxonomy: false, canManageUsers: false };
         const admin = { canManageTaxonomy: true, canManageUsers: true };
 
-        expect(searchFilterHints(admin)).toEqual([
+        const labels: Record<string, string> = {
+            'palette.tags': 'Tags',
+            'palette.topics': 'Topics',
+            'palette.users': 'Users',
+        };
+
+        expect(searchFilterHints(admin, (key) => labels[key] ?? key)).toEqual([
             { prefix: '#', label: 'Tags', entityType: 'Tag' },
             { prefix: '>', label: 'Topics', entityType: 'Topic' },
             { prefix: '@', label: 'Users', entityType: 'User' },
         ]);
-        expect(searchFilterHints(contributor)).toEqual([]);
+        expect(searchFilterHints(contributor, (key) => labels[key] ?? key)).toEqual([]);
 
         expect(canSearchEntityType('Post', contributor)).toBe(true);
         expect(canSearchEntityType('Tag', contributor)).toBe(false);
@@ -94,7 +100,7 @@ describe('command palette helpers', () => {
                 kind: 'page',
                 page: {
                     id: 'integrations',
-                    label: 'Integrations',
+                    labelKey: 'nav.integrations',
                     path: '/integrations',
                     keywords: [],
                     requires: 'integrations',

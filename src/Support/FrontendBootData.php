@@ -26,10 +26,10 @@ final class FrontendBootData
         $locale = Localization::resolveLocale($canvasUser?->locale);
 
         return [
-            'languages' => Localization::languageOptions(),
+            'languages' => Localization::languageOptions($locale),
             'maxUpload' => UploadLimits::maxBytes(),
             'path' => Paths::basePath(),
-            'roles' => Role::options(),
+            'roles' => Role::options($locale),
             'appTimezone' => config('app.timezone'),
             'defaultLocale' => Localization::resolveLocale(null),
             'translations' => Localization::availableTranslations($locale),

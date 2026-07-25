@@ -1,13 +1,24 @@
 import { Subheading } from '@/components/heading';
 import { Text } from '@/components/text';
+import { useCanvas } from '@/hooks/useCanvas';
 import { resolvePostSeo, type PostSeoInput } from '@/lib/seo';
 
 type SeoPreviewProps = {
     post: PostSeoInput;
 };
 
+function useSeoFallbacks() {
+    const { t } = useCanvas();
+
+    return {
+        untitledPost: t('editor.untitled_post'),
+        noDescription: t('editor.seo_no_description'),
+        featuredImage: t('editor.featured_image'),
+    };
+}
+
 function SerpPreview({ post }: SeoPreviewProps) {
-    const seo = resolvePostSeo(post);
+    const seo = resolvePostSeo(post, undefined, useSeoFallbacks());
     let hostname = 'example.com';
 
     try {
@@ -27,7 +38,8 @@ function SerpPreview({ post }: SeoPreviewProps) {
 }
 
 function SocialPreview({ post }: SeoPreviewProps) {
-    const seo = resolvePostSeo(post);
+    const { t } = useCanvas();
+    const seo = resolvePostSeo(post, undefined, useSeoFallbacks());
 
     return (
         <div className="min-w-0 overflow-hidden rounded-lg border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-white/[0.03] dark:ring-1 dark:ring-white/5">
@@ -35,7 +47,7 @@ function SocialPreview({ post }: SeoPreviewProps) {
                 <img src={seo.imageUrl} alt={seo.imageAlt} className="aspect-[1.91/1] w-full max-w-full object-cover" />
             ) : (
                 <div className="flex aspect-[1.91/1] items-center justify-center bg-zinc-100 text-sm text-zinc-500 dark:bg-white/[0.04] dark:text-zinc-400">
-                    No image selected
+                    {t('editor.seo_no_image')}
                 </div>
             )}
             <div className="min-w-0 space-y-1 p-3">
@@ -58,11 +70,13 @@ function SocialPreview({ post }: SeoPreviewProps) {
 }
 
 export default function SeoPreview({ post }: SeoPreviewProps) {
+    const { t } = useCanvas();
+
     return (
         <div className="space-y-4">
             <div>
                 <Subheading level={4} className="text-sm/6">
-                    Search preview
+                    {t('editor.seo_search_preview')}
                 </Subheading>
                 <div className="mt-2">
                     <SerpPreview post={post} />
@@ -71,7 +85,7 @@ export default function SeoPreview({ post }: SeoPreviewProps) {
 
             <div>
                 <Subheading level={4} className="text-sm/6">
-                    Social preview
+                    {t('editor.seo_social_preview')}
                 </Subheading>
                 <div className="mt-2">
                     <SocialPreview post={post} />

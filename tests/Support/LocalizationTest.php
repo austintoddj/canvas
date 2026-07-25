@@ -149,3 +149,19 @@ it('returns labels for catalog codes', function (): void {
         ->and(Localization::labelFor('unknown'))->toBeNull()
         ->and(Localization::labelFor(null))->toBeNull();
 });
+
+it('translates language picker labels for the active UI locale', function (): void {
+    $german = Localization::languageOptions('de');
+    $japanese = Localization::languageOptions('ja');
+
+    $germanFrench = collect($german)->firstWhere('code', 'fr');
+    $japaneseFrench = collect($japanese)->firstWhere('code', 'fr');
+    $germanGerman = collect($german)->firstWhere('code', 'de');
+
+    expect($germanFrench)->not->toBeNull()
+        ->and($germanFrench['label'])->toBe('Französisch')
+        ->and($japaneseFrench['label'])->toBe('フランス語')
+        ->and($germanGerman['label'])->toBe('Deutsch')
+        ->and(Localization::labelFor('fr', 'de'))->toBe('Französisch')
+        ->and(Localization::labelFor('ja', 'ja'))->toBe('日本語');
+});

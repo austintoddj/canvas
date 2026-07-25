@@ -182,9 +182,10 @@ it('maps forbidden responses to a permission-oriented error', function (): void 
         ->assertJsonPath(
             'error',
             'The AI provider denied access. Confirm API credits, region/team permissions, and model access'
-            .' in the provider console, or set a different model in Integrations. (Model access denied for this team.)'
+            .' in the provider console, or set a different model in Integrations.'
         )
-        ->assertJsonPath('code', AiWritingException::CodeForbidden);
+        ->assertJsonPath('code', AiWritingException::CodeForbidden)
+        ->assertJsonPath('detail', 'Model access denied for this team.');
 });
 
 it('maps missing models to a clear error', function (): void {
@@ -202,9 +203,10 @@ it('maps missing models to a clear error', function (): void {
         ->assertStatus(422)
         ->assertJsonPath(
             'error',
-            'The AI model was not found. Set a valid model id in Integrations settings. (Model not found)'
+            'The AI model was not found. Set a valid model id in Integrations settings.'
         )
-        ->assertJsonPath('code', AiWritingException::CodeModelNotFound);
+        ->assertJsonPath('code', AiWritingException::CodeModelNotFound)
+        ->assertJsonPath('detail', 'Model not found');
 });
 
 it('retries once on rate limit then succeeds', function (): void {
@@ -245,9 +247,93 @@ it('returns rate limited after exhausted retries', function (): void {
         ])
         ->assertStatus(422)
         ->assertJsonPath('error', 'The AI provider rate limit was exceeded. Try again shortly.')
-        ->assertJsonPath('code', AiWritingException::CodeRateLimited);
+        ->assertJsonPath('code', AiWritingException::CodeRateLimited)
+        ->assertJsonPath('detail', 'Rate limit');
 
     Http::assertSentCount(2);
+});
+
+it('maps insufficient quota on 429 to a quota error not rate limit', function (): void {
+    setAiIntegration(AiProvider::OpenAi, 'openai-test-key');
+
+    Http::fake([
+        'api.openai.com/*' => Http::response([
+            'error' => [
+                'message' => 'You exceeded your current quota, please check your plan and billing details.',
+                'type' => 'insufficient_quota',
+                'code' => 'insufficient_quota',
+            ],
+        ], 429),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'improve',
+            'text' => 'Hello',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('code', AiWritingException::CodeQuotaExceeded)
+        ->assertJsonPath(
+            'error',
+            'The AI provider reports insufficient credits or quota. Check billing in the provider console, or switch provider in Integrations.'
+        )
+        ->assertJsonPath(
+            'detail',
+            'You exceeded your current quota, please check your plan and billing details.'
+        );
+
+    // Quota is not treated as a transient rate limit: no retry.
+    Http::assertSentCount(1);
+});
+
+it('maps context length failures to a dedicated error', function (): void {
+    setAiIntegration(AiProvider::OpenAi, 'openai-test-key');
+
+    Http::fake([
+        'api.openai.com/*' => Http::response([
+            'error' => [
+                'message' => "This model's maximum context length is 8192 tokens.",
+                'type' => 'invalid_request_error',
+                'code' => 'context_length_exceeded',
+            ],
+        ], 400),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'improve',
+            'text' => 'Hello',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('code', AiWritingException::CodeContextLength)
+        ->assertJsonPath(
+            'error',
+            'Selection or post content is too long for this model. Shorten the text and try again.'
+        )
+        ->assertJsonPath('detail', "This model's maximum context length is 8192 tokens.");
+});
+
+it('maps context length from message text without a provider code', function (): void {
+    setAiIntegration(AiProvider::Anthropic, 'anthropic-test-key');
+
+    Http::fake([
+        'api.anthropic.com/*' => Http::response([
+            'type' => 'error',
+            'error' => [
+                'type' => 'invalid_request_error',
+                'message' => 'prompt is too long: 200000 tokens > 200000 maximum',
+            ],
+        ], 400),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'improve',
+            'text' => 'Hello',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('code', AiWritingException::CodeContextLength)
+        ->assertJsonPath('detail', 'prompt is too long: 200000 tokens > 200000 maximum');
 });
 
 it('maps connection failures to a timeout-oriented error', function (): void {
@@ -436,7 +522,7 @@ it('maps empty anthropic content to a clear error', function (): void {
         ->assertJsonPath('code', AiWritingException::CodeEmpty);
 });
 
-it('maps unexpected provider failures with a safe hint', function (): void {
+it('maps unexpected provider failures with a safe detail field', function (): void {
     setAiIntegration(AiProvider::Xai, 'xai-test-key');
 
     Http::fake([
@@ -451,14 +537,12 @@ it('maps unexpected provider failures with a safe hint', function (): void {
             'text' => 'Hello',
         ])
         ->assertStatus(422)
-        ->assertJsonPath(
-            'error',
-            'Could not complete the AI request. Try again. (Upstream capacity exhausted)'
-        )
-        ->assertJsonPath('code', AiWritingException::CodeFailed);
+        ->assertJsonPath('error', 'Could not complete the AI request. Try again.')
+        ->assertJsonPath('code', AiWritingException::CodeFailed)
+        ->assertJsonPath('detail', 'Upstream capacity exhausted');
 });
 
-it('omits provider hints that look like secrets', function (): void {
+it('omits provider details that look like secrets', function (): void {
     setAiIntegration(AiProvider::Xai, 'xai-test-key');
 
     Http::fake([
@@ -474,7 +558,27 @@ it('omits provider hints that look like secrets', function (): void {
         ])
         ->assertStatus(422)
         ->assertJsonPath('error', 'Could not complete the AI request. Try again.')
-        ->assertJsonPath('code', AiWritingException::CodeFailed);
+        ->assertJsonPath('code', AiWritingException::CodeFailed)
+        ->assertJsonMissingPath('detail');
+});
+
+it('omits provider details longer than 200 characters', function (): void {
+    setAiIntegration(AiProvider::Xai, 'xai-test-key');
+
+    Http::fake([
+        'api.x.ai/*' => Http::response([
+            'error' => ['message' => str_repeat('x', 201)],
+        ], 500),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/ai/rewrite', [
+            'action' => 'improve',
+            'text' => 'Hello',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('code', AiWritingException::CodeFailed)
+        ->assertJsonMissingPath('detail');
 });
 
 it('rejects unusable seo suggestions', function (array $content, string $message): void {

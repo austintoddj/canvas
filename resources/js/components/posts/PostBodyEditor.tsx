@@ -810,7 +810,9 @@ export default function PostBodyEditor({
     const aiSettleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const editor = useEditor({
-        extensions: createPostEditorExtensions(),
+        extensions: createPostEditorExtensions({
+            placeholder: t('editor.body_placeholder', 'Start writing…'),
+        }),
         content: bodyHtmlForEditor(body),
         editable: !disabled,
         // Toolbar reads isActive() / getAttributes(); re-render on selection so

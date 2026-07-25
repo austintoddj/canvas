@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useSyncExternalStore } from 'react';
 import clsx from 'clsx';
 
+import { t } from '@/lib/i18n';
 import { dismissToast, getToasts, subscribeToasts, type ToastItem, type ToastTone } from '@/lib/toast';
 import { IconAlertTriangle, IconCircleCheck, IconExclamationCircle, IconInfoCircle, IconX } from '@tabler/icons-react';
 
@@ -68,7 +69,7 @@ function ToastCard({ item }: { item: ToastItem }) {
             <button
                 type="button"
                 className="shrink-0 rounded-md p-0.5 text-zinc-400 transition hover:bg-zinc-950/5 hover:text-zinc-700 focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:hover:bg-white/10 dark:hover:text-zinc-200"
-                aria-label="Dismiss notification"
+                aria-label={t('common.dismiss_notification')}
                 onClick={() => dismissToast(item.id)}
             >
                 <IconX className="size-4" aria-hidden="true" />
@@ -84,7 +85,7 @@ export function Toaster() {
         <div
             className="pointer-events-none fixed inset-x-0 bottom-0 z-[80] flex flex-col items-end gap-2 p-4 sm:inset-x-auto sm:right-0 sm:bottom-0 sm:max-w-md sm:p-6"
             data-toaster
-            aria-label="Notifications"
+            aria-label={t('common.notifications')}
         >
             <AnimatePresence initial={false} mode="popLayout">
                 {items.map((item) => (

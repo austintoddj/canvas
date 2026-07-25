@@ -87,7 +87,7 @@ export const CODE_BLOCK_LANGUAGES = [
     { value: 'yaml', label: 'YAML' },
 ] as const;
 
-export function createPostEditorExtensions() {
+export function createPostEditorExtensions(options?: { placeholder?: string }) {
     return [
         StarterKit.configure({
             heading: { levels: [1, 2, 3] },
@@ -109,7 +109,7 @@ export function createPostEditorExtensions() {
             },
         }),
         Placeholder.configure({
-            placeholder: 'Start writing…',
+            placeholder: options?.placeholder ?? 'Start writing…',
         }),
         Highlight.configure({
             multicolor: false,

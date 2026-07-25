@@ -1,23 +1,50 @@
+import { t } from '@/lib/i18n';
+
 export type TimezoneOption = {
     value: string;
     label: string;
 };
 
+type EssentialTimezone = {
+    value: string;
+    labelKey: string;
+    labelFallback: string;
+};
+
 export const ESSENTIAL_TIMEZONES = [
-    { value: 'UTC', label: 'UTC (Coordinated Universal Time)' },
-    { value: 'America/New_York', label: 'Eastern Time (EST/EDT)' },
-    { value: 'America/Chicago', label: 'Central Time (CST/CDT)' },
-    { value: 'America/Los_Angeles', label: 'Pacific Time (PST/PDT)' },
-    { value: 'Europe/London', label: 'London (GMT/BST)' },
-    { value: 'Europe/Paris', label: 'Central European (CET/CEST)' },
-    { value: 'Asia/Kolkata', label: 'India (IST)' },
-    { value: 'Asia/Tokyo', label: 'Japan (JST)' },
-] as const satisfies readonly TimezoneOption[];
+    { value: 'UTC', labelKey: 'timezone.utc', labelFallback: 'UTC (Coordinated Universal Time)' },
+    {
+        value: 'America/New_York',
+        labelKey: 'timezone.america_new_york',
+        labelFallback: 'Eastern Time (EST/EDT)',
+    },
+    {
+        value: 'America/Chicago',
+        labelKey: 'timezone.america_chicago',
+        labelFallback: 'Central Time (CST/CDT)',
+    },
+    {
+        value: 'America/Los_Angeles',
+        labelKey: 'timezone.america_los_angeles',
+        labelFallback: 'Pacific Time (PST/PDT)',
+    },
+    { value: 'Europe/London', labelKey: 'timezone.europe_london', labelFallback: 'London (GMT/BST)' },
+    {
+        value: 'Europe/Paris',
+        labelKey: 'timezone.europe_paris',
+        labelFallback: 'Central European (CET/CEST)',
+    },
+    { value: 'Asia/Kolkata', labelKey: 'timezone.asia_kolkata', labelFallback: 'India (IST)' },
+    { value: 'Asia/Tokyo', labelKey: 'timezone.asia_tokyo', labelFallback: 'Japan (JST)' },
+] as const satisfies readonly EssentialTimezone[];
 
 const ESSENTIAL_VALUES = new Set<string>(ESSENTIAL_TIMEZONES.map((zone) => zone.value));
 
 export function listTimezoneOptions(): TimezoneOption[] {
-    return ESSENTIAL_TIMEZONES.map((zone) => ({ ...zone }));
+    return ESSENTIAL_TIMEZONES.map((zone) => ({
+        value: zone.value,
+        label: t(zone.labelKey, zone.labelFallback),
+    }));
 }
 
 export function listTimezones(): string[] {
@@ -25,7 +52,13 @@ export function listTimezones(): string[] {
 }
 
 export function timezoneLabel(value: string): string {
-    return ESSENTIAL_TIMEZONES.find((zone) => zone.value === value)?.label ?? value;
+    const match = ESSENTIAL_TIMEZONES.find((zone) => zone.value === value);
+
+    if (match === undefined) {
+        return value;
+    }
+
+    return t(match.labelKey, match.labelFallback);
 }
 
 export function isEssentialTimezone(value: string): boolean {

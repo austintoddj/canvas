@@ -1,5 +1,6 @@
 import type { RoleValue } from '@/lib/permissions';
 import { Role } from '@/lib/permissions';
+import { roleLabel } from '@/lib/users/roles';
 import type { UserLookupResult, UserStorePayload } from '@/types/api';
 
 export type GrantAccessFormState = {
@@ -32,23 +33,15 @@ export function grantAccessPayload(role: RoleValue): UserStorePayload {
 
 export function roleLabelFromHost(host: UserLookupResult, labels?: Record<number, string>): string {
     if (host.role === null) {
-        return 'No access';
+        return roleLabel(null, labels);
     }
 
     if (labels !== undefined && labels[host.role] !== undefined) {
         return labels[host.role];
     }
 
-    if (host.role === Role.Contributor) {
-        return 'Contributor';
-    }
-
-    if (host.role === Role.Editor) {
-        return 'Editor';
-    }
-
-    if (host.role === Role.Admin) {
-        return 'Admin';
+    if (host.role === Role.Contributor || host.role === Role.Editor || host.role === Role.Admin) {
+        return roleLabel(host.role, labels);
     }
 
     return `Role ${host.role}`;

@@ -73,7 +73,7 @@ final readonly class PostInsights implements JsonSerializable
         return new self(
             post: $post,
             readTime: ReadTime::calculate($post->body, $locale),
-            popularReadingTimes: self::popularReadingTimes(clone $currentViewsQuery),
+            popularReadingTimes: self::popularReadingTimes(clone $currentViewsQuery, $locale),
             topReferers: self::topReferers(clone $currentViewsQuery, $locale),
             topBrowsers: self::topBrowsers(clone $currentViewsQuery, $locale),
             monthlyViews: $monthlyViews,
@@ -161,7 +161,7 @@ final readonly class PostInsights implements JsonSerializable
      * @param  Builder<View>|HasMany<View, Post>  $views
      * @return array<string, string>
      */
-    private static function popularReadingTimes(Builder|HasMany $views): array
+    private static function popularReadingTimes(Builder|HasMany $views, ?string $locale): array
     {
         $hour = QueryDate::hourExpression();
 
@@ -183,11 +183,40 @@ final readonly class PostInsights implements JsonSerializable
         foreach ($rows as $row) {
             $start = Date::createFromTimeString((string) $row->hour);
             $end = $start->copy()->addMinutes(60);
-            $label = sprintf('%s - %s', $start->format('g:i A'), $end->format('g:i A'));
+            $label = self::formatHourBand($start, $end, $locale);
             $results[$label] = number_format(((int) $row->aggregate) / $total * 100, 2);
         }
 
         return $results;
+    }
+
+    /**
+     * Localized hour-band label for popular reading times (display only).
+     */
+    private static function formatHourBand(CarbonInterface $start, CarbonInterface $end, ?string $locale): string
+    {
+        $resolved = Localization::resolveLocale($locale);
+
+        if (class_exists(\IntlDateFormatter::class)) {
+            $formatter = new \IntlDateFormatter(
+                $resolved,
+                \IntlDateFormatter::NONE,
+                \IntlDateFormatter::SHORT,
+            );
+
+            $startLabel = $formatter->format($start->toDateTime());
+            $endLabel = $formatter->format($end->toDateTime());
+
+            if (is_string($startLabel) && $startLabel !== '' && is_string($endLabel) && $endLabel !== '') {
+                return sprintf('%s – %s', $startLabel, $endLabel);
+            }
+        }
+
+        return sprintf(
+            '%s – %s',
+            $start->copy()->locale($resolved)->isoFormat('LT'),
+            $end->copy()->locale($resolved)->isoFormat('LT'),
+        );
     }
 
     /**
