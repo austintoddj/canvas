@@ -143,7 +143,9 @@ export function IntegrationDrawerChrome({
                         data-integration-caution-zone="true"
                     >
                         {cautionZoneTitle ? (
-                            <h3 className="text-sm/6 font-semibold text-zinc-950 dark:text-white">{cautionZoneTitle}</h3>
+                            <h3 className="text-sm/6 font-semibold text-zinc-950 dark:text-white">
+                                {cautionZoneTitle}
+                            </h3>
                         ) : null}
                         {cautionZone}
                     </section>

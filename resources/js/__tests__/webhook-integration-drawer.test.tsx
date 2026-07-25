@@ -109,7 +109,9 @@ describe('WebhookIntegrationDrawer secret dialog', () => {
         expect(document.querySelector('[data-webhook-secret-done="true"]')).not.toBeNull();
 
         // No amber drawer banner — secret lives only in the dialog.
-        expect(document.querySelector('[data-integration-drawer="webhooks"] [data-webhook-plain-secret="true"]')).toBeNull();
+        expect(
+            document.querySelector('[data-integration-drawer="webhooks"] [data-webhook-plain-secret="true"]')
+        ).toBeNull();
 
         // Parent re-render with new array refs must not dismiss the dialog.
         await waitFor(() => {

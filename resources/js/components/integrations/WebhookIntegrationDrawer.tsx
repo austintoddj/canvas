@@ -28,9 +28,7 @@ type WebhookIntegrationDrawerProps = {
 
 /** One dialog: confirm rotate → reveal secret (also used after first enable). */
 type SecretDialog =
-    | { step: 'closed' }
-    | { step: 'confirm' }
-    | { step: 'reveal'; secret: string; reason: 'rotate' | 'create' };
+    { step: 'closed' } | { step: 'confirm' } | { step: 'reveal'; secret: string; reason: 'rotate' | 'create' };
 
 const DEFAULT_EVENTS: WebhookEventOption[] = [
     { id: 'post.published', label: 'Published', description: 'When a draft or scheduled post goes live.' },
@@ -354,9 +352,7 @@ export function WebhookIntegrationDrawer({
                         'integrations.webhooks_about_help',
                         'Lifecycle events use your app queue (same idea as the weekly digest). Send test runs immediately so you can verify the URL.'
                     )}
-                    cautionZoneTitle={
-                        configured ? t('integrations.webhooks_secret', 'Signing secret') : undefined
-                    }
+                    cautionZoneTitle={configured ? t('integrations.webhooks_secret', 'Signing secret') : undefined}
                     cautionZone={
                         configured ? (
                             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -545,7 +541,12 @@ export function WebhookIntegrationDrawer({
                             </code>
                         </AlertBody>
                         <AlertActions>
-                            <Button type="button" outline onClick={() => void copySecret()} data-webhook-copy-secret="true">
+                            <Button
+                                type="button"
+                                outline
+                                onClick={() => void copySecret()}
+                                data-webhook-copy-secret="true"
+                            >
                                 {t('integrations.webhooks_copy_secret', 'Copy secret')}
                             </Button>
                             <Button
