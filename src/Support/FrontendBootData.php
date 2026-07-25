@@ -27,7 +27,7 @@ final class FrontendBootData
 
         return [
             'languages' => Localization::languageOptions(),
-            'maxUpload' => config('canvas.upload_filesize'),
+            'maxUpload' => UploadLimits::maxBytes(),
             'path' => Paths::basePath(),
             'roles' => Role::options(),
             'appTimezone' => config('app.timezone'),

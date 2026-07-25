@@ -2,6 +2,7 @@
 
 use Canvas\Models\Media;
 use Canvas\Support\Paths;
+use Canvas\Support\UploadLimits;
 use Canvas\Tests\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -240,13 +241,14 @@ it('rejects an upload with no file', function (): void {
 
 it('rejects an upload that exceeds the maximum filesize', function (): void {
     $id = (string) Str::uuid();
-    $oversizeKb = (int) (config('canvas.upload_filesize') / 1024) + 1024;
+    $oversizeKb = UploadLimits::maxKilobytes() + 1024;
 
     $this->actingAs($this->admin, 'canvas')
         ->postJson("canvas/api/media/{$id}", [
             'file' => UploadedFile::fake()->create('large.jpg', $oversizeKb, 'image/jpeg'),
         ])
-        ->assertUnprocessable();
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.file.0', UploadLimits::tooLargeMessage());
 });
 
 it('rejects media uploads with disallowed mime types', function (): void {

@@ -1,8 +1,10 @@
 <?php
 
 use Canvas\Http\Requests\StoreMediaRequest;
+use Canvas\Support\UploadLimits;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 it('requires an uploaded file', function (): void {
     $id = (string) Str::uuid();
@@ -19,7 +21,7 @@ it('requires an uploaded file', function (): void {
 
 it('rejects uploads that exceed the maximum filesize', function (): void {
     $id = (string) Str::uuid();
-    $oversizeKb = (int) (config('canvas.upload_filesize') / 1024) + 1024;
+    $oversizeKb = UploadLimits::maxKilobytes() + 1024;
 
     assertFormRequestInvalid(
         StoreMediaRequest::class,
@@ -31,6 +33,30 @@ it('rejects uploads that exceed the maximum filesize', function (): void {
             'file' => UploadedFile::fake()->create('large.jpg', $oversizeKb, 'image/jpeg'),
         ],
     );
+});
+
+it('uses a human-readable max filesize validation message', function (): void {
+    $id = (string) Str::uuid();
+    $oversizeKb = UploadLimits::maxKilobytes() + 1024;
+
+    $request = makeFormRequest(
+        StoreMediaRequest::class,
+        [],
+        $this->admin,
+        [],
+        "canvas/api/media/{$id}",
+        'POST',
+        [
+            'file' => UploadedFile::fake()->create('large.jpg', $oversizeKb, 'image/jpeg'),
+        ],
+    );
+
+    try {
+        $request->validateResolved();
+        expect(false)->toBeTrue('Expected validation to fail.');
+    } catch (ValidationException $exception) {
+        expect($exception->errors()['file'][0] ?? null)->toBe(UploadLimits::tooLargeMessage());
+    }
 });
 
 it('rejects uploads with disallowed mime types', function (): void {

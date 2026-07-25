@@ -339,7 +339,7 @@ export default function MediaIndex() {
     async function handleFiles(files: File[]) {
         if (files.length === 0) {
             setError(null);
-            toast.error('File type not supported. Use JPG, GIF, PNG, or WebP.');
+            toast.error(t('media.unsupported_type'));
             return;
         }
 
@@ -757,7 +757,7 @@ export default function MediaIndex() {
                                         disabled={loadingMore || uploading}
                                         onClick={() => void loadMore()}
                                     >
-                                        {loadingMore ? 'Loading…' : 'Load more'}
+                                        {loadingMore ? t('common.loading') : t('common.load_more')}
                                     </Button>
                                 </div>
                             ) : null}
@@ -789,15 +789,17 @@ export default function MediaIndex() {
 
             <Alert open={confirmBulkDeleteOpen} onClose={closeBulkDeleteConfirm} size="sm">
                 <AlertTitle>
-                    Delete {selectionCount} {selectionCount === 1 ? 'image' : 'images'}?
+                    {selectionCount === 1
+                        ? t('media.delete_bulk_title', { count: selectionCount })
+                        : t('media.delete_bulk_title_other', { count: selectionCount })}
                 </AlertTitle>
-                <AlertDescription>This cannot be undone.</AlertDescription>
+                <AlertDescription>{t('common.this_cannot_be_undone')}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={bulkDeleting} onClick={closeBulkDeleteConfirm}>
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                     <Button type="button" color="red" disabled={bulkDeleting} onClick={() => void confirmBulkDelete()}>
-                        {bulkDeleting ? 'Deleting…' : 'Delete'}
+                        {bulkDeleting ? t('common.deleting') : t('common.delete')}
                     </Button>
                 </AlertActions>
             </Alert>

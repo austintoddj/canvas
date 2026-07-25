@@ -390,13 +390,13 @@ export default function PostsIndex() {
 
             <Alert open={pendingDelete !== null} onClose={closeDeleteConfirm} size="sm">
                 <AlertTitle>{t('editor.delete_title')}</AlertTitle>
-                <AlertDescription>Delete {deleteLabel}? This cannot be undone.</AlertDescription>
+                <AlertDescription>{t('editor.delete_confirm_body', { title: deleteLabel })}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                     <Button type="button" color="red" disabled={deleting} onClick={() => void confirmDelete()}>
-                        {deleting ? 'Deleting…' : 'Delete'}
+                        {deleting ? t('common.deleting') : t('common.delete')}
                     </Button>
                 </AlertActions>
             </Alert>

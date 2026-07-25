@@ -10,9 +10,12 @@ import {
     api,
     apiBaseUrl,
     apiErrorCode,
+    apiErrorMessage,
     apiRequest,
+    messageFromApiBody,
     throwForStatus,
 } from '@/lib/api';
+import { loadTranslations } from '@/lib/i18n';
 
 function jsonResponse(status: number, body: unknown): Response {
     if (status === 204) {
@@ -31,6 +34,12 @@ describe('api client', () => {
     beforeEach(() => {
         document.head.innerHTML = '<meta name="csrf-token" content="test-csrf-token">';
         window.Canvas = { ...window.Canvas, path: '/canvas' };
+        loadTranslations(
+            JSON.stringify({
+                'common.request_failed': 'Request failed.',
+                'media.too_large_generic': 'File is too large. Try a smaller image.',
+            })
+        );
         vi.stubGlobal('fetch', fetchMock);
         fetchMock.mockReset();
     });
@@ -55,6 +64,26 @@ describe('api client', () => {
             expect(error).toBeInstanceOf(ValidationError);
             expect((error as ValidationError).errors).toEqual({ slug: ['The slug is taken.'] });
         }
+
+        try {
+            throwForStatus(413, { message: 'File is too large. Maximum size is 1.9 MB.' });
+        } catch (error) {
+            expect(error).toBeInstanceOf(ApiError);
+            expect((error as ApiError).status).toBe(413);
+            expect((error as ApiError).message).toBe('File is too large. Maximum size is 1.9 MB.');
+        }
+
+        try {
+            throwForStatus(413, null);
+        } catch (error) {
+            expect((error as ApiError).message).toMatch(/too large/i);
+            expect((error as ApiError).message).not.toMatch(/status 413/i);
+        }
+
+        expect(messageFromApiBody({ message: 'Hello' })).toBe('Hello');
+        expect(messageFromApiBody({ errors: { file: ['Too big'] } })).toBe('Too big');
+        expect(apiErrorMessage(new ApiError(413, { message: 'File is too large.' }))).toBe('File is too large.');
+        expect(apiErrorMessage(new ApiError(500, null))).toBe('Request failed.');
 
         expect(apiErrorCode(new ApiError(422, { code: 'stats_published_only' }))).toBe('stats_published_only');
         expect(apiErrorCode(new ApiError(404, { message: 'Not found' }))).toBeNull();

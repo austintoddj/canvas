@@ -1,7 +1,11 @@
 <?php
 
 use Canvas\CanvasServiceProvider;
+use Canvas\Support\UploadLimits;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Http\Request;
 
 it('registers the weekly digest schedule when mail is enabled', function (): void {
     config([
@@ -63,4 +67,37 @@ it('returns early from command registration when not running in console', functi
     } finally {
         $property->setValue($this->app, $previous);
     }
+});
+
+it('renders a clear json 413 for post too large on canvas api routes', function (): void {
+    $request = Request::create('/canvas/api/media/'.fake()->uuid(), 'POST');
+    $request->headers->set('Accept', 'application/json');
+
+    $response = $this->app->make(ExceptionHandler::class)
+        ->render($request, new PostTooLargeException('The POST data is too large.'));
+
+    expect($response->getStatusCode())->toBe(413)
+        ->and($response->headers->get('content-type'))->toContain('application/json');
+
+    $payload = $response->getData(true);
+    $message = UploadLimits::tooLargeMessage();
+
+    expect($payload['message'])->toBe($message)
+        ->and($payload['errors']['file'] ?? null)->toBe([$message]);
+});
+
+it('does not claim post too large responses for non-canvas routes', function (): void {
+    $request = Request::create('/api/unrelated', 'POST');
+    $request->headers->set('Accept', 'application/json');
+
+    $response = $this->app->make(ExceptionHandler::class)
+        ->render($request, new PostTooLargeException('The POST data is too large.'));
+
+    $payload = method_exists($response, 'getData') ? $response->getData(true) : null;
+
+    if (is_array($payload)) {
+        expect($payload['message'] ?? null)->not->toBe(UploadLimits::tooLargeMessage());
+    }
+
+    expect($response->getStatusCode())->toBe(413);
 });

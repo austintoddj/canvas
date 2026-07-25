@@ -294,18 +294,18 @@ Confirm these settings in `config/canvas.php` (publish with `php artisan vendor:
 'locales' => ($locales = env('CANVAS_LOCALES')) ? array_values(array_filter(array_map('trim', explode(',', $locales)))) : [],
 ```
 
-| Key               | Env                      | Default / notes                                                                                                                |
-| ----------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| `user_model`      | `CANVAS_USER_MODEL`      | `App\Models\User` — host Eloquent class Canvas reads identity from                                                             |
-| `guard`           | `CANVAS_GUARD`           | `web` — applied as `auth:{guard}` on all Canvas routes                                                                         |
-| `middleware`      | —                        | `['web']` — additional middleware applied before auth                                                                          |
-| `locales`         | `CANVAS_LOCALES`         | empty = full package catalog; comma-separated codes restrict the picker (`en,es`). Codes without translation files are ignored |
-| `domain`          | `CANVAS_DOMAIN`          | `null` — optional subdomain for the admin SPA                                                                                  |
-| `path`            | `CANVAS_PATH`            | `canvas` → admin at `/canvas` by default                                                                                       |
-| `storage_disk`    | `CANVAS_STORAGE_DISK`    | `public` — disk for media uploads                                                                                              |
-| `storage_path`    | `CANVAS_STORAGE_PATH`    | `canvas` — path prefix on that disk                                                                                            |
-| `upload_filesize` | `CANVAS_UPLOAD_FILESIZE` | `3145728` (3 MB)                                                                                                               |
-| `mail.enabled`    | `CANVAS_MAIL_ENABLED`    | `false` — weekly author digest (see [Weekly digest](#weekly-digest))                                                           |
+| Key               | Env                      | Default / notes                                                                                                                                                                                                                       |
+| ----------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user_model`      | `CANVAS_USER_MODEL`      | `App\Models\User` — host Eloquent class Canvas reads identity from                                                                                                                                                                    |
+| `guard`           | `CANVAS_GUARD`           | `web` — applied as `auth:{guard}` on all Canvas routes                                                                                                                                                                                |
+| `middleware`      | —                        | `['web']` — additional middleware applied before auth                                                                                                                                                                                 |
+| `locales`         | `CANVAS_LOCALES`         | empty = full package catalog; comma-separated codes restrict the picker (`en,es`). Codes without translation files are ignored                                                                                                        |
+| `domain`          | `CANVAS_DOMAIN`          | `null` — optional subdomain for the admin SPA                                                                                                                                                                                         |
+| `path`            | `CANVAS_PATH`            | `canvas` → admin at `/canvas` by default                                                                                                                                                                                              |
+| `storage_disk`    | `CANVAS_STORAGE_DISK`    | `public` — disk for media uploads                                                                                                                                                                                                     |
+| `storage_path`    | `CANVAS_STORAGE_PATH`    | `canvas` — path prefix on that disk                                                                                                                                                                                                   |
+| `upload_filesize` | `CANVAS_UPLOAD_FILESIZE` | Desired max in bytes (`3145728` = 3 MB). Runtime effective max is `min(config, PHP upload/post limits)` so the SPA never allows more than the server accepts. Oversized Canvas API requests return JSON **413** with a clear message. |
+| `mail.enabled`    | `CANVAS_MAIL_ENABLED`    | `false` — weekly author digest (see [Weekly digest](#weekly-digest))                                                                                                                                                                  |
 
 Your host app owns login, logout, and password reset for the configured guard.
 

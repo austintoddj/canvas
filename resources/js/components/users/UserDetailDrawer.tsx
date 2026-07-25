@@ -321,7 +321,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
         try {
             await usersApi.destroy(userId);
             setConfirmRevokeOpen(false);
-            toast.success(`Access revoked for ${user.name}.`);
+            toast.success(t('users.revoked', { name: user.name }));
             onRevoked?.(user.id);
             onClose();
         } catch {
@@ -349,7 +349,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                                     disabled={revoking || saving || loading}
                                     onClick={openRevokeConfirm}
                                 >
-                                    Revoke access
+                                    {t('users.revoke')}
                                 </Button>
                             ) : (
                                 <span />
@@ -361,7 +361,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                                     disabled={saving || revoking || localeSwitching}
                                     onClick={onClose}
                                 >
-                                    Cancel
+                                    {t('common.cancel')}
                                 </Button>
                                 <Button
                                     type="button"
@@ -369,7 +369,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
                                     disabled={loading || saving || revoking || localeSwitching || !isDirty || !showForm}
                                     onClick={() => void handleSave()}
                                 >
-                                    {saving ? 'Saving…' : isSelf ? 'Save profile' : 'Save'}
+                                    {saving ? t('common.saving') : isSelf ? t('users.save_profile') : t('common.save')}
                                 </Button>
                             </div>
                         </>
@@ -454,7 +454,9 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
 
                             {!isSelf && accessForm !== null ? (
                                 <div className="space-y-2">
-                                    <Text className="text-sm font-medium text-zinc-950 dark:text-white">Role</Text>
+                                    <Text className="text-sm font-medium text-zinc-950 dark:text-white">
+                                        {t('users.role')}
+                                    </Text>
                                     <RoleSelectDropdown
                                         value={accessForm.role}
                                         onChange={setRole}
@@ -470,16 +472,18 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
             </SideDrawer>
 
             <Alert open={confirmRevokeOpen} onClose={closeRevokeConfirm} size="sm">
-                <AlertTitle>Revoke access?</AlertTitle>
+                <AlertTitle>{t('users.revoke_title')}</AlertTitle>
                 <AlertDescription>
-                    Revoke Canvas access for {user?.name}? They’ll lose the admin until access is granted again.
+                    {t('users.revoke_body', {
+                        name: user?.name ?? t('common.untitled'),
+                    })}
                 </AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={revoking} onClick={closeRevokeConfirm}>
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                     <Button type="button" color="red" disabled={revoking} onClick={() => void confirmRevoke()}>
-                        {revoking ? 'Revoking…' : 'Revoke access'}
+                        {revoking ? t('users.revoking') : t('users.revoke')}
                     </Button>
                 </AlertActions>
             </Alert>

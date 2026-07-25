@@ -34,15 +34,20 @@ use Canvas\Support\MediaService;
 use Canvas\Support\MediaStorage;
 use Canvas\Support\SettingsRepository;
 use Canvas\Support\SettingsWebhookEndpointRepository;
+use Canvas\Support\UploadLimits;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Validation\ValidatesWhenResolved;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\HttpFoundation\Response;
 
 class CanvasServiceProvider extends ServiceProvider
 {
@@ -74,6 +79,33 @@ class CanvasServiceProvider extends ServiceProvider
         $this->registerGates();
         $this->registerEvents();
         $this->registerScheduler();
+        $this->registerExceptionHandling();
+    }
+
+    private function registerExceptionHandling(): void
+    {
+        $this->callAfterResolving(ExceptionHandler::class, function (ExceptionHandler $handler): void {
+            if (! method_exists($handler, 'renderable')) {
+                return;
+            }
+
+            $handler->renderable(function (PostTooLargeException $exception, Request $request): ?Response {
+                if (! UploadLimits::isCanvasApiRequest($request)) {
+                    return null;
+                }
+
+                $message = UploadLimits::tooLargeMessage(
+                    locale: UploadLimits::requestLocale($request),
+                );
+
+                return response()->json([
+                    'message' => $message,
+                    'errors' => [
+                        'file' => [$message],
+                    ],
+                ], 413);
+            });
+        });
     }
 
     /**

@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 export type LaravelValidationErrors = Record<string, string[]>;
@@ -32,6 +34,55 @@ export function apiErrorCode(error: unknown): string | null {
     const code = (error.body as { code: unknown }).code;
 
     return typeof code === 'string' && code.trim() !== '' ? code : null;
+}
+
+/** Prefer JSON `message` / field errors over a bare HTTP status string. */
+export function messageFromApiBody(body: unknown): string | null {
+    if (typeof body === 'string' && body.trim() !== '') {
+        return body.trim();
+    }
+
+    if (typeof body !== 'object' || body === null) {
+        return null;
+    }
+
+    if ('message' in body) {
+        const message = (body as { message: unknown }).message;
+
+        if (typeof message === 'string' && message.trim() !== '') {
+            return message.trim();
+        }
+    }
+
+    const errors = extractValidationErrors(body);
+    const firstField = Object.values(errors)[0];
+    const firstMessage = firstField?.[0];
+
+    return typeof firstMessage === 'string' && firstMessage.trim() !== '' ? firstMessage.trim() : null;
+}
+
+export function apiErrorMessage(error: unknown, fallback?: string): string {
+    const resolvedFallback = fallback ?? t('common.request_failed', 'Request failed.');
+
+    if (error instanceof ApiError) {
+        const fromBody = messageFromApiBody(error.body);
+
+        if (fromBody) {
+            return fromBody;
+        }
+
+        if (error.message && !/^Request failed with status \d+$/.test(error.message)) {
+            return error.message;
+        }
+
+        return resolvedFallback;
+    }
+
+    if (error instanceof Error && error.message.trim() !== '') {
+        return error.message;
+    }
+
+    return resolvedFallback;
 }
 
 export class UnauthorizedError extends ApiError {
@@ -120,10 +171,18 @@ export function throwForStatus(status: number, body: unknown): never {
             throw new UnauthorizedError(body);
         case 403:
             throw new ForbiddenError(body);
+        case 413: {
+            // Prefer server message; SPA upload path rewrites with t() for locale.
+            const message =
+                messageFromApiBody(body) ?? t('media.too_large_generic', 'File is too large. Try a smaller image.');
+            throw new ApiError(413, body, message);
+        }
         case 422:
             throw new ValidationError(body);
-        default:
-            throw new ApiError(status, body);
+        default: {
+            const message = messageFromApiBody(body) ?? undefined;
+            throw new ApiError(status, body, message);
+        }
     }
 }
 

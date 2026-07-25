@@ -7,6 +7,7 @@ use Canvas\Models\CanvasUser;
 use Canvas\Support\FrontendBootData;
 use Canvas\Support\Localization;
 use Canvas\Support\Paths;
+use Canvas\Support\UploadLimits;
 use Canvas\Support\Version;
 
 it('builds the frontend boot payload', function (): void {
@@ -16,7 +17,7 @@ it('builds the frontend boot payload', function (): void {
 
     expect($bootData)->toMatchArray([
         'languages' => Localization::languageOptions(),
-        'maxUpload' => config('canvas.upload_filesize'),
+        'maxUpload' => UploadLimits::maxBytes(),
         'path' => Paths::basePath(),
         'roles' => Role::options(),
         'appTimezone' => config('app.timezone'),

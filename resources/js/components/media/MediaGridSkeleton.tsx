@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 
 import { Skeleton } from '@/components/Skeleton';
+import { t } from '@/lib/i18n';
 import {
     JUSTIFIED_GAP_PX,
     JUSTIFIED_TARGET_ROW_HEIGHT_DIALOG,
@@ -32,7 +33,7 @@ export function MediaGridSkeleton({
             aria-live="polite"
             data-media-grid-skeleton="true"
         >
-            <span className="sr-only">Loading media…</span>
+            <span className="sr-only">{t('media.loading')}</span>
             {Array.from({ length: count }, (_, index) => {
                 const aspect = SKELETON_ASPECTS[index % SKELETON_ASPECTS.length];
                 const width = rowHeight * aspect;

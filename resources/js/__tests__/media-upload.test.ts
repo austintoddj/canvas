@@ -2,14 +2,17 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ApiError, ValidationError } from '@/lib/api';
 import {
     MediaUploadError,
     ALLOWED_MEDIA_MIME_TYPES,
     getMaxUploadBytes,
     mediaApi,
+    tooLargeMessage,
     uploadMedia,
     validateMediaFile,
 } from '@/lib/api/media';
+import { loadTranslations } from '@/lib/i18n';
 import type { Media } from '@/types/api';
 
 function imageFile(name: string, type: string, sizeBytes: number): File {
@@ -37,6 +40,14 @@ const uploadedMedia: Media = {
 describe('media upload', () => {
     beforeEach(() => {
         window.Canvas = { ...window.Canvas, maxUpload: 3_145_728 };
+        loadTranslations(
+            JSON.stringify({
+                'media.unsupported_type': 'File type not supported. Use JPG, GIF, PNG, or WebP.',
+                'media.too_large': 'File is too large. Maximum size is :max.',
+                'media.too_large_generic': 'File is too large. Try a smaller image.',
+                'media.upload_failed': 'Upload failed.',
+            })
+        );
     });
 
     afterEach(() => {
@@ -66,5 +77,50 @@ describe('media upload', () => {
         await expect(uploadMedia(imageFile('bad.pdf', 'application/pdf', 100))).rejects.toThrow(MediaUploadError);
         expect(createSpy).not.toHaveBeenCalled();
         expect(storeSpy).not.toHaveBeenCalled();
+    });
+
+    it('maps 413 and file validation failures to MediaUploadError with a clear message', async () => {
+        expect(tooLargeMessage(2_031_616)).toBe('File is too large. Maximum size is 1.9 MB.');
+
+        loadTranslations(
+            JSON.stringify({
+                'media.too_large': 'Datei zu groß. Maximum :max.',
+            })
+        );
+        expect(tooLargeMessage(2_031_616)).toBe('Datei zu groß. Maximum 1.9 MB.');
+
+        loadTranslations(
+            JSON.stringify({
+                'media.too_large': 'File is too large. Maximum size is :max.',
+            })
+        );
+
+        vi.spyOn(mediaApi, 'create').mockResolvedValue({ id: 'media-uuid' });
+        const storeSpy = vi
+            .spyOn(mediaApi, 'store')
+            .mockRejectedValue(
+                new ApiError(
+                    413,
+                    { message: 'File is too large. Maximum size is 1.9 MB.' },
+                    'File is too large. Maximum size is 1.9 MB.'
+                )
+            );
+
+        await expect(uploadMedia(imageFile('photo.jpg', 'image/jpeg', 512))).rejects.toMatchObject({
+            name: 'MediaUploadError',
+            message: 'File is too large. Maximum size is 3 MB.',
+        });
+
+        storeSpy.mockRejectedValueOnce(
+            new ValidationError({
+                message: 'The given data was invalid.',
+                errors: { file: ['File is too large. Maximum size is 1.9 MB.'] },
+            })
+        );
+
+        await expect(uploadMedia(imageFile('photo.jpg', 'image/jpeg', 512))).rejects.toMatchObject({
+            name: 'MediaUploadError',
+            message: 'File is too large. Maximum size is 3 MB.',
+        });
     });
 });

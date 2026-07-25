@@ -154,7 +154,7 @@ export default function UsersIndex() {
         try {
             await usersApi.destroy(String(userId));
             setPendingRevoke(null);
-            toast.success(`Access revoked for ${name}.`);
+            toast.success(t('users.revoked', { name }));
 
             if (detailId === String(userId)) {
                 closeDetail();
@@ -287,8 +287,9 @@ export default function UsersIndex() {
                                                     <Text className="mt-0.5 truncate text-sm text-canvas-muted dark:text-canvas-muted-dark">
                                                         {username ? `@${username}` : user.email}
                                                         {' · '}
-                                                        {postsCount.toLocaleString()}{' '}
-                                                        {postsCount === 1 ? 'post' : 'posts'}
+                                                        {postsCount === 1
+                                                            ? t('common.post_count', { count: postsCount })
+                                                            : t('common.posts_count', { count: postsCount })}
                                                     </Text>
                                                 </div>
                                             </div>
@@ -297,7 +298,7 @@ export default function UsersIndex() {
                                             <ListRowEnd date={formatListDate(user.canvas?.updated_at)}>
                                                 {!isSelf ? (
                                                     <ListRowActionButton
-                                                        label={`Revoke access for ${user.name}`}
+                                                        label={`${t('users.revoke')} — ${user.name}`}
                                                         danger
                                                         onClick={() => setPendingRevoke(user)}
                                                     >
@@ -396,15 +397,16 @@ export default function UsersIndex() {
             <Alert open={pendingRevoke !== null} onClose={closeRevokeConfirm} size="sm">
                 <AlertTitle>{t('users.revoke_title')}</AlertTitle>
                 <AlertDescription>
-                    Revoke Canvas access for {pendingRevoke?.name ?? 'this user'}? They will no longer be able to use
-                    Canvas until invited again.
+                    {t('users.revoke_body', {
+                        name: pendingRevoke?.name ?? t('common.untitled'),
+                    })}
                 </AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={revoking} onClick={closeRevokeConfirm}>
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                     <Button type="button" color="red" disabled={revoking} onClick={() => void confirmRevoke()}>
-                        {revoking ? 'Revoking…' : 'Revoke access'}
+                        {revoking ? t('users.revoking') : t('users.revoke')}
                     </Button>
                 </AlertActions>
             </Alert>

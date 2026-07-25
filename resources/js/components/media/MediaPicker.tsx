@@ -11,7 +11,8 @@ import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { ErrorText } from '@/components/text';
 import { usePermissions } from '@/hooks/usePermissions';
 import { isInitialLoading, isRefreshing } from '@/lib/async-ui';
-import { mediaApi, uploadMedia } from '@/lib/api/media';
+import { mediaApi, unsupportedTypeMessage, uploadMedia } from '@/lib/api/media';
+import { t } from '@/lib/i18n';
 import { MEDIA_SEARCH_DEBOUNCE_MS, mediaIndexQueryParams, type MediaListFilters } from '@/lib/media/list';
 import type { Media, Paginated } from '@/types/api';
 
@@ -79,7 +80,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
             })
             .catch(() => {
                 if (!cancelled && !controller.signal.aborted) {
-                    setError('Unable to load media.');
+                    setError(t('media.load_error'));
                 }
             })
             .finally(() => {
@@ -108,7 +109,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
             setPage(response.current_page);
             setLastPage(response.last_page);
         } catch {
-            setError('Unable to load media.');
+            setError(t('media.load_error'));
         } finally {
             setLoadingMore(false);
         }
@@ -116,7 +117,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
 
     async function handleFiles(files: File[]) {
         if (files.length === 0) {
-            setError('File type not supported. Use JPG, GIF, PNG, or WebP.');
+            setError(unsupportedTypeMessage());
             return;
         }
 
@@ -128,7 +129,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
             setMedia((current) => [uploaded, ...current]);
             onSelect(uploaded.url, uploaded);
         } catch (uploadError) {
-            setError(uploadError instanceof Error ? uploadError.message : 'Upload failed.');
+            setError(uploadError instanceof Error ? uploadError.message : t('media.upload_failed', 'Upload failed.'));
         } finally {
             setUploading(false);
         }
@@ -147,11 +148,11 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
         <div>
             <div className="flex flex-wrap items-end justify-between gap-3">
                 <Field className="min-w-[12rem] flex-1">
-                    <Label className="sr-only">Search media</Label>
+                    <Label className="sr-only">{t('media.search_label')}</Label>
                     <Input
                         name="media-search"
                         value={search}
-                        placeholder="Search media…"
+                        placeholder={t('media.search_placeholder')}
                         onChange={(event) => setSearch(event.target.value)}
                     />
                 </Field>
@@ -161,11 +162,11 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                         value={scope}
                         onChange={(next) => setScope(next)}
                         indicator="slide"
-                        aria-label="Media author scope"
+                        aria-label={t('media.scope_label')}
                         className="shrink-0"
                     >
-                        <PillNavItem value="user">Mine</PillNavItem>
-                        <PillNavItem value="all">All</PillNavItem>
+                        <PillNavItem value="user">{t('media.scope_mine')}</PillNavItem>
+                        <PillNavItem value="all">{t('common.all')}</PillNavItem>
                     </PillNav>
                 ) : null}
             </div>
@@ -175,7 +176,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                 uploading={uploading}
                 multiple={false}
                 spacious={trueEmptyLibrary}
-                label="Drop an image here, or click to browse"
+                label={t('media.dropzone_single')}
                 onFiles={(files) => void handleFiles(files)}
             />
 
@@ -195,7 +196,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                     <MediaGrid
                         items={media}
                         compact
-                        emptyMessage="No images found."
+                        emptyMessage={t('media.filtered_empty')}
                         onSelect={(item) => onSelect(item.url, item)}
                     />
                 </div>
@@ -204,7 +205,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
             {page < lastPage && !loading ? (
                 <div className="mt-4 flex justify-center">
                     <Button type="button" outline disabled={loadingMore} onClick={() => void loadMore()}>
-                        {loadingMore ? 'Loading…' : 'Load more'}
+                        {loadingMore ? t('common.loading') : t('common.load_more')}
                     </Button>
                 </div>
             ) : null}
@@ -221,8 +222,8 @@ type MediaPickerProps = {
 export default function MediaPicker({ open, onClose, onSelect }: MediaPickerProps) {
     return (
         <Dialog open={open} onClose={onClose} size="4xl">
-            <DialogTitle>Choose image</DialogTitle>
-            <DialogDescription>Browse your media library or upload a new image.</DialogDescription>
+            <DialogTitle>{t('editor.choose_image')}</DialogTitle>
+            <DialogDescription>{t('media.browse')}</DialogDescription>
 
             <DialogBody>
                 <MediaPickerPanel

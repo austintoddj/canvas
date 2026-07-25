@@ -313,7 +313,7 @@ export default function OrganizeIndex() {
         try {
             await api.destroy(itemId);
             setPendingDelete(null);
-            toast.success(tab === 'tags' ? 'Tag deleted.' : 'Topic deleted.');
+            toast.success(tab === 'tags' ? t('taxonomy.tag_deleted') : t('taxonomy.topic_deleted'));
 
             if (detailId === itemId) {
                 closeDetail();
@@ -321,7 +321,7 @@ export default function OrganizeIndex() {
 
             await handleDeleted(itemId);
         } catch {
-            toast.error(tab === 'tags' ? 'Unable to delete this tag.' : 'Unable to delete this topic.');
+            toast.error(tab === 'tags' ? t('taxonomy.tag_delete_error') : t('taxonomy.topic_delete_error'));
         } finally {
             setDeleting(false);
         }
@@ -378,12 +378,12 @@ export default function OrganizeIndex() {
                         type="search"
                         name="taxonomy-search"
                         value={searchDraft}
-                        placeholder="Search by name"
+                        placeholder={t('organize.search_placeholder')}
                         onChange={(event) => setSearchDraft(event.target.value)}
                     />
                 </Field>
                 <Field className="w-full sm:w-44">
-                    <Label className="sr-only">Sort</Label>
+                    <Label className="sr-only">{t('organize.sort_label', 'Sort')}</Label>
                     <Select
                         name="taxonomy-sort"
                         value={filters.sort}
@@ -563,18 +563,19 @@ export default function OrganizeIndex() {
             <Alert open={pendingDelete !== null} onClose={closeDeleteConfirm} size="sm">
                 <AlertTitle>{copy.deleteTitle}</AlertTitle>
                 <AlertDescription>
-                    Delete{' '}
-                    {pendingDelete === null || pendingDelete.name.trim() === ''
-                        ? copy.untitled
-                        : pendingDelete.name.trim()}
-                    ? This cannot be undone.
+                    {t('taxonomy.delete_confirm', {
+                        name:
+                            pendingDelete === null || pendingDelete.name.trim() === ''
+                                ? copy.untitled
+                                : pendingDelete.name.trim(),
+                    })}
                 </AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                     <Button type="button" color="red" disabled={deleting} onClick={() => void confirmDelete()}>
-                        {deleting ? 'Deleting…' : 'Delete'}
+                        {deleting ? t('common.deleting') : t('common.delete')}
                     </Button>
                 </AlertActions>
             </Alert>

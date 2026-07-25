@@ -3,6 +3,7 @@ import { useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
 
 import { Text } from '@/components/text';
 import { ALLOWED_MEDIA_MIME_TYPES, getMaxUploadBytes } from '@/lib/api/media';
+import { t } from '@/lib/i18n';
 import { applyDragDepth, isFileDragTypes } from '@/lib/media/drag';
 import { formatMediaBytes, mediaFilesFromList } from '@/lib/media/list';
 import { IconPhoto, IconUpload } from '@tabler/icons-react';
@@ -34,7 +35,7 @@ export function MediaDropzone({
     spacious = false,
     suppressDragHighlight = false,
     className,
-    label = 'Drop images here, or click to browse',
+    label,
     hint,
 }: MediaDropzoneProps) {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -43,6 +44,7 @@ export function MediaDropzone({
 
     const isDisabled = disabled || uploading;
     const showDragging = dragging && !suppressDragHighlight;
+    const resolvedLabel = label ?? t(multiple ? 'media.dropzone_multi' : 'media.dropzone_single');
     const resolvedHint = hint ?? `JPG, PNG, GIF, or WebP · up to ${formatMediaBytes(getMaxUploadBytes())}`;
 
     function openPicker() {
@@ -137,7 +139,7 @@ export function MediaDropzone({
             role="button"
             tabIndex={isDisabled ? -1 : 0}
             aria-disabled={isDisabled || undefined}
-            aria-label={uploading ? 'Uploading images' : label}
+            aria-label={uploading ? t('media.uploading') : resolvedLabel}
             onClick={openPicker}
             onKeyDown={handleKeyDown}
             onDragEnter={handleDragEnter}
@@ -187,7 +189,7 @@ export function MediaDropzone({
             </span>
 
             <Text className="mt-3 text-sm font-medium text-zinc-950 dark:text-white">
-                {uploading ? 'Uploading…' : showDragging ? 'Drop to upload' : label}
+                {uploading ? t('media.uploading') : showDragging ? t('media.drop_to_upload') : resolvedLabel}
             </Text>
             <Text className="mt-1 text-xs text-canvas-muted dark:text-canvas-muted-dark">{resolvedHint}</Text>
         </div>
