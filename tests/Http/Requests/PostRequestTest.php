@@ -17,14 +17,13 @@ it('requires a slug', function (): void {
     );
 });
 
-it('requires a title when creating a post', function (): void {
+it('allows creating a draft without a title', function (): void {
     $id = (string) Str::uuid();
 
-    assertFormRequestInvalid(
+    assertFormRequestValid(
         PostRequest::class,
-        ['slug' => 'new-post'],
+        ['slug' => 'new-post', 'title' => null],
         $this->admin,
-        ['title'],
         ['id' => $id],
         "canvas/api/posts/{$id}",
     );

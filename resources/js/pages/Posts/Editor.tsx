@@ -131,7 +131,6 @@ export default function PostsEditor() {
         postId,
         form,
         enabled: autosaveEnabled,
-        isPersisted: draftPersisted,
         onSaved: handleSaved,
     });
 

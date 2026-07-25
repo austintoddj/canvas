@@ -38,11 +38,11 @@ class PostRequest extends FormRequest
         $post = is_string($postId) ? Post::query()->find($postId) : null;
         $ownerId = $post instanceof Post ? $post->user_id : data_get($user, 'id');
 
-        // First store creates the row — title required. Later updates may clear the
-        // title; lists render empty titles as “Untitled post” without storing that label.
-        $titleRules = $post === null ? ['required', 'string'] : ['nullable', 'string'];
+        // Drafts may be created or updated without a title; lists show “Untitled post”.
+        // Publishing still requires a title (promote + published_at).
+        $titleRules = ['nullable', 'string'];
 
-        if ($post !== null && filled($this->input('published_at')) && $this->boolean('promote')) {
+        if (filled($this->input('published_at')) && $this->boolean('promote')) {
             $titleRules = ['required', 'string'];
         }
 

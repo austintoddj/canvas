@@ -380,16 +380,21 @@ describe('when storing and updating posts', function (): void {
             ]);
     });
 
-    it('requires a title when creating a post', function (): void {
+    it('stores a new draft without a title', function (): void {
         $id = (string) Str::uuid();
 
         $this->actingAs($this->admin, 'canvas')
             ->postJson("canvas/api/posts/{$id}", [
                 'slug' => 'no-title-yet',
                 'title' => '',
+                'body' => '<p>Draft body only</p>',
             ])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['title']);
+            ->assertCreated()
+            ->assertJsonPath('id', $id)
+            ->assertJsonPath('slug', 'no-title-yet')
+            ->assertJsonPath('title', null)
+            ->assertJsonPath('user_id', $this->admin->id)
+            ->assertJsonPath('body', '<p>Draft body only</p>');
     });
 
     it('updates an existing draft post', function (): void {

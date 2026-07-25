@@ -19,7 +19,7 @@ function AvatarImage({ src, alt }: { src: string; alt: string }) {
         return null;
     }
 
-    return <img className="size-full" src={src} alt={alt} onError={() => setFailed(true)} />;
+    return <img className="size-full object-cover" src={src} alt={alt} onError={() => setFailed(true)} />;
 }
 
 export function Avatar({
