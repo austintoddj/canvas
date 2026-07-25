@@ -102,7 +102,7 @@ it('queues a delivery job when a draft is published via the api', function (): v
         ->postJson("canvas/api/posts/{$post->id}", [
             'title' => 'Go live',
             'slug' => 'go-live',
-            'published_at' => now()->subHour()->format('Y-m-d H:i:s'),
+            'published_at' => now()->subHour()->toIso8601String(),
         ])
         ->assertOk();
 
@@ -128,7 +128,7 @@ it('does not queue delivery for pending autosaves on live posts', function (): v
             'title' => 'Pending title',
             'slug' => 'live',
             'body' => 'Pending body',
-            'published_at' => $post->published_at->format('Y-m-d H:i:s'),
+            'published_at' => $post->published_at->toIso8601String(),
         ])
         ->assertOk()
         ->assertJsonPath('has_pending_changes', true);

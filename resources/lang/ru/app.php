@@ -185,6 +185,7 @@ return [
     'editor.schedule_prev_month' => 'Предыдущий месяц',
     'editor.schedule_next_month' => 'Следующий месяц',
     'editor.schedule_timezone_hint' => 'Время использует локальный часовой пояс этого устройства.',
+    'editor.schedule_app_timezone' => 'Приложение: :timezone · :when',
     'editor.schedule_presets.in_one_hour' => 'Через 1 час',
     'editor.schedule_presets.tomorrow_morning' => 'Завтра в 9:00',
     'editor.schedule_presets.next_monday' => 'В следующий понедельник',

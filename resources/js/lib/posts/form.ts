@@ -138,26 +138,14 @@ export function slugify(value: string): string {
 }
 
 /**
- * Local calendar datetime with second fidelity for API payloads.
- * Avoids UTC day-shift when evening local times serialize through ISO-Z alone.
+ * Absolute instant for API `published_at` (ISO-8601 with Z).
+ * Picker wall-clock values are never sent on the wire.
  */
-export function toPublishDateTimeString(date: Date = new Date()): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+export function toPublishedAtPayload(date: Date = new Date()): string {
+    return date.toISOString();
 }
 
-/** @deprecated Prefer toPublishDateTimeString — kept for callers that only need the day. */
-export function toPublishDateString(date: Date = new Date()): string {
-    return toPublishDateTimeString(date).slice(0, 10);
-}
-
-/** Value for `<input type="datetime-local">` (YYYY-MM-DDTHH:mm). */
+/** Value for datetime-local-style picker controls (YYYY-MM-DDTHH:mm) in device local time. */
 export function toDatetimeLocalValue(value: string | Date | null | undefined): string {
     if (value === null || value === undefined || value === '') {
         return '';
@@ -179,7 +167,7 @@ export function toDatetimeLocalValue(value: string | Date | null | undefined): s
 }
 
 /**
- * Convert a datetime-local control value into an API-ready local datetime string.
+ * Convert a datetime-local control value into an API ISO instant.
  * Returns null for empty or invalid input.
  */
 export function fromDatetimeLocalValue(value: string): string | null {
@@ -214,9 +202,13 @@ export function fromDatetimeLocalValue(value: string): string | null {
         return null;
     }
 
-    return toPublishDateTimeString(local);
+    return toPublishedAtPayload(local);
 }
 
+/**
+ * Parse an API `published_at` value as a true instant.
+ * Requires a timezone designator (Z or numeric offset); naive strings are rejected.
+ */
 export function parsePublishedAt(value: string | null | undefined): Date | null {
     if (value === null || value === undefined) {
         return null;
@@ -228,42 +220,7 @@ export function parsePublishedAt(value: string | null | undefined): Date | null 
         return null;
     }
 
-    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
-
-    if (dateOnly !== null) {
-        const year = Number(dateOnly[1]);
-        const month = Number(dateOnly[2]);
-        const day = Number(dateOnly[3]);
-        const local = new Date(year, month - 1, day);
-
-        if (local.getFullYear() === year && local.getMonth() === month - 1 && local.getDate() === day) {
-            return local;
-        }
-
-        return null;
-    }
-
-    const localDateTime = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/.exec(trimmed);
-
-    if (localDateTime !== null && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(trimmed)) {
-        const year = Number(localDateTime[1]);
-        const month = Number(localDateTime[2]);
-        const day = Number(localDateTime[3]);
-        const hours = Number(localDateTime[4]);
-        const minutes = Number(localDateTime[5]);
-        const seconds = localDateTime[6] !== undefined ? Number(localDateTime[6]) : 0;
-        const local = new Date(year, month - 1, day, hours, minutes, seconds);
-
-        if (
-            local.getFullYear() === year &&
-            local.getMonth() === month - 1 &&
-            local.getDate() === day &&
-            local.getHours() === hours &&
-            local.getMinutes() === minutes
-        ) {
-            return local;
-        }
-
+    if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(trimmed)) {
         return null;
     }
 
@@ -363,19 +320,29 @@ export function formFromCreateResponse(
     };
 }
 
-export function toStorePayload(form: PostFormState, options?: { promote?: boolean }): PostStorePayload {
+export type StorePayloadOptions = {
+    promote?: boolean;
+    schedule?: boolean;
+    publish_now?: boolean;
+};
+
+export function toStorePayload(form: PostFormState, options?: StorePayloadOptions): PostStorePayload {
+    const publishNow = options?.publish_now === true;
+
     return {
         title: form.title,
         slug: form.slug,
         summary: form.summary === '' ? null : form.summary,
         body: normalizeBodyHtml(form.body),
-        published_at: form.publishedAt,
+        published_at: publishNow ? null : form.publishedAt,
         featured_image: form.featuredImage,
         featured_image_caption: form.featuredImageCaption,
         meta: form.meta,
         tags: form.tags,
         topic: form.topic ? [form.topic] : [],
         ...(options?.promote === true ? { promote: true } : {}),
+        ...(options?.schedule === true ? { schedule: true } : {}),
+        ...(publishNow ? { publish_now: true } : {}),
     };
 }
 
@@ -383,10 +350,14 @@ export function serializeFormState(form: PostFormState): string {
     return JSON.stringify(toStorePayload(form));
 }
 
+/**
+ * Client-side optimistic publish stamp (ISO). Prefer server `publish_now` for the wire
+ * so app/browser clock skew cannot schedule by accident; this still helps status before echo.
+ */
 export function publishFormState(form: PostFormState, at: Date = new Date()): PostFormState {
     return {
         ...form,
-        publishedAt: toPublishDateTimeString(at),
+        publishedAt: toPublishedAtPayload(at),
     };
 }
 
@@ -398,10 +369,10 @@ export function scheduleFormState(form: PostFormState, at: Date | string): PostF
 
         if (publishedAt === null) {
             const parsed = parsePublishedAt(at);
-            publishedAt = parsed !== null ? toPublishDateTimeString(parsed) : null;
+            publishedAt = parsed !== null ? toPublishedAtPayload(parsed) : null;
         }
     } else {
-        publishedAt = toPublishDateTimeString(at);
+        publishedAt = toPublishedAtPayload(at);
     }
 
     return {

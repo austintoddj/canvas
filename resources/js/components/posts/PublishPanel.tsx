@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Button } from '@/components/button';
 import { Description, Field, Fieldset, Label } from '@/components/fieldset';
 import { useCanvas } from '@/hooks/useCanvas';
-import { isPublished, isScheduled, publishStatus, type PostFormState } from '@/lib/posts/form';
+import { formatScheduleSummary } from '@/lib/datetime-picker';
+import { isPublished, isScheduled, parsePublishedAt, publishStatus, type PostFormState } from '@/lib/posts/form';
 
 type PublishPanelProps = {
     form: PostFormState;
@@ -22,16 +23,13 @@ function formatScheduledDate(value: string | null, locale: string): string {
         return '';
     }
 
-    const date = new Date(value);
+    const parsed = parsePublishedAt(value);
 
-    if (Number.isNaN(date.getTime())) {
+    if (parsed === null) {
         return value;
     }
 
-    return date.toLocaleString(locale, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-    });
+    return formatScheduleSummary(parsed, locale, { withTimeZoneName: true });
 }
 
 export default function PublishPanel({

@@ -7,6 +7,7 @@ use Canvas\Policies\UserPolicy;
 use Canvas\Support\SettingsRepository;
 use Canvas\Tests\Models\BareUser;
 use Canvas\Tests\TestCase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 
 uses(TestCase::class)->in('.');
@@ -68,6 +69,22 @@ function createPublishedPosts(int|string $userId, int $count = 2): void
         'user_id' => $userId,
         'published_at' => now()->subDay(),
     ]);
+}
+
+/**
+ * ISO-8601 with offset/Z for HTTP published_at payloads (v7 wire contract).
+ */
+function publishedAtIso(DateTimeInterface|string|null $at = null): string
+{
+    if ($at === null) {
+        return now()->toIso8601String();
+    }
+
+    if (is_string($at)) {
+        return Carbon::parse($at)->toIso8601String();
+    }
+
+    return Carbon::instance(DateTimeImmutable::createFromInterface($at))->toIso8601String();
 }
 
 function setUnsplashAccessKey(?string $key): void

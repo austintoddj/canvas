@@ -185,6 +185,7 @@ return [
     'editor.schedule_prev_month' => 'Tháng trước',
     'editor.schedule_next_month' => 'Tháng sau',
     'editor.schedule_timezone_hint' => 'Thời gian dùng múi giờ địa phương của thiết bị này.',
+    'editor.schedule_app_timezone' => 'Ứng dụng: :timezone · :when',
     'editor.schedule_presets.in_one_hour' => 'Trong 1 giờ',
     'editor.schedule_presets.tomorrow_morning' => 'Sáng mai 9 giờ',
     'editor.schedule_presets.next_monday' => 'Thứ Hai tới',

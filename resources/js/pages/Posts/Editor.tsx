@@ -22,7 +22,6 @@ import {
     mergeTaxonomyOptions,
     postHasPendingChanges,
     postToFormState,
-    publishFormState,
     scheduleFormState,
     serializeFormState,
     slugify,
@@ -147,16 +146,11 @@ export default function PostsEditor() {
         setPublishBusy(true);
 
         try {
-            // Apply publishedAt only after a successful store so failed validation
-            // (empty shell, missing title) never leaves the badge stuck mid-state.
-            const next = publishFormState(form);
-            const ok = await saveNow(next, { promote: true });
+            // Server stamps published_at via publish_now so browser/app TZ skew cannot schedule.
+            // onSaved echoes the stored ISO instant onto the form.
+            const ok = await saveNow(form, { promote: true, publish_now: true });
 
             if (ok) {
-                setForm((current) => ({
-                    ...current,
-                    publishedAt: current.publishedAt ?? next.publishedAt,
-                }));
                 setHasPendingChanges(false);
                 setPublishConfirmOpen(false);
                 toast.success(t('editor.published'));
@@ -220,7 +214,7 @@ export default function PostsEditor() {
                 return;
             }
 
-            const ok = await saveNow(next, { promote: true });
+            const ok = await saveNow(next, { promote: true, schedule: true });
 
             if (ok) {
                 setForm((current) => ({

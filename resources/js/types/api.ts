@@ -103,6 +103,7 @@ export type PostStorePayload = {
     title: string;
     summary?: string | null;
     body?: string | null;
+    /** Absolute ISO-8601 instant with Z/offset, or null. */
     published_at?: string | null;
     featured_image?: string | null;
     featured_image_caption?: string | null;
@@ -111,6 +112,10 @@ export type PostStorePayload = {
     topic?: TaxonomyOption[];
     /** When true on a live post, write the public snapshot and clear pending. */
     promote?: boolean;
+    /** Schedule for a future published_at (server requires after:now). */
+    schedule?: boolean;
+    /** Server stamps published_at = now(); client published_at is ignored. */
+    publish_now?: boolean;
 };
 
 export type MonthOverMonth = {

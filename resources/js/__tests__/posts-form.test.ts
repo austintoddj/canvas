@@ -24,8 +24,7 @@ import {
     slugify,
     taxonomyFromName,
     toDatetimeLocalValue,
-    toPublishDateString,
-    toPublishDateTimeString,
+    toPublishedAtPayload,
     toStorePayload,
     unpublishFormState,
 } from '@/lib/posts/form';
@@ -39,7 +38,7 @@ const samplePost: Post = {
     body: '<p>Existing body</p>',
     featured_image: null,
     featured_image_caption: null,
-    published_at: '2026-06-01 09:30:00',
+    published_at: '2026-06-01T09:30:00.000Z',
     created_at: '2026-06-01T00:00:00Z',
     updated_at: '2026-06-02T00:00:00Z',
     views_count: 3,
@@ -65,7 +64,7 @@ describe('post form helpers', () => {
             slug: 'hello-world',
             summary: 'A short summary',
             body: '<p>Existing body</p>',
-            publishedAt: '2026-06-01 09:30:00',
+            publishedAt: '2026-06-01T09:30:00.000Z',
             featuredImage: null,
             featuredImageCaption: null,
             meta: { title: 'SEO title' },
@@ -78,12 +77,22 @@ describe('post form helpers', () => {
             slug: 'hello-world',
             summary: 'A short summary',
             body: '<p>Existing body</p>',
-            published_at: '2026-06-01 09:30:00',
+            published_at: '2026-06-01T09:30:00.000Z',
             featured_image: null,
             featured_image_caption: null,
             meta: { title: 'SEO title' },
             tags: [{ name: 'News', slug: 'news' }],
             topic: [{ name: 'Updates', slug: 'updates' }],
+        });
+        expect(toStorePayload(form, { promote: true, publish_now: true })).toMatchObject({
+            published_at: null,
+            promote: true,
+            publish_now: true,
+        });
+        expect(toStorePayload(form, { promote: true, schedule: true })).toMatchObject({
+            published_at: '2026-06-01T09:30:00.000Z',
+            promote: true,
+            schedule: true,
         });
         expect(formFromCreateResponse({ id: 'new-1', slug: 'post-new-1' })).toMatchObject({
             title: '',
@@ -186,24 +195,26 @@ describe('post form helpers', () => {
         expect(parsePublishedAt(undefined)).toBeNull();
         expect(parsePublishedAt(null)).toBeNull();
 
-        expect(toPublishDateTimeString(new Date(2026, 0, 5, 15, 30, 0))).toBe('2026-01-05 15:30:00');
-        expect(toPublishDateTimeString(new Date(2026, 6, 11, 20, 0, 45))).toBe('2026-07-11 20:00:45');
-        expect(toPublishDateString(new Date(2026, 0, 5, 15, 30, 0))).toBe('2026-01-05');
+        const localStamp = new Date(2026, 2, 10, 8, 15, 30);
+        expect(toPublishedAtPayload(localStamp)).toBe(localStamp.toISOString());
+        expect(parsePublishedAt('2026-06-01 09:30:00')).toBeNull();
+        expect(parsePublishedAt('2026-06-01T09:30:00.000Z')?.toISOString()).toBe('2026-06-01T09:30:00.000Z');
 
-        const published = publishFormState(draft, new Date(2026, 2, 10, 8, 15, 30));
-        expect(published.publishedAt).toBe('2026-03-10 08:15:30');
-        expect(isPublished(published, new Date(2026, 2, 10, 8, 15, 30))).toBe(true);
+        const published = publishFormState(draft, localStamp);
+        expect(published.publishedAt).toBe(localStamp.toISOString());
+        expect(isPublished(published, localStamp)).toBe(true);
         expect(unpublishFormState(published).publishedAt).toBeNull();
 
+        const scheduledLocal = new Date(2099, 5, 15, 14, 45, 0);
         const scheduled = scheduleFormState(draft, '2099-06-15T14:45');
-        expect(scheduled.publishedAt).toBe('2099-06-15 14:45:00');
+        expect(scheduled.publishedAt).toBe(scheduledLocal.toISOString());
         expect(publishStatus(scheduled, new Date(2026, 0, 1))).toBe('scheduled');
         expect(isScheduled(scheduled, new Date(2026, 0, 1))).toBe(true);
         expect(isPublished(scheduled, new Date(2026, 0, 1))).toBe(false);
-        expect(toStorePayload(scheduled).published_at).toBe('2099-06-15 14:45:00');
+        expect(toStorePayload(scheduled).published_at).toBe(scheduledLocal.toISOString());
 
-        expect(toDatetimeLocalValue('2099-06-15 14:45:00')).toBe('2099-06-15T14:45');
-        expect(fromDatetimeLocalValue('2099-06-15T14:45')).toBe('2099-06-15 14:45:00');
+        expect(toDatetimeLocalValue(scheduledLocal.toISOString())).toBe('2099-06-15T14:45');
+        expect(fromDatetimeLocalValue('2099-06-15T14:45')).toBe(scheduledLocal.toISOString());
         expect(fromDatetimeLocalValue('')).toBeNull();
         expect(fromDatetimeLocalValue('not-a-date')).toBeNull();
 

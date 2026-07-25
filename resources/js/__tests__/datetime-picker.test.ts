@@ -66,7 +66,7 @@ describe('datetime-picker', () => {
 
         expect(parsed).not.toBeNull();
         expect(toPickerValue(parsed!)).toBe(value);
-        expect(fromDatetimeLocalValue(value)).toBe('2099-06-15 14:45:00');
+        expect(fromDatetimeLocalValue(value)).toBe(new Date(2099, 5, 15, 14, 45, 0).toISOString());
         expect(isScheduleInFuture(value, new Date(2026, 0, 1))).toBe(true);
         expect(isScheduleInFuture('2020-01-01T00:00', new Date(2026, 0, 1))).toBe(false);
 

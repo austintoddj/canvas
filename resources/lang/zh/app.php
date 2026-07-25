@@ -185,6 +185,7 @@ return [
     'editor.schedule_prev_month' => '上个月',
     'editor.schedule_next_month' => '下个月',
     'editor.schedule_timezone_hint' => '时间使用此设备的本地时区。',
+    'editor.schedule_app_timezone' => '应用：:timezone · :when',
     'editor.schedule_presets.in_one_hour' => '1 小时后',
     'editor.schedule_presets.tomorrow_morning' => '明天上午 9 点',
     'editor.schedule_presets.next_monday' => '下周一',

@@ -35,7 +35,7 @@ describe('post lifecycle domain events', function (): void {
                 'title' => 'Edited Title',
                 'slug' => 'edited-slug',
                 'body' => 'Edited body',
-                'published_at' => $post->published_at->format('Y-m-d H:i:s'),
+                'published_at' => $post->published_at->toIso8601String(),
             ])
             ->assertOk()
             ->assertJsonPath('has_pending_changes', true);
@@ -112,7 +112,7 @@ describe('post lifecycle domain events', function (): void {
             'slug' => 'ready',
         ]);
 
-        $publishedAt = now()->subHour()->format('Y-m-d H:i:s');
+        $publishedAt = now()->subHour()->toIso8601String();
 
         $this->actingAs($this->admin, 'canvas')
             ->postJson("canvas/api/posts/{$post->id}", [
@@ -132,7 +132,7 @@ describe('post lifecycle domain events', function (): void {
         Event::fake([PostPublished::class, PostScheduled::class, PostUpdated::class]);
 
         $id = (string) Str::uuid();
-        $publishedAt = now()->subHour()->format('Y-m-d H:i:s');
+        $publishedAt = now()->subHour()->toIso8601String();
 
         $this->actingAs($this->admin, 'canvas')
             ->postJson("canvas/api/posts/{$id}", [
@@ -156,7 +156,7 @@ describe('post lifecycle domain events', function (): void {
             'slug' => 'later',
         ]);
 
-        $scheduledAt = now()->addWeek()->format('Y-m-d H:i:s');
+        $scheduledAt = now()->addWeek()->toIso8601String();
 
         $this->actingAs($this->admin, 'canvas')
             ->postJson("canvas/api/posts/{$post->id}", [
@@ -188,7 +188,7 @@ describe('post lifecycle domain events', function (): void {
                 'title' => 'Promoted Title',
                 'slug' => 'promoted-slug',
                 'body' => 'Promoted body',
-                'published_at' => $post->published_at->format('Y-m-d H:i:s'),
+                'published_at' => $post->published_at->toIso8601String(),
                 'promote' => true,
             ])
             ->assertOk();
@@ -226,7 +226,7 @@ describe('post lifecycle domain events', function (): void {
                 'meta' => null,
                 'tags' => [],
                 'topic' => [],
-                'published_at' => $post->published_at->format('Y-m-d H:i:s'),
+                'published_at' => $post->published_at->toIso8601String(),
                 'promote' => true,
             ])
             ->assertOk();
@@ -269,7 +269,7 @@ describe('post lifecycle domain events', function (): void {
             'published_at' => now()->subDay(),
         ]);
 
-        $scheduledAt = now()->addWeek()->format('Y-m-d H:i:s');
+        $scheduledAt = now()->addWeek()->toIso8601String();
 
         $this->actingAs($this->admin, 'canvas')
             ->postJson("canvas/api/posts/{$post->id}", [
@@ -296,7 +296,7 @@ describe('post lifecycle domain events', function (): void {
             'slug' => 'soon',
         ]);
 
-        $publishedAt = now()->subHour()->format('Y-m-d H:i:s');
+        $publishedAt = now()->subHour()->toIso8601String();
 
         $this->actingAs($this->admin, 'canvas')
             ->postJson("canvas/api/posts/{$post->id}", [

@@ -185,6 +185,7 @@ return [
     'editor.schedule_prev_month' => 'पिछला महीना',
     'editor.schedule_next_month' => 'अगला महीना',
     'editor.schedule_timezone_hint' => 'समय इस डिवाइस की स्थानीय समय-क्षेत्र का उपयोग करते हैं।',
+    'editor.schedule_app_timezone' => 'ऐप: :timezone · :when',
     'editor.schedule_presets.in_one_hour' => '1 घंटे में',
     'editor.schedule_presets.tomorrow_morning' => 'कल सुबह 9 बजे',
     'editor.schedule_presets.next_monday' => 'अगले सोमवार',

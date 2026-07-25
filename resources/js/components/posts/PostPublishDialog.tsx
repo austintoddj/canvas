@@ -195,6 +195,7 @@ export default function PostPublishDialog({
                                     value={scheduleAt}
                                     disabled={busy || disabled || !scheduleOpen}
                                     locale={locale}
+                                    appTimezone={boot.appTimezone}
                                     data-publish-schedule-input=""
                                     labels={{
                                         time: t('editor.schedule_time', 'Time'),
@@ -203,8 +204,9 @@ export default function PostPublishDialog({
                                         empty: t('editor.schedule_pick', 'Choose a date and time'),
                                         timezoneHint: t(
                                             'editor.schedule_timezone_hint',
-                                            "Times use this device's local timezone."
+                                            'Times are chosen in this device’s local timezone.'
                                         ),
+                                        appTimezoneSummary: t('editor.schedule_app_timezone', 'App: :timezone · :when'),
                                         presets: {
                                             in_one_hour: t('editor.schedule_presets.in_one_hour', 'In 1 hour'),
                                             tomorrow_morning: t(

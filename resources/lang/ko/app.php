@@ -185,6 +185,7 @@ return [
     'editor.schedule_prev_month' => '이전 달',
     'editor.schedule_next_month' => '다음 달',
     'editor.schedule_timezone_hint' => '시간은 이 기기의 로컬 시간대를 사용합니다.',
+    'editor.schedule_app_timezone' => '앱: :timezone · :when',
     'editor.schedule_presets.in_one_hour' => '1시간 후',
     'editor.schedule_presets.tomorrow_morning' => '내일 오전 9시',
     'editor.schedule_presets.next_monday' => '다음 월요일',

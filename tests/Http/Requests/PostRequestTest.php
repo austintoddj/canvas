@@ -146,7 +146,7 @@ it('accepts nullable post fields', function (): void {
             'title' => 'A new post',
             'summary' => 'Summary text',
             'body' => 'Body text',
-            'published_at' => now()->toDateTimeString(),
+            'published_at' => now()->toIso8601String(),
             'featured_image' => 'https://example.com/image.jpg',
             'featured_image_caption' => 'Caption text',
             'meta' => ['title' => 'Meta title'],

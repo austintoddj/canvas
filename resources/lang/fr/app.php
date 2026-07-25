@@ -185,6 +185,7 @@ return [
     'editor.schedule_prev_month' => 'Mois précédent',
     'editor.schedule_next_month' => 'Mois suivant',
     'editor.schedule_timezone_hint' => 'Les heures utilisent le fuseau horaire local de cet appareil.',
+    'editor.schedule_app_timezone' => 'App : :timezone · :when',
     'editor.schedule_presets.in_one_hour' => 'Dans 1 heure',
     'editor.schedule_presets.tomorrow_morning' => 'Demain 9 h',
     'editor.schedule_presets.next_monday' => 'Lundi prochain',

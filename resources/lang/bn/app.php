@@ -185,6 +185,7 @@ return [
     'editor.schedule_prev_month' => 'আগের মাস',
     'editor.schedule_next_month' => 'পরের মাস',
     'editor.schedule_timezone_hint' => 'সময় এই ডিভাইসের স্থানীয় সময়অঞ্চল ব্যবহার করে।',
+    'editor.schedule_app_timezone' => 'অ্যাপ: :timezone · :when',
     'editor.schedule_presets.in_one_hour' => '১ ঘণ্টার মধ্যে',
     'editor.schedule_presets.tomorrow_morning' => 'কাল সকাল ৯টায়',
     'editor.schedule_presets.next_monday' => 'আগামী সোমবার',

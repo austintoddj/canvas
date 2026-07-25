@@ -45,6 +45,8 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
     const performSaveRef = useRef<() => Promise<boolean>>(async () => false);
     const savingStartedAt = useRef<number | null>(null);
     const promoteNextSave = useRef(false);
+    const scheduleNextSave = useRef(false);
+    const publishNowNextSave = useRef(false);
 
     useEffect(() => {
         formRef.current = form;
@@ -114,7 +116,11 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
             const formSnapshot = formRef.current;
             const snapshot = serializeFormState(formSnapshot);
             const shouldPromote = promoteNextSave.current;
+            const shouldSchedule = scheduleNextSave.current;
+            const shouldPublishNow = publishNowNextSave.current;
             promoteNextSave.current = false;
+            scheduleNextSave.current = false;
+            publishNowNextSave.current = false;
 
             if (shouldSkipStore(snapshot, lastSavedSnapshot.current, shouldPromote)) {
                 if (mountedRef.current) {
@@ -144,7 +150,14 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
             }
 
             try {
-                const post = await postsApi.store(id, toStorePayload(formSnapshot, { promote: shouldPromote }));
+                const post = await postsApi.store(
+                    id,
+                    toStorePayload(formSnapshot, {
+                        promote: shouldPromote,
+                        schedule: shouldSchedule,
+                        publish_now: shouldPublishNow,
+                    })
+                );
 
                 if (!mountedRef.current) {
                     lastSavedSnapshot.current = snapshot;
@@ -213,20 +226,28 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
         };
     }, [markSaved]);
 
-    const saveNow = useCallback(async (nextForm?: PostFormState, options?: { promote?: boolean }): Promise<boolean> => {
-        if (debounceTimer.current !== null) {
-            clearTimeout(debounceTimer.current);
-            debounceTimer.current = null;
-        }
+    const saveNow = useCallback(
+        async (
+            nextForm?: PostFormState,
+            options?: { promote?: boolean; schedule?: boolean; publish_now?: boolean }
+        ): Promise<boolean> => {
+            if (debounceTimer.current !== null) {
+                clearTimeout(debounceTimer.current);
+                debounceTimer.current = null;
+            }
 
-        if (nextForm !== undefined) {
-            formRef.current = nextForm;
-        }
+            if (nextForm !== undefined) {
+                formRef.current = nextForm;
+            }
 
-        promoteNextSave.current = options?.promote === true;
+            promoteNextSave.current = options?.promote === true;
+            scheduleNextSave.current = options?.schedule === true;
+            publishNowNextSave.current = options?.publish_now === true;
 
-        return performSaveRef.current();
-    }, []);
+            return performSaveRef.current();
+        },
+        []
+    );
 
     useEffect(() => {
         if (!enabled || postId === null || lastSavedSnapshot.current === null) {

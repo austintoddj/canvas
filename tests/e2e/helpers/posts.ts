@@ -103,8 +103,18 @@ export async function scheduleForLater(page: Page): Promise<void> {
     await submit.click();
 
     const response = await responsePromise;
-    const payload = response.request().postDataJSON() as { published_at?: string | null } | null;
+    const payload = response.request().postDataJSON() as {
+        published_at?: string | null;
+        schedule?: boolean;
+        promote?: boolean;
+    } | null;
     expect(payload?.published_at, 'schedule payload must include a future published_at').toBeTruthy();
+    expect(payload?.published_at, 'schedule published_at must be ISO with timezone').toMatch(
+        /(?:Z|[+-]\d{2}:?\d{2})$/i
+    );
+    expect(payload?.schedule, 'schedule intent flag required').toBe(true);
+    expect(payload?.promote, 'schedule promote required').toBe(true);
+    expect(response.ok(), `schedule store failed: ${response.status()}`).toBeTruthy();
 
     await expect(submit).toBeHidden({ timeout: 20_000 });
     await expect(page.locator('[data-publish-status="scheduled"]')).toBeVisible({ timeout: 20_000 });

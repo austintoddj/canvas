@@ -185,6 +185,7 @@ return [
     'editor.schedule_prev_month' => 'الشهر السابق',
     'editor.schedule_next_month' => 'الشهر التالي',
     'editor.schedule_timezone_hint' => 'الأوقات تستخدم المنطقة الزمنية المحلية لهذا الجهاز.',
+    'editor.schedule_app_timezone' => 'التطبيق: :timezone · :when',
     'editor.schedule_presets.in_one_hour' => 'خلال ساعة',
     'editor.schedule_presets.tomorrow_morning' => 'غدًا الساعة 9 صباحًا',
     'editor.schedule_presets.next_monday' => 'الإثنين القادم',

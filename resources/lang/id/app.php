@@ -185,6 +185,7 @@ return [
     'editor.schedule_prev_month' => 'Bulan sebelumnya',
     'editor.schedule_next_month' => 'Bulan berikutnya',
     'editor.schedule_timezone_hint' => 'Waktu menggunakan zona waktu lokal perangkat ini.',
+    'editor.schedule_app_timezone' => 'App: :timezone · :when',
     'editor.schedule_presets.in_one_hour' => 'Dalam 1 jam',
     'editor.schedule_presets.tomorrow_morning' => 'Besok pukul 09.00',
     'editor.schedule_presets.next_monday' => 'Senin depan',

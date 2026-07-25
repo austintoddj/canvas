@@ -185,6 +185,7 @@ return [
     'editor.schedule_prev_month' => '前の月',
     'editor.schedule_next_month' => '次の月',
     'editor.schedule_timezone_hint' => '時刻はこの端末のローカルタイムゾーンを使用します。',
+    'editor.schedule_app_timezone' => 'アプリ: :timezone · :when',
     'editor.schedule_presets.in_one_hour' => '1 時間後',
     'editor.schedule_presets.tomorrow_morning' => '明日 9:00',
     'editor.schedule_presets.next_monday' => '次の月曜日',

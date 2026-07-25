@@ -69,7 +69,7 @@ class CanvasInstallSmokeTest extends TestCase
                 'slug' => 'install-smoke-post',
                 'summary' => null,
                 'body' => '<p>Hello from install smoke</p>',
-                'published_at' => now()->subMinute()->format('Y-m-d H:i:s'),
+                'published_at' => now()->subMinute()->toIso8601String(),
             ])
             ->assertSuccessful()
             ->assertJsonPath('id', $id)

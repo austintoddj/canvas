@@ -12,6 +12,7 @@ use Canvas\Models\Topic;
 use Canvas\Support\PostAuthor;
 use Canvas\Support\PostLifecycleEvents;
 use Canvas\Support\PostSnapshot;
+use Canvas\Support\PublishedAt;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -81,7 +82,14 @@ class PostController extends Controller
     {
         $data = $request->validated();
         $promote = (bool) ($data['promote'] ?? false);
-        unset($data['promote']);
+        $publishNow = (bool) ($data['publish_now'] ?? false);
+        unset($data['promote'], $data['schedule'], $data['publish_now']);
+
+        if ($publishNow) {
+            $data['published_at'] = now()->format('Y-m-d H:i:s');
+        } elseif (array_key_exists('published_at', $data) && is_string($data['published_at']) && $data['published_at'] !== '') {
+            $data['published_at'] = PublishedAt::toStorageString(PublishedAt::parse($data['published_at']));
+        }
 
         $user = request()->user(config('canvas.guard'));
 

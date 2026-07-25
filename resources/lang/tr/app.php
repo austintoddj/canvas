@@ -185,6 +185,7 @@ return [
     'editor.schedule_prev_month' => 'Önceki ay',
     'editor.schedule_next_month' => 'Sonraki ay',
     'editor.schedule_timezone_hint' => 'Saatler bu cihazın yerel saat dilimini kullanır.',
+    'editor.schedule_app_timezone' => 'Uygulama: :timezone · :when',
     'editor.schedule_presets.in_one_hour' => '1 saat içinde',
     'editor.schedule_presets.tomorrow_morning' => 'Yarın 09:00',
     'editor.schedule_presets.next_monday' => 'Gelecek pazartesi',

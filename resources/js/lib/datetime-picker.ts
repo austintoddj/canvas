@@ -161,7 +161,11 @@ export function monthYearLabel(view: { year: number; month: number }, locale?: s
     );
 }
 
-export function formatScheduleSummary(value: string | Date | null | undefined, locale?: string): string {
+export function formatScheduleSummary(
+    value: string | Date | null | undefined,
+    locale?: string,
+    options?: { timeZone?: string; withTimeZoneName?: boolean }
+): string {
     if (value === null || value === undefined || value === '') {
         return '';
     }
@@ -179,6 +183,8 @@ export function formatScheduleSummary(value: string | Date | null | undefined, l
         year: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
+        ...(options?.withTimeZoneName === true ? { timeZoneName: 'short' as const } : {}),
+        ...(options?.timeZone !== undefined && options.timeZone !== '' ? { timeZone: options.timeZone } : {}),
     }).format(date);
 }
 

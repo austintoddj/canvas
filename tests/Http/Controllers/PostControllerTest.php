@@ -447,7 +447,7 @@ describe('when storing and updating posts', function (): void {
                 'title' => 'Edited Title',
                 'slug' => 'edited-slug',
                 'body' => 'Edited body',
-                'published_at' => $post->published_at->format('Y-m-d H:i:s'),
+                'published_at' => $post->published_at->toIso8601String(),
             ])
             ->assertOk()
             ->assertJsonPath('title', 'Live Title')
@@ -481,7 +481,7 @@ describe('when storing and updating posts', function (): void {
                 'title' => 'Promoted Title',
                 'slug' => 'promoted-slug',
                 'body' => 'Promoted body',
-                'published_at' => $post->published_at->format('Y-m-d H:i:s'),
+                'published_at' => $post->published_at->toIso8601String(),
                 'promote' => true,
             ])
             ->assertOk()
@@ -555,7 +555,7 @@ describe('when storing and updating posts', function (): void {
             'meta' => null,
             'tags' => [],
             'topic' => [],
-            'published_at' => $post->published_at->format('Y-m-d H:i:s'),
+            'published_at' => $post->published_at->toIso8601String(),
         ];
 
         $this->actingAs($this->admin, 'canvas')
@@ -609,13 +609,16 @@ describe('when storing and updating posts', function (): void {
         ]);
 
         $scheduledAt = now()->addDays(3)->seconds(0)->milliseconds(0);
-        $payload = $scheduledAt->format('Y-m-d H:i:s');
+        $payload = $scheduledAt->toIso8601String();
+        $stored = $scheduledAt->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
 
         $response = $this->actingAs($this->admin, 'canvas')
             ->postJson("canvas/api/posts/{$post->id}", [
                 'title' => $post->title,
                 'slug' => $post->slug,
                 'published_at' => $payload,
+                'schedule' => true,
+                'promote' => true,
             ])
             ->assertOk();
 
@@ -623,7 +626,7 @@ describe('when storing and updating posts', function (): void {
 
         expect($fresh)->not->toBeNull()
             ->and($fresh->published_at)->not->toBeNull()
-            ->and($fresh->published_at->format('Y-m-d H:i:s'))->toBe($payload)
+            ->and($fresh->published_at->format('Y-m-d H:i:s'))->toBe($stored)
             ->and($fresh->published)->toBeFalse()
             ->and(Post::query()->published()->whereKey($post->id)->exists())->toBeFalse()
             ->and(Post::query()->draft()->whereKey($post->id)->exists())->toBeTrue();
@@ -641,13 +644,15 @@ describe('when storing and updating posts', function (): void {
         ]);
 
         $publishedAt = now()->subHours(2)->seconds(0)->milliseconds(0);
-        $payload = $publishedAt->format('Y-m-d H:i:s');
+        $payload = $publishedAt->toIso8601String();
+        $stored = $publishedAt->timezone(config('app.timezone'))->format('Y-m-d H:i:s');
 
         $response = $this->actingAs($this->admin, 'canvas')
             ->postJson("canvas/api/posts/{$post->id}", [
                 'title' => $post->title,
                 'slug' => $post->slug,
                 'published_at' => $payload,
+                'promote' => true,
             ])
             ->assertOk();
 
@@ -657,10 +662,106 @@ describe('when storing and updating posts', function (): void {
 
         $fresh = $post->fresh();
 
-        expect($fresh->published_at->format('Y-m-d H:i:s'))->toBe($payload)
+        expect($fresh->published_at->format('Y-m-d H:i:s'))->toBe($stored)
             ->and($fresh->published)->toBeTrue()
             ->and(Post::query()->published()->whereKey($post->id)->exists())->toBeTrue()
             ->and(Post::query()->draft()->whereKey($post->id)->exists())->toBeFalse();
+    });
+
+    // Regression: browser local wall clock mis-stored as app TZ → schedule goes live immediately
+    it('converts offset-aware schedule instants into app timezone storage', function (): void {
+        config(['app.timezone' => 'UTC']);
+        Carbon::setTestNow(Carbon::parse('2026-07-25T15:00:00Z'));
+
+        $post = Post::factory()->draft()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Chicago schedule',
+            'slug' => 'chicago-schedule',
+        ]);
+
+        // America/Chicago summer = UTC-5; "now + 1 hour" local wall = 11:00 CDT = 16:00 UTC
+        $payload = '2026-07-25T11:00:00-05:00';
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'published_at' => $payload,
+                'schedule' => true,
+                'promote' => true,
+            ])
+            ->assertOk();
+
+        $fresh = $post->fresh();
+
+        expect($fresh->published_at->format('Y-m-d H:i:s'))->toBe('2026-07-25 16:00:00')
+            ->and($fresh->published)->toBeFalse();
+
+        Carbon::setTestNow();
+    });
+
+    it('rejects schedule when published_at is not in the future', function (): void {
+        $post = Post::factory()->draft()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Too late',
+            'slug' => 'too-late',
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'published_at' => now()->subHour()->toIso8601String(),
+                'schedule' => true,
+                'promote' => true,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['published_at']);
+    });
+
+    it('rejects timezone-naive published_at on the wire', function (): void {
+        $post = Post::factory()->draft()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Naive',
+            'slug' => 'naive-datetime',
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'published_at' => now()->addDay()->format('Y-m-d H:i:s'),
+                'promote' => true,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['published_at']);
+    });
+
+    it('stamps server now when publish_now is set', function (): void {
+        Carbon::setTestNow(Carbon::parse('2026-07-25T15:30:00Z'));
+
+        $post = Post::factory()->draft()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Publish now',
+            'slug' => 'publish-now',
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'published_at' => null,
+                'publish_now' => true,
+                'promote' => true,
+            ])
+            ->assertOk();
+
+        $fresh = $post->fresh();
+
+        expect($fresh->published_at->format('Y-m-d H:i:s'))->toBe('2026-07-25 15:30:00')
+            ->and($fresh->published)->toBeTrue();
+
+        Carbon::setTestNow();
     });
 
     it('lets contributors update only their own posts', function (): void {
@@ -739,7 +840,7 @@ describe('when syncing taxonomy', function (): void {
         $data = [
             'title' => $post->title,
             'slug' => $post->slug,
-            'published_at' => now()->subDay()->toDateString(),
+            'published_at' => now()->subDay()->toIso8601String(),
             'promote' => true,
             'tags' => [
                 [
@@ -864,7 +965,7 @@ describe('when syncing taxonomy', function (): void {
             ->postJson("canvas/api/posts/{$post->id}", [
                 'title' => $post->title,
                 'slug' => $post->slug,
-                'published_at' => $post->published_at->format('Y-m-d H:i:s'),
+                'published_at' => $post->published_at->toIso8601String(),
                 'tags' => [
                     [
                         'name' => $tag->name,
@@ -885,7 +986,7 @@ describe('when syncing taxonomy', function (): void {
         $data = [
             'title' => $post->title,
             'slug' => $post->slug,
-            'published_at' => now()->subDay()->toDateString(),
+            'published_at' => now()->subDay()->toIso8601String(),
             'promote' => true,
             'topic' => [
                 [

@@ -39,6 +39,8 @@ type DateTimePickerProps = {
     onChange: (datetimeLocal: string) => void;
     disabled?: boolean;
     locale?: string;
+    /** Application timezone (config app.timezone) for mismatch summary. */
+    appTimezone?: string;
     showPresets?: boolean;
     labels?: {
         time?: string;
@@ -47,6 +49,8 @@ type DateTimePickerProps = {
         empty?: string;
         presets?: Partial<Record<SchedulePresetId, string>>;
         timezoneHint?: string;
+        /** Shown when device TZ ≠ appTimezone, e.g. "App: :timezone · :when". */
+        appTimezoneSummary?: string;
     };
     'data-publish-schedule-input'?: string;
 };
@@ -110,17 +114,29 @@ function TimeSelect({
     );
 }
 
+function detectDeviceTimezone(): string | null {
+    try {
+        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        return typeof zone === 'string' && zone !== '' ? zone : null;
+    } catch {
+        return null;
+    }
+}
+
 export default function DateTimePicker({
     value,
     onChange,
     disabled = false,
     locale,
+    appTimezone,
     showPresets = true,
     labels = {},
     'data-publish-schedule-input': dataAttr,
 }: DateTimePickerProps) {
     const twelveHour = useMemo(() => usesTwelveHourClock(locale), [locale]);
     const selected = useMemo(() => parseDatetimeLocalValue(value), [value]);
+    const deviceTimezone = useMemo(() => detectDeviceTimezone(), []);
 
     const [view, setView] = useState(() => {
         const base = selected ?? defaultScheduleDate();
@@ -136,7 +152,23 @@ export default function DateTimePicker({
     const weekdays = useMemo(() => weekdayLabels(locale, 0), [locale]);
     const cells = useMemo(() => buildMonthGrid(view, { weekStartsOn: 0 }), [view]);
     const presets = useMemo(() => schedulePresets(), []);
-    const summary = formatScheduleSummary(selected ?? value, locale);
+    const summary = formatScheduleSummary(selected ?? value, locale, { withTimeZoneName: true });
+    const showAppTimezone =
+        selected !== null &&
+        typeof appTimezone === 'string' &&
+        appTimezone !== '' &&
+        deviceTimezone !== null &&
+        deviceTimezone !== appTimezone;
+    const appTimezoneWhen =
+        showAppTimezone && selected !== null
+            ? formatScheduleSummary(selected, locale, { timeZone: appTimezone, withTimeZoneName: true })
+            : '';
+    const appTimezoneLine =
+        showAppTimezone && labels.appTimezoneSummary !== undefined
+            ? labels.appTimezoneSummary.replace(':timezone', appTimezone).replace(':when', appTimezoneWhen)
+            : showAppTimezone
+              ? `App: ${appTimezone} · ${appTimezoneWhen}`
+              : null;
 
     function emit(date: Date) {
         const clamped = clampScheduleDate(date);
@@ -225,6 +257,11 @@ export default function DateTimePicker({
                 </p>
                 {labels.timezoneHint ? (
                     <p className="mt-0.5 text-xs/5 text-zinc-500 dark:text-zinc-400">{labels.timezoneHint}</p>
+                ) : null}
+                {appTimezoneLine ? (
+                    <p className="mt-0.5 text-xs/5 text-zinc-500 dark:text-zinc-400" data-schedule-app-timezone>
+                        {appTimezoneLine}
+                    </p>
                 ) : null}
             </div>
 
