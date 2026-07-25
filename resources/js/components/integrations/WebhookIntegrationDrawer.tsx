@@ -26,11 +26,11 @@ type WebhookIntegrationDrawerProps = {
 };
 
 const DEFAULT_EVENTS: WebhookEventOption[] = [
-    { id: 'post.published', label: 'Published' },
-    { id: 'post.scheduled', label: 'Scheduled' },
-    { id: 'post.updated', label: 'Updated' },
-    { id: 'post.unpublished', label: 'Unpublished' },
-    { id: 'post.deleted', label: 'Deleted' },
+    { id: 'post.published', label: 'Published', description: 'When a draft or scheduled post goes live.' },
+    { id: 'post.scheduled', label: 'Scheduled', description: 'When a future publish date is set on a post.' },
+    { id: 'post.updated', label: 'Updated', description: 'When a live or scheduled post’s public content changes.' },
+    { id: 'post.unpublished', label: 'Unpublished', description: 'When a post leaves public or scheduled visibility.' },
+    { id: 'post.deleted', label: 'Deleted', description: 'When a post is removed.' },
 ];
 
 export function WebhookIntegrationDrawer({
@@ -105,7 +105,7 @@ export function WebhookIntegrationDrawer({
     const aboutItems = [
         t(
             'integrations.webhooks_about_outbound',
-            'Canvas queues a POST for the events you select when a post is published, updated, unpublished, or deleted'
+            'Canvas queues a POST for the events you select when a post is published, scheduled, updated, unpublished, or deleted'
         ),
         t(
             'integrations.webhooks_about_signed',
@@ -312,7 +312,7 @@ export function WebhookIntegrationDrawer({
                     title={t('integrations.webhooks', 'Webhooks')}
                     description={t(
                         'integrations.webhooks_help',
-                        'Notify external services when posts are published, updated, or deleted.'
+                        'Notify external services when posts are published, scheduled, updated, or deleted.'
                     )}
                     enabled={configured}
                     enabledAt={enabledAt}
@@ -429,6 +429,12 @@ export function WebhookIntegrationDrawer({
                                         disabled={busy}
                                         invalid={Boolean(fieldErrors.events)}
                                     />
+                                    <Description className="mt-2">
+                                        {t(
+                                            'integrations.webhooks_events_scheduled_note',
+                                            'A post that goes live only because its scheduled time arrived does not send Published. Subscribe to Scheduled for when the date is set.'
+                                        )}
+                                    </Description>
                                     {fieldErrors.events ? <ErrorMessage>{fieldErrors.events}</ErrorMessage> : null}
                                 </Field>
 

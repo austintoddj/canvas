@@ -103,7 +103,7 @@ export default function IntegrationsIndex() {
                         title={t('integrations.webhooks', 'Webhooks')}
                         description={t(
                             'integrations.webhooks_help',
-                            'Notify external services when posts are published, updated, or deleted.'
+                            'Notify external services when posts are published, scheduled, updated, or deleted.'
                         )}
                         configured={webhooksConfigured}
                         configuredLabel={enabledLabel}

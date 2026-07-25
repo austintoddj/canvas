@@ -21,6 +21,7 @@ export type WebhookEventId = 'post.published' | 'post.scheduled' | 'post.updated
 export type WebhookEventOption = {
     id: WebhookEventId | string;
     label: string;
+    description?: string;
 };
 
 export type WebhooksIntegrationStatus = {

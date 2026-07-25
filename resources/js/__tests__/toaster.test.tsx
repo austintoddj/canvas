@@ -5,11 +5,18 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Toaster } from '@/components/Toaster';
+import { loadTranslations } from '@/lib/i18n';
 import { dismissToast, getToasts, toast } from '@/lib/toast';
 
 describe('Toaster', () => {
     beforeEach(() => {
         dismissToast();
+        loadTranslations(
+            JSON.stringify({
+                'common.dismiss_notification': 'Dismiss notification',
+                'common.notifications': 'Notifications',
+            })
+        );
     });
 
     afterEach(() => {

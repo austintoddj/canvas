@@ -201,7 +201,7 @@ class IntegrationsController extends Controller
      *         masked_secret: string|null,
      *         events: list<string>,
      *         enabled_at: string|null,
-     *         available_events: list<array{id: string, label: string}>,
+     *         available_events: list<array{id: string, label: string, description: string}>,
      *         plain_secret?: string
      *     }
      * }

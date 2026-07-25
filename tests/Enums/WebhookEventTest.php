@@ -40,6 +40,12 @@ it('exposes admin option rows for subscribable events', function (): void {
         ->and($options[0])->toMatchArray([
             'id' => 'post.published',
             'label' => 'Published',
+            'description' => 'When a draft or scheduled post goes live.',
+        ])
+        ->and($options[1])->toMatchArray([
+            'id' => 'post.scheduled',
+            'label' => 'Scheduled',
+            'description' => 'When a future publish date is set on a post.',
         ]);
 });
 
