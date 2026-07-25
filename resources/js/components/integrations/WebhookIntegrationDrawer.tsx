@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { IconInfoCircle } from '@tabler/icons-react';
 
-import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
+import { Alert, AlertActions, AlertBody, AlertDescription, AlertTitle } from '@/components/alert';
 import { Button } from '@/components/button';
 import { Description, ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/fieldset';
 import { IntegrationDrawerChrome } from '@/components/integrations/IntegrationDrawerChrome';
@@ -25,6 +26,12 @@ type WebhookIntegrationDrawerProps = {
     onStatusChange: (status: IntegrationsStatus) => void;
 };
 
+/** One dialog: confirm rotate → reveal secret (also used after first enable). */
+type SecretDialog =
+    | { step: 'closed' }
+    | { step: 'confirm' }
+    | { step: 'reveal'; secret: string; reason: 'rotate' | 'create' };
+
 const DEFAULT_EVENTS: WebhookEventOption[] = [
     { id: 'post.published', label: 'Published', description: 'When a draft or scheduled post goes live.' },
     { id: 'post.scheduled', label: 'Scheduled', description: 'When a future publish date is set on a post.' },
@@ -47,17 +54,20 @@ export function WebhookIntegrationDrawer({
     const { t } = useCanvas();
     const [url, setUrl] = useState(initialUrl ?? '');
     const [events, setEvents] = useState<string[]>(initialEvents);
-    const [plainSecret, setPlainSecret] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
     const [testing, setTesting] = useState(false);
     const [rotating, setRotating] = useState(false);
     const [clearing, setClearing] = useState(false);
     const [confirmDisconnectOpen, setConfirmDisconnectOpen] = useState(false);
+    const [secretDialog, setSecretDialog] = useState<SecretDialog>({ step: 'closed' });
     const [fieldErrors, setFieldErrors] = useState<{
         url?: string;
         events?: string;
     }>({});
 
+    // Hydrate form state only when the drawer opens. Parent status updates (after
+    // save/rotate) pass new events/availableEvents array references — resetting on
+    // those deps was wiping one-time secret UI before the user could copy it.
     useEffect(() => {
         if (!open) {
             return;
@@ -73,19 +83,20 @@ export function WebhookIntegrationDrawer({
             setUrl(initialUrl ?? '');
             const options = availableEvents.length > 0 ? availableEvents : DEFAULT_EVENTS;
             setEvents(initialEvents.length > 0 ? initialEvents : options.map((option) => option.id));
-            setPlainSecret(null);
             setFieldErrors({});
             setSaving(false);
             setTesting(false);
             setRotating(false);
             setClearing(false);
             setConfirmDisconnectOpen(false);
+            setSecretDialog({ step: 'closed' });
         });
 
         return () => {
             cancelled = true;
         };
-    }, [open, initialUrl, initialEvents, availableEvents]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- open-only reset; read latest props when opening
+    }, [open]);
 
     const eventOptions = useMemo(() => {
         if (availableEvents.length > 0) {
@@ -101,6 +112,7 @@ export function WebhookIntegrationDrawer({
         trimmedUrl !== '' &&
         events.length > 0 &&
         (!configured || trimmedUrl !== (initialUrl ?? '') || !sameEventSet(events, initialEvents));
+    const secretDialogOpen = secretDialog.step !== 'closed';
 
     const aboutItems = [
         t(
@@ -124,6 +136,14 @@ export function WebhookIntegrationDrawer({
             'With Redis, database, or SQS queues, run a queue worker (php artisan queue:work). The default sync driver needs no worker.'
         ),
     ];
+
+    function closeSecretDialog() {
+        if (rotating) {
+            return;
+        }
+
+        setSecretDialog({ step: 'closed' });
+    }
 
     async function handleSave() {
         if (saving) {
@@ -154,15 +174,19 @@ export function WebhookIntegrationDrawer({
             });
             onStatusChange(next);
 
-            if (typeof next.webhooks.plain_secret === 'string' && next.webhooks.plain_secret !== '') {
-                setPlainSecret(next.webhooks.plain_secret);
+            const nextPlain =
+                typeof next.webhooks.plain_secret === 'string' && next.webhooks.plain_secret !== ''
+                    ? next.webhooks.plain_secret
+                    : null;
+
+            if (nextPlain !== null) {
+                setSecretDialog({ step: 'reveal', secret: nextPlain, reason: 'create' });
                 toast.success(
                     configured
                         ? t('integrations.webhooks_saved', 'Webhook settings saved.')
                         : t('integrations.webhooks_connected', 'Webhooks connected.')
                 );
             } else {
-                setPlainSecret(null);
                 toast.success(t('integrations.webhooks_saved', 'Webhook settings saved.'));
                 onClose();
             }
@@ -181,7 +205,7 @@ export function WebhookIntegrationDrawer({
         }
     }
 
-    async function handleRotateSecret() {
+    async function confirmRotateSecret() {
         if (rotating || !configured) {
             return;
         }
@@ -195,10 +219,18 @@ export function WebhookIntegrationDrawer({
             });
             onStatusChange(next);
 
-            if (typeof next.webhooks.plain_secret === 'string') {
-                setPlainSecret(next.webhooks.plain_secret);
+            const nextPlain =
+                typeof next.webhooks.plain_secret === 'string' && next.webhooks.plain_secret !== ''
+                    ? next.webhooks.plain_secret
+                    : null;
+
+            if (nextPlain === null) {
+                toast.error(t('integrations.webhooks_rotate_error', 'Unable to rotate the signing secret.'));
+                return;
             }
 
+            // Stay in the same dialog — morph confirm → reveal.
+            setSecretDialog({ step: 'reveal', secret: nextPlain, reason: 'rotate' });
             toast.success(t('integrations.webhooks_secret_rotated', 'Signing secret rotated.'));
         } catch {
             toast.error(t('integrations.webhooks_rotate_error', 'Unable to rotate the signing secret.'));
@@ -249,7 +281,7 @@ export function WebhookIntegrationDrawer({
                 webhooks: { url: null },
             });
             onStatusChange(next);
-            setPlainSecret(null);
+            setSecretDialog({ step: 'closed' });
             setConfirmDisconnectOpen(false);
             toast.success(t('integrations.webhooks_disconnected', 'Webhooks disconnected.'));
             onClose();
@@ -261,12 +293,12 @@ export function WebhookIntegrationDrawer({
     }
 
     async function copySecret() {
-        if (!plainSecret || typeof navigator.clipboard?.writeText !== 'function') {
+        if (secretDialog.step !== 'reveal' || typeof navigator.clipboard?.writeText !== 'function') {
             return;
         }
 
         try {
-            await navigator.clipboard.writeText(plainSecret);
+            await navigator.clipboard.writeText(secretDialog.secret);
             toast.success(t('integrations.webhooks_secret_copied', 'Signing secret copied.'));
         } catch {
             toast.error(t('integrations.webhooks_secret_copy_error', 'Unable to copy the signing secret.'));
@@ -322,6 +354,40 @@ export function WebhookIntegrationDrawer({
                         'integrations.webhooks_about_help',
                         'Lifecycle events use your app queue (same idea as the weekly digest). Send test runs immediately so you can verify the URL.'
                     )}
+                    cautionZoneTitle={
+                        configured ? t('integrations.webhooks_secret', 'Signing secret') : undefined
+                    }
+                    cautionZone={
+                        configured ? (
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div className="min-w-0 flex-1 space-y-1">
+                                    {maskedSecret ? (
+                                        <code
+                                            className="block max-w-full truncate font-mono text-sm text-zinc-600 dark:text-zinc-400"
+                                            data-masked-secret="true"
+                                        >
+                                            {maskedSecret}
+                                        </code>
+                                    ) : null}
+                                    <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                                        {t(
+                                            'integrations.webhooks_secret_help',
+                                            'Used to sign Canvas-Signature headers. Rotate if the secret may be compromised.'
+                                        )}
+                                    </Text>
+                                </div>
+                                <Button
+                                    type="button"
+                                    outline
+                                    disabled={busy}
+                                    onClick={() => setSecretDialog({ step: 'confirm' })}
+                                    data-webhook-rotate-secret="true"
+                                >
+                                    {t('integrations.webhooks_rotate_secret', 'Rotate secret')}
+                                </Button>
+                            </div>
+                        ) : null
+                    }
                     dangerZone={
                         configured ? (
                             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -360,34 +426,6 @@ export function WebhookIntegrationDrawer({
                                 {t('integrations.webhooks_settings', 'Webhook settings')}
                             </Legend>
                             <FieldGroup className="space-y-5">
-                                {plainSecret ? (
-                                    <div
-                                        className="space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 dark:border-amber-400/30 dark:bg-amber-400/10"
-                                        data-webhook-plain-secret="true"
-                                    >
-                                        <Text className="text-sm font-medium text-zinc-950 dark:text-white">
-                                            {t('integrations.webhooks_secret_once_title', 'Copy your signing secret')}
-                                        </Text>
-                                        <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                                            {t(
-                                                'integrations.webhooks_secret_once_help',
-                                                'This is shown once. Store it with your receiver to verify Canvas-Signature headers.'
-                                            )}
-                                        </Text>
-                                        <code className="mt-1 block break-all font-mono text-xs text-zinc-800 dark:text-zinc-200">
-                                            {plainSecret}
-                                        </code>
-                                        <Button
-                                            type="button"
-                                            outline
-                                            className="mt-1"
-                                            onClick={() => void copySecret()}
-                                        >
-                                            {t('integrations.webhooks_copy_secret', 'Copy secret')}
-                                        </Button>
-                                    </div>
-                                ) : null}
-
                                 <Field>
                                     <Label>{t('integrations.webhooks_url', 'Endpoint URL')}</Label>
                                     <Description>
@@ -429,50 +467,99 @@ export function WebhookIntegrationDrawer({
                                         disabled={busy}
                                         invalid={Boolean(fieldErrors.events)}
                                     />
-                                    <Description className="mt-2">
-                                        {t(
-                                            'integrations.webhooks_events_scheduled_note',
-                                            'A post that goes live only because its scheduled time arrived does not send Published. Subscribe to Scheduled for when the date is set.'
-                                        )}
-                                    </Description>
+                                    <div
+                                        className="mt-3 flex gap-2.5 rounded-lg border border-zinc-950/10 bg-zinc-50/80 px-3 py-2.5 dark:border-white/10 dark:bg-white/[0.03]"
+                                        data-webhook-events-scheduled-note="true"
+                                    >
+                                        <IconInfoCircle
+                                            className="mt-0.5 size-4 shrink-0 text-zinc-500 dark:text-zinc-400"
+                                            aria-hidden="true"
+                                        />
+                                        <p className="min-w-0 text-sm/5 text-zinc-600 dark:text-zinc-400">
+                                            {t(
+                                                'integrations.webhooks_events_scheduled_note',
+                                                'A post that goes live only because its scheduled time arrived does not send Published. Subscribe to Scheduled for when the date is set.'
+                                            )}
+                                        </p>
+                                    </div>
                                     {fieldErrors.events ? <ErrorMessage>{fieldErrors.events}</ErrorMessage> : null}
                                 </Field>
-
-                                {configured ? (
-                                    <Field>
-                                        <Label>{t('integrations.webhooks_secret', 'Signing secret')}</Label>
-                                        {maskedSecret ? (
-                                            <code
-                                                className="mt-2 block max-w-full truncate font-mono text-sm text-zinc-600 dark:text-zinc-400"
-                                                data-masked-secret="true"
-                                            >
-                                                {maskedSecret}
-                                            </code>
-                                        ) : null}
-                                        <Description>
-                                            {t(
-                                                'integrations.webhooks_secret_help',
-                                                'Used to sign Canvas-Signature headers. Rotate if the secret may be compromised.'
-                                            )}
-                                        </Description>
-                                        <Button
-                                            type="button"
-                                            outline
-                                            className="mt-2"
-                                            disabled={busy}
-                                            onClick={() => void handleRotateSecret()}
-                                        >
-                                            {rotating
-                                                ? t('integrations.webhooks_rotating', 'Rotating…')
-                                                : t('integrations.webhooks_rotate_secret', 'Rotate secret')}
-                                        </Button>
-                                    </Field>
-                                ) : null}
                             </FieldGroup>
                         </Fieldset>
                     </form>
                 </IntegrationDrawerChrome>
             </SideDrawer>
+
+            <Alert
+                open={secretDialogOpen}
+                onClose={closeSecretDialog}
+                size={secretDialog.step === 'reveal' ? 'md' : 'sm'}
+            >
+                {secretDialog.step === 'confirm' ? (
+                    <>
+                        <AlertTitle>{t('integrations.webhooks_rotate_title', 'Rotate signing secret?')}</AlertTitle>
+                        <AlertDescription>
+                            {t(
+                                'integrations.webhooks_rotate_body',
+                                'A new secret is generated and shown once. Receivers must update their verification key or Canvas-Signature checks will fail until they do.'
+                            )}
+                        </AlertDescription>
+                        <AlertActions>
+                            <Button type="button" plain disabled={rotating} onClick={closeSecretDialog}>
+                                {t('common.cancel')}
+                            </Button>
+                            <Button
+                                type="button"
+                                color="dark/zinc"
+                                disabled={rotating}
+                                onClick={() => void confirmRotateSecret()}
+                                data-webhook-rotate-confirm="true"
+                            >
+                                {rotating
+                                    ? t('integrations.webhooks_rotating', 'Rotating…')
+                                    : t('integrations.webhooks_rotate_secret', 'Rotate secret')}
+                            </Button>
+                        </AlertActions>
+                    </>
+                ) : null}
+
+                {secretDialog.step === 'reveal' ? (
+                    <>
+                        <AlertTitle>
+                            {secretDialog.reason === 'rotate'
+                                ? t('integrations.webhooks_secret_rotated', 'Signing secret rotated.')
+                                : t('integrations.webhooks_secret_once_title', 'Copy your signing secret')}
+                        </AlertTitle>
+                        <AlertDescription>
+                            {t(
+                                'integrations.webhooks_secret_once_help',
+                                'This is shown once. Store it with your receiver to verify Canvas-Signature headers.'
+                            )}
+                        </AlertDescription>
+                        <AlertBody>
+                            <code
+                                className="block break-all rounded-lg border border-zinc-950/10 bg-zinc-50 px-3 py-2.5 font-mono text-xs leading-5 text-zinc-800 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200"
+                                data-webhook-plain-secret="true"
+                            >
+                                {secretDialog.secret}
+                            </code>
+                        </AlertBody>
+                        <AlertActions>
+                            <Button type="button" outline onClick={() => void copySecret()} data-webhook-copy-secret="true">
+                                {t('integrations.webhooks_copy_secret', 'Copy secret')}
+                            </Button>
+                            <Button
+                                type="button"
+                                color="dark/zinc"
+                                onClick={closeSecretDialog}
+                                data-webhook-secret-done="true"
+                            >
+                                {t('common.close')}
+                            </Button>
+                        </AlertActions>
+                    </>
+                ) : null}
+            </Alert>
 
             <Alert open={confirmDisconnectOpen} onClose={() => !clearing && setConfirmDisconnectOpen(false)} size="sm">
                 <AlertTitle>{t('integrations.disconnect_webhooks_title', 'Disconnect webhooks?')}</AlertTitle>

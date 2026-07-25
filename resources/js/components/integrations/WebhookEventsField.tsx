@@ -24,8 +24,10 @@ export function WebhookEventsField({
     const { t } = useCanvas();
     const selected = new Set(value);
     const allIds = options.map((option) => option.id);
-    const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
-    const noneSelected = value.length === 0;
+    const total = allIds.length;
+    const selectedCount = value.length;
+    const allSelected = total > 0 && allIds.every((id) => selected.has(id));
+    const partiallySelected = selectedCount > 0 && !allSelected;
 
     function toggle(eventId: string, checked: boolean) {
         if (checked) {
@@ -40,45 +42,50 @@ export function WebhookEventsField({
         onChange(value.filter((id) => id !== eventId));
     }
 
-    function selectAll() {
-        onChange(allIds);
-    }
-
-    function clearAll() {
-        onChange([]);
+    function setAll(checked: boolean) {
+        onChange(checked ? allIds : []);
     }
 
     return (
-        <div className={cn('space-y-2', className)}>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <button
-                    type="button"
-                    className="text-sm font-medium text-zinc-700 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-zinc-300"
-                    disabled={disabled || allSelected}
-                    onClick={selectAll}
-                    data-webhook-events-select-all="true"
+        <div
+            data-slot="control"
+            className={cn(
+                'overflow-hidden rounded-lg border border-zinc-950/10 dark:border-white/10',
+                invalid && 'border-red-500 dark:border-red-600',
+                className
+            )}
+            data-webhook-events="true"
+            data-invalid={invalid ? true : undefined}
+        >
+            <div className="flex items-center justify-between gap-3 border-b border-zinc-950/10 bg-zinc-50/80 px-3.5 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+                <CheckboxField disabled={disabled || total === 0} className="min-w-0">
+                    <Checkbox
+                        color="dark/zinc"
+                        checked={allSelected}
+                        indeterminate={partiallySelected}
+                        disabled={disabled || total === 0}
+                        onChange={setAll}
+                        data-webhook-events-select-all="true"
+                    />
+                    <Label className="cursor-pointer font-medium">
+                        {t('integrations.webhooks_events_select_all', 'Select all')}
+                    </Label>
+                </CheckboxField>
+
+                <p
+                    className="shrink-0 text-xs/5 tabular-nums text-zinc-500 dark:text-zinc-400"
+                    aria-live="polite"
+                    data-webhook-events-selected-count="true"
                 >
-                    {t('integrations.webhooks_events_select_all', 'Select all')}
-                </button>
-                <button
-                    type="button"
-                    className="text-sm font-medium text-zinc-700 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-zinc-300"
-                    disabled={disabled || noneSelected}
-                    onClick={clearAll}
-                    data-webhook-events-clear="true"
-                >
-                    {t('integrations.webhooks_events_clear', 'Clear')}
-                </button>
+                    {t(
+                        'integrations.webhooks_events_selected_count',
+                        { count: selectedCount, total },
+                        ':count of :total selected'
+                    )}
+                </p>
             </div>
 
-            <CheckboxGroup
-                className={cn(
-                    'rounded-lg border border-zinc-950/10 p-3 dark:border-white/10',
-                    invalid && 'border-red-500 dark:border-red-600'
-                )}
-                data-webhook-events="true"
-                data-invalid={invalid ? true : undefined}
-            >
+            <CheckboxGroup className="p-3.5 sm:p-4">
                 {options.map((option) => {
                     const isChecked = selected.has(option.id);
 

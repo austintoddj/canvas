@@ -40,13 +40,19 @@ test.describe('Integrations webhooks', () => {
         await save.click();
         await saveResponse;
 
-        // First enable shows the one-time signing secret; later saves toast only.
+        // First enable opens the one-time signing secret dialog; later saves toast only.
         await expect(
             page
                 .locator('[data-webhook-plain-secret="true"]')
-                .or(page.getByText(/Webhook settings saved|Webhooks connected/i))
+                .or(page.getByText(/Copy your signing secret|Webhook settings saved|Webhooks connected/i))
                 .first()
         ).toBeVisible({ timeout: 20_000 });
+
+        // Dismiss the secret dialog if it opened so footer actions stay usable.
+        const secretDone = page.locator('[data-webhook-secret-done="true"]');
+        if (await secretDone.isVisible().catch(() => false)) {
+            await secretDone.click();
+        }
 
         // Parent status refresh re-mounts the drawer footer — re-query after settle.
         await expect(page.locator('[data-integration-row="webhooks"]')).toContainText(/Enabled/i, {

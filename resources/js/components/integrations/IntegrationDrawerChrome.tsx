@@ -28,6 +28,13 @@ type IntegrationDrawerChromeProps = {
     permissionsHelp?: string;
     icon?: ReactNode;
     children: ReactNode;
+    /**
+     * Important but non-destructive actions (e.g. rotate signing secret).
+     * Rendered between settings and the danger zone with neutral chrome.
+     */
+    cautionZone?: ReactNode;
+    /** Heading for the caution section (required when cautionZone is set). */
+    cautionZoneTitle?: string;
     dangerZone?: ReactNode;
 };
 
@@ -43,6 +50,8 @@ export function IntegrationDrawerChrome({
     permissionsHelp,
     icon,
     children,
+    cautionZone,
+    cautionZoneTitle,
     dangerZone,
 }: IntegrationDrawerChromeProps) {
     const { t } = useCanvas();
@@ -121,10 +130,25 @@ export function IntegrationDrawerChrome({
 
             <Divider soft />
 
-            <section className="min-w-0 space-y-3" data-integration-settings="true">
+            <section className="min-w-0 space-y-4" data-integration-settings="true">
                 <Subheading level={3}>{t('integrations.settings', 'Settings')}</Subheading>
                 <div className="min-w-0">{children}</div>
             </section>
+
+            {cautionZone ? (
+                <>
+                    <Divider soft />
+                    <section
+                        className="min-w-0 space-y-3 rounded-lg border border-zinc-950/10 bg-zinc-950/[0.015] p-3.5 dark:border-white/10 dark:bg-white/[0.02]"
+                        data-integration-caution-zone="true"
+                    >
+                        {cautionZoneTitle ? (
+                            <h3 className="text-sm/6 font-semibold text-zinc-950 dark:text-white">{cautionZoneTitle}</h3>
+                        ) : null}
+                        {cautionZone}
+                    </section>
+                </>
+            ) : null}
 
             {dangerZone ? (
                 <>

@@ -22,6 +22,10 @@ function ControlledField({ initial = ['post.published'] }: { initial?: string[] 
     return <WebhookEventsField options={OPTIONS} value={value} onChange={setValue} />;
 }
 
+function eventControls() {
+    return OPTIONS.map((option) => document.querySelector(`[data-webhook-event="${option.id}"]`));
+}
+
 describe('WebhookEventsField', () => {
     it('renders event labels, ids, and descriptions', () => {
         render(withCanvas(<ControlledField />));
@@ -32,26 +36,42 @@ describe('WebhookEventsField', () => {
         expect(document.querySelector('[data-webhook-event="post.published"]')).not.toBeNull();
     });
 
-    it('selects all and clears the selection', async () => {
+    it('shows the selection count in the list header', () => {
+        render(withCanvas(<ControlledField initial={['post.published']} />));
+
+        const count = document.querySelector('[data-webhook-events-selected-count="true"]');
+        expect(count).not.toBeNull();
+        expect(count).toHaveTextContent('1 of 3 selected');
+    });
+
+    it('selects all via the master checkbox, then clears', async () => {
         const user = userEvent.setup();
         render(withCanvas(<ControlledField initial={['post.published']} />));
 
         const selectAll = document.querySelector('[data-webhook-events-select-all="true"]');
-        const clear = document.querySelector('[data-webhook-events-clear="true"]');
         expect(selectAll).not.toBeNull();
-        expect(clear).not.toBeNull();
+        expect(selectAll).toHaveAttribute('data-indeterminate');
 
         await user.click(selectAll as HTMLElement);
 
-        const controls = OPTIONS.map((option) => document.querySelector(`[data-webhook-event="${option.id}"]`));
+        const controls = eventControls();
         expect(controls.every((el) => el !== null)).toBe(true);
         for (const control of controls) {
             expect(control).toHaveAttribute('data-checked');
         }
+        expect(selectAll).toHaveAttribute('data-checked');
+        expect(selectAll).not.toHaveAttribute('data-indeterminate');
+        expect(document.querySelector('[data-webhook-events-selected-count="true"]')).toHaveTextContent(
+            '3 of 3 selected'
+        );
 
-        await user.click(clear as HTMLElement);
+        await user.click(selectAll as HTMLElement);
         for (const control of controls) {
             expect(control).not.toHaveAttribute('data-checked');
         }
+        expect(selectAll).not.toHaveAttribute('data-checked');
+        expect(document.querySelector('[data-webhook-events-selected-count="true"]')).toHaveTextContent(
+            '0 of 3 selected'
+        );
     });
 });
