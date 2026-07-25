@@ -129,6 +129,44 @@ describe('when listing posts', function (): void {
                 'publishedCount' => $this->admin->posts()->published()->count(),
             ]);
     });
+
+    it('flags list rows with unpublished edits without exposing the pending blob', function (): void {
+        $pendingPost = Post::factory()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Live Title',
+            'slug' => 'live-title',
+            'published_at' => now()->subDay(),
+            'pending' => [
+                'title' => 'Pending Title',
+                'slug' => 'live-title',
+                'summary' => null,
+                'body' => 'Pending body',
+                'featured_image' => null,
+                'featured_image_caption' => null,
+                'meta' => null,
+                'tags' => [],
+                'topic' => null,
+            ],
+        ]);
+        $cleanPost = createPublishedPost(['user_id' => $this->admin->id, 'title' => 'Clean Live']);
+
+        $rows = collect(
+            $this->actingAs($this->admin, 'canvas')
+                ->getJson('canvas/api/posts')
+                ->assertSuccessful()
+                ->json('posts.data')
+        );
+
+        $pendingRow = $rows->firstWhere('id', $pendingPost->id);
+        $cleanRow = $rows->firstWhere('id', $cleanPost->id);
+
+        expect($pendingRow)->not->toBeNull()
+            ->and($pendingRow['has_pending_changes'])->toBeTrue()
+            ->and(array_key_exists('pending', $pendingRow))->toBeFalse()
+            ->and($cleanRow)->not->toBeNull()
+            ->and($cleanRow['has_pending_changes'])->toBeFalse()
+            ->and(array_key_exists('pending', $cleanRow))->toBeFalse();
+    });
 });
 
 describe('when showing posts', function (): void {

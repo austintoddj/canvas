@@ -1,5 +1,5 @@
 import * as Headless from '@headlessui/react';
-import type { ReactNode } from 'react';
+import { useLayoutEffect, useRef, type ReactNode, type UIEvent } from 'react';
 
 import { Button } from '@/components/button';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,19 @@ type SideDrawerProps = {
     titleClassName?: string;
 };
 
+/**
+ * Apply a remembered scroll offset without writing the clamped value back to memory.
+ * Temporary content shrinks (remounts / loading flashes) must not erase the user's place.
+ */
+function applyScrollTop(el: HTMLElement, top: number): void {
+    const max = Math.max(0, el.scrollHeight - el.clientHeight);
+    const next = Math.min(Math.max(0, top), max);
+
+    if (el.scrollTop !== next) {
+        el.scrollTop = next;
+    }
+}
+
 export function SideDrawer({
     open,
     onClose,
@@ -24,6 +37,66 @@ export function SideDrawer({
     closeLabel = 'Close',
     titleClassName,
 }: SideDrawerProps) {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const scrollTopRef = useRef(0);
+    const wasOpenRef = useRef(false);
+    /** Ignore browser scroll events fired while we re-apply a remembered position. */
+    const restoringRef = useRef(false);
+
+    useLayoutEffect(() => {
+        const el = scrollRef.current;
+        const justOpened = open && !wasOpenRef.current;
+        wasOpenRef.current = open;
+
+        if (!open) {
+            scrollTopRef.current = 0;
+            restoringRef.current = false;
+
+            if (el) {
+                el.scrollTop = 0;
+            }
+
+            return;
+        }
+
+        if (justOpened) {
+            scrollTopRef.current = 0;
+            if (el) {
+                el.scrollTop = 0;
+            }
+            return;
+        }
+
+        if (!el) {
+            return;
+        }
+
+        restoringRef.current = true;
+        applyScrollTop(el, scrollTopRef.current);
+
+        // Focus traps / layout clamps often adjust scroll after this layout pass.
+        const frame = requestAnimationFrame(() => {
+            if (scrollRef.current) {
+                applyScrollTop(scrollRef.current, scrollTopRef.current);
+            }
+
+            restoringRef.current = false;
+        });
+
+        return () => {
+            cancelAnimationFrame(frame);
+            restoringRef.current = false;
+        };
+    });
+
+    function handleScroll(event: UIEvent<HTMLDivElement>) {
+        if (restoringRef.current || !open) {
+            return;
+        }
+
+        scrollTopRef.current = event.currentTarget.scrollTop;
+    }
+
     return (
         <Headless.Dialog open={open} onClose={onClose} className="relative z-50" data-side-drawer="true">
             <Headless.DialogBackdrop
@@ -54,7 +127,12 @@ export function SideDrawer({
                                 </Headless.CloseButton>
                             </div>
 
-                            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain">
+                            <div
+                                ref={scrollRef}
+                                onScroll={handleScroll}
+                                data-side-drawer-scroll="true"
+                                className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain"
+                            >
                                 {children}
                             </div>
 

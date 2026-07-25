@@ -64,7 +64,6 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-    const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
     const serialized = JSON.stringify(formToPayload(form));
     const isDirty = media !== null && serialized !== baseline;
@@ -82,7 +81,6 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                 setLoading(true);
                 setError(null);
                 setFieldErrors({});
-                setSaveMessage(null);
                 setConfirmDeleteOpen(false);
                 setDeleting(false);
                 setMedia(null);
@@ -126,7 +124,6 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
 
         setSaving(true);
         setFieldErrors({});
-        setSaveMessage(null);
         setError(null);
 
         try {
@@ -135,14 +132,15 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
             setMedia(updated);
             setForm(nextForm);
             setBaseline(JSON.stringify(formToPayload(nextForm)));
-            setSaveMessage(t('common.saved'));
+            toast.success(t('media.saved'));
             onUpdated?.(updated);
         } catch (saveError) {
             if (saveError instanceof ValidationError) {
                 setFieldErrors(saveError.errors);
-                setError(t('common.please_fix_fields'));
+                toast.error(t('common.please_fix_fields'));
             } else {
                 setError(t('media.save_changes_error'));
+                toast.error(t('media.save_changes_error'));
             }
         } finally {
             setSaving(false);
@@ -202,21 +200,14 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                             <Button type="button" outline color="red" disabled={deleting} onClick={openDeleteConfirm}>
                                 {t('common.delete')}
                             </Button>
-                            <div className="flex flex-wrap items-center gap-2">
-                                {saveMessage && !isDirty ? (
-                                    <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                                        {saveMessage}
-                                    </Text>
-                                ) : null}
-                                <Button
-                                    type="button"
-                                    color="dark/zinc"
-                                    disabled={!isDirty || saving || deleting}
-                                    onClick={() => void handleSave()}
-                                >
-                                    {saving ? t('common.saving') : t('common.save')}
-                                </Button>
-                            </div>
+                            <Button
+                                type="button"
+                                color="dark/zinc"
+                                disabled={!isDirty || saving || deleting}
+                                onClick={() => void handleSave()}
+                            >
+                                {saving ? t('common.saving') : t('common.save')}
+                            </Button>
                         </>
                     ) : undefined
                 }
@@ -284,7 +275,6 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                                                     ...current,
                                                     original_name: event.target.value,
                                                 }));
-                                                setSaveMessage(null);
                                             }}
                                             invalid={Boolean(fieldErrors.original_name)}
                                         />
@@ -302,7 +292,6 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                                                     ...current,
                                                     alt: event.target.value,
                                                 }));
-                                                setSaveMessage(null);
                                             }}
                                             invalid={Boolean(fieldErrors.alt)}
                                         />
@@ -321,7 +310,6 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                                                     ...current,
                                                     caption: event.target.value,
                                                 }));
-                                                setSaveMessage(null);
                                             }}
                                             invalid={Boolean(fieldErrors.caption)}
                                         />

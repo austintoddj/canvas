@@ -34,7 +34,9 @@ class PostController extends Controller
         $baseQuery = $this->visiblePostsQuery($user, $canViewAllPosts);
 
         $posts = (clone $baseQuery)
-            ->select('id', 'title', 'summary', 'featured_image', 'published_at', 'created_at', 'updated_at')
+            // `pending` is selected so the has_pending_changes append resolves, then hidden
+            // so list rows never ship the full unpublished blob.
+            ->select('id', 'title', 'summary', 'featured_image', 'published_at', 'created_at', 'updated_at', 'pending')
             ->when(
                 request()->query('type') === 'draft',
                 fn (Builder $query) => $query->draft(),
@@ -43,6 +45,10 @@ class PostController extends Controller
             ->latest()
             ->withCount('views')
             ->paginate();
+
+        $posts->getCollection()->each(static function (Post $post): void {
+            $post->makeHidden(['pending']);
+        });
 
         $counts = $this->draftAndPublishedCounts($baseQuery);
 

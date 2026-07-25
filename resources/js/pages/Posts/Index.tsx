@@ -313,6 +313,11 @@ export default function PostsIndex() {
                                                         <Badge color={badgeColor} data-publish-status={status}>
                                                             {badgeLabel}
                                                         </Badge>
+                                                        {post.has_pending_changes ? (
+                                                            <Badge color="zinc" data-pending-changes="true">
+                                                                {t('dashboard.pending_badge')}
+                                                            </Badge>
+                                                        ) : null}
                                                     </div>
                                                     <Text className="mt-1 line-clamp-1 text-sm text-canvas-muted dark:text-canvas-muted-dark">
                                                         {post.summary?.trim()

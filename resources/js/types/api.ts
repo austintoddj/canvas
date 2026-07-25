@@ -42,6 +42,8 @@ export type PostListItem = {
     created_at: string;
     updated_at: string;
     views_count: number;
+    /** Live snapshot has unpublished editor changes waiting to be promoted. */
+    has_pending_changes?: boolean;
 };
 
 export type PostPending = {
@@ -254,9 +256,7 @@ export type DashboardPipeline = {
     pending: DashboardPipelinePost[];
 };
 
-export type DashboardRecentPost = PostListItem & {
-    has_pending_changes?: boolean;
-};
+export type DashboardRecentPost = PostListItem;
 
 export type DashboardTopPost = {
     id: string;
