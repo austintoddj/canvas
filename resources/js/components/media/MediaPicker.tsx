@@ -136,6 +136,12 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
 
     const showInitialSkeleton = isInitialLoading(loading, media.length);
     const refreshing = isRefreshing(loading, media.length);
+    const hasSearch = debouncedSearch.trim() !== '';
+    const isEmpty = !loading && media.length === 0;
+    const showLibraryGrid = media.length > 0;
+    const showFilteredEmpty = isEmpty && hasSearch;
+    const trueEmptyLibrary = isEmpty && !hasSearch;
+    const showGridSection = !showInitialSkeleton && (showLibraryGrid || showFilteredEmpty);
 
     return (
         <div>
@@ -168,6 +174,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                 className="mt-4"
                 uploading={uploading}
                 multiple={false}
+                spacious={trueEmptyLibrary}
                 label="Drop an image here, or click to browse"
                 onFiles={(files) => void handleFiles(files)}
             />
@@ -176,7 +183,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
 
             {showInitialSkeleton ? <MediaGridSkeleton className="mt-6" count={6} compact /> : null}
 
-            {!showInitialSkeleton ? (
+            {showGridSection ? (
                 <div
                     className={
                         refreshing
@@ -188,7 +195,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                     <MediaGrid
                         items={media}
                         compact
-                        emptyMessage="No images found. Drop one above to get started."
+                        emptyMessage="No images found."
                         onSelect={(item) => onSelect(item.url, item)}
                     />
                 </div>
