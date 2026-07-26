@@ -219,10 +219,52 @@ describe('post editor media round-trip', () => {
         const html = editor!.getHTML();
         expect(html).toContain('data-youtube-video');
         expect(html).toMatch(/dQw4w9WgXcQ/);
-        // Valid node still has a real iframe; null/empty stay shells without src.
+        // Valid node still has a real iframe; null/empty stay compact invalid markers (no iframe).
         const iframes = editor!.view.dom.querySelectorAll('iframe');
         expect(iframes.length).toBe(1);
         expect(iframes[0]?.getAttribute('src')).toMatch(/embed\/dQw4w9WgXcQ/);
+        expect(html).toContain('data-invalid-youtube');
+        expect(html).toContain('canvas-post-body-youtube-invalid');
+    });
+
+    it('pastes live / shorts / youtu.be URLs into working youtube iframes', () => {
+        const cases = [
+            'https://www.youtube.com/live/dQw4w9WgXcQ',
+            'https://www.youtube.com/shorts/dQw4w9WgXcQ',
+            'https://youtu.be/dQw4w9WgXcQ?si=ABCDEF',
+            'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=90',
+        ];
+
+        for (const url of cases) {
+            editor = createEditor('<p></p>');
+            expect(editor.view.pasteText(url), url).toBe(true);
+
+            const nodes = mediaNodes(editor);
+            expect(nodes, url).toHaveLength(1);
+            expect(nodes[0]?.type, url).toBe('youtube');
+
+            const html = editor.getHTML();
+            expect(html, url).not.toContain('data-invalid-youtube');
+            expect(html, url).toMatch(/youtube-nocookie\.com\/embed\/dQw4w9WgXcQ|youtube\.com\/embed\/dQw4w9WgXcQ/);
+
+            const iframe = editor.view.dom.querySelector('div[data-youtube-video] iframe');
+            expect(iframe, url).not.toBeNull();
+            expect(iframe!.getAttribute('src'), url).toMatch(/embed\/dQw4w9WgXcQ/);
+
+            editor.destroy();
+            editor = null;
+        }
+    });
+
+    it('does not insert a blank youtube shell when the matched URL has no video id', () => {
+        editor = createEditor('<p></p>');
+        // Channel home-ish path may match a broad host pattern in other rules; our paste
+        // gate requires a resolvable video id.
+        editor.view.pasteText('https://www.youtube.com/playlist?list=PLxxxxxxxx');
+
+        const yt = mediaNodes(editor).filter((n) => n.type === 'youtube');
+        expect(yt).toHaveLength(0);
+        expect(editor.getHTML()).not.toContain('data-invalid-youtube');
     });
 
     it('loads mixed X and YouTube embed HTML without throwing', () => {
