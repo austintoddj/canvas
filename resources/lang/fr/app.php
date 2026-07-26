@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => 'Aucune image sélectionnée',
     'editor.embedded_post' => 'Publication intégrée',
     'editor.embedded_video' => 'Vidéo intégrée',
+    'editor.embedded_content' => 'Contenu intégré',
     'editor.seo_desc_placeholder' => 'Utilise un résumé ou un extrait du corps lorsqu\'il est vide',
     'editor.published_badge' => 'Publié',
     'editor.draft_badge' => 'Brouillon',

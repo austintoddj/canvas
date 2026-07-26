@@ -474,25 +474,16 @@
     border: 0;
 }
 
-/* Selection chrome: ring on the box, no ProseMirror paint strip */
-.canvas-post-body div[data-youtube-video].ProseMirror-selectednode,
-.canvas-post-body .canvas-post-body-embed.ProseMirror-selectednode,
-.canvas-post-body div[data-canvas-embed].ProseMirror-selectednode {
-    outline: 2px solid color-mix(in oklab, var(--color-blue-500) 70%, transparent);
-    outline-offset: 2px;
-    background: transparent;
-}
-
-.canvas-post-body .canvas-post-body-embed,
-.canvas-post-body div[data-canvas-embed] {
+/* Generic iframe node (Vimeo, X, other embed URLs) */
+.canvas-post-body .canvas-post-body-iframe,
+.canvas-post-body div[data-canvas-iframe] {
     margin: 1em 0;
     overflow: hidden;
     border-radius: 0.5rem;
 }
 
-/* Vimeo: full-width 16:9 shell like YouTube */
-.canvas-post-body .canvas-post-body-embed--vimeo,
-.canvas-post-body div[data-canvas-embed='vimeo'] {
+.canvas-post-body .canvas-post-body-iframe--video,
+.canvas-post-body div[data-canvas-iframe][data-layout='video'] {
     position: relative;
     aspect-ratio: 16 / 9;
     width: 100%;
@@ -500,40 +491,56 @@
     background: color-mix(in oklab, var(--color-zinc-950) 6%, transparent);
 }
 
-.dark .canvas-post-body .canvas-post-body-embed--vimeo,
-.dark .canvas-post-body div[data-canvas-embed='vimeo'] {
+.dark .canvas-post-body .canvas-post-body-iframe--video,
+.dark .canvas-post-body div[data-canvas-iframe][data-layout='video'] {
     background: color-mix(in oklab, white 6%, transparent);
 }
 
-.canvas-post-body .canvas-post-body-embed--vimeo iframe,
-.canvas-post-body div[data-canvas-embed='vimeo'] iframe {
+.canvas-post-body .canvas-post-body-iframe--video > iframe,
+.canvas-post-body div[data-canvas-iframe][data-layout='video'] > iframe {
     position: absolute;
     inset: 0;
     display: block;
     width: 100% !important;
     height: 100% !important;
-    min-height: 0;
     border: 0;
 }
 
-/*
- * X: tweet cards are ~550px, not fluid full-width. Cap the shell so we don't
- * paint a huge empty gray frame beside the card.
- */
-.canvas-post-body .canvas-post-body-embed--x,
-.canvas-post-body div[data-canvas-embed='x'] {
+/* Card-style embeds (e.g. X) — cap width, no empty full-bleed gray shell */
+.canvas-post-body .canvas-post-body-iframe--card,
+.canvas-post-body div[data-canvas-iframe][data-layout='card'] {
     max-width: 550px;
     background: transparent;
 }
 
-.canvas-post-body .canvas-post-body-embed--x iframe,
-.canvas-post-body div[data-canvas-embed='x'] iframe {
+.canvas-post-body .canvas-post-body-iframe--card > iframe,
+.canvas-post-body div[data-canvas-iframe][data-layout='card'] > iframe {
     display: block;
     width: 100%;
     min-height: 12rem;
     height: auto;
     border: 0;
     border-radius: 0.5rem;
+}
+
+/* TipTap first-party <audio> */
+.canvas-post-body audio.canvas-post-body-audio,
+.canvas-post-body audio {
+    display: block;
+    width: 100%;
+    max-width: 36rem;
+    margin: 1em 0;
+    border-radius: 0.5rem;
+}
+
+/* Selection chrome: ring on the box, no ProseMirror paint strip */
+.canvas-post-body div[data-youtube-video].ProseMirror-selectednode,
+.canvas-post-body .canvas-post-body-iframe.ProseMirror-selectednode,
+.canvas-post-body div[data-canvas-iframe].ProseMirror-selectednode,
+.canvas-post-body audio.ProseMirror-selectednode {
+    outline: 2px solid color-mix(in oklab, var(--color-blue-500) 70%, transparent);
+    outline-offset: 2px;
+    background: transparent;
 }
 
 /* lowlight / highlight.js tokens — tuned for dark code panels */

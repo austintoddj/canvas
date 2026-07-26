@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => 'Изображение не выбрано',
     'editor.embedded_post' => 'Встроенная запись',
     'editor.embedded_video' => 'Встроенное видео',
+    'editor.embedded_content' => 'Встроенный контент',
     'editor.seo_desc_placeholder' => 'Использует краткое изложение или отрывок из тела, если он пуст.',
     'editor.published_badge' => 'Опубликовано',
     'editor.draft_badge' => 'Черновик',

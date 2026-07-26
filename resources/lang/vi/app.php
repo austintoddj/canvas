@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => 'Chưa chọn hình',
     'editor.embedded_post' => 'Bài nhúng',
     'editor.embedded_video' => 'Video nhúng',
+    'editor.embedded_content' => 'Nội dung nhúng',
     'editor.seo_desc_placeholder' => 'Sử dụng phần tóm tắt hoặc phần nội dung khi trống',
     'editor.published_badge' => 'Đã xuất bản',
     'editor.draft_badge' => 'Bản nháp',

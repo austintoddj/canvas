@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => 'Görsel seçilmedi',
     'editor.embedded_post' => 'Gömülü gönderi',
     'editor.embedded_video' => 'Gömülü video',
+    'editor.embedded_content' => 'Gömülü içerik',
     'editor.seo_desc_placeholder' => 'Boş olduğunda özeti veya gövde alıntısını kullanır',
     'editor.published_badge' => 'Yayınlandı',
     'editor.draft_badge' => 'Taslak',

@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => 'Kein Bild ausgewählt',
     'editor.embedded_post' => 'Eingebetteter Beitrag',
     'editor.embedded_video' => 'Eingebettetes Video',
+    'editor.embedded_content' => 'Eingebetteter Inhalt',
     'editor.seo_desc_placeholder' => 'Verwendet eine Zusammenfassung oder einen Textauszug, wenn dieser leer ist',
     'editor.published_badge' => 'Veröffentlicht',
     'editor.draft_badge' => 'Entwurf',

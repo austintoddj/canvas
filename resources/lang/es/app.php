@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => 'Ninguna imagen seleccionada',
     'editor.embedded_post' => 'Publicación incrustada',
     'editor.embedded_video' => 'Vídeo incrustado',
+    'editor.embedded_content' => 'Contenido incrustado',
     'editor.seo_desc_placeholder' => 'Utiliza resumen o extracto del cuerpo cuando está vacío',
     'editor.published_badge' => 'Publicado',
     'editor.draft_badge' => 'Borrador',

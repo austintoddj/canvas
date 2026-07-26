@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => 'No image selected',
     'editor.embedded_post' => 'Embedded post',
     'editor.embedded_video' => 'Embedded video',
+    'editor.embedded_content' => 'Embedded content',
     'editor.seo_desc_placeholder' => 'Uses summary or body excerpt when empty',
     'editor.published_badge' => 'Published',
     'editor.draft_badge' => 'Draft',

@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => 'Tidak ada gambar dipilih',
     'editor.embedded_post' => 'Pos tersemat',
     'editor.embedded_video' => 'Video tersemat',
+    'editor.embedded_content' => 'Konten tersemat',
     'editor.seo_desc_placeholder' => 'Menggunakan ringkasan atau kutipan isi saat kosong',
     'editor.published_badge' => 'Diterbitkan',
     'editor.draft_badge' => 'Draf',

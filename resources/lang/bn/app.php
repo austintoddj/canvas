@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => 'কোনো ছবি নির্বাচিত নয়',
     'editor.embedded_post' => 'এম্বেডেড পোস্ট',
     'editor.embedded_video' => 'এম্বেডেড ভিডিও',
+    'editor.embedded_content' => 'এম্বেড করা বিষয়বস্তু',
     'editor.seo_desc_placeholder' => 'খালি হলে সারাংশ বা মূল অংশ ব্যবহার করে',
     'editor.published_badge' => 'প্রকাশিত হয়েছে',
     'editor.draft_badge' => 'খসড়া',

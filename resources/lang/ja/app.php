@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => '画像が選択されていません',
     'editor.embedded_post' => '埋め込み投稿',
     'editor.embedded_video' => '埋め込み動画',
+    'editor.embedded_content' => '埋め込みコンテンツ',
     'editor.seo_desc_placeholder' => '空の場合は概要または本文の抜粋を使用します',
     'editor.published_badge' => '発行済み',
     'editor.draft_badge' => '下書き',

@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => '未选择图片',
     'editor.embedded_post' => '嵌入的帖子',
     'editor.embedded_video' => '嵌入的视频',
+    'editor.embedded_content' => '嵌入内容',
     'editor.seo_desc_placeholder' => '空时使用摘要或正文摘录',
     'editor.published_badge' => '已发表',
     'editor.draft_badge' => '草稿',

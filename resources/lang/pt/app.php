@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => 'Nenhuma imagem selecionada',
     'editor.embedded_post' => 'Publicação incorporada',
     'editor.embedded_video' => 'Vídeo incorporado',
+    'editor.embedded_content' => 'Conteúdo incorporado',
     'editor.seo_desc_placeholder' => 'Usa resumo ou trecho do corpo quando vazio',
     'editor.published_badge' => 'Publicado',
     'editor.draft_badge' => 'Rascunho',

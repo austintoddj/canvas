@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => 'لم يُحدد صورة',
     'editor.embedded_post' => 'منشور مضمّن',
     'editor.embedded_video' => 'فيديو مضمّن',
+    'editor.embedded_content' => 'محتوى مضمّن',
     'editor.seo_desc_placeholder' => 'يستخدم ملخصًا أو مقتطفًا من النص عندما يكون فارغًا',
     'editor.published_badge' => 'تم النشر',
     'editor.draft_badge' => 'مسودة',

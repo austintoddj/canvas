@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => '선택된 이미지 없음',
     'editor.embedded_post' => '임베드된 게시물',
     'editor.embedded_video' => '임베드된 동영상',
+    'editor.embedded_content' => '삽입된 콘텐츠',
     'editor.seo_desc_placeholder' => '비어 있는 경우 요약 또는 본문 발췌를 사용합니다.',
     'editor.published_badge' => '게시됨',
     'editor.draft_badge' => '초안',

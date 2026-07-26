@@ -578,6 +578,7 @@ return [
     'editor.seo_no_image' => 'कोई छवि चयनित नहीं',
     'editor.embedded_post' => 'एम्बेडेड पोस्ट',
     'editor.embedded_video' => 'एम्बेडेड वीडियो',
+    'editor.embedded_content' => 'एम्बेडेड सामग्री',
     'editor.seo_desc_placeholder' => 'खाली होने पर सारांश या मुख्य अंश का उपयोग करता है',
     'editor.published_badge' => 'प्रकाशित',
     'editor.draft_badge' => 'मसौदा',

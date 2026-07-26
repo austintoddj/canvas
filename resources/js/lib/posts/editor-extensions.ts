@@ -11,12 +11,13 @@ import TaskList from '@tiptap/extension-task-list';
 import TextAlign from '@tiptap/extension-text-align';
 import Typography from '@tiptap/extension-typography';
 import Underline from '@tiptap/extension-underline';
+import Audio from '@tiptap/extension-audio';
 import Youtube from '@tiptap/extension-youtube';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 
 import { AiRewriteDecoration } from '@/lib/posts/ai-rewrite-decoration';
-import { CanvasEmbed } from '@/lib/posts/embed-extension';
+import { CanvasIframe } from '@/lib/posts/iframe-extension';
 
 const ImageCreditParagraph = Extension.create({
     name: 'imageCreditParagraph',
@@ -133,6 +134,7 @@ export function createPostEditorExtensions(options?: { placeholder?: string }) {
             },
         }),
         ImageCreditParagraph,
+        // First-party TipTap media nodes
         Youtube.configure({
             controls: true,
             nocookie: true,
@@ -142,11 +144,18 @@ export function createPostEditorExtensions(options?: { placeholder?: string }) {
             width: 640,
             height: 360,
             HTMLAttributes: {
-                // Keep attrs light so CSS absolute-fill wins over fixed width/height.
                 class: 'canvas-post-body-youtube-iframe',
             },
         }),
-        CanvasEmbed,
+        Audio.configure({
+            controls: true,
+            autoplay: false,
+            HTMLAttributes: {
+                class: 'canvas-post-body-audio',
+            },
+        }),
+        // Generic iframe for non-YouTube embeds (Vimeo, X, prebuilt embed URLs).
+        CanvasIframe,
         TableKit.configure({
             table: {
                 resizable: true,
