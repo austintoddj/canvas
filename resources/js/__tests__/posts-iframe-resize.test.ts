@@ -184,19 +184,47 @@ describe('installCardIframeResize', () => {
         expect(a.style.height).toBe('400px');
     });
 
-    it('nudgeCardIframeResize re-applies src on card iframes', () => {
+    it('nudgeCardIframeResize force-reloads by clearing src first', () => {
         root = document.createElement('div');
         document.body.appendChild(root);
 
         const iframe = document.createElement('iframe');
         const src = 'https://platform.twitter.com/embed/Tweet.html?id=99';
         iframe.setAttribute('src', src);
+        applyCardIframeHeight(iframe, 640);
         root.appendChild(iframe);
 
-        const before = iframe.getAttribute('src');
+        const srcWrites: string[] = [];
+        const descriptor = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'src');
+        const removeSpy = iframe.removeAttribute.bind(iframe);
+        iframe.removeAttribute = (name: string) => {
+            if (name === 'src') {
+                srcWrites.push('__cleared__');
+            }
+            return removeSpy(name);
+        };
+
+        // Track property writes used to start a real navigation after clear.
+        Object.defineProperty(iframe, 'src', {
+            configurable: true,
+            get() {
+                return descriptor?.get?.call(iframe) ?? src;
+            },
+            set(value: string) {
+                srcWrites.push(String(value));
+                descriptor?.set?.call(iframe, value);
+            },
+        });
+
         nudgeCardIframeResize(root);
-        expect(iframe.getAttribute('src')).toBe(before);
-        expect(iframe.getAttribute('src')).toBe(src);
+
+        expect(srcWrites[0]).toBe('__cleared__');
+        expect(srcWrites).toContain(src);
+        // Measured height must be cleared so placeholder fallback can re-run.
+        expect(iframe.style.height).toBe('');
+        expect(iframe.style.minHeight).toBe('');
+        expect(iframe.getAttribute('height')).toBeNull();
+        expect(iframe.getAttribute('src') ?? iframe.src).toContain('Tweet.html?id=99');
     });
 
     it('isCardIframeAtPlaceholderHeight respects the 12rem default', () => {

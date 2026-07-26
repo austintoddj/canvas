@@ -307,24 +307,36 @@ export function applyCardIframeHeight(iframe: HTMLIFrameElement, height: number)
 }
 
 /**
- * Re-set card iframe `src` so Twitter re-sends resize postMessages.
+ * Force card iframes to reload so Twitter re-sends resize postMessages.
  * Call after installing the listener when embeds were already in the DOM
  * (e.g. preview open) — otherwise early resize messages are missed and cards
  * stay clipped at the 12rem placeholder.
+ *
+ * Browsers no-op a same-src assignment, so we must clear `src` before restoring
+ * it. Also drop any previously applied height so multi-card placeholder fallback
+ * can re-assign after the reload.
  */
 export function nudgeCardIframeResize(root: ParentNode = document): void {
     const iframes = Array.from(root.querySelectorAll<HTMLIFrameElement>(CARD_IFRAME_SELECTOR));
 
     for (const iframe of iframes) {
-        const src = iframe.getAttribute('src');
+        const src = (iframe.getAttribute('src') ?? iframe.src ?? '').trim();
 
-        if (src === null || src.trim() === '') {
+        if (src === '' || src === 'about:blank') {
             continue;
         }
 
-        // Force a reload without changing the URL. Clearing first avoids some
-        // browsers no-op'ing a same-src assignment.
-        iframe.setAttribute('src', src);
+        // Reset measured height so cards look like fresh placeholders until the
+        // next twttr.private.resize lands (needed for multi-card document-order
+        // fallback after a re-nudge / Strict Mode remount).
+        iframe.style.height = '';
+        iframe.style.minHeight = '';
+        iframe.removeAttribute('height');
+
+        // Same-src setAttribute/assignment does not reload in Chromium/WebKit.
+        iframe.removeAttribute('src');
+        // Prefer the property so the browser starts a real navigation.
+        iframe.src = src;
     }
 }
 

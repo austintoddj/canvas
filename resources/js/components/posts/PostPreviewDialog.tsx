@@ -41,9 +41,12 @@ export default function PostPreviewDialog({ open, form, onClose }: PostPreviewDi
     const dateLabel = formatPreviewDate(form.publishedAt, locale);
     const bodyRef = useRef<HTMLDivElement>(null);
 
-    // useLayoutEffect so the resize listener (and iframe nudge) run before paint.
-    // useEffect was too late: Twitter often posts height before the listener attaches,
-    // leaving cards stuck at the 12rem placeholder and clipping embed content.
+    // useLayoutEffect so the resize listener (and iframe force-reload nudge) run
+    // before paint. useEffect was too late: Twitter often posts height before the
+    // listener attaches, leaving cards stuck at the 12rem placeholder.
+    // Canvas UI avoids this race with a document-level listener on first paint;
+    // the SPA preview injects HTML when the dialog opens, so it must nudge-reload
+    // cards after the listener is attached (see nudgeCardIframeResize).
     useLayoutEffect(() => {
         if (!open || !hasBody) {
             return;
