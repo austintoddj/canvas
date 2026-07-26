@@ -87,7 +87,7 @@
             </figure>
         @endif
 
-        <div class="prose prose-lg max-w-none font-serif text-gray-800 prose-headings:font-sans prose-a:text-indigo-600 hover:prose-a:text-indigo-800">
+        <div class="canvas-post-body prose prose-lg max-w-none font-serif text-gray-800 prose-headings:font-sans prose-a:text-indigo-600 hover:prose-a:text-indigo-800">
             {!! $post->body !!}
         </div>
 

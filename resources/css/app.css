@@ -478,13 +478,13 @@
 .canvas-post-body .canvas-post-body-iframe,
 .canvas-post-body div[data-canvas-iframe] {
     margin: 1em 0;
-    overflow: hidden;
     border-radius: 0.5rem;
 }
 
 .canvas-post-body .canvas-post-body-iframe--video,
 .canvas-post-body div[data-canvas-iframe][data-layout='video'] {
     position: relative;
+    overflow: hidden;
     aspect-ratio: 16 / 9;
     width: 100%;
     max-width: 100%;
@@ -506,21 +506,27 @@
     border: 0;
 }
 
-/* Card-style embeds (e.g. X) — cap width, no empty full-bleed gray shell */
+/*
+ * Card-style embeds (e.g. X) — cap width, no empty full-bleed gray shell.
+ * Height is set from Twitter's twttr.private.resize postMessage (see iframe-resize.ts).
+ * Do not overflow:hidden here or portrait media is clipped before/while height settles.
+ */
 .canvas-post-body .canvas-post-body-iframe--card,
 .canvas-post-body div[data-canvas-iframe][data-layout='card'] {
     max-width: 550px;
     background: transparent;
+    overflow: visible;
 }
 
 .canvas-post-body .canvas-post-body-iframe--card > iframe,
 .canvas-post-body div[data-canvas-iframe][data-layout='card'] > iframe {
     display: block;
     width: 100%;
+    /* Loading placeholder until resize message arrives */
     min-height: 12rem;
-    height: auto;
+    height: 12rem;
     border: 0;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
 }
 
 /* TipTap first-party <audio> */

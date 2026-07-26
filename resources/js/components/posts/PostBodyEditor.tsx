@@ -38,6 +38,7 @@ import {
 } from '@/lib/posts/ai-writing';
 import { bodyFromEditorHtml, bodyHtmlForEditor } from '@/lib/posts/body';
 import { CODE_BLOCK_LANGUAGES, createPostEditorExtensions } from '@/lib/posts/editor-extensions';
+import { installCardIframeResize } from '@/lib/posts/iframe-resize';
 import { toast } from '@/lib/toast';
 import {
     IconAlignCenter,
@@ -836,6 +837,18 @@ export default function PostBodyEditor({
 
         editor.setEditable(!disabled);
     }, [disabled, editor]);
+
+    // X/Twitter card iframes report their height via postMessage; size them so
+    // portrait media and full tweets are not clipped.
+    useEffect(() => {
+        if (editor === null) {
+            return;
+        }
+
+        const dom = editor.view.dom;
+
+        return installCardIframeResize(dom);
+    }, [editor]);
 
     useEffect(() => {
         if (editor === null) {

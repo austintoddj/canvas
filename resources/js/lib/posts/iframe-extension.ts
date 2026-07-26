@@ -23,10 +23,11 @@ declare module '@tiptap/core' {
 
 function allowForSrc(src: string): string {
     if (/twitter\.com\/embed|Tweet\.html/i.test(src)) {
-        return 'encrypted-media';
+        // Media posts (video/gif) need autoplay + encrypted-media; fullscreen helps expanded media.
+        return 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share';
     }
 
-    return 'encrypted-media; fullscreen; picture-in-picture';
+    return 'accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
 }
 
 /**

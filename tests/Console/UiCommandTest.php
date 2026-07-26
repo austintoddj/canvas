@@ -51,7 +51,7 @@ it('publishes all reader view files', function (): void {
         $this->assertFileExists("{$base}/{$view}.blade.php", "Missing view: {$view}.blade.php");
     }
 
-    foreach (['author', 'meta', 'pagination', 'post-list-item', 'social-links'] as $partial) {
+    foreach (['author', 'embeds', 'meta', 'pagination', 'post-list-item', 'social-links'] as $partial) {
         $this->assertFileExists("{$base}/partials/{$partial}.blade.php", "Missing partial: {$partial}.blade.php");
     }
 });

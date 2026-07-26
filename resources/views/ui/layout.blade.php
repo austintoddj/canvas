@@ -27,6 +27,7 @@
             outline-offset: 2px;
         }
     </style>
+    @include('canvas::ui.partials.embeds')
     @stack('head')
 </head>
 <body class="bg-white text-gray-900 antialiased font-sans">

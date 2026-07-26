@@ -50,6 +50,7 @@ class UiCommand extends Command
 
         $this->newLine();
         $this->line('  <fg=gray>Open</> /canvas-ui <fg=gray>in your browser.</>');
+        $this->line('  <fg=gray>Post body embeds (YouTube, X, Vimeo) are styled in the UI layout — no extra assets.</>');
 
         return self::SUCCESS;
     }

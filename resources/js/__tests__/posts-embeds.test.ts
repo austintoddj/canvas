@@ -172,6 +172,9 @@ describe('post editor media round-trip', () => {
         const html = editor.getHTML();
         expect(html).toContain('data-youtube-video');
         expect(html).toMatch(/youtube-nocookie\.com\/embed\/dQw4w9WgXcQ|youtube\.com\/embed\/dQw4w9WgXcQ/);
+        // Cross-origin player needs delegated permissions; without allow the shell stays blank.
+        expect(html).toMatch(/allow="[^"]*encrypted-media[^"]*"/);
+        expect(html).toMatch(/referrerpolicy="strict-origin-when-cross-origin"/);
 
         editor.commands.setContent(html);
         const reloaded = mediaNodes(editor);

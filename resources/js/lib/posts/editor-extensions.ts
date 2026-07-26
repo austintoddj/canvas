@@ -145,6 +145,11 @@ export function createPostEditorExtensions(options?: { placeholder?: string }) {
             height: 360,
             HTMLAttributes: {
                 class: 'canvas-post-body-youtube-iframe',
+                // Cross-origin players need delegated permissions or the shell stays blank.
+                allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
+                referrerpolicy: 'strict-origin-when-cross-origin',
+                title: 'YouTube video',
+                frameborder: '0',
             },
         }),
         Audio.configure({

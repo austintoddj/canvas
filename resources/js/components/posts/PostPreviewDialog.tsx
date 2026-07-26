@@ -1,8 +1,11 @@
+import { useEffect, useRef } from 'react';
+
 import { Avatar } from '@/components/avatar';
 import { Dialog, DialogBody, DialogCloseButton, DialogTitle } from '@/components/dialog';
 import { Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { bodyHtmlForEditor, parsePublishedAt, type PostFormState } from '@/lib/posts/form';
+import { installCardIframeResize } from '@/lib/posts/iframe-resize';
 import { userInitials } from '@/lib/users/roles';
 
 type PostPreviewDialogProps = {
@@ -36,6 +39,21 @@ export default function PostPreviewDialog({ open, form, onClose }: PostPreviewDi
     const avatarSrc =
         author?.avatar_url ?? (author === null ? (user.avatar_url ?? user.canvas?.avatar_url ?? null) : null);
     const dateLabel = formatPreviewDate(form.publishedAt, locale);
+    const bodyRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!open || !hasBody) {
+            return;
+        }
+
+        const el = bodyRef.current;
+
+        if (el === null) {
+            return;
+        }
+
+        return installCardIframeResize(el);
+    }, [open, hasBody, bodyHtml]);
 
     return (
         <Dialog open={open} onClose={onClose} size="5xl" data-post-preview-dialog="true">
@@ -92,6 +110,7 @@ export default function PostPreviewDialog({ open, form, onClose }: PostPreviewDi
 
                     {hasBody ? (
                         <div
+                            ref={bodyRef}
                             className="canvas-post-body"
                             data-post-preview-body="true"
                             dangerouslySetInnerHTML={{ __html: bodyHtml }}
