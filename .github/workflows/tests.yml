@@ -22,10 +22,10 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Setup Node
-              uses: actions/setup-node@v6
+              uses: actions/setup-node@v7
               with:
                   node-version: 22
                   cache: npm
@@ -44,7 +44,7 @@ jobs:
 
             - name: Upload JS coverage
               if: always()
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: js-coverage
                   path: |
@@ -58,7 +58,7 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -69,7 +69,7 @@ jobs:
                   coverage: none
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v5
+              uses: actions/cache@v6
               with:
                   path: vendor
                   key: ${{ runner.os }}-php-quality-8.4-laravel-12-${{ hashFiles('composer.lock') }}
@@ -97,7 +97,7 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -108,7 +108,7 @@ jobs:
                   coverage: none
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v5
+              uses: actions/cache@v6
               with:
                   path: vendor
                   key: ${{ runner.os }}-php-${{ matrix.php }}-laravel-${{ matrix.laravel }}-${{ hashFiles('composer.lock') }}
@@ -123,7 +123,7 @@ jobs:
 
             - name: Upload JUnit report
               if: failure()
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: junit-php${{ matrix.php }}-laravel${{ matrix.laravel }}
                   path: build/junit.xml
@@ -137,7 +137,7 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -148,7 +148,7 @@ jobs:
                   coverage: pcov
 
             - name: Cache Composer dependencies
-              uses: actions/cache@v5
+              uses: actions/cache@v6
               with:
                   path: vendor
                   key: ${{ runner.os }}-php-coverage-8.4-laravel-12-${{ hashFiles('composer.lock') }}
@@ -163,7 +163,7 @@ jobs:
 
             - name: Upload PHP coverage
               if: always()
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: php-coverage
                   path: build/coverage
@@ -181,7 +181,7 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -199,7 +199,7 @@ jobs:
 
             - name: Upload host diagnostics on failure
               if: failure()
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: install-smoke-host-laravel${{ matrix.laravel }}
                   path: |
@@ -233,7 +233,7 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -278,7 +278,7 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -308,7 +308,7 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -319,7 +319,7 @@ jobs:
                   coverage: none
 
             - name: Setup Node
-              uses: actions/setup-node@v6
+              uses: actions/setup-node@v7
               with:
                   node-version: 22
                   cache: npm
@@ -343,7 +343,7 @@ jobs:
 
             - name: Upload Playwright report
               if: failure()
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: playwright-report
                   path: |
