@@ -105,11 +105,13 @@ export const CanvasEmbed = Node.create<CanvasEmbedOptions>({
                             : t('editor.embedded_video', 'Embedded video'),
                     loading: 'lazy',
                     frameborder: '0',
-                    allowfullscreen: 'true',
+                    // Use only `allow` — browsers warn when both allow and allowfullscreen are set.
                     allow:
                         provider === 'vimeo'
                             ? 'autoplay; fullscreen; picture-in-picture; encrypted-media'
-                            : 'encrypted-media; fullscreen',
+                            : provider === 'x'
+                              ? 'encrypted-media'
+                              : 'encrypted-media; fullscreen',
                     ...(provider === 'x' ? { scrolling: 'no' } : {}),
                 },
             ],

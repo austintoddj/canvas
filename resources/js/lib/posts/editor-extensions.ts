@@ -89,9 +89,13 @@ export const CODE_BLOCK_LANGUAGES = [
 
 export function createPostEditorExtensions(options?: { placeholder?: string }) {
     return [
+        // StarterKit v3 already registers link + underline — disable them so our
+        // configured copies are the only ones (avoids duplicate-extension warnings).
         StarterKit.configure({
             heading: { levels: [1, 2, 3] },
             codeBlock: false,
+            link: false,
+            underline: false,
         }),
         CodeBlockLowlight.configure({
             lowlight,
@@ -133,11 +137,13 @@ export function createPostEditorExtensions(options?: { placeholder?: string }) {
             controls: true,
             nocookie: true,
             modestBranding: true,
-            // Match CSS 16:9 box; fixed 640×480 attrs clipped the thumbnail.
+            // Dimensions are decorative; CSS on div[data-youtube-video] owns layout.
+            // Do not put a "box" class on the iframe — TipTap applies HTMLAttributes to the iframe only.
             width: 640,
             height: 360,
             HTMLAttributes: {
-                class: 'canvas-post-body-youtube',
+                // Keep attrs light so CSS absolute-fill wins over fixed width/height.
+                class: 'canvas-post-body-youtube-iframe',
             },
         }),
         CanvasEmbed,
