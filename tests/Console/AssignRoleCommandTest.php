@@ -48,5 +48,6 @@ it('rejects invalid roles', function (): void {
         'role' => 'boss',
     ])
         ->assertExitCode(1)
-        ->expectsOutputToContain('Please enter a valid role.');
+        ->expectsOutputToContain('Please enter a valid role (Contributor, Editor, Admin).')
+        ->expectsOutputToContain('canvas:roles');
 });

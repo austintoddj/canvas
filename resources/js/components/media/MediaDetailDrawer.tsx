@@ -250,6 +250,14 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                                     </DescriptionDetails>
                                     <DescriptionTerm>{t('media.uploaded')}</DescriptionTerm>
                                     <DescriptionDetails>{formatMediaDate(media.created_at)}</DescriptionDetails>
+                                    {media.user?.name ? (
+                                        <>
+                                            <DescriptionTerm>{t('media.uploaded_by', 'Uploaded by')}</DescriptionTerm>
+                                            <DescriptionDetails className="text-zinc-500 dark:text-zinc-400">
+                                                {media.user.name}
+                                            </DescriptionDetails>
+                                        </>
+                                    ) : null}
                                     <DescriptionTerm>{t('media.filename')}</DescriptionTerm>
                                     <DescriptionDetails className="break-all">{media.filename}</DescriptionDetails>
                                 </DescriptionList>

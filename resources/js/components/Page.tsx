@@ -11,6 +11,7 @@ export const MediaShow = lazy(() => import('@/pages/Media/Show'));
 export const OrganizeIndex = lazy(() => import('@/pages/Organize/Index'));
 export const UsersIndex = lazy(() => import('@/pages/Users/Index'));
 export const IntegrationsIndex = lazy(() => import('@/pages/Integrations/Index'));
+export const NotFound = lazy(() => import('@/pages/NotFound'));
 
 export default function Page({ component: Component }: { component: ComponentType }) {
     return (

@@ -738,4 +738,12 @@ return [
     'taxonomy.this_tag' => 'this tag',
     'taxonomy.this_topic' => 'this topic',
     'editor.ai_custom_help' => 'Tell the model how to rewrite the selected text. The result replaces the selection as plain text.',
+    'errors.not_found_title' => 'Page not found',
+    'errors.not_found_description' => 'That page does not exist or is no longer available.',
+    'errors.not_found_hint' => 'Check the URL or go back to the dashboard.',
+    'errors.not_found_home' => 'Back to dashboard',
+    'errors.generic_title' => 'Something went wrong',
+    'errors.generic_description' => 'An unexpected error occurred. Try again or return home.',
+    'errors.generic_hint' => 'If this keeps happening, refresh the page.',
+    'media.uploaded_by' => 'Uploaded by',
 ];

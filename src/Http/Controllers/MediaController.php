@@ -9,6 +9,7 @@ use Canvas\Http\Requests\StoreMediaRequest;
 use Canvas\Http\Requests\UpdateMediaRequest;
 use Canvas\Models\Media;
 use Canvas\Support\MediaService;
+use Canvas\Support\MediaUploader;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -65,14 +66,14 @@ class MediaController extends Controller
             $request->safe()->only(['alt', 'caption', 'original_name']),
         );
 
-        return response()->json($media, 201);
+        return response()->json($this->mediaPayload($media), 201);
     }
 
     public function show(Media $media): JsonResponse
     {
         $this->ensureMediaIsVisibleToCurrentUser($media);
 
-        return response()->json($media, 200);
+        return response()->json($this->mediaPayload($media), 200);
     }
 
     public function update(UpdateMediaRequest $request, Media $media): JsonResponse
@@ -80,7 +81,7 @@ class MediaController extends Controller
         $media->fill($request->validated());
         $media->save();
 
-        return response()->json($media->refresh(), 200);
+        return response()->json($this->mediaPayload($media->refresh()), 200);
     }
 
     public function destroy(DestroyMediaRequest $request, Media $media): Response
@@ -106,5 +107,16 @@ class MediaController extends Controller
             ! $canViewAll || request()->query('scope', 'user') !== 'all',
             fn (Builder $query) => $query->where('user_id', data_get($user, 'id')),
         );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mediaPayload(Media $media): array
+    {
+        $payload = $media->toArray();
+        $payload['user'] = MediaUploader::for($media);
+
+        return $payload;
     }
 }

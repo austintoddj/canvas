@@ -109,11 +109,13 @@ it('returns data for creating media', function (): void {
 it('returns existing media data', function (): void {
     $media = Media::factory()->create(['user_id' => $this->admin->id]);
 
-    $response = $this->actingAs($this->admin, 'canvas')
+    $this->actingAs($this->admin, 'canvas')
         ->getJson("canvas/api/media/{$media->id}")
-        ->assertSuccessful();
-
-    expect($media->is($response->getOriginalContent()))->toBeTrue();
+        ->assertSuccessful()
+        ->assertJsonPath('id', $media->id)
+        ->assertJsonPath('user_id', $this->admin->id)
+        ->assertJsonPath('user.id', $this->admin->id)
+        ->assertJsonPath('user.name', $this->admin->name);
 });
 
 it('returns not found for media the user cannot view', function (): void {
@@ -138,13 +140,15 @@ it('stores uploaded media and persists the file', function (): void {
 
     $path = Paths::baseStoragePath().'/'.$file->hashName();
 
-    expect($response->getOriginalContent())->toBeInstanceOf(Media::class)
-        ->and($response->getOriginalContent()->id)->toBe($id)
-        ->and($response->getOriginalContent()->path)->toBe($path)
-        ->and($response->getOriginalContent()->alt)->toBe('A photo')
-        ->and($response->getOriginalContent()->caption)->toBe('Caption text')
-        ->and($response->getOriginalContent()->url)->toStartWith('/storage/')
-        ->and($response->getOriginalContent()->url)->not->toContain('http');
+    $response
+        ->assertJsonPath('id', $id)
+        ->assertJsonPath('path', $path)
+        ->assertJsonPath('alt', 'A photo')
+        ->assertJsonPath('caption', 'Caption text')
+        ->assertJsonPath('user.id', $this->admin->id);
+
+    expect($response->json('url'))->toStartWith('/storage/')
+        ->and($response->json('url'))->not->toContain('http');
 
     Storage::disk(config('canvas.storage_disk'))->assertExists($path);
 
@@ -276,9 +280,11 @@ it('updates media metadata', function (): void {
         ])
         ->assertSuccessful();
 
-    expect($response->getOriginalContent()->alt)->toBe('Updated alt text')
-        ->and($response->getOriginalContent()->caption)->toBe('Updated caption')
-        ->and($response->getOriginalContent()->original_name)->toBe('renamed.jpg');
+    $response
+        ->assertJsonPath('alt', 'Updated alt text')
+        ->assertJsonPath('caption', 'Updated caption')
+        ->assertJsonPath('original_name', 'renamed.jpg')
+        ->assertJsonPath('user.id', $this->admin->id);
 });
 
 it('forbids updating media owned by another contributor', function (): void {
@@ -333,9 +339,10 @@ it('allows admins to view media owned by other users', function (): void {
     $otherUser = User::factory()->contributor()->create();
     $media = Media::factory()->create(['user_id' => $otherUser->id]);
 
-    $response = $this->actingAs($this->admin, 'canvas')
+    $this->actingAs($this->admin, 'canvas')
         ->getJson("canvas/api/media/{$media->id}")
-        ->assertSuccessful();
-
-    expect($media->is($response->getOriginalContent()))->toBeTrue();
+        ->assertSuccessful()
+        ->assertJsonPath('id', $media->id)
+        ->assertJsonPath('user.id', $otherUser->id)
+        ->assertJsonPath('user.name', $otherUser->name);
 });

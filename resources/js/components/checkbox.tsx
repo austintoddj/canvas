@@ -41,8 +41,9 @@ const base = [
     'before:absolute before:inset-0 before:-z-10 before:rounded-[calc(0.3125rem-1px)] before:bg-white before:shadow-sm',
     'group-data-checked:before:hidden',
     'dark:before:hidden',
-    'dark:bg-white/5 dark:group-data-checked:bg-current',
-    'border border-zinc-950/15 group-data-checked:border-transparent group-data-hover:group-data-checked:border-transparent group-data-hover:border-zinc-950/30 group-data-checked:bg-current',
+    // Use CSS vars for checked fill — bg-current is white in dark mode and hides the checkmark.
+    'dark:bg-white/5 dark:group-data-checked:bg-(--checkbox-checked-bg)',
+    'border border-zinc-950/15 group-data-checked:border-transparent group-data-hover:group-data-checked:border-transparent group-data-hover:border-zinc-950/30 group-data-checked:bg-(--checkbox-checked-bg)',
     'dark:border-white/15 dark:group-data-checked:border-white/5 dark:group-data-hover:group-data-checked:border-white/5 dark:group-data-hover:border-white/30',
     'after:pointer-events-none after:absolute after:inset-0 after:rounded-[calc(0.3125rem-1px)] after:ring-transparent after:ring-inset group-data-focus:after:ring-2 group-data-focus:after:ring-blue-500',
     'group-data-disabled:opacity-50',

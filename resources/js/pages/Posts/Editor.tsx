@@ -91,6 +91,8 @@ export default function PostsEditor() {
     const handleSaved = useCallback((post: Post) => {
         setDraftPersisted(true);
         setHasPendingChanges(postHasPendingChanges(post));
+        // Keep sidebar recent posts in sync after create/autosave (title, order).
+        invalidateRecentPosts();
 
         setForm((current) => {
             const nextPublishedAt = post.published_at ?? null;
@@ -153,6 +155,7 @@ export default function PostsEditor() {
             if (ok) {
                 setHasPendingChanges(false);
                 setPublishConfirmOpen(false);
+                invalidateRecentPosts();
                 toast.success(t('editor.published'));
             } else {
                 toast.error(t('editor.publish_error'));
@@ -171,6 +174,7 @@ export default function PostsEditor() {
             if (ok) {
                 setHasPendingChanges(false);
                 setUpdateConfirmOpen(false);
+                invalidateRecentPosts();
                 toast.success(t('editor.updated', 'Post updated.'));
             } else {
                 toast.error(t('editor.update_error', 'Unable to update this post.'));
@@ -223,6 +227,7 @@ export default function PostsEditor() {
                 }));
                 setHasPendingChanges(false);
                 setPublishConfirmOpen(false);
+                invalidateRecentPosts();
                 toast.success(t('editor.scheduled'));
             } else {
                 toast.error(t('editor.schedule_error'));
@@ -240,6 +245,7 @@ export default function PostsEditor() {
 
         if (ok) {
             setHasPendingChanges(false);
+            invalidateRecentPosts();
             toast.success(t('editor.unpublished'));
         } else {
             toast.error(t('editor.unpublish_error'));

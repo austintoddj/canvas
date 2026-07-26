@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Canvas\Console;
 
 use Canvas\Console\Concerns\ResolvesCanvasUsers;
+use Canvas\Enums\Role;
 use Illuminate\Console\Command;
 
 class AssignRoleCommand extends Command
@@ -21,7 +22,9 @@ class AssignRoleCommand extends Command
         $role = $this->resolveRole($this->argument('role'));
 
         if (! $role) {
-            $this->components->error('Please enter a valid role.');
+            $names = implode(', ', Role::names());
+            $this->components->error(sprintf('Please enter a valid role (%s).', $names));
+            $this->line('  <fg=gray>List roles:</> php artisan canvas:roles');
 
             return self::FAILURE;
         }

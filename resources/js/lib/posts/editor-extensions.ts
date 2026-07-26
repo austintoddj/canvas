@@ -133,6 +133,9 @@ export function createPostEditorExtensions(options?: { placeholder?: string }) {
             controls: true,
             nocookie: true,
             modestBranding: true,
+            // Match CSS 16:9 box; fixed 640×480 attrs clipped the thumbnail.
+            width: 640,
+            height: 360,
             HTMLAttributes: {
                 class: 'canvas-post-body-youtube',
             },

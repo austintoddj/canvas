@@ -105,7 +105,8 @@ class UserController extends Controller
         $validated = $request->validated();
         $isSelf = (string) $currentUser->getKey() === (string) $user->getKey();
 
-        // Admins manage other users' access only. Authors own their own profile fields.
+        // Admins manage other users' access only. Authors own their own profile fields
+        // (including admins — you cannot change your own role in the UI/API).
         $payload = $isSelf
             ? Arr::except($validated, CanvasUserAttributes::ACCESS)
             : Arr::only($validated, CanvasUserAttributes::ACCESS);

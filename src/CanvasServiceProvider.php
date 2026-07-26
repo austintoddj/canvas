@@ -11,6 +11,7 @@ use Canvas\Console\MakeAdminCommand;
 use Canvas\Console\MigrateCommand;
 use Canvas\Console\PublishCommand;
 use Canvas\Console\RemoveAccessCommand;
+use Canvas\Console\RolesCommand;
 use Canvas\Console\UiCommand;
 use Canvas\Console\UsersCommand;
 use Canvas\Contracts\WebhookEndpointRepository;
@@ -196,6 +197,7 @@ class CanvasServiceProvider extends ServiceProvider
             MakeAdminCommand::class,
             PublishCommand::class,
             RemoveAccessCommand::class,
+            RolesCommand::class,
             UiCommand::class,
             UsersCommand::class,
         ]);

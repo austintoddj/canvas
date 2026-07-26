@@ -6,13 +6,10 @@ import { Avatar } from '@/components/avatar';
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
 import { ContentReveal } from '@/components/ContentReveal';
-import { EmptyState } from '@/components/EmptyState';
-import { EmptyStateReveal } from '@/components/EmptyStateReveal';
 import { ListRowActionButton, ListRowEnd } from '@/components/ListRowEnd';
 import { PageHeader } from '@/components/PageHeader';
 import { GrantAccessDrawer } from '@/components/users/GrantAccessDrawer';
 import { UserDetailDrawer } from '@/components/users/UserDetailDrawer';
-import { UsersEmptyVisual } from '@/components/users/UsersEmptyVisual';
 import {
     Pagination,
     PaginationGap,
@@ -28,7 +25,7 @@ import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useMobilePageAction } from '@/hooks/useMobilePageAction';
-import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
+import { isInitialLoading, isRefreshing } from '@/lib/async-ui';
 import { usersApi } from '@/lib/api/users';
 import { formatListDate } from '@/lib/format-list-date';
 import { paginationWindow, shouldGoToPreviousPageAfterDelete } from '@/lib/list-pagination';
@@ -194,12 +191,10 @@ export default function UsersIndex() {
     const itemCount = response?.data.length ?? 0;
     const showInitialSkeleton = isInitialLoading(loading, itemCount);
     const refreshing = isRefreshing(loading, itemCount);
-    const isEmpty = shouldShowEmpty(loading, itemCount);
-    const { animateEmpty, animateContent } = useAsyncReveal(loading, itemCount);
-    /** Show through load; hide only when empty state owns the CTA. */
-    const showInviteAction = !isEmpty;
+    const { animateContent } = useAsyncReveal(loading, itemCount);
+    // Admin is always present — invite stays available; no marketing empty state.
     useMobilePageAction({
-        visible: showInviteAction,
+        visible: true,
         onClick: () => setGrantOpen(true),
     });
 
@@ -208,12 +203,10 @@ export default function UsersIndex() {
             <PageHeader
                 title={t('users.title')}
                 actions={
-                    showInviteAction ? (
-                        <Button type="button" outline onClick={() => setGrantOpen(true)}>
-                            <IconPlus data-slot="icon" />
-                            {t('users.invite')}
-                        </Button>
-                    ) : undefined
+                    <Button type="button" outline onClick={() => setGrantOpen(true)}>
+                        <IconPlus data-slot="icon" />
+                        {t('users.invite')}
+                    </Button>
                 }
             >
                 <PageDescription>{t('users.description')}</PageDescription>
@@ -223,20 +216,6 @@ export default function UsersIndex() {
 
             {showInitialSkeleton ? (
                 <TableListSkeleton rows={6} columns={2} />
-            ) : isEmpty ? (
-                <EmptyStateReveal animate={animateEmpty}>
-                    <EmptyState
-                        headline={t('users.empty_headline')}
-                        description={t('users.empty_blurb')}
-                        visual={<UsersEmptyVisual />}
-                        action={
-                            <Button type="button" color="dark/zinc" onClick={() => setGrantOpen(true)}>
-                                <IconPlus data-slot="icon" />
-                                {t('users.invite')}
-                            </Button>
-                        }
-                    />
-                </EmptyStateReveal>
             ) : response ? (
                 <ContentReveal busy={refreshing} animate={animateContent}>
                     <Table striped>

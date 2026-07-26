@@ -66,6 +66,27 @@ describe('locale switch helpers', () => {
         expect(next.translations).toContain('Dashboard-de');
     });
 
+    it('remaps language and role labels from the new dictionary', () => {
+        const next = withUpdatedLocale(
+            bootFixture(),
+            'de',
+            JSON.stringify({
+                'nav.dashboard': 'Dashboard-de',
+                'locale.en': 'Englisch',
+                'locale.de': 'Deutsch',
+                'locale.ar-EG': 'Arabisch (Ägypten)',
+                'users.role_contributor': 'Mitwirkender',
+                'users.role_editor': 'Redakteur',
+                'users.role_admin': 'Administrator',
+            })
+        );
+
+        expect(next.languages.find((l) => l.code === 'de')?.label).toBe('Deutsch');
+        expect(next.languages.find((l) => l.code === 'en')?.label).toBe('Englisch');
+        expect(next.roles[1]).toBe('Mitwirkender');
+        expect(next.roles[3]).toBe('Administrator');
+    });
+
     it('updates boot user without changing translations', () => {
         const boot = bootFixture();
         const nextUser = {

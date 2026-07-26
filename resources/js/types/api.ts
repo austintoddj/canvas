@@ -150,6 +150,14 @@ export type PostsIndexParams = {
     page?: number;
 };
 
+/** Display-only uploader on media show/store responses. */
+export type MediaUploader = {
+    id: number;
+    name: string | null;
+    username: string | null;
+    avatar_url: string | null;
+};
+
 export type Media = {
     id: string;
     user_id: number;
@@ -166,6 +174,8 @@ export type Media = {
     type: string | null;
     created_at: string;
     updated_at: string;
+    /** Present on show/store/update; omit from list rows. */
+    user?: MediaUploader | null;
 };
 
 export type MediaCreateResponse = {
