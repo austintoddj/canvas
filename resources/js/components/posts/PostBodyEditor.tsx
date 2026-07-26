@@ -847,7 +847,9 @@ export default function PostBodyEditor({
 
         const dom = editor.view.dom;
 
-        return installCardIframeResize(dom);
+        // Editor is long-lived; paste inserts iframes after the listener is ready.
+        // Skip nudge so we do not reload cards on every mount.
+        return installCardIframeResize(dom, { nudge: false });
     }, [editor]);
 
     useEffect(() => {

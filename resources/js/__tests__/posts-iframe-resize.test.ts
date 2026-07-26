@@ -4,8 +4,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
     applyCardIframeHeight,
+    CARD_IFRAME_PLACEHOLDER_HEIGHT_PX,
     installCardIframeResize,
+    isCardIframeAtPlaceholderHeight,
     isTwitterEmbedOrigin,
+    nudgeCardIframeResize,
     parseTwitterEmbedResize,
     parseTwitterEmbedResizeHeight,
 } from '@/lib/posts/iframe-resize';
@@ -141,5 +144,69 @@ describe('installCardIframeResize', () => {
         expect(iframe.style.height).toBe('502px');
         expect(iframe.style.minHeight).toBe('502px');
         expect(iframe.getAttribute('height')).toBe('502');
+    });
+
+    it('sizes multiple cards via placeholder fallback when source is null', () => {
+        root = document.createElement('div');
+        document.body.appendChild(root);
+
+        const a = document.createElement('iframe');
+        a.src = 'https://platform.twitter.com/embed/Tweet.html?id=1';
+        const b = document.createElement('iframe');
+        b.src = 'https://platform.twitter.com/embed/Tweet.html?id=2';
+        root.appendChild(a);
+        root.appendChild(b);
+
+        unsubscribe = installCardIframeResize(root, { nudge: false });
+
+        const fire = (height: number) => {
+            window.dispatchEvent(
+                new MessageEvent('message', {
+                    origin: 'https://platform.twitter.com',
+                    data: {
+                        'twttr.embed': {
+                            method: 'twttr.private.resize',
+                            params: [{ height, width: 550 }],
+                        },
+                    },
+                    source: null,
+                })
+            );
+        };
+
+        fire(400);
+        expect(a.style.height).toBe('400px');
+        expect(isCardIframeAtPlaceholderHeight(a)).toBe(false);
+        expect(isCardIframeAtPlaceholderHeight(b)).toBe(true);
+
+        fire(612);
+        expect(b.style.height).toBe('612px');
+        expect(a.style.height).toBe('400px');
+    });
+
+    it('nudgeCardIframeResize re-applies src on card iframes', () => {
+        root = document.createElement('div');
+        document.body.appendChild(root);
+
+        const iframe = document.createElement('iframe');
+        const src = 'https://platform.twitter.com/embed/Tweet.html?id=99';
+        iframe.setAttribute('src', src);
+        root.appendChild(iframe);
+
+        const before = iframe.getAttribute('src');
+        nudgeCardIframeResize(root);
+        expect(iframe.getAttribute('src')).toBe(before);
+        expect(iframe.getAttribute('src')).toBe(src);
+    });
+
+    it('isCardIframeAtPlaceholderHeight respects the 12rem default', () => {
+        const iframe = document.createElement('iframe');
+        expect(isCardIframeAtPlaceholderHeight(iframe)).toBe(true);
+
+        applyCardIframeHeight(iframe, CARD_IFRAME_PLACEHOLDER_HEIGHT_PX);
+        expect(isCardIframeAtPlaceholderHeight(iframe)).toBe(true);
+
+        applyCardIframeHeight(iframe, CARD_IFRAME_PLACEHOLDER_HEIGHT_PX + 1);
+        expect(isCardIframeAtPlaceholderHeight(iframe)).toBe(false);
     });
 });

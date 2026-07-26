@@ -173,6 +173,22 @@
         return null;
     }
 
+    var PLACEHOLDER_PX = 192;
+
+    function atPlaceholder(iframe) {
+        var attr = iframe.getAttribute('height');
+        if (attr && String(attr).trim() !== '') {
+            var n = Number(attr);
+            if (isFinite(n)) return n <= PLACEHOLDER_PX;
+        }
+        var styleH = iframe.style.height;
+        if (styleH && String(styleH).trim() !== '') {
+            var sn = parseFloat(styleH);
+            if (isFinite(sn)) return sn <= PLACEHOLDER_PX;
+        }
+        return true;
+    }
+
     function findIframe(source, root, widgetId) {
         var list = root.querySelectorAll(CARD);
         if (!list.length) return null;
@@ -189,7 +205,14 @@
             }
         }
 
-        return list.length === 1 ? list[0] : null;
+        if (list.length === 1) return list[0];
+
+        // Multiple cards: assign in document order to the next still at placeholder height.
+        for (var k = 0; k < list.length; k++) {
+            if (atPlaceholder(list[k])) return list[k];
+        }
+
+        return null;
     }
 
     function applyHeight(iframe, height) {

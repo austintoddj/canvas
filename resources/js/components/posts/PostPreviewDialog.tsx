@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 
 import { Avatar } from '@/components/avatar';
 import { Dialog, DialogBody, DialogCloseButton, DialogTitle } from '@/components/dialog';
@@ -41,7 +41,10 @@ export default function PostPreviewDialog({ open, form, onClose }: PostPreviewDi
     const dateLabel = formatPreviewDate(form.publishedAt, locale);
     const bodyRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
+    // useLayoutEffect so the resize listener (and iframe nudge) run before paint.
+    // useEffect was too late: Twitter often posts height before the listener attaches,
+    // leaving cards stuck at the 12rem placeholder and clipping embed content.
+    useLayoutEffect(() => {
         if (!open || !hasBody) {
             return;
         }
@@ -52,17 +55,17 @@ export default function PostPreviewDialog({ open, form, onClose }: PostPreviewDi
             return;
         }
 
-        return installCardIframeResize(el);
+        return installCardIframeResize(el, { nudge: true });
     }, [open, hasBody, bodyHtml]);
 
     return (
-        <Dialog open={open} onClose={onClose} size="5xl" data-post-preview-dialog="true">
+        <Dialog open={open} onClose={onClose} size="5xl" align="top" data-post-preview-dialog="true">
             <div className="relative flex items-start justify-between gap-3">
                 <DialogTitle className="min-w-0 pe-2">{t('editor.preview')}</DialogTitle>
                 <DialogCloseButton label={t('common.close')} className="-me-1 -mt-1" />
             </div>
-            <DialogBody>
-                <article className="mx-auto max-w-3xl">
+            <DialogBody className="min-w-0 overflow-visible">
+                <article className="mx-auto max-w-3xl overflow-visible">
                     <header className="mb-8">
                         {form.topic !== null ? (
                             <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">

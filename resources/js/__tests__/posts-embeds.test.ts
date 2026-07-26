@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { createPostEditorExtensions } from '@/lib/posts/editor-extensions';
 import { iframeAttrsFromPasteMatch, resolveIframeEmbedFromUrl } from '@/lib/posts/embeds';
+import { buildYoutubeEmbedSrc, extractYoutubeStartSeconds, extractYoutubeVideoId } from '@/lib/posts/youtube-extension';
 
 function createEditor(content = '') {
     return new Editor({
@@ -24,6 +25,29 @@ function mediaNodes(editor: Editor) {
 
     return nodes;
 }
+
+describe('extractYoutubeVideoId / buildYoutubeEmbedSrc', () => {
+    it('extracts ids from watch, live, shorts, youtu.be, and embed URLs', () => {
+        expect(extractYoutubeVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+        expect(extractYoutubeVideoId('https://www.youtube.com/live/G9jtwBjvXuE?si=jtUxWUDTg7ivDcF2')).toBe(
+            'G9jtwBjvXuE'
+        );
+        expect(extractYoutubeVideoId('https://www.youtube.com/shorts/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+        expect(extractYoutubeVideoId('https://youtu.be/dQw4w9WgXcQ?si=x')).toBe('dQw4w9WgXcQ');
+        expect(extractYoutubeVideoId('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+        expect(extractYoutubeVideoId('https://www.youtube.com/playlist?list=PLxxxxxxxx')).toBeNull();
+    });
+
+    it('builds nocookie embed src with optional start time', () => {
+        expect(buildYoutubeEmbedSrc('https://www.youtube.com/live/G9jtwBjvXuE')).toBe(
+            'https://www.youtube-nocookie.com/embed/G9jtwBjvXuE?rel=0'
+        );
+        expect(buildYoutubeEmbedSrc('https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=90', { modestBranding: true })).toBe(
+            'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?modestbranding=1&rel=0&start=90'
+        );
+        expect(extractYoutubeStartSeconds('https://youtu.be/dQw4w9WgXcQ?t=1m30s')).toBe(90);
+    });
+});
 
 describe('resolveIframeEmbedFromUrl', () => {
     it('resolves X/Twitter status URLs to an iframe embed src', () => {
@@ -217,15 +241,24 @@ describe('post editor media round-trip', () => {
 
         expect(() => editor!.getHTML()).not.toThrow();
         const html = editor!.getHTML();
+        expect(html).toContain('data-youtube-video');
         expect(html).toMatch(/dQw4w9WgXcQ/);
-        // Valid node still has a real iframe; null/empty produce no iframe.
+        // Valid node still has a real iframe; null/empty stay compact invalid markers (no iframe).
         const iframes = editor!.view.dom.querySelectorAll('iframe');
         expect(iframes.length).toBe(1);
         expect(iframes[0]?.getAttribute('src')).toMatch(/embed\/dQw4w9WgXcQ/);
+        expect(html).toContain('data-invalid-youtube');
+        expect(html).toContain('canvas-post-body-youtube-invalid');
     });
 
-    it('pastes shorts and youtu.be via stock TipTap paste rules', () => {
-        const cases = ['https://www.youtube.com/shorts/dQw4w9WgXcQ', 'https://youtu.be/dQw4w9WgXcQ'];
+    it('pastes live / shorts / youtu.be URLs into working youtube iframes', () => {
+        const cases = [
+            'https://www.youtube.com/live/G9jtwBjvXuE?si=jtUxWUDTg7ivDcF2',
+            'https://www.youtube.com/live/dQw4w9WgXcQ',
+            'https://www.youtube.com/shorts/dQw4w9WgXcQ',
+            'https://youtu.be/dQw4w9WgXcQ?si=ABCDEF',
+            'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=90',
+        ];
 
         for (const url of cases) {
             editor = createEditor('<p></p>');
@@ -235,13 +268,29 @@ describe('post editor media round-trip', () => {
             expect(nodes, url).toHaveLength(1);
             expect(nodes[0]?.type, url).toBe('youtube');
 
+            const html = editor.getHTML();
+            expect(html, url).not.toContain('data-invalid-youtube');
+            expect(html, url).toMatch(
+                /youtube-nocookie\.com\/embed\/(?:G9jtwBjvXuE|dQw4w9WgXcQ)|youtube\.com\/embed\/(?:G9jtwBjvXuE|dQw4w9WgXcQ)/
+            );
+
             const iframe = editor.view.dom.querySelector('div[data-youtube-video] iframe');
             expect(iframe, url).not.toBeNull();
-            expect(iframe!.getAttribute('src'), url).toMatch(/embed\/dQw4w9WgXcQ/);
+            expect(iframe!.getAttribute('src'), url).toMatch(/embed\/(?:G9jtwBjvXuE|dQw4w9WgXcQ)/);
 
             editor.destroy();
             editor = null;
         }
+    });
+
+    it('does not insert a blank youtube shell when the matched URL has no video id', () => {
+        editor = createEditor('<p></p>');
+        // Playlist URLs are not single-video embeds — leave as plain text, not a blank shell.
+        editor.view.pasteText('https://www.youtube.com/playlist?list=PLxxxxxxxx');
+
+        const yt = mediaNodes(editor).filter((n) => n.type === 'youtube');
+        expect(yt).toHaveLength(0);
+        expect(editor.getHTML()).not.toContain('data-invalid-youtube');
     });
 
     it('loads mixed X and YouTube embed HTML without throwing', () => {

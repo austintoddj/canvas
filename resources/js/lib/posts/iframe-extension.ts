@@ -101,7 +101,9 @@ export const CanvasIframe = Node.create<CanvasIframeOptions>({
                 {
                     src,
                     title: t('editor.embedded_content', 'Embedded content'),
-                    loading: 'lazy',
+                    // Cards need an immediate load so Twitter can post resize height;
+                    // lazy deferral left multi-card previews stuck at the 12rem placeholder.
+                    loading: layout === 'card' ? 'eager' : 'lazy',
                     frameborder: '0',
                     allow: allowForSrc(src),
                     ...(layout === 'card' ? { scrolling: 'no' } : {}),

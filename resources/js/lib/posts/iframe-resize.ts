@@ -18,6 +18,9 @@ const TWITTER_ORIGINS = new Set([
 
 const CARD_IFRAME_SELECTOR = 'iframe[src*="platform.twitter.com/embed"], iframe[src*="Tweet.html"]';
 
+/** CSS default for card iframes (`height: 12rem`) before a resize message arrives. */
+export const CARD_IFRAME_PLACEHOLDER_HEIGHT_PX = 192;
+
 export function isTwitterEmbedOrigin(origin: string): boolean {
     if (TWITTER_ORIGINS.has(origin)) {
         return true;
@@ -222,6 +225,35 @@ function normalizeHeight(value: number): number | null {
     return Math.ceil(value);
 }
 
+/**
+ * Whether a card iframe is still at (or near) the CSS placeholder height.
+ * Used when contentWindow/id matching fails across multiple cards.
+ */
+export function isCardIframeAtPlaceholderHeight(iframe: HTMLIFrameElement): boolean {
+    const attr = iframe.getAttribute('height');
+
+    if (attr !== null && attr.trim() !== '') {
+        const n = Number(attr);
+
+        if (Number.isFinite(n)) {
+            return n <= CARD_IFRAME_PLACEHOLDER_HEIGHT_PX;
+        }
+    }
+
+    const styleH = iframe.style.height;
+
+    if (styleH !== null && styleH.trim() !== '') {
+        const n = Number.parseFloat(styleH);
+
+        if (Number.isFinite(n)) {
+            return n <= CARD_IFRAME_PLACEHOLDER_HEIGHT_PX;
+        }
+    }
+
+    // No explicit height yet — treat as placeholder (CSS default applies).
+    return true;
+}
+
 function findCardIframe(
     source: MessageEventSource | null,
     root: ParentNode,
@@ -255,6 +287,14 @@ function findCardIframe(
         return iframes[0] ?? null;
     }
 
+    // Multiple cards: when source/id cannot be matched (nested Twitter frames, late
+    // binding), assign in document order to the next iframe still at placeholder height.
+    const pending = iframes.filter((iframe) => isCardIframeAtPlaceholderHeight(iframe));
+
+    if (pending.length > 0) {
+        return pending[0] ?? null;
+    }
+
     return null;
 }
 
@@ -267,10 +307,36 @@ export function applyCardIframeHeight(iframe: HTMLIFrameElement, height: number)
 }
 
 /**
+ * Re-set card iframe `src` so Twitter re-sends resize postMessages.
+ * Call after installing the listener when embeds were already in the DOM
+ * (e.g. preview open) — otherwise early resize messages are missed and cards
+ * stay clipped at the 12rem placeholder.
+ */
+export function nudgeCardIframeResize(root: ParentNode = document): void {
+    const iframes = Array.from(root.querySelectorAll<HTMLIFrameElement>(CARD_IFRAME_SELECTOR));
+
+    for (const iframe of iframes) {
+        const src = iframe.getAttribute('src');
+
+        if (src === null || src.trim() === '') {
+            continue;
+        }
+
+        // Force a reload without changing the URL. Clearing first avoids some
+        // browsers no-op'ing a same-src assignment.
+        iframe.setAttribute('src', src);
+    }
+}
+
+/**
  * Install a window message listener that sizes Twitter/X card iframes under `root`.
  * Returns an unsubscribe function.
+ *
+ * When `nudge` is true (default), card iframes already in `root` are reloaded so
+ * resize messages fire after the listener is attached — required for preview
+ * dialogs that inject HTML and then install the listener.
  */
-export function installCardIframeResize(root: ParentNode = document): () => void {
+export function installCardIframeResize(root: ParentNode = document, options: { nudge?: boolean } = {}): () => void {
     const onMessage = (event: MessageEvent) => {
         if (!isTwitterEmbedOrigin(event.origin)) {
             return;
@@ -292,6 +358,10 @@ export function installCardIframeResize(root: ParentNode = document): () => void
     };
 
     window.addEventListener('message', onMessage);
+
+    if (options.nudge !== false) {
+        nudgeCardIframeResize(root);
+    }
 
     return () => {
         window.removeEventListener('message', onMessage);
