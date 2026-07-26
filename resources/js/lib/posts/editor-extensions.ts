@@ -12,12 +12,12 @@ import TextAlign from '@tiptap/extension-text-align';
 import Typography from '@tiptap/extension-typography';
 import Underline from '@tiptap/extension-underline';
 import Audio from '@tiptap/extension-audio';
-import Youtube from '@tiptap/extension-youtube';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 
 import { AiRewriteDecoration } from '@/lib/posts/ai-rewrite-decoration';
 import { CanvasIframe } from '@/lib/posts/iframe-extension';
+import { createCanvasYoutubeExtension } from '@/lib/posts/youtube-extension';
 
 const ImageCreditParagraph = Extension.create({
     name: 'imageCreditParagraph',
@@ -134,24 +134,9 @@ export function createPostEditorExtensions(options?: { placeholder?: string }) {
             },
         }),
         ImageCreditParagraph,
-        // First-party TipTap media nodes
-        Youtube.configure({
-            controls: true,
-            nocookie: true,
-            modestBranding: true,
-            // Dimensions are decorative; CSS on div[data-youtube-video] owns layout.
-            // Do not put a "box" class on the iframe — TipTap applies HTMLAttributes to the iframe only.
-            width: 640,
-            height: 360,
-            HTMLAttributes: {
-                class: 'canvas-post-body-youtube-iframe',
-                // Cross-origin players need delegated permissions or the shell stays blank.
-                allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
-                referrerpolicy: 'strict-origin-when-cross-origin',
-                title: 'YouTube video',
-                frameborder: '0',
-            },
-        }),
+        // YouTube: clean iframe output (see youtube-extension.ts). TipTap upstream
+        // dumps option flags as HTML attrs and can crash on null src.
+        createCanvasYoutubeExtension(),
         Audio.configure({
             controls: true,
             autoplay: false,

@@ -175,11 +175,79 @@ describe('post editor media round-trip', () => {
         // Cross-origin player needs delegated permissions; without allow the shell stays blank.
         expect(html).toMatch(/allow="[^"]*encrypted-media[^"]*"/);
         expect(html).toMatch(/referrerpolicy="strict-origin-when-cross-origin"/);
+        // TipTap upstream dumps option flags as HTML attrs (origin="", autoplay="false") —
+        // those break or blank the player. Our renderer must stay clean.
+        expect(html).not.toMatch(/\sorigin=""/);
+        expect(html).not.toMatch(/autoplay="false"/);
+        expect(html).not.toMatch(/modestbranding="true"/);
+        expect(html).not.toMatch(/disablekbcontrols=/);
+        expect(html).not.toMatch(/enableiframeapi=/);
+        expect(html).not.toMatch(/ivloadpolicy=/);
+        expect(html).not.toMatch(/\splaylist=""/);
 
         editor.commands.setContent(html);
         const reloaded = mediaNodes(editor);
         expect(reloaded).toHaveLength(1);
         expect(reloaded[0]?.type).toBe('youtube');
+
+        // Live DOM iframe (what the author actually sees) must keep a real embed src.
+        const iframe = editor.view.dom.querySelector('iframe');
+        expect(iframe).not.toBeNull();
+        expect(iframe!.getAttribute('src')).toMatch(/youtube(?:-nocookie)?\.com\/embed\/dQw4w9WgXcQ/);
+        expect(iframe!.getAttribute('allow')).toContain('encrypted-media');
+        expect(iframe!.getAttribute('referrerpolicy')).toBe('strict-origin-when-cross-origin');
+        expect(iframe!.hasAttribute('origin')).toBe(false);
+        expect(iframe!.getAttribute('autoplay')).toBeNull();
+    });
+
+    it('does not crash when a youtube node has a null or empty src', () => {
+        // TipTap upstream calls url.match() without a null guard; empty embeds used to white-screen the editor.
+        editor = createEditor({
+            type: 'doc',
+            content: [
+                { type: 'paragraph' },
+                { type: 'youtube', attrs: { src: null } },
+                { type: 'youtube', attrs: { src: '' } },
+                {
+                    type: 'youtube',
+                    attrs: { src: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+                },
+            ],
+        } as never);
+
+        expect(() => editor!.getHTML()).not.toThrow();
+        const html = editor!.getHTML();
+        expect(html).toContain('data-youtube-video');
+        expect(html).toMatch(/dQw4w9WgXcQ/);
+        // Valid node still has a real iframe; null/empty stay shells without src.
+        const iframes = editor!.view.dom.querySelectorAll('iframe');
+        expect(iframes.length).toBe(1);
+        expect(iframes[0]?.getAttribute('src')).toMatch(/embed\/dQw4w9WgXcQ/);
+    });
+
+    it('loads mixed X and YouTube embed HTML without throwing', () => {
+        const html = [
+            '<p>embeds</p>',
+            '<div data-canvas-iframe="" data-src="https://platform.twitter.com/embed/Tweet.html?id=123" data-layout="card" class="canvas-post-body-iframe canvas-post-body-iframe--card">',
+            '<iframe src="https://platform.twitter.com/embed/Tweet.html?id=123" loading="lazy" frameborder="0"></iframe>',
+            '</div>',
+            '<div data-youtube-video="">',
+            '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?modestbranding=1" width="640" height="360" allowfullscreen="true" class="canvas-post-body-youtube-iframe"></iframe>',
+            '</div>',
+        ].join('');
+
+        expect(() => {
+            editor = createEditor(html);
+            editor.getHTML();
+        }).not.toThrow();
+
+        const nodes = mediaNodes(editor!);
+        expect(nodes.some((n) => n.type === 'canvasIframe')).toBe(true);
+        expect(nodes.some((n) => n.type === 'youtube')).toBe(true);
+
+        const yt = editor!.view.dom.querySelector('div[data-youtube-video] iframe');
+        expect(yt?.getAttribute('src')).toMatch(/embed\/dQw4w9WgXcQ/);
+        expect(yt?.hasAttribute('origin')).toBe(false);
     });
 
     it('pastes an audio file URL into the audio node', () => {

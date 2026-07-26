@@ -472,6 +472,14 @@
     height: 100% !important;
     max-width: none;
     border: 0;
+    /* Ensure the player paints above the shell background */
+    background: #000;
+    z-index: 1;
+}
+
+/* Invalid / empty YouTube shells (no iframe) stay visually quiet */
+.canvas-post-body div[data-youtube-video][data-invalid-youtube='true'] {
+    background: color-mix(in oklab, var(--color-zinc-950) 8%, transparent);
 }
 
 /* Generic iframe node (Vimeo, X, other embed URLs) */
