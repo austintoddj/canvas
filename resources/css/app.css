@@ -558,11 +558,15 @@
 .canvas-post-body div[data-canvas-iframe][data-layout='card'] > iframe {
     display: block;
     width: 100%;
-    /* Loading placeholder until resize message arrives */
+    /* Loading placeholder until resize message arrives.
+     * Measured height is applied as inline height/min-height !important
+     * (see applyCardIframeHeight) so this cannot re-clip sized cards. */
     min-height: 12rem;
     height: 12rem;
     border: 0;
     border-radius: 0.75rem;
+    /* Let the iframe report its full document — never clip internal media. */
+    overflow: visible;
 }
 
 /* TipTap first-party <audio> */

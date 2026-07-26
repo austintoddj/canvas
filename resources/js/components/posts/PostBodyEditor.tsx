@@ -38,7 +38,7 @@ import {
 } from '@/lib/posts/ai-writing';
 import { bodyFromEditorHtml, bodyHtmlForEditor } from '@/lib/posts/body';
 import { CODE_BLOCK_LANGUAGES, createPostEditorExtensions } from '@/lib/posts/editor-extensions';
-import { installCardIframeResize } from '@/lib/posts/iframe-resize';
+import { ensureDocumentCardIframeResize } from '@/lib/posts/iframe-resize';
 import { toast } from '@/lib/toast';
 import {
     IconAlignCenter,
@@ -838,18 +838,11 @@ export default function PostBodyEditor({
         editor.setEditable(!disabled);
     }, [disabled, editor]);
 
-    // X/Twitter card iframes report their height via postMessage; size them so
-    // portrait media and full tweets are not clipped.
+    // X/Twitter card heights come from a document-level postMessage listener
+    // (ensureDocumentCardIframeResize / Canvas UI parity). Ensure it is up once
+    // the editor mounts so paste-in cards size without a preview open.
     useEffect(() => {
-        if (editor === null) {
-            return;
-        }
-
-        const dom = editor.view.dom;
-
-        // Editor is long-lived; paste inserts iframes after the listener is ready.
-        // Skip nudge so we do not reload cards on every mount.
-        return installCardIframeResize(dom, { nudge: false });
+        ensureDocumentCardIframeResize();
     }, [editor]);
 
     useEffect(() => {

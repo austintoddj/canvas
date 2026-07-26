@@ -4,6 +4,10 @@
  * Cross-origin iframes cannot size to content via CSS. Twitter posts
  * `twttr.private.resize` (and related) messages with the measured height;
  * this module applies those heights to the matching iframe.
+ *
+ * Canvas UI installs a long-lived document listener in embeds.blade.php.
+ * The SPA mirrors that with {@link ensureDocumentCardIframeResize} so
+ * preview/editor cards never miss early resize posts.
  */
 
 const TWITTER_ORIGINS = new Set([
@@ -67,7 +71,14 @@ export function parseTwitterEmbedResize(data: unknown): TwitterEmbedResizeNotice
             const rpc = embed as Record<string, unknown>;
             const method = typeof rpc.method === 'string' ? rpc.method : '';
 
-            if (method.includes('resize') || method.includes('dimensions')) {
+            // Prefer explicit resize/dimensions, but still accept twttr.embed payloads
+            // that only carry a height (X has shipped both shapes).
+            if (
+                method === '' ||
+                method.includes('resize') ||
+                method.includes('dimensions') ||
+                method.includes('twttr')
+            ) {
                 const height = heightFromUnknown(rpc.params) ?? heightFromUnknown(rpc);
 
                 if (height !== null) {
@@ -84,6 +95,15 @@ export function parseTwitterEmbedResize(data: unknown): TwitterEmbedResizeNotice
                 return { height, id: idFromUnknown(record) ?? idFromUnknown(record.params) };
             }
         }
+
+        // Bare height payloads sometimes seen from nested embed frames.
+        if ('height' in record && (typeof record.method === 'string' ? record.method.includes('twttr') : true)) {
+            const height = heightFromUnknown(record.height);
+
+            if (height !== null && (typeof record.method === 'string' || 'width' in record)) {
+                return { height, id: idFromUnknown(record) };
+            }
+        }
     }
 
     // Array style: ["twttr.private.resize", { height }] or [method, params]
@@ -91,7 +111,7 @@ export function parseTwitterEmbedResize(data: unknown): TwitterEmbedResizeNotice
         const head = parsed[0];
         const method = typeof head === 'string' ? head : '';
 
-        if (method.includes('resize') || method.includes('twttr')) {
+        if (method.includes('resize') || method.includes('twttr') || method.includes('dimensions')) {
             const height = heightFromUnknown(parsed[1]) ?? heightFromUnknown(parsed.slice(1));
 
             if (height !== null) {
@@ -254,12 +274,16 @@ export function isCardIframeAtPlaceholderHeight(iframe: HTMLIFrameElement): bool
     return true;
 }
 
+function listCardIframes(root: ParentNode): HTMLIFrameElement[] {
+    return Array.from(root.querySelectorAll<HTMLIFrameElement>(CARD_IFRAME_SELECTOR));
+}
+
 function findCardIframe(
     source: MessageEventSource | null,
     root: ParentNode,
     widgetId: string | null
 ): HTMLIFrameElement | null {
-    const iframes = Array.from(root.querySelectorAll<HTMLIFrameElement>(CARD_IFRAME_SELECTOR));
+    const iframes = listCardIframes(root);
 
     if (iframes.length === 0) {
         return null;
@@ -281,7 +305,7 @@ function findCardIframe(
         }
     }
 
-    // Single card on the page: safe to target even if contentWindow matching fails
+    // Single card under this root: safe even if contentWindow matching fails
     // (e.g. cross-origin timing before the frame is fully bound).
     if (iframes.length === 1) {
         return iframes[0] ?? null;
@@ -291,18 +315,35 @@ function findCardIframe(
     // binding), assign in document order to the next iframe still at placeholder height.
     const pending = iframes.filter((iframe) => isCardIframeAtPlaceholderHeight(iframe));
 
-    if (pending.length > 0) {
-        return pending[0] ?? null;
+    if (pending.length === 0) {
+        return null;
     }
 
-    return null;
+    // When the post preview is open, editor cards are usually already sized; prefer
+    // still-placeholder cards inside the preview body so multi-embed previews do not
+    // lose heights to already-settled editor iframes under a document-level root.
+    if (root === document || root === document.body || root === document.documentElement) {
+        const previewBody = document.querySelector('[data-post-preview-body="true"]');
+
+        if (previewBody !== null) {
+            const previewPending = pending.filter((iframe) => previewBody.contains(iframe));
+
+            if (previewPending.length > 0) {
+                return previewPending[0] ?? null;
+            }
+        }
+    }
+
+    return pending[0] ?? null;
 }
 
 export function applyCardIframeHeight(iframe: HTMLIFrameElement, height: number): void {
     const px = `${Math.ceil(height)}px`;
 
-    iframe.style.height = px;
-    iframe.style.minHeight = px;
+    // !important so the stylesheet `height: 12rem` placeholder cannot win in any
+    // cascade edge case (and so later class churn does not re-clip sized cards).
+    iframe.style.setProperty('height', px, 'important');
+    iframe.style.setProperty('min-height', px, 'important');
     iframe.setAttribute('height', String(Math.ceil(height)));
 }
 
@@ -315,11 +356,22 @@ export function applyCardIframeHeight(iframe: HTMLIFrameElement, height: number)
  * Browsers no-op a same-src assignment, so we must clear `src` before restoring
  * it. Also drop any previously applied height so multi-card placeholder fallback
  * can re-assign after the reload.
+ *
+ * By default only reloads cards still at the placeholder height so already-sized
+ * cards are not thrashed when body HTML updates.
  */
-export function nudgeCardIframeResize(root: ParentNode = document): void {
-    const iframes = Array.from(root.querySelectorAll<HTMLIFrameElement>(CARD_IFRAME_SELECTOR));
+export function nudgeCardIframeResize(
+    root: ParentNode = document,
+    options: { onlyPlaceholder?: boolean } = {}
+): void {
+    const onlyPlaceholder = options.onlyPlaceholder !== false;
+    const iframes = listCardIframes(root);
 
     for (const iframe of iframes) {
+        if (onlyPlaceholder && !isCardIframeAtPlaceholderHeight(iframe)) {
+            continue;
+        }
+
         const src = (iframe.getAttribute('src') ?? iframe.src ?? '').trim();
 
         if (src === '' || src === 'about:blank') {
@@ -329,8 +381,8 @@ export function nudgeCardIframeResize(root: ParentNode = document): void {
         // Reset measured height so cards look like fresh placeholders until the
         // next twttr.private.resize lands (needed for multi-card document-order
         // fallback after a re-nudge / Strict Mode remount).
-        iframe.style.height = '';
-        iframe.style.minHeight = '';
+        iframe.style.removeProperty('height');
+        iframe.style.removeProperty('min-height');
         iframe.removeAttribute('height');
 
         // Same-src setAttribute/assignment does not reload in Chromium/WebKit.
@@ -378,4 +430,27 @@ export function installCardIframeResize(root: ParentNode = document, options: { 
     return () => {
         window.removeEventListener('message', onMessage);
     };
+}
+
+/** Singleton document-level listener (Canvas UI parity). */
+let documentResizeStop: (() => void) | null = null;
+
+/**
+ * Ensure a single long-lived document-level resize listener is installed.
+ * Safe to call repeatedly. Mirrors the Canvas UI embeds partial so cards in
+ * the editor and preview receive heights without open/close races.
+ */
+export function ensureDocumentCardIframeResize(): void {
+    if (documentResizeStop !== null) {
+        return;
+    }
+
+    // Never nudge the whole document on install — that would thrash editor cards.
+    documentResizeStop = installCardIframeResize(document, { nudge: false });
+}
+
+/** @internal test helper — clears the document singleton. */
+export function __resetDocumentCardIframeResizeForTests(): void {
+    documentResizeStop?.();
+    documentResizeStop = null;
 }

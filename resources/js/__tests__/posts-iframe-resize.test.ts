@@ -3,8 +3,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+    __resetDocumentCardIframeResizeForTests,
     applyCardIframeHeight,
     CARD_IFRAME_PLACEHOLDER_HEIGHT_PX,
+    ensureDocumentCardIframeResize,
     installCardIframeResize,
     isCardIframeAtPlaceholderHeight,
     isTwitterEmbedOrigin,
@@ -83,6 +85,7 @@ describe('installCardIframeResize', () => {
         unsubscribe?.();
         unsubscribe = null;
         root?.remove();
+        __resetDocumentCardIframeResizeForTests();
     });
 
     it('sets iframe height from a matching postMessage', () => {
@@ -94,7 +97,7 @@ describe('installCardIframeResize', () => {
         root.appendChild(iframe);
 
         // happy-dom may not expose contentWindow the same way; use single-iframe fallback
-        unsubscribe = installCardIframeResize(root);
+        unsubscribe = installCardIframeResize(root, { nudge: false });
 
         window.dispatchEvent(
             new MessageEvent('message', {
@@ -121,7 +124,7 @@ describe('installCardIframeResize', () => {
         iframe.src = 'https://platform.twitter.com/embed/Tweet.html?id=123';
         root.appendChild(iframe);
 
-        unsubscribe = installCardIframeResize(root);
+        unsubscribe = installCardIframeResize(root, { nudge: false });
 
         window.dispatchEvent(
             new MessageEvent('message', {
@@ -138,11 +141,13 @@ describe('installCardIframeResize', () => {
         expect(iframe.style.height).toBe('');
     });
 
-    it('applyCardIframeHeight writes style and attribute', () => {
+    it('applyCardIframeHeight writes style and attribute with important', () => {
         const iframe = document.createElement('iframe');
         applyCardIframeHeight(iframe, 501.2);
         expect(iframe.style.height).toBe('502px');
         expect(iframe.style.minHeight).toBe('502px');
+        expect(iframe.style.getPropertyPriority('height')).toBe('important');
+        expect(iframe.style.getPropertyPriority('min-height')).toBe('important');
         expect(iframe.getAttribute('height')).toBe('502');
     });
 
@@ -191,7 +196,7 @@ describe('installCardIframeResize', () => {
         const iframe = document.createElement('iframe');
         const src = 'https://platform.twitter.com/embed/Tweet.html?id=99';
         iframe.setAttribute('src', src);
-        applyCardIframeHeight(iframe, 640);
+        // Leave at placeholder so onlyPlaceholder default still reloads it.
         root.appendChild(iframe);
 
         const srcWrites: string[] = [];
@@ -201,10 +206,10 @@ describe('installCardIframeResize', () => {
             if (name === 'src') {
                 srcWrites.push('__cleared__');
             }
+
             return removeSpy(name);
         };
 
-        // Track property writes used to start a real navigation after clear.
         Object.defineProperty(iframe, 'src', {
             configurable: true,
             get() {
@@ -220,11 +225,24 @@ describe('installCardIframeResize', () => {
 
         expect(srcWrites[0]).toBe('__cleared__');
         expect(srcWrites).toContain(src);
-        // Measured height must be cleared so placeholder fallback can re-run.
         expect(iframe.style.height).toBe('');
         expect(iframe.style.minHeight).toBe('');
         expect(iframe.getAttribute('height')).toBeNull();
         expect(iframe.getAttribute('src') ?? iframe.src).toContain('Tweet.html?id=99');
+    });
+
+    it('nudgeCardIframeResize skips already-sized cards by default', () => {
+        root = document.createElement('div');
+        document.body.appendChild(root);
+
+        const sized = document.createElement('iframe');
+        sized.setAttribute('src', 'https://platform.twitter.com/embed/Tweet.html?id=1');
+        applyCardIframeHeight(sized, 640);
+        root.appendChild(sized);
+
+        const before = sized.style.height;
+        nudgeCardIframeResize(root, { onlyPlaceholder: true });
+        expect(sized.style.height).toBe(before);
     });
 
     it('isCardIframeAtPlaceholderHeight respects the 12rem default', () => {
@@ -236,5 +254,32 @@ describe('installCardIframeResize', () => {
 
         applyCardIframeHeight(iframe, CARD_IFRAME_PLACEHOLDER_HEIGHT_PX + 1);
         expect(isCardIframeAtPlaceholderHeight(iframe)).toBe(false);
+    });
+
+    it('ensureDocumentCardIframeResize installs once and sizes document cards', () => {
+        root = document.createElement('div');
+        document.body.appendChild(root);
+
+        const iframe = document.createElement('iframe');
+        iframe.src = 'https://platform.twitter.com/embed/Tweet.html?id=55';
+        root.appendChild(iframe);
+
+        ensureDocumentCardIframeResize();
+        ensureDocumentCardIframeResize(); // no-op second call
+
+        window.dispatchEvent(
+            new MessageEvent('message', {
+                origin: 'https://platform.twitter.com',
+                data: {
+                    'twttr.embed': {
+                        method: 'twttr.private.resize',
+                        params: [{ height: 501, width: 550 }],
+                    },
+                },
+                source: null,
+            })
+        );
+
+        expect(iframe.style.height).toBe('501px');
     });
 });

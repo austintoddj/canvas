@@ -5,7 +5,11 @@ import { Dialog, DialogBody, DialogCloseButton, DialogTitle } from '@/components
 import { Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { bodyHtmlForEditor, parsePublishedAt, type PostFormState } from '@/lib/posts/form';
-import { installCardIframeResize } from '@/lib/posts/iframe-resize';
+import {
+    ensureDocumentCardIframeResize,
+    isCardIframeAtPlaceholderHeight,
+    nudgeCardIframeResize,
+} from '@/lib/posts/iframe-resize';
 import { userInitials } from '@/lib/users/roles';
 
 type PostPreviewDialogProps = {
@@ -41,24 +45,77 @@ export default function PostPreviewDialog({ open, form, onClose }: PostPreviewDi
     const dateLabel = formatPreviewDate(form.publishedAt, locale);
     const bodyRef = useRef<HTMLDivElement>(null);
 
-    // useLayoutEffect so the resize listener (and iframe force-reload nudge) run
-    // before paint. useEffect was too late: Twitter often posts height before the
-    // listener attaches, leaving cards stuck at the 12rem placeholder.
-    // Canvas UI avoids this race with a document-level listener on first paint;
-    // the SPA preview injects HTML when the dialog opens, so it must nudge-reload
-    // cards after the listener is attached (see nudgeCardIframeResize).
+    // Document-level listener (Canvas UI parity) is installed at app boot and
+    // re-asserted here. Fresh preview iframes load once; Twitter posts heights
+    // to the already-attached listener. We only re-nudge cards still stuck at
+    // the 12rem placeholder after a delay — never thrash loads on an interval.
     useLayoutEffect(() => {
+        ensureDocumentCardIframeResize();
+
         if (!open || !hasBody) {
             return;
         }
 
-        const el = bodyRef.current;
+        let cancelled = false;
+        let raf = 0;
+        let recoveryTimer = 0;
 
-        if (el === null) {
-            return;
-        }
+        const scheduleRecovery = (el: HTMLElement) => {
+            // One delayed recovery only: if a card never received a height
+            // (missed early postMessage / nested-frame match failure), force a
+            // single reload of still-placeholder cards so Twitter re-sends.
+            recoveryTimer = window.setTimeout(() => {
+                if (cancelled || bodyRef.current !== el) {
+                    return;
+                }
 
-        return installCardIframeResize(el, { nudge: true });
+                const cards = el.querySelectorAll<HTMLIFrameElement>(
+                    'iframe[src*="platform.twitter.com/embed"], iframe[src*="Tweet.html"]'
+                );
+                let stuck = false;
+
+                cards.forEach((iframe) => {
+                    if (isCardIframeAtPlaceholderHeight(iframe)) {
+                        stuck = true;
+                    }
+                });
+
+                if (stuck) {
+                    nudgeCardIframeResize(el, { onlyPlaceholder: true });
+                }
+            }, 600);
+        };
+
+        const attach = () => {
+            if (cancelled) {
+                return;
+            }
+
+            const el = bodyRef.current;
+
+            if (el === null) {
+                // Dialog Transition may mount panel content one frame later.
+                raf = window.requestAnimationFrame(attach);
+
+                return;
+            }
+
+            scheduleRecovery(el);
+        };
+
+        attach();
+
+        return () => {
+            cancelled = true;
+
+            if (raf !== 0) {
+                window.cancelAnimationFrame(raf);
+            }
+
+            if (recoveryTimer !== 0) {
+                window.clearTimeout(recoveryTimer);
+            }
+        };
     }, [open, hasBody, bodyHtml]);
 
     return (
