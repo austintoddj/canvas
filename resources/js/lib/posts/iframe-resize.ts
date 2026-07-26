@@ -360,10 +360,7 @@ export function applyCardIframeHeight(iframe: HTMLIFrameElement, height: number)
  * By default only reloads cards still at the placeholder height so already-sized
  * cards are not thrashed when body HTML updates.
  */
-export function nudgeCardIframeResize(
-    root: ParentNode = document,
-    options: { onlyPlaceholder?: boolean } = {}
-): void {
+export function nudgeCardIframeResize(root: ParentNode = document, options: { onlyPlaceholder?: boolean } = {}): void {
     const onlyPlaceholder = options.onlyPlaceholder !== false;
     const iframes = listCardIframes(root);
 

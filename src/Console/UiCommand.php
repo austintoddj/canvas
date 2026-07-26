@@ -48,7 +48,8 @@ class UiCommand extends Command
         }
 
         $this->newLine();
-        $this->line('  <fg=gray>Open</> /canvas-ui <fg=gray>in your browser.</>');
+        $this->info('Canvas UI published successfully.');
+        $this->comment('Visit: /canvas-ui');
 
         return self::SUCCESS;
     }

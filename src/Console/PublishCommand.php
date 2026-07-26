@@ -31,7 +31,8 @@ class PublishCommand extends Command
             ]);
         });
 
-        $this->components->info('Publishing complete.');
+        $this->newLine();
+        $this->info('Publishing complete.');
 
         return self::SUCCESS;
     }

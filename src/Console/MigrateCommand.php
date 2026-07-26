@@ -24,7 +24,8 @@ class MigrateCommand extends Command
             ]);
         });
 
-        $this->components->info('Canvas migrations complete.');
+        $this->newLine();
+        $this->info('Canvas migrations complete.');
 
         return self::SUCCESS;
     }

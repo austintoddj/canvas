@@ -24,7 +24,7 @@ class AssignRoleCommand extends Command
         if (! $role) {
             $names = implode(', ', Role::names());
             $this->components->error(sprintf('Please enter a valid role (%s).', $names));
-            $this->line('  <fg=gray>List roles:</> php artisan canvas:roles');
+            $this->comment('List roles: php artisan canvas:roles');
 
             return self::FAILURE;
         }
@@ -35,14 +35,14 @@ class AssignRoleCommand extends Command
         $email = (string) data_get($user, 'email', '');
 
         if ($previousRole) {
-            $this->components->info(sprintf(
+            $this->info(sprintf(
                 'Updated %s from %s to %s.',
                 $email,
                 $previousRole->label(),
                 $role->label(),
             ));
         } else {
-            $this->components->info(sprintf('Assigned %s to %s.', $role->label(), $email));
+            $this->info(sprintf('Assigned %s to %s.', $role->label(), $email));
         }
 
         return self::SUCCESS;

@@ -41,8 +41,9 @@ class InstallCommand extends Command
         $this->components->task('Linking storage', fn (): int => $this->runSilentTask('storage:link'));
 
         $this->newLine();
-        $this->line('  <fg=gray>Grant admin access:</> php artisan canvas:make-admin your@email.com');
-        $this->line('  <fg=gray>Then visit:</> /canvas');
+        $this->info('Canvas installed successfully.');
+        $this->comment('Grant yourself admin access: php artisan canvas:make-admin you@email.com');
+        $this->comment('Visit: /canvas');
 
         return self::SUCCESS;
     }

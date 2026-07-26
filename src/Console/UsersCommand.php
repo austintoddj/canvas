@@ -43,7 +43,7 @@ class UsersCommand extends Command
             ->all();
 
         if ($rows === []) {
-            $this->components->info('No users have Canvas access yet.');
+            $this->info('No users have Canvas access yet.');
 
             return self::SUCCESS;
         }
