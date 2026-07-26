@@ -63,6 +63,11 @@ const baseInput = {
 describe('seo helpers', () => {
     it('strips HTML, truncates text, and finds the first image', () => {
         expect(stripHtml('<p>Hello <em>world</em></p>')).toBe('Hello world');
+        expect(stripHtml('<script>alert(1)</script >Visible')).toBe('Visible');
+        expect(stripHtml('<style>body{color:red}</style ><p>Visible</p>')).toBe('Visible');
+        expect(stripHtml('<scriptlet>Visible</scriptlet>')).toBe('Visible');
+        expect(stripHtml('<script>alert(1)')).toBe('');
+        expect(stripHtml('<style>body{color:red}')).toBe('');
         expect(stripHtml(null)).toBe('');
         expect(truncate('one two three four five six seven eight nine ten', 20)).toBe('one two three four…');
         expect(truncate('short', 20)).toBe('short');
