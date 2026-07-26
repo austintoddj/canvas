@@ -472,42 +472,13 @@
     height: 100% !important;
     max-width: none;
     border: 0;
-    /* Ensure the player paints above the shell background */
     background: #000;
     z-index: 1;
 }
 
-/*
- * Invalid / empty YouTube nodes (no resolvable embed). Compact — never a full
- * 16:9 slab; optional link to the raw URL when we still have one.
- */
-.canvas-post-body div[data-youtube-video][data-invalid-youtube='true'],
-.canvas-post-body div.canvas-post-body-youtube-invalid {
-    aspect-ratio: auto;
-    min-height: 0;
-    height: auto;
-    padding: 0.5rem 0.75rem;
-    background: color-mix(in oklab, var(--color-zinc-950) 6%, transparent);
-    font-size: 0.875rem;
-    line-height: 1.4;
-    word-break: break-all;
-}
-
-.dark .canvas-post-body div[data-youtube-video][data-invalid-youtube='true'],
-.dark .canvas-post-body div.canvas-post-body-youtube-invalid {
-    background: color-mix(in oklab, white 6%, transparent);
-}
-
-.canvas-post-body div[data-youtube-video][data-invalid-youtube='true'] > a,
-.canvas-post-body div.canvas-post-body-youtube-invalid > a {
-    color: var(--color-blue-600);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-.dark .canvas-post-body div[data-youtube-video][data-invalid-youtube='true'] > a,
-.dark .canvas-post-body div.canvas-post-body-youtube-invalid > a {
-    color: var(--color-blue-400);
+/* Unresolvable / empty youtube nodes: no fake 16:9 void */
+.canvas-post-body div[data-youtube-video]:not(:has(> iframe)) {
+    display: none;
 }
 
 /* Generic iframe node (Vimeo, X, other embed URLs) */

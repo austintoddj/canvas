@@ -16,13 +16,13 @@ It lives next to the `canvas:ui` stubs on purpose: Canvas UI is optional; this d
 
 ## Mental model
 
-| Layer | What it is | Who uses it |
-| ----- | ---------- | ----------- |
-| **Admin SPA** | React app at `/{canvas.path}` (default `/canvas`) | Authors, editors, admins |
-| **Admin JSON API** | Authenticated routes under `/{path}/api/*` | The SPA only (session + Canvas access) |
-| **Data layer** | Eloquent models (`Post`, `Tag`, `Topic`, `CanvasUser`, …) | Your reader, API, jobs, Tinker |
-| **Canvas UI** | Optional Blade starter at `/canvas-ui` | Demo blog or starting point |
-| **Webhooks** | Outbound HTTPS on public lifecycle events | Zapier, CDN purge, your API |
+| Layer              | What it is                                                | Who uses it                            |
+| ------------------ | --------------------------------------------------------- | -------------------------------------- |
+| **Admin SPA**      | React app at `/{canvas.path}` (default `/canvas`)         | Authors, editors, admins               |
+| **Admin JSON API** | Authenticated routes under `/{path}/api/*`                | The SPA only (session + Canvas access) |
+| **Data layer**     | Eloquent models (`Post`, `Tag`, `Topic`, `CanvasUser`, …) | Your reader, API, jobs, Tinker         |
+| **Canvas UI**      | Optional Blade starter at `/canvas-ui`                    | Demo blog or starting point            |
+| **Webhooks**       | Outbound HTTPS on public lifecycle events                 | Zapier, CDN purge, your API            |
 
 **Headless rule:** the source of truth for published content is the **database**, not the admin UI. Your frontend should read models (or a host API you build on top of them). Do not call the admin JSON API from the public site — it requires login and Canvas authorization.
 
@@ -64,14 +64,14 @@ Then open **`/canvas-ui`**.
 
 Use `--force` to overwrite previously published views/controller.
 
-| Route name | Path | Purpose |
-| ---------- | ---- | ------- |
-| `canvas-ui.index` | `/canvas-ui` | Paginated published posts |
-| `canvas-ui.show` | `/canvas-ui/{slug}` | Single post (+ view/visit tracking middleware) |
-| `canvas-ui.feed` | `/canvas-ui/feed` | RSS |
-| `canvas-ui.tags` / `.tag` | `/canvas-ui/tags`, `…/tags/{slug}` | Tag index / archive |
-| `canvas-ui.topics` / `.topic` | `/canvas-ui/topics`, `…/topics/{slug}` | Topic index / archive |
-| `canvas-ui.author` | `/canvas-ui/@{username}` | Author archive (`canvas_users.username`) |
+| Route name                    | Path                                   | Purpose                                        |
+| ----------------------------- | -------------------------------------- | ---------------------------------------------- |
+| `canvas-ui.index`             | `/canvas-ui`                           | Paginated published posts                      |
+| `canvas-ui.show`              | `/canvas-ui/{slug}`                    | Single post (+ view/visit tracking middleware) |
+| `canvas-ui.feed`              | `/canvas-ui/feed`                      | RSS                                            |
+| `canvas-ui.tags` / `.tag`     | `/canvas-ui/tags`, `…/tags/{slug}`     | Tag index / archive                            |
+| `canvas-ui.topics` / `.topic` | `/canvas-ui/topics`, `…/topics/{slug}` | Topic index / archive                          |
+| `canvas-ui.author`            | `/canvas-ui/@{username}`               | Author archive (`canvas_users.username`)       |
 
 The controller stub is intentionally thin: Eloquent queries + views + `PostViewed` on show. Treat it as a template you own after publish.
 
@@ -96,30 +96,30 @@ $post = Post::published()
     ->firstWhere('slug', $slug); // or abort 404
 ```
 
-| Scope | Meaning |
-| ----- | ------- |
-| `Post::published()` | `published_at` is set and **≤ now** |
-| `Post::draft()` | No `published_at`, or `published_at` **in the future** (scheduled) |
+| Scope               | Meaning                                                            |
+| ------------------- | ------------------------------------------------------------------ |
+| `Post::published()` | `published_at` is set and **≤ now**                                |
+| `Post::draft()`     | No `published_at`, or `published_at` **in the future** (scheduled) |
 
 Scheduled posts are **draft** until their time passes. There is no separate “scheduled” scope; time is the gate.
 
 ### Important fields on `Post`
 
-| Column / attribute | Notes |
-| ------------------ | ----- |
-| `id` | UUID string (not auto-increment) |
-| `slug` | Unique per `user_id` |
-| `title`, `summary` | Plain text |
-| `body` | **HTML** from the TipTap editor (see [Post body HTML](#post-body-html)) |
-| `published_at` | `null` = draft; future = scheduled; past/now = live |
-| `featured_image` | URL or root-relative `/storage/…` path |
-| `featured_image_caption` | Alt / caption |
-| `meta` | JSON SEO bag (`title`, `description`, `canonical_link`, …) |
-| `pending` | JSON blob of **unpublished edits** on a live post (editor only) |
-| `read_time` | Appended attribute from body length |
-| `has_pending_changes` | Whether `pending` is non-empty |
-| `user_id` | Host user id (`config('canvas.user_model')`) |
-| `topic_id` | Optional topic |
+| Column / attribute       | Notes                                                                   |
+| ------------------------ | ----------------------------------------------------------------------- |
+| `id`                     | UUID string (not auto-increment)                                        |
+| `slug`                   | Unique per `user_id`                                                    |
+| `title`, `summary`       | Plain text                                                              |
+| `body`                   | **HTML** from the TipTap editor (see [Post body HTML](#post-body-html)) |
+| `published_at`           | `null` = draft; future = scheduled; past/now = live                     |
+| `featured_image`         | URL or root-relative `/storage/…` path                                  |
+| `featured_image_caption` | Alt / caption                                                           |
+| `meta`                   | JSON SEO bag (`title`, `description`, `canonical_link`, …)              |
+| `pending`                | JSON blob of **unpublished edits** on a live post (editor only)         |
+| `read_time`              | Appended attribute from body length                                     |
+| `has_pending_changes`    | Whether `pending` is non-empty                                          |
+| `user_id`                | Host user id (`config('canvas.user_model')`)                            |
+| `topic_id`               | Optional topic                                                          |
 
 **Live snapshot vs pending:** Once a post is published, ordinary admin autosaves write **`pending` only** and leave public columns alone. Readers must use the live columns (`title`, `body`, …), not `pending`. Promote/publish in the admin is what merges pending into the public snapshot.
 
@@ -188,18 +188,18 @@ event(new \Canvas\Events\PostViewed(
 
 ### Common block types
 
-| Content | Typical markup |
-| ------- | ---------------- |
-| Paragraphs, headings, lists, quotes | Standard HTML (`p`, `h1`–`h3`, `ul`/`ol`, `blockquote`, …) |
-| Links | `a` with `href` |
-| Images | `img.canvas-post-body-image` (often root-relative `/storage/…`) |
-| Unsplash credit | following `p.canvas-post-body-image-credit` |
-| Code | `pre.canvas-post-body-code` / `code` |
-| Tables | `table.canvas-post-body-table` |
-| Audio | `audio.canvas-post-body-audio` with `controls` |
-| YouTube | `div[data-youtube-video] > iframe` (usually youtube-nocookie embed URL) |
-| Vimeo / generic video | `div[data-canvas-iframe][data-layout="video"] > iframe` |
-| X / Twitter cards | `div[data-canvas-iframe][data-layout="card"] > iframe` (`platform.twitter.com/embed/Tweet.html?id=…`) |
+| Content                             | Typical markup                                                                                        |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Paragraphs, headings, lists, quotes | Standard HTML (`p`, `h1`–`h3`, `ul`/`ol`, `blockquote`, …)                                            |
+| Links                               | `a` with `href`                                                                                       |
+| Images                              | `img.canvas-post-body-image` (often root-relative `/storage/…`)                                       |
+| Unsplash credit                     | following `p.canvas-post-body-image-credit`                                                           |
+| Code                                | `pre.canvas-post-body-code` / `code`                                                                  |
+| Tables                              | `table.canvas-post-body-table`                                                                        |
+| Audio                               | `audio.canvas-post-body-audio` with `controls`                                                        |
+| YouTube                             | `div[data-youtube-video] > iframe` (usually youtube-nocookie embed URL)                               |
+| Vimeo / generic video               | `div[data-canvas-iframe][data-layout="video"] > iframe`                                               |
+| X / Twitter cards                   | `div[data-canvas-iframe][data-layout="card"] > iframe` (`platform.twitter.com/embed/Tweet.html?id=…`) |
 
 ### Recommended CSS (video + cards)
 
@@ -243,15 +243,15 @@ Expect **session cookies** and CSRF for mutating requests, same as a normal Lara
 
 ### Posts (high level)
 
-| Method | Path | Notes |
-| ------ | ---- | ----- |
-| `GET` | `/posts` | Paginated list; `?type=draft` vs published; counts |
-| `GET` | `/posts/create` | Empty post shell + tag/topic catalogs |
-| `GET` | `/posts/{id}` | Full post payload for the editor |
-| `POST` | `/posts/{id}` | Create/update (UUID in path); `promote`, `publish_now` flags |
-| `POST` | `/posts/{id}/discard` | Clear `pending`, keep live snapshot |
-| `GET` | `/posts/{id}/stats` | Insights (published only) |
-| `DELETE` | `/posts/{id}` | Soft delete |
+| Method   | Path                  | Notes                                                        |
+| -------- | --------------------- | ------------------------------------------------------------ |
+| `GET`    | `/posts`              | Paginated list; `?type=draft` vs published; counts           |
+| `GET`    | `/posts/create`       | Empty post shell + tag/topic catalogs                        |
+| `GET`    | `/posts/{id}`         | Full post payload for the editor                             |
+| `POST`   | `/posts/{id}`         | Create/update (UUID in path); `promote`, `publish_now` flags |
+| `POST`   | `/posts/{id}/discard` | Clear `pending`, keep live snapshot                          |
+| `GET`    | `/posts/{id}/stats`   | Insights (published only)                                    |
+| `DELETE` | `/posts/{id}`         | Soft delete                                                  |
 
 List responses hide the full `pending` blob but expose `has_pending_changes`. Detail responses include editor fields the SPA needs.
 
@@ -279,11 +279,11 @@ See [.github/UPGRADE.md](../../.github/UPGRADE.md) (Webhooks section) for event 
 
 Canvas access is a row in `canvas_users` linked to your host user model.
 
-| Role | Intent |
-| ---- | ------ |
+| Role        | Intent                                                    |
+| ----------- | --------------------------------------------------------- |
 | Contributor | Write/manage own posts (publish rules depend on policies) |
-| Editor | Broader post access |
-| Admin | Users, taxonomy, integrations, full access |
+| Editor      | Broader post access                                       |
+| Admin       | Users, taxonomy, integrations, full access                |
 
 Grant access: `php artisan canvas:make-admin you@example.com` (and related role commands as documented in the main readme / upgrade notes). Host auth (login/logout) stays yours; Canvas only checks “is this authenticated user a Canvas user?”
 
@@ -293,14 +293,14 @@ Grant access: `php artisan canvas:make-admin you@example.com` (and related role 
 
 Relevant `config/canvas.php` keys for frontends and hosts:
 
-| Key | Default | Relevance |
-| --- | ------- | --------- |
-| `path` | `canvas` | Admin SPA mount |
-| `domain` | `null` | Optional admin subdomain |
-| `user_model` | `App\Models\User` | Author relation |
-| `guard` | `web` | Auth guard for admin |
-| `storage_disk` / `storage_path` | `public` / `canvas` | Media URLs in body |
-| `middleware` | `['web']` | Extra middleware on admin routes |
+| Key                             | Default             | Relevance                        |
+| ------------------------------- | ------------------- | -------------------------------- |
+| `path`                          | `canvas`            | Admin SPA mount                  |
+| `domain`                        | `null`              | Optional admin subdomain         |
+| `user_model`                    | `App\Models\User`   | Author relation                  |
+| `guard`                         | `web`               | Auth guard for admin             |
+| `storage_disk` / `storage_path` | `public` / `canvas` | Media URLs in body               |
+| `middleware`                    | `['web']`           | Extra middleware on admin routes |
 
 Reader routes from `canvas:ui` are **host** routes (`web` middleware); they do not use the Canvas admin path prefix.
 
@@ -379,18 +379,18 @@ On webhook `post.published` / `post.updated`, rebuild the page for that slug. On
 
 ## Related files in this package
 
-| Path | Role |
-| ---- | ---- |
-| `resources/stubs/controllers/CanvasUiController.stub` | Published controller |
-| `resources/stubs/routes/canvas-ui.stub` | Published routes |
-| `resources/views/ui/*` | Default Blade templates |
-| `src/Console/UiCommand.php` | `canvas:ui` implementation |
-| `src/Models/Post.php` | Post model + scopes |
-| `src/Support/PostSeo.php` | SEO resolution |
-| `resources/js/lib/posts/embeds.ts` | URL → embed `src` (editor) |
-| `resources/js/lib/posts/iframe-resize.ts` | X card height (admin; copy pattern for public) |
-| `.github/UPGRADE.md` | Webhooks, config, upgrade notes |
-| `readme.md` | Install and high-level product overview |
+| Path                                                  | Role                                           |
+| ----------------------------------------------------- | ---------------------------------------------- |
+| `resources/stubs/controllers/CanvasUiController.stub` | Published controller                           |
+| `resources/stubs/routes/canvas-ui.stub`               | Published routes                               |
+| `resources/views/ui/*`                                | Default Blade templates                        |
+| `src/Console/UiCommand.php`                           | `canvas:ui` implementation                     |
+| `src/Models/Post.php`                                 | Post model + scopes                            |
+| `src/Support/PostSeo.php`                             | SEO resolution                                 |
+| `resources/js/lib/posts/embeds.ts`                    | URL → embed `src` (editor)                     |
+| `resources/js/lib/posts/iframe-resize.ts`             | X card height (admin; copy pattern for public) |
+| `.github/UPGRADE.md`                                  | Webhooks, config, upgrade notes                |
+| `readme.md`                                           | Install and high-level product overview        |
 
 ---
 

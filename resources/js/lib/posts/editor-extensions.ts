@@ -134,8 +134,7 @@ export function createPostEditorExtensions(options?: { placeholder?: string }) {
             },
         }),
         ImageCreditParagraph,
-        // YouTube: clean iframe output (see youtube-extension.ts). TipTap upstream
-        // dumps option flags as HTML attrs and can crash on null src.
+        // YouTube: stock TipTap + thin safe renderHTML (see youtube-extension.ts).
         createCanvasYoutubeExtension(),
         Audio.configure({
             controls: true,
