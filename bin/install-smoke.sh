@@ -122,8 +122,10 @@ composer require austintoddj/canvas:@dev \
 echo "==> canvas:install"
 php artisan canvas:install --no-interaction
 
-echo "==> storage:link"
-php artisan storage:link --no-interaction
+if [[ ! -L public/storage ]]; then
+    echo "error: canvas:install did not create public/storage symlink" >&2
+    exit 1
+fi
 
 echo "==> Seed host user + canvas:make-admin"
 php artisan tinker --execute="

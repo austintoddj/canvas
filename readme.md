@@ -32,10 +32,9 @@ Canvas is an open-source publishing platform for [Laravel](https://laravel.com).
 ```bash
 composer require austintoddj/canvas
 php artisan canvas:install
-php artisan storage:link
 ```
 
-Sign in to your application, then grant yourself access:
+Grant admin access to an existing user:
 
 ```bash
 php artisan canvas:make-admin your@email.com

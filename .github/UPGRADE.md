@@ -95,11 +95,11 @@ If you skip this, `/canvas` still loads, admin routes still work, and Canvas sti
 5. Link storage and clear views if needed:
 
     ```bash
-    php artisan storage:link
+    php artisan storage:link   # already done by canvas:install on fresh installs
     php artisan view:clear
     ```
 
-    Set `APP_URL` to the exact URL you open in the browser (Herd `http://my-app.test`, not a leftover `http://localhost:8000`). Library media on the public disk is stored as root-relative `/storage/...` paths so admin thumbs load even when `APP_URL` is mis-set; Open Graph, webhooks, and similar absolute consumers still follow the request host / `APP_URL`.
+    Fresh `canvas:install` creates the public storage symlink automatically. Run `storage:link` manually if you only published config/migrated without install, or if the link is missing. Set `APP_URL` to the exact URL you open in the browser (Herd `http://my-app.test`, not a leftover `http://localhost:8000`). Library media on the public disk is stored as root-relative `/storage/...` paths so admin thumbs load even when `APP_URL` is mis-set; Open Graph, webhooks, and similar absolute consumers still follow the request host / `APP_URL`.
 
 6. Grant Canvas access:
 

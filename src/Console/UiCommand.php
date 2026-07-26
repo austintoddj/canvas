@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Canvas\Console;
 
+use Canvas\Console\Concerns\InteractsWithConsoleTasks;
 use Illuminate\Console\Command;
 use Illuminate\Console\View\TaskResult;
 
 class UiCommand extends Command
 {
+    use InteractsWithConsoleTasks;
+
     protected $signature = 'canvas:ui { --force : Overwrite existing views and controller }';
 
     protected $description = 'Publish the Canvas reader UI views, controller, and route stub';
@@ -19,14 +22,10 @@ class UiCommand extends Command
     public function handle(): int
     {
         $this->components->task('Publishing views', function (): int {
-            $exitCode = $this->callSilent('vendor:publish', [
+            return $this->runSilentTask('vendor:publish', [
                 '--tag' => 'canvas-ui-views',
                 '--force' => $this->option('force'),
             ]);
-
-            return $exitCode === self::SUCCESS
-                ? TaskResult::Success->value
-                : TaskResult::Failure->value;
         });
 
         $this->components->task(
@@ -50,7 +49,6 @@ class UiCommand extends Command
 
         $this->newLine();
         $this->line('  <fg=gray>Open</> /canvas-ui <fg=gray>in your browser.</>');
-        $this->line('  <fg=gray>Post body embeds (YouTube, X, Vimeo) are styled in the UI layout — no extra assets.</>');
 
         return self::SUCCESS;
     }

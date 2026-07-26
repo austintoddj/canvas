@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Canvas\Console;
 
+use Canvas\Console\Concerns\InteractsWithConsoleTasks;
 use Illuminate\Console\Command;
-use Illuminate\Console\View\TaskResult;
 
 class InstallCommand extends Command
 {
+    use InteractsWithConsoleTasks;
+
     protected $signature = 'canvas:install';
 
     protected $description = 'Install the Canvas components and resources';
@@ -36,19 +38,12 @@ class InstallCommand extends Command
 
         $this->components->task('Running migrations', fn (): int => $this->runSilentTask('canvas:migrate'));
 
+        $this->components->task('Linking storage', fn (): int => $this->runSilentTask('storage:link'));
+
         $this->newLine();
-        $this->line('  <fg=gray>Sign in, then:</> php artisan canvas:make-admin your@email.com');
+        $this->line('  <fg=gray>Grant admin access:</> php artisan canvas:make-admin your@email.com');
+        $this->line('  <fg=gray>Then visit:</> /canvas');
 
         return self::SUCCESS;
-    }
-
-    /**
-     * @param  array<string, mixed>  $parameters
-     */
-    private function runSilentTask(string $command, array $parameters = []): int
-    {
-        return $this->callSilent($command, $parameters) === self::SUCCESS
-            ? TaskResult::Success->value
-            : TaskResult::Failure->value;
     }
 }

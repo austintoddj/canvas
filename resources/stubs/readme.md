@@ -219,7 +219,7 @@ Cross-origin tweet iframes **do not** expand with CSS alone. Portrait and media-
 
 ### Media URLs
 
-Uploads use `config('canvas.storage_disk')` and `storage_path` (defaults: `public` disk, `canvas/` prefix). Bodies and featured images often store **root-relative** paths like `/storage/canvas/…` so they work across hosts. Ensure `php artisan storage:link` and that your CDN/app serves that path. Helpers such as `Canvas\Support\MediaUrl` / `PostSeo` expand to absolute URLs when needed (e.g. Open Graph, webhooks).
+Uploads use `config('canvas.storage_disk')` and `storage_path` (defaults: `public` disk, `canvas/` prefix). Bodies and featured images often store **root-relative** paths like `/storage/canvas/…` so they work across hosts. `canvas:install` runs `storage:link` for you; if you skipped install or use a custom disk/CDN, ensure that path is linked or served. Helpers such as `Canvas\Support\MediaUrl` / `PostSeo` expand to absolute URLs when needed (e.g. Open Graph, webhooks).
 
 ### XSS and sanitization
 

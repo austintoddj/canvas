@@ -7,7 +7,8 @@ it('exits successfully and outputs the install messages', function (): void {
     TestCase::withSharedTestbenchLock(function (): void {
         $this->artisan('canvas:install')
             ->assertExitCode(0)
-            ->expectsOutputToContain('canvas:make-admin');
+            ->expectsOutputToContain('canvas:make-admin')
+            ->expectsOutputToContain('/canvas');
     });
 });
 
@@ -16,6 +17,20 @@ it('publishes the config file', function (): void {
         $this->artisan('canvas:install');
 
         $this->assertFileExists(config_path('canvas.php'));
+    });
+});
+
+it('links public storage', function (): void {
+    TestCase::withSharedTestbenchLock(function (): void {
+        $link = public_path('storage');
+
+        if (is_link($link) || file_exists($link)) {
+            unlink($link);
+        }
+
+        $this->artisan('canvas:install')->assertExitCode(0);
+
+        expect(is_link($link))->toBeTrue();
     });
 });
 

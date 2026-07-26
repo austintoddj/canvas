@@ -26,8 +26,8 @@ class RolesCommand extends Command
         $this->table(['Name', 'Value', 'Label'], $rows);
 
         $this->newLine();
-        $this->info('Assign: php artisan canvas:assign-role user@example.com Editor');
-        $this->info('Admin shortcut: php artisan canvas:make-admin user@example.com');
+        $this->line('  <fg=gray>Assign:</> php artisan canvas:assign-role user@example.com Editor');
+        $this->line('  <fg=gray>Admin shortcut:</> php artisan canvas:make-admin user@example.com');
 
         return self::SUCCESS;
     }

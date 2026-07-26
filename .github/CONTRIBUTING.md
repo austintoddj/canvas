@@ -30,7 +30,6 @@ If you want to work locally, use a Laravel app with a sibling Canvas checkout:
     ```bash
     composer require austintoddj/canvas @dev
     php artisan canvas:install
-    php artisan storage:link
     ```
 
 3. To avoid re-publishing frontend assets every time you make a change, symlink the Canvas package build output into your Laravel app instead:
