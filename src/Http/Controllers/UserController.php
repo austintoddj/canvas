@@ -24,9 +24,6 @@ use Illuminate\Support\Facades\Gate;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(): AnonymousResourceCollection
     {
         $userModel = HostUser::modelClass();
@@ -47,9 +44,6 @@ class UserController extends Controller
         return UserResource::collection($canvasUsers);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): JsonResponse
     {
         return response()->json([
@@ -87,9 +81,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(UserRequest $request, SyncCanvasUser $syncCanvasUser, int|string $id): JsonResponse
     {
         $currentUser = request()->user(config('canvas.guard'));
@@ -121,9 +112,6 @@ class UserController extends Controller
         ], $created ? 201 : 200);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Model $user): UserResource
     {
         $canvasUser = CanvasUser::query()
@@ -134,9 +122,6 @@ class UserController extends Controller
         return UserResource::make(UserResource::hostUserFromCanvasUser($canvasUser));
     }
 
-    /**
-     * Display the specified relationship.
-     */
     public function posts(Model $user): JsonResponse
     {
         return response()->json(
@@ -149,8 +134,6 @@ class UserController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
      * @throws Exception
      */
     public function destroy(Model $user): JsonResponse

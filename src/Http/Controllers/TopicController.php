@@ -15,9 +15,6 @@ use Illuminate\Support\Str;
 
 class TopicController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): JsonResponse
     {
         $query = Topic::query()
@@ -29,9 +26,6 @@ class TopicController extends Controller
         return response()->json($query->paginate(), 200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): JsonResponse
     {
         return response()->json(Topic::query()->make([
@@ -39,9 +33,6 @@ class TopicController extends Controller
         ]), 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(TopicRequest $request, string $id): JsonResponse
     {
         $data = $request->validated();
@@ -69,32 +60,21 @@ class TopicController extends Controller
         return response()->json($topic->refresh(), $created ? 201 : 200);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Topic $topic): JsonResponse
     {
         return response()->json($topic, 200);
     }
 
-    /**
-     * Display the specified relationship.
-     */
     public function posts(Topic $topic): JsonResponse
     {
         return response()->json($topic->posts()->withCount('views')->paginate(), 200);
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @return mixed
-     *
      * @throws Exception
      */
     public function destroy(Topic $topic)
     {
-
         $topic->delete();
 
         return response()->json(null, 204);

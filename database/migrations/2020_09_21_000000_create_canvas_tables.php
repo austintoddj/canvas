@@ -4,10 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Baseline Canvas schema. Filename is frozen for upgrade history — do not rename.
- * Prefer anonymous classes + typed up()/down() for any *new* migrations.
- */
 return new class extends Migration
 {
     public function up(): void

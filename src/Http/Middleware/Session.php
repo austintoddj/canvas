@@ -11,9 +11,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Session
 {
-    /**
-     * Handle the incoming request.
-     */
     public function handle(Request $request, Closure $next): Response
     {
         if (session()->has('viewed_posts')) {

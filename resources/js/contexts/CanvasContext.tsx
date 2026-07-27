@@ -13,7 +13,6 @@ import type { CanvasBoot, UserResource } from '@/types/boot';
 
 export type { CanvasContextValue, CanvasPermissions };
 
-// Co-located with CanvasProvider to keep context and its consumer together; Fast Refresh is not a concern here.
 // eslint-disable-next-line react-refresh/only-export-components
 export const CanvasContext = createContext<CanvasContextValue | null>(null);
 

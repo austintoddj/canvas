@@ -23,9 +23,6 @@ use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(): JsonResponse
     {
         $user = request()->user(config('canvas.guard'));
@@ -59,9 +56,6 @@ class PostController extends Controller
         ], 200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): JsonResponse
     {
         $uuid = Str::uuid();
@@ -77,8 +71,6 @@ class PostController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
      * Live (published) posts keep a stable public snapshot: ordinary saves write
      * `pending` only. Pass `promote: true` (or unpublish) to mutate live fields.
      *
@@ -153,9 +145,6 @@ class PostController extends Controller
         return response()->json($this->postPayload($post->refresh()));
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Post $post): JsonResponse
     {
         $this->ensurePostIsVisibleToCurrentUser($post);
@@ -169,9 +158,6 @@ class PostController extends Controller
         ]);
     }
 
-    /**
-     * Display stats for the specified resource.
-     */
     public function stats(Post $post): JsonResponse
     {
         $this->ensurePostIsVisibleToCurrentUser($post);
@@ -191,10 +177,6 @@ class PostController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @return mixed
-     *
      * @throws Exception
      */
     public function destroy(Post $post)

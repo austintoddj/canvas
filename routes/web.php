@@ -22,19 +22,14 @@ Route::middleware([
     Authorize::class,
 ])->group(function (): void {
     Route::prefix('api')->group(function (): void {
-        // Stats routes...
         Route::get('stats', StatsController::class);
 
-        // Translations routes...
         Route::get('translations/{locale}', TranslationsController::class);
 
-        // Unsplash routes...
         Route::get('unsplash', UnsplashController::class);
 
-        // AI writing (any Canvas user)...
         Route::post('ai/rewrite', AiRewriteController::class)->middleware('throttle:30,1');
 
-        // Integrations (admin)...
         Route::prefix('integrations')->middleware(['can:manage-integrations'])->group(function (): void {
             Route::get('/', [IntegrationsController::class, 'show']);
             Route::put('/', [IntegrationsController::class, 'update']);
@@ -42,7 +37,6 @@ Route::middleware([
                 ->middleware('throttle:10,1');
         });
 
-        // Media routes...
         Route::prefix('media')->controller(MediaController::class)->group(function (): void {
             Route::get('/', 'index');
             Route::get('create', 'create');
@@ -52,7 +46,6 @@ Route::middleware([
             Route::delete('{media}', 'destroy');
         });
 
-        // Post routes...
         Route::prefix('posts')->controller(PostController::class)->group(function (): void {
             Route::get('/', 'index');
             Route::get('create', 'create');
@@ -63,7 +56,6 @@ Route::middleware([
             Route::delete('{post}', 'destroy');
         });
 
-        // Tag routes...
         Route::prefix('tags')->middleware(['can:manage-taxonomy'])->controller(TagController::class)->group(function (): void {
             Route::get('/', 'index');
             Route::get('create', 'create');
@@ -73,7 +65,6 @@ Route::middleware([
             Route::delete('{tag}', 'destroy');
         });
 
-        // Topic routes...
         Route::prefix('topics')->middleware(['can:manage-taxonomy'])->controller(TopicController::class)->group(function (): void {
             Route::get('/', 'index');
             Route::get('create', 'create');
@@ -83,7 +74,6 @@ Route::middleware([
             Route::delete('{topic}', 'destroy');
         });
 
-        // User routes...
         Route::prefix('users')->controller(UserController::class)->group(function (): void {
             Route::get('/', 'index')->middleware(['can:manage-users']);
             Route::get('create', 'create')->middleware(['can:manage-users']);
@@ -94,10 +84,8 @@ Route::middleware([
             Route::delete('{user}', 'destroy')->middleware(['can:manage-users']);
         });
 
-        // Search routes...
         Route::get('search', [SearchController::class, 'index']);
     });
 
-    // Catch-all route...
     Route::get('/{view?}', ViewController::class)->where('view', '(.*)')->name('canvas');
 });

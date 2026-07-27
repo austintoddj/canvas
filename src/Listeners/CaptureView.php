@@ -36,9 +36,6 @@ class CaptureView
         }
     }
 
-    /**
-     * Check if a given post exists in the session.
-     */
     private function wasRecentlyViewed(Post $post): bool
     {
         $viewed = session()->get('viewed_posts', []);
@@ -46,9 +43,6 @@ class CaptureView
         return array_key_exists($post->id, $viewed);
     }
 
-    /**
-     * Add a given post to the session.
-     */
     private function storeInSession(Post $post): void
     {
         session()->put("viewed_posts.{$post->id}", now()->timestamp);

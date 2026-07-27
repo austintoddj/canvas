@@ -20,9 +20,6 @@ class StatsController extends Controller
     /** @var list<int> */
     private const ALLOWED_DAYS = [7, 30, 90, 365];
 
-    /**
-     * Display a listing of the resource.
-     */
     public function __invoke(): JsonResponse
     {
         $user = request()->user(config('canvas.guard'));

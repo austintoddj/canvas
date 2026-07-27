@@ -52,9 +52,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CanvasServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/canvas.php', 'canvas');
@@ -161,9 +158,6 @@ class CanvasServiceProvider extends ServiceProvider
         });
     }
 
-    /**
-     * Configure the routes offered by the application.
-     */
     private function configureRoutes(): void
     {
         Route::bind('user', function (mixed $value): mixed {
@@ -180,9 +174,6 @@ class CanvasServiceProvider extends ServiceProvider
             });
     }
 
-    /**
-     * Configure the commands offered by the application.
-     */
     private function configureCommands(): void
     {
         if (! $this->app->runningInConsole()) {
@@ -203,9 +194,6 @@ class CanvasServiceProvider extends ServiceProvider
         ]);
     }
 
-    /**
-     * Register the package's migrations.
-     */
     private function registerMigrations(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
@@ -232,9 +220,6 @@ class CanvasServiceProvider extends ServiceProvider
         });
     }
 
-    /**
-     * Register the package's form request resolver.
-     */
     private function registerFormRequests(): void
     {
         $this->app->afterResolving(ValidatesWhenResolved::class, function (ValidatesWhenResolved $resolved): void {
@@ -249,9 +234,6 @@ class CanvasServiceProvider extends ServiceProvider
         });
     }
 
-    /**
-     * Configure publishing for the package.
-     */
     private function configurePublishing(): void
     {
         if ($this->app->runningInConsole()) {

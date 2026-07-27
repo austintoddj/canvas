@@ -15,9 +15,6 @@ use Illuminate\Support\Str;
 
 class TagController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): JsonResponse
     {
         $query = Tag::query()
@@ -29,9 +26,6 @@ class TagController extends Controller
         return response()->json($query->paginate(), 200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): JsonResponse
     {
         return response()->json(Tag::query()->make([
@@ -39,9 +33,6 @@ class TagController extends Controller
         ]), 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(TagRequest $request, string $id): JsonResponse
     {
         $data = $request->validated();
@@ -69,32 +60,21 @@ class TagController extends Controller
         return response()->json($tag->refresh(), $created ? 201 : 200);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Tag $tag): JsonResponse
     {
         return response()->json($tag, 200);
     }
 
-    /**
-     * Display the specified relationship.
-     */
     public function posts(Tag $tag): JsonResponse
     {
         return response()->json($tag->posts()->withCount('views')->paginate(), 200);
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @return mixed
-     *
      * @throws Exception
      */
     public function destroy(Tag $tag)
     {
-
         $tag->delete();
 
         return response()->json(null, 204);

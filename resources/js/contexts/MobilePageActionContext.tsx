@@ -19,7 +19,6 @@ type MobilePageActionContextValue = {
     setContribution: (next: MobilePageActionContribution) => void;
 };
 
-// Co-located with provider; Fast Refresh is not a concern for this context module.
 // eslint-disable-next-line react-refresh/only-export-components
 export const MobilePageActionContext = createContext<MobilePageActionContextValue | null>(null);
 
@@ -51,7 +50,6 @@ export function MobilePageActionProvider({ children }: { children: ReactNode }) 
     return <MobilePageActionContext.Provider value={value}>{children}</MobilePageActionContext.Provider>;
 }
 
-// Co-located with provider; Fast Refresh is not a concern for this context module.
 // eslint-disable-next-line react-refresh/only-export-components
 export function useMobilePageActionState(): MobilePageActionContextValue {
     const context = useContext(MobilePageActionContext);

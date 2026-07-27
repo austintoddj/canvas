@@ -38,9 +38,6 @@ class CaptureVisit
         }
     }
 
-    /**
-     * Check if a given post and IP are unique to the session.
-     */
     private function visitIsUnique(Post $post, string $ip): bool
     {
         $visits = session()->get('visited_posts', []);
@@ -49,9 +46,6 @@ class CaptureVisit
             || $visits[$post->id]['ip'] !== $ip;
     }
 
-    /**
-     * Add a given post and IP to the session.
-     */
     private function storeInSession(Post $post, string $ip): void
     {
         session()->put("visited_posts.{$post->id}", [
