@@ -73,7 +73,7 @@ class TopicController extends Controller
     /**
      * @throws Exception
      */
-    public function destroy(Topic $topic)
+    public function destroy(Topic $topic): JsonResponse
     {
         $topic->delete();
 

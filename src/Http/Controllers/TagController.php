@@ -73,7 +73,7 @@ class TagController extends Controller
     /**
      * @throws Exception
      */
-    public function destroy(Tag $tag)
+    public function destroy(Tag $tag): JsonResponse
     {
         $tag->delete();
 

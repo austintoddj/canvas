@@ -179,7 +179,7 @@ class PostController extends Controller
     /**
      * @throws Exception
      */
-    public function destroy(Post $post)
+    public function destroy(Post $post): JsonResponse
     {
         $this->ensurePostIsVisibleToCurrentUser($post);
 
