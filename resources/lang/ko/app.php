@@ -39,6 +39,7 @@ return [
     'common.version' => '버전:버전',
     'common.words_one' => ':단어 세기',
     'common.words_other' => ':단어 세기',
+    'common.delete_aria' => ':name 삭제',
     'common.edit_aria' => ':name 편집',
     'common.dismiss_notification' => '알림 닫기',
     'common.notifications' => '알림',

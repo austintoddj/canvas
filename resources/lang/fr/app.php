@@ -39,6 +39,7 @@ return [
     'common.version' => 'Version :version',
     'common.words_one' => ':compter le mot',
     'common.words_other' => ':compter les mots',
+    'common.delete_aria' => 'Supprimer :name',
     'common.edit_aria' => 'Modifier :name',
     'common.dismiss_notification' => 'Fermer la notification',
     'common.notifications' => 'Notifications',

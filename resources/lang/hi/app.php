@@ -39,6 +39,7 @@ return [
     'common.version' => 'संस्करण:संस्करण',
     'common.words_one' => ':शब्द गिनती',
     'common.words_other' => ':शब्द गिनें',
+    'common.delete_aria' => ':name हटाएँ',
     'common.edit_aria' => ':name संपादित करें',
     'common.dismiss_notification' => 'सूचना खारिज करें',
     'common.notifications' => 'सूचनाएँ',

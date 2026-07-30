@@ -39,6 +39,7 @@ return [
     'common.version' => 'Versi :versi',
     'common.words_one' => ':menghitung kata',
     'common.words_other' => ':menghitung kata',
+    'common.delete_aria' => 'Hapus :name',
     'common.edit_aria' => 'Edit :name',
     'common.dismiss_notification' => 'Tutup notifikasi',
     'common.notifications' => 'Notifikasi',

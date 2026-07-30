@@ -39,6 +39,7 @@ return [
     'common.version' => 'Sürüm :sürüm',
     'common.words_one' => ':sözcüğü say',
     'common.words_other' => ':sözcükleri say',
+    'common.delete_aria' => ':name sil',
     'common.edit_aria' => ':name düzenle',
     'common.dismiss_notification' => 'Bildirimi kapat',
     'common.notifications' => 'Bildirimler',

@@ -39,6 +39,7 @@ return [
     'common.version' => 'সংস্করণ: সংস্করণ',
     'common.words_one' => ': শব্দ গণনা',
     'common.words_other' => ': শব্দ গণনা',
+    'common.delete_aria' => ':name মুছুন',
     'common.edit_aria' => ':name সম্পাদনা করুন',
     'common.dismiss_notification' => 'বিজ্ঞপ্তি বাতিল',
     'common.notifications' => 'বিজ্ঞপ্তি',

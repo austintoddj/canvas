@@ -39,6 +39,7 @@ return [
     'common.version' => 'Phiên bản: phiên bản',
     'common.words_one' => ':đếm từ',
     'common.words_other' => ':đếm từ',
+    'common.delete_aria' => 'Xóa :name',
     'common.edit_aria' => 'Chỉnh sửa :name',
     'common.dismiss_notification' => 'Đóng thông báo',
     'common.notifications' => 'Thông báo',

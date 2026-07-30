@@ -39,6 +39,7 @@ return [
     'common.version' => 'バージョン:バージョン',
     'common.words_one' => ':単語を数える',
     'common.words_other' => ':単語を数える',
+    'common.delete_aria' => ':nameを削除',
     'common.edit_aria' => ':nameを編集',
     'common.dismiss_notification' => '通知を閉じる',
     'common.notifications' => '通知',

@@ -332,13 +332,15 @@ export default function PostsIndex() {
                                                 {status === 'published' ? (
                                                     <ListRowActionLink
                                                         href={`/posts/${post.id}/stats`}
-                                                        label={`View stats for ${title}`}
+                                                        label={t('dashboard.recent_stats_aria', { title })}
+                                                        tooltip={t('editor.stats')}
                                                     >
                                                         <IconChartBar className="size-5" aria-hidden="true" />
                                                     </ListRowActionLink>
                                                 ) : null}
                                                 <ListRowActionButton
-                                                    label={`Delete ${title}`}
+                                                    label={t('common.delete_aria', { name: title })}
+                                                    tooltip={t('common.delete')}
                                                     danger
                                                     onClick={() => setPendingDelete(post)}
                                                 >

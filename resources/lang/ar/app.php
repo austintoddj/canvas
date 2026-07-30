@@ -39,6 +39,7 @@ return [
     'common.version' => 'الإصدار: الإصدار',
     'common.words_one' => ':عد الكلمة',
     'common.words_other' => ':عد الكلمات',
+    'common.delete_aria' => 'حذف :name',
     'common.edit_aria' => 'تعديل :name',
     'common.dismiss_notification' => 'إغلاق الإشعار',
     'common.notifications' => 'الإشعارات',

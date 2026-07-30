@@ -39,6 +39,7 @@ return [
     'common.version' => 'Version :Version',
     'common.words_one' => ':Wort zählen',
     'common.words_other' => ':Wörter zählen',
+    'common.delete_aria' => ':name löschen',
     'common.edit_aria' => ':name bearbeiten',
     'common.dismiss_notification' => 'Benachrichtigung schließen',
     'common.notifications' => 'Benachrichtigungen',

@@ -39,6 +39,7 @@ return [
     'common.version' => '版本：版本',
     'common.words_one' => ': 计​​算单词数',
     'common.words_other' => ': 数字数',
+    'common.delete_aria' => '删除 :name',
     'common.edit_aria' => '编辑 :name',
     'common.dismiss_notification' => '关闭通知',
     'common.notifications' => '通知',

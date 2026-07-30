@@ -296,7 +296,7 @@
         transform: rotate(0deg);
     }
     40% {
-        transform: rotate(10deg);
+        transform: rotate(7deg);
     }
     100% {
         transform: rotate(0deg);
@@ -312,8 +312,8 @@
         opacity: 1;
     }
     40% {
-        transform: translateY(1.5px);
-        opacity: 0.85;
+        transform: translateY(1px);
+        opacity: 0.9;
     }
 }
 
@@ -324,8 +324,8 @@
         opacity: 1;
     }
     40% {
-        transform: translateY(-1.5px);
-        opacity: 0.85;
+        transform: translateY(-1px);
+        opacity: 0.9;
     }
 }
 

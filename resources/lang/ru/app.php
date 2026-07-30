@@ -39,6 +39,7 @@ return [
     'common.version' => 'Версия: версия',
     'common.words_one' => ':считать слово',
     'common.words_other' => ':считать слова',
+    'common.delete_aria' => 'Удалить :name',
     'common.edit_aria' => 'Редактировать :name',
     'common.dismiss_notification' => 'Закрыть уведомление',
     'common.notifications' => 'Уведомления',
