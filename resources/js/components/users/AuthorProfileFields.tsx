@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import { useMemo } from 'react';
 
 import {
     Dropdown,
@@ -102,16 +101,12 @@ function TimezoneSelectDropdown({
     invalid?: boolean;
 }) {
     const { t } = useCanvas();
-    // Recompute when the translator changes (locale switch reloads dictionary).
-    const catalog = useMemo(() => listTimezoneOptions(), [t]);
-
-    const options = useMemo((): TimezoneOption[] => {
-        if (value !== '' && !catalog.some((zone) => zone.value === value)) {
-            return [{ value, label: value }, ...catalog];
-        }
-
-        return catalog;
-    }, [catalog, value]);
+    // listTimezoneOptions reads the active dictionary (updated on locale switch via CanvasProvider).
+    const catalog = listTimezoneOptions();
+    const options: TimezoneOption[] =
+        value !== '' && !catalog.some((zone) => zone.value === value)
+            ? [{ value, label: value }, ...catalog]
+            : catalog;
 
     return (
         <Dropdown>
