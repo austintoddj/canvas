@@ -1,6 +1,15 @@
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useId,
+    useLayoutEffect,
+    useRef,
+    useState,
+    type FocusEvent,
+    type ReactNode,
+} from 'react';
 
 import { useFinePointerHover } from '@/hooks/useFinePointerHover';
 
@@ -106,7 +115,7 @@ export function Tooltip({
         };
     }, [visible, placement, content]);
 
-    const show = () => {
+    const show = useCallback(() => {
         if (!active) {
             return;
         }
@@ -118,13 +127,30 @@ export function Tooltip({
         }
 
         openTimer.current = setTimeout(() => setOpen(true), delayMs);
-    };
+    }, [active, clearOpenTimer, delayMs]);
 
-    const hide = () => {
+    const hide = useCallback(() => {
         clearOpenTimer();
         setOpen(false);
         setCoords(null);
-    };
+    }, [clearOpenTimer]);
+
+    /**
+     * Keyboard focus only. Programmatic restore (dialog/drawer close) is not
+     * :focus-visible and must not re-open the tip while the pointer still sits
+     * on the trigger.
+     */
+    const showFromFocus = useCallback(
+        (event: FocusEvent<HTMLSpanElement>) => {
+            const target = event.target;
+            if (!(target instanceof Element) || !target.matches(':focus-visible')) {
+                return;
+            }
+
+            show();
+        },
+        [show]
+    );
 
     return (
         <>
@@ -133,8 +159,9 @@ export function Tooltip({
                 className={clsx('min-w-0', triggerClassName ?? 'inline-flex')}
                 onMouseEnter={show}
                 onMouseLeave={hide}
-                onFocus={show}
+                onFocus={showFromFocus}
                 onBlur={hide}
+                onPointerDown={hide}
                 aria-describedby={visible ? tooltipId : undefined}
             >
                 {children}

@@ -150,6 +150,50 @@ export type PostsIndexParams = {
     page?: number;
 };
 
+/** Lean revision row from index / rename (no body). */
+export type PostRevisionListItem = {
+    id: string;
+    post_id: string;
+    user_id: number | null;
+    /** User-assigned version name; null until renamed or saved with a name. */
+    label: string | null;
+    title: string | null;
+    created_at: string;
+    updated_at: string;
+    /** Display-only revision actor (never written back). */
+    user?: PostAuthor | null;
+};
+
+/** Full snapshot for diff/restore (show + create). */
+export type PostRevision = PostRevisionListItem & {
+    slug: string | null;
+    summary: string | null;
+    body: string | null;
+    featured_image: string | null;
+    featured_image_caption: string | null;
+    meta: PostMeta | null;
+};
+
+export type PostRevisionsResponse = {
+    revisions: PostRevisionListItem[];
+};
+
+export type PostRevisionResponse = {
+    revision: PostRevision;
+};
+
+export type PostRevisionListResponse = {
+    revision: PostRevisionListItem;
+};
+
+export type RenamePostRevisionPayload = {
+    label: string | null;
+};
+
+export type CreatePostRevisionPayload = {
+    label?: string | null;
+};
+
 /** Display-only uploader on media show/store responses. */
 export type MediaUploader = {
     id: number;

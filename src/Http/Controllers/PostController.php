@@ -13,6 +13,7 @@ use Canvas\Support\PostAuthor;
 use Canvas\Support\PostLifecycleEvents;
 use Canvas\Support\PostSnapshot;
 use Canvas\Support\PublishedAt;
+use Canvas\Support\RecordPostRevision;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -105,13 +106,18 @@ class PostController extends Controller
         $tagsInput = is_array($tagsInput) ? $tagsInput : [];
         $topicInput = is_array($topicInput) ? $topicInput : [];
 
+        $userId = data_get($user, 'id');
+        $userId = is_int($userId) || is_numeric($userId) ? (int) $userId : null;
+
         if ($this->shouldWritePendingOnly($post, $data, $promote)) {
             $post->writePending($data, $tagsInput, $topicInput);
 
+            // Tier B: live pending autosaves do not append history rows.
             return response()->json($this->postPayload($post->refresh()), 200);
         }
 
         $before = $post->exists ? PostSnapshot::from($post) : null;
+        $hadRevisions = $post->exists && $post->revisions()->exists();
 
         $post->fill($data);
         $post->user_id ??= data_get($user, 'id');
@@ -124,6 +130,10 @@ class PostController extends Controller
         $post->load(['tags', 'topic']);
 
         PostLifecycleEvents::dispatch($before, $post);
+
+        $after = PostSnapshot::from($post);
+        $reason = RecordPostRevision::reasonForStore($before, $after, $promote, $hadRevisions);
+        RecordPostRevision::fromPost($post, $userId, $reason);
 
         return response()->json($this->postPayload($post), $created ? 201 : 200);
     }

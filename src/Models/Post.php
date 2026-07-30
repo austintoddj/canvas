@@ -102,6 +102,14 @@ class Post extends Model
         return $this->hasMany(Visit::class);
     }
 
+    /**
+     * @return HasMany<PostRevision, $this>
+     */
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(PostRevision::class);
+    }
+
     public function getReadTimeAttribute(): string
     {
         return ReadTime::calculate($this->body, app()->getLocale());

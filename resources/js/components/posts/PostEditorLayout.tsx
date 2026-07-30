@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
 import { ErrorText } from '@/components/text';
+import { Tooltip } from '@/components/tooltip';
 import { useCanvas } from '@/hooks/useCanvas';
 import { CONTENT_REVEAL_MS, shouldAnimateReveal } from '@/lib/async-ui';
 import {
@@ -15,12 +16,16 @@ import {
     type PostFormState,
     type PostSaveStatus,
 } from '@/lib/posts/form';
-import { IconArrowLeft, IconChartBar, IconLayoutSidebarRight } from '@tabler/icons-react';
+import { IconArrowLeft, IconChartBar, IconHistory, IconLayoutSidebarRight } from '@tabler/icons-react';
 
 export type PostEditorFocusControls = {
     focusMode: boolean;
     onToggleFocusMode: () => void;
 };
+
+/** Icon-only plain controls: match label text weight (no adjacent text to carry contrast). */
+const editorChromeIconButtonClassName =
+    '![--btn-icon:var(--color-zinc-950)] data-hover:![--btn-icon:var(--color-zinc-950)] data-active:![--btn-icon:var(--color-zinc-950)] dark:![--btn-icon:var(--color-white)] dark:data-hover:![--btn-icon:var(--color-white)] dark:data-active:![--btn-icon:var(--color-white)]';
 
 type PostEditorLayoutProps = {
     form: PostFormState;
@@ -29,6 +34,9 @@ type PostEditorLayoutProps = {
     saveStatus: PostSaveStatus;
     hasPendingChanges?: boolean;
     inspectorOpen?: boolean;
+    historyOpen?: boolean;
+    /** When set, show history control (saved posts only). */
+    onOpenHistory?: () => void;
     onTitleChange: (title: string) => void;
     onOpenInspector: () => void;
     onPreview?: () => void;
@@ -46,6 +54,8 @@ export default function PostEditorLayout({
     saveStatus,
     hasPendingChanges = false,
     inspectorOpen = false,
+    historyOpen = false,
+    onOpenHistory,
     onTitleChange,
     onOpenInspector,
     onPreview,
@@ -213,28 +223,47 @@ export default function PostEditorLayout({
                     </Button>
                 ) : null}
                 {published && postId !== null && !focusMode ? (
-                    <Button
-                        href={`/posts/${postId}/stats`}
-                        plain
-                        aria-label={t('editor.view_stats')}
-                        title={t('editor.stats')}
-                    >
-                        <IconChartBar data-slot="icon" />
-                        <span className="hidden sm:inline">{t('editor.stats')}</span>
-                    </Button>
+                    <Tooltip content={t('editor.stats')} placement="bottom">
+                        <Button
+                            href={`/posts/${postId}/stats`}
+                            plain
+                            className={editorChromeIconButtonClassName}
+                            aria-label={t('editor.view_stats')}
+                        >
+                            <IconChartBar data-slot="icon" />
+                        </Button>
+                    </Tooltip>
                 ) : null}
-                <Button
-                    type="button"
-                    plain
-                    disabled={disabled}
-                    onClick={onOpenInspector}
-                    aria-label={t('editor.post_settings')}
-                    title={t('editor.post_settings')}
-                    aria-expanded={inspectorOpen}
-                    data-post-inspector-trigger
-                >
-                    <IconLayoutSidebarRight data-slot="icon" />
-                </Button>
+                {!focusMode && onOpenHistory !== undefined ? (
+                    <Tooltip content={t('editor.history', 'History')} placement="bottom">
+                        <Button
+                            type="button"
+                            plain
+                            className={editorChromeIconButtonClassName}
+                            disabled={disabled}
+                            onClick={onOpenHistory}
+                            aria-label={t('editor.history_title', 'Version history')}
+                            aria-expanded={historyOpen}
+                            data-post-history-trigger
+                        >
+                            <IconHistory data-slot="icon" />
+                        </Button>
+                    </Tooltip>
+                ) : null}
+                <Tooltip content={t('editor.settings', 'Settings')} placement="bottom">
+                    <Button
+                        type="button"
+                        plain
+                        className={editorChromeIconButtonClassName}
+                        disabled={disabled}
+                        onClick={onOpenInspector}
+                        aria-label={t('editor.post_settings')}
+                        aria-expanded={inspectorOpen}
+                        data-post-inspector-trigger
+                    >
+                        <IconLayoutSidebarRight data-slot="icon" />
+                    </Button>
+                </Tooltip>
             </div>
         </div>
     );
