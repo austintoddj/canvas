@@ -45,17 +45,17 @@ If an older install left `App\Providers\CanvasServiceProvider` (or a providers e
 
 #### Artisan commands
 
-| Command | Purpose |
-| ------- | ------- |
-| `canvas:make-admin {user}` | Grant or promote to Admin |
-| `canvas:assign-role {user} {role}` | Assign Contributor, Editor, or Admin |
-| `canvas:remove-access {user}` | Delete the `canvas_users` row (host untouched) |
-| `canvas:users` / `canvas:users {user}` | List access or dump one profile as JSON |
-| `canvas:migrate` | Run package schema migrations |
-| `canvas:publish` | Publish admin assets |
-| `canvas:install` | First-time install helper |
-| `canvas:digest` | Weekly author digest (when mail enabled) |
-| `canvas:ui` | Optional sample reader views |
+| Command                                | Purpose                                        |
+| -------------------------------------- | ---------------------------------------------- |
+| `canvas:make-admin {user}`             | Grant or promote to Admin                      |
+| `canvas:assign-role {user} {role}`     | Assign Contributor, Editor, or Admin           |
+| `canvas:remove-access {user}`          | Delete the `canvas_users` row (host untouched) |
+| `canvas:users` / `canvas:users {user}` | List access or dump one profile as JSON        |
+| `canvas:migrate`                       | Run package schema migrations                  |
+| `canvas:publish`                       | Publish admin assets                           |
+| `canvas:install`                       | First-time install helper                      |
+| `canvas:digest`                        | Weekly author digest (when mail enabled)       |
+| `canvas:ui`                            | Optional sample reader views                   |
 
 All `{user}` arguments accept an email address or host user ID. Full list: [docs/installation.md](../docs/installation.md).
 

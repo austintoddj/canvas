@@ -18,16 +18,16 @@ Visit `/canvas-ui`. Pass `--force` to overwrite previously published files.
 
 ## Routes
 
-| Name | URI | Description |
-| ---- | --- | ----------- |
-| `canvas-ui.index` | `/canvas-ui` | Published posts |
-| `canvas-ui.show` | `/canvas-ui/{slug}` | Single post |
-| `canvas-ui.feed` | `/canvas-ui/feed` | RSS feed |
-| `canvas-ui.tags` | `/canvas-ui/tags` | Tag index |
-| `canvas-ui.tag` | `/canvas-ui/tags/{slug}` | Posts for a tag |
-| `canvas-ui.topics` | `/canvas-ui/topics` | Topic index |
-| `canvas-ui.topic` | `/canvas-ui/topics/{slug}` | Posts for a topic |
-| `canvas-ui.author` | `/canvas-ui/@{username}` | Author archive |
+| Name               | URI                        | Description       |
+| ------------------ | -------------------------- | ----------------- |
+| `canvas-ui.index`  | `/canvas-ui`               | Published posts   |
+| `canvas-ui.show`   | `/canvas-ui/{slug}`        | Single post       |
+| `canvas-ui.feed`   | `/canvas-ui/feed`          | RSS feed          |
+| `canvas-ui.tags`   | `/canvas-ui/tags`          | Tag index         |
+| `canvas-ui.tag`    | `/canvas-ui/tags/{slug}`   | Posts for a tag   |
+| `canvas-ui.topics` | `/canvas-ui/topics`        | Topic index       |
+| `canvas-ui.topic`  | `/canvas-ui/topics/{slug}` | Posts for a topic |
+| `canvas-ui.author` | `/canvas-ui/@{username}`   | Author archive    |
 
 These are ordinary application routes. The show route records views via the `PostViewed` event and Canvas session middleware.
 

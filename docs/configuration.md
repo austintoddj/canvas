@@ -12,18 +12,18 @@ Most options may also be set via environment variables.
 
 ## Options
 
-| Option | Environment variable | Default |
-| ------ | -------------------- | ------- |
-| `domain` | `CANVAS_DOMAIN` | `null` |
-| `path` | `CANVAS_PATH` | `canvas` |
-| `user_model` | `CANVAS_USER_MODEL` | `App\Models\User` |
-| `guard` | `CANVAS_GUARD` | `web` |
-| `locales` | `CANVAS_LOCALES` | `[]` (all catalog languages) |
-| `middleware` | — | `['web']` |
-| `storage_disk` | `CANVAS_STORAGE_DISK` | `public` |
-| `storage_path` | `CANVAS_STORAGE_PATH` | `canvas` |
-| `upload_filesize` | `CANVAS_UPLOAD_FILESIZE` | `3145728` (3 MB) |
-| `mail.enabled` | `CANVAS_MAIL_ENABLED` | `false` |
+| Option            | Environment variable     | Default                      |
+| ----------------- | ------------------------ | ---------------------------- |
+| `domain`          | `CANVAS_DOMAIN`          | `null`                       |
+| `path`            | `CANVAS_PATH`            | `canvas`                     |
+| `user_model`      | `CANVAS_USER_MODEL`      | `App\Models\User`            |
+| `guard`           | `CANVAS_GUARD`           | `web`                        |
+| `locales`         | `CANVAS_LOCALES`         | `[]` (all catalog languages) |
+| `middleware`      | —                        | `['web']`                    |
+| `storage_disk`    | `CANVAS_STORAGE_DISK`    | `public`                     |
+| `storage_path`    | `CANVAS_STORAGE_PATH`    | `canvas`                     |
+| `upload_filesize` | `CANVAS_UPLOAD_FILESIZE` | `3145728` (3 MB)             |
+| `mail.enabled`    | `CANVAS_MAIL_ENABLED`    | `false`                      |
 
 ### Path and domain
 

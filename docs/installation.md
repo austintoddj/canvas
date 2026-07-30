@@ -66,17 +66,17 @@ You may automate this in your application's `composer.json`:
 
 ## Artisan commands
 
-| Command | Description |
-| ------- | ----------- |
-| `canvas:install` | Migrate, publish assets, link storage |
-| `canvas:migrate` | Run package migrations |
-| `canvas:publish` | Publish admin assets |
-| `canvas:make-admin {user}` | Grant Admin access |
-| `canvas:assign-role {user} {role}` | Assign Contributor, Editor, or Admin |
-| `canvas:remove-access {user}` | Remove Canvas access |
-| `canvas:users` | List or inspect Canvas users |
-| `canvas:roles` | List roles |
-| `canvas:ui` | Publish the optional reader |
-| `canvas:digest` | Send the weekly digest |
+| Command                            | Description                           |
+| ---------------------------------- | ------------------------------------- |
+| `canvas:install`                   | Migrate, publish assets, link storage |
+| `canvas:migrate`                   | Run package migrations                |
+| `canvas:publish`                   | Publish admin assets                  |
+| `canvas:make-admin {user}`         | Grant Admin access                    |
+| `canvas:assign-role {user} {role}` | Assign Contributor, Editor, or Admin  |
+| `canvas:remove-access {user}`      | Remove Canvas access                  |
+| `canvas:users`                     | List or inspect Canvas users          |
+| `canvas:roles`                     | List roles                            |
+| `canvas:ui`                        | Publish the optional reader           |
+| `canvas:digest`                    | Send the weekly digest                |
 
 The `{user}` argument accepts an email address or user ID.

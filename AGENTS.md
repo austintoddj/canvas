@@ -17,20 +17,20 @@ Laravel publishing **package** (`austintoddj/canvas`): PHP API + React admin SPA
 
 ## Layout
 
-| Path | Role |
-|------|------|
-| `src/` | Package PHP (`Canvas\`), PSR-4 |
-| `routes/web.php` | Package routes (auth + API + SPA shell) |
-| `config/canvas.php` | Published config |
-| `database/migrations/`, `database/factories/` | Package schema + factories |
-| `docs/` | Host-facing documentation (versioned with the package) |
-| `resources/js/` | Admin SPA (React 19, TipTap, RR v7, Tailwind 4, Headless UI) |
-| `resources/js/__tests__/` | Vitest unit/component tests |
-| `resources/lang/{locale}/app.php` | UI catalog (17 locales; `en` is source of truth) |
-| `resources/dist/` | **Committed** Vite build — hosts serve this |
-| `resources/views/`, `resources/stubs/` | Blade layout/mail + `canvas:ui` stubs (code only; no host manuals) |
-| `tests/` | Pest (PHP); `tests/e2e/` Playwright |
-| `bin/` | `preflight.sh`, `install-smoke.sh`, `e2e-prepare.sh` |
+| Path                                          | Role                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------ |
+| `src/`                                        | Package PHP (`Canvas\`), PSR-4                                     |
+| `routes/web.php`                              | Package routes (auth + API + SPA shell)                            |
+| `config/canvas.php`                           | Published config                                                   |
+| `database/migrations/`, `database/factories/` | Package schema + factories                                         |
+| `docs/`                                       | Host-facing documentation (versioned with the package)             |
+| `resources/js/`                               | Admin SPA (React 19, TipTap, RR v7, Tailwind 4, Headless UI)       |
+| `resources/js/__tests__/`                     | Vitest unit/component tests                                        |
+| `resources/lang/{locale}/app.php`             | UI catalog (17 locales; `en` is source of truth)                   |
+| `resources/dist/`                             | **Committed** Vite build — hosts serve this                        |
+| `resources/views/`, `resources/stubs/`        | Blade layout/mail + `canvas:ui` stubs (code only; no host manuals) |
+| `tests/`                                      | Pest (PHP); `tests/e2e/` Playwright                                |
+| `bin/`                                        | `preflight.sh`, `install-smoke.sh`, `e2e-prepare.sh`               |
 
 Path alias: `@/*` → `resources/js/*` (`tsconfig.json`, `vite.config.ts`).
 
@@ -82,7 +82,7 @@ composer test:install-smoke  # bash bin/install-smoke.sh
 composer test -- --filter=LocalizationTest
 
 npm test                 # vitest run (resources/js/__tests__)
-npm run test:coverage    # coverage/ 
+npm run test:coverage    # coverage/
 npm run test:watch
 npm run e2e:prepare      # bash bin/e2e-prepare.sh
 npm run e2e              # playwright (tests/e2e/)

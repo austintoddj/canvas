@@ -30,11 +30,23 @@ import {
 } from '@/components/sidebar';
 import { CloseMenuIcon, SidebarLayout } from '@/components/sidebar-layout';
 import { Toaster } from '@/components/Toaster';
+import {
+    NavIconDashboard,
+    NavIconIntegrations,
+    NavIconMedia,
+    NavIconOrganize,
+    NavIconPosts,
+    NavIconSearch,
+    NavIconUsers,
+} from '@/components/sidebar-nav-icons';
+import { Tooltip } from '@/components/tooltip';
 import { UserDetailDrawer } from '@/components/users/UserDetailDrawer';
 import { MobilePageActionProvider, useMobilePageActionState } from '@/contexts/MobilePageActionContext';
+import { SidebarChromeProvider, useSidebarChrome } from '@/contexts/SidebarChromeContext';
 import { useCanvas } from '@/hooks/useCanvas';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
+import { useSidebarCollapsed } from '@/hooks/useSidebarCollapsed';
 import { type ThemeMode, useTheme } from '@/hooks/useTheme';
 import { resolveMobilePageAction } from '@/lib/resolve-mobile-page-action';
 import { searchShortcutKeys } from '@/lib/platform';
@@ -46,19 +58,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
     IconBook,
-    IconBuildingStore,
     IconDeviceDesktop,
     IconExternalLink,
-    IconFileText,
-    IconLayoutDashboard,
+    IconLayoutSidebarLeftCollapse,
+    IconLayoutSidebarLeftExpand,
     IconLifebuoy,
     IconMoon,
-    IconPhoto,
     IconRocket,
     IconSearch,
-    IconStack2,
     IconSun,
-    IconUsers,
 } from '@tabler/icons-react';
 
 function ThemeToggle({ mode, setMode }: { mode: ThemeMode; setMode: (m: ThemeMode) => void }) {
@@ -192,6 +200,196 @@ function UserDropdownContent({
     );
 }
 
+function SidebarCollapseToggle({ mode }: { mode: 'collapse' | 'expand' }) {
+    const { t } = useCanvas();
+    const { toggleCollapsed } = useSidebarChrome();
+    const label = mode === 'expand' ? t('nav.expand_sidebar') : t('nav.collapse_sidebar');
+    const tip = mode === 'expand' ? t('nav.expand') : t('nav.collapse');
+    const Icon = mode === 'expand' ? IconLayoutSidebarLeftExpand : IconLayoutSidebarLeftCollapse;
+
+    // Match SidebarItem rail chrome: size-9 hit target, size-5 icon, centered in the column.
+    return (
+        <Tooltip
+            content={tip}
+            placement="right"
+            triggerClassName={mode === 'expand' ? 'flex w-full justify-center' : undefined}
+        >
+            <button
+                type="button"
+                onClick={toggleCollapsed}
+                aria-label={label}
+                aria-expanded={mode === 'collapse'}
+                className={clsx(
+                    'flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-zinc-500',
+                    'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
+                    'hover:bg-zinc-950/5 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-white'
+                )}
+            >
+                <Icon data-slot="icon" className="size-5 shrink-0" stroke={1.85} aria-hidden />
+            </button>
+        </Tooltip>
+    );
+}
+
+function AppSidebar({
+    openPalette,
+    mode,
+    setMode,
+    onOpenProfile,
+}: {
+    openPalette: () => void;
+    mode: ThemeMode;
+    setMode: (m: ThemeMode) => void;
+    onOpenProfile: () => void;
+}) {
+    const { user, t } = useCanvas();
+    const { canManageTaxonomy, canManageUsers, canManageIntegrations } = usePermissions();
+    const { pathname } = useLocation();
+    const { posts: recentPosts } = useRecentPosts(5);
+    const { rail } = useSidebarChrome();
+
+    return (
+        <Sidebar>
+            <SidebarHeader>
+                <div className={clsx('flex items-center lg:mb-2.5', rail ? 'justify-center' : 'gap-2')}>
+                    <Headless.CloseButton
+                        as={Link}
+                        href="/"
+                        className={clsx(
+                            'inline-flex max-w-full items-center rounded-lg text-left text-base/6 font-medium text-zinc-950 focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500 sm:text-sm/5 dark:text-white',
+                            rail ? 'size-9 justify-center p-0' : 'gap-3 px-2 py-2.5 sm:py-2'
+                        )}
+                    >
+                        <span
+                            data-slot="avatar"
+                            className={clsx(
+                                'inline-grid shrink-0 place-items-center rounded-[20%] bg-zinc-900 text-white outline -outline-offset-1 outline-black/10 dark:bg-white dark:text-zinc-900 dark:outline-white/10',
+                                rail ? 'size-7' : 'size-7 sm:size-6'
+                            )}
+                            aria-hidden
+                        >
+                            <QuillIcon className="size-[65%]" />
+                        </span>
+                        <SidebarLabel>{t('nav.canvas')}</SidebarLabel>
+                    </Headless.CloseButton>
+
+                    {/* Expanded desktop: collapse control top-right */}
+                    {!rail ? (
+                        <div className="ml-auto max-lg:hidden">
+                            <SidebarCollapseToggle mode="collapse" />
+                        </div>
+                    ) : null}
+
+                    {/* Mobile drawer close */}
+                    <Headless.CloseButton
+                        aria-label={t('common.close')}
+                        className="-mr-1.5 ml-auto flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg text-zinc-500 focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500 lg:hidden dark:text-zinc-400"
+                    >
+                        <CloseMenuIcon className="size-6" />
+                    </Headless.CloseButton>
+                </div>
+                <SidebarSection className="max-lg:hidden">
+                    <SidebarItem onClick={openPalette} tooltip={t('nav.search')}>
+                        <NavIconSearch />
+                        <SidebarLabel>{t('nav.search')}</SidebarLabel>
+                        <SidebarShortcut>
+                            <KbdGroup keys={searchShortcutKeys()} />
+                        </SidebarShortcut>
+                    </SidebarItem>
+                </SidebarSection>
+            </SidebarHeader>
+
+            <SidebarBody>
+                <SidebarSection>
+                    <SidebarItem href="/" current={pathname === '/'} tooltip={t('nav.dashboard')}>
+                        <NavIconDashboard />
+                        <SidebarLabel>{t('nav.dashboard')}</SidebarLabel>
+                    </SidebarItem>
+                    <SidebarItem href="/posts" current={pathname.startsWith('/posts')} tooltip={t('nav.posts')}>
+                        <NavIconPosts />
+                        <SidebarLabel>{t('nav.posts')}</SidebarLabel>
+                    </SidebarItem>
+                    <SidebarItem href="/media" current={pathname.startsWith('/media')} tooltip={t('nav.media')}>
+                        <NavIconMedia />
+                        <SidebarLabel>{t('nav.media')}</SidebarLabel>
+                    </SidebarItem>
+                    {canManageTaxonomy ? (
+                        <SidebarItem
+                            href="/organize"
+                            current={pathname.startsWith('/organize')}
+                            tooltip={t('nav.organize')}
+                        >
+                            <NavIconOrganize />
+                            <SidebarLabel>{t('nav.organize')}</SidebarLabel>
+                        </SidebarItem>
+                    ) : null}
+                    {canManageUsers ? (
+                        <SidebarItem href="/users" current={pathname.startsWith('/users')} tooltip={t('nav.users')}>
+                            <NavIconUsers />
+                            <SidebarLabel>{t('nav.users')}</SidebarLabel>
+                        </SidebarItem>
+                    ) : null}
+                    {canManageIntegrations ? (
+                        <SidebarItem
+                            href="/integrations"
+                            current={pathname.startsWith('/integrations')}
+                            tooltip={t('nav.integrations')}
+                        >
+                            <NavIconIntegrations />
+                            <SidebarLabel>{t('nav.integrations')}</SidebarLabel>
+                        </SidebarItem>
+                    ) : null}
+                </SidebarSection>
+
+                {!rail && recentPosts.length > 0 ? (
+                    <SidebarSection className="max-lg:hidden">
+                        <SidebarHeading>{t('nav.recent_posts')}</SidebarHeading>
+                        {recentPosts.map((post) => (
+                            <SidebarItem key={post.id} href={`/posts/${post.id}`}>
+                                {post.title ?? t('common.untitled')}
+                            </SidebarItem>
+                        ))}
+                    </SidebarSection>
+                ) : null}
+
+                <SidebarSpacer />
+            </SidebarBody>
+
+            <SidebarFooter className="max-lg:hidden">
+                {/* Collapsed rail: expand control sits above the profile avatar */}
+                {rail ? <SidebarCollapseToggle mode="expand" /> : null}
+
+                <Dropdown>
+                    <DropdownButton as={SidebarItem} className={rail ? 'justify-center' : undefined}>
+                        <span className={clsx('flex min-w-0 items-center', rail ? 'justify-center' : 'gap-3')}>
+                            <Avatar
+                                src={user.avatar_url}
+                                initials={userInitials(user.name)}
+                                className={rail ? 'size-7' : 'size-10'}
+                                square
+                                alt=""
+                            />
+                            {!rail ? (
+                                <span className="min-w-0 flex-1">
+                                    <span className="block truncate text-sm/5 font-medium text-zinc-950 dark:text-white">
+                                        {user.name}
+                                    </span>
+                                    <span className="block truncate text-xs/5 font-normal text-canvas-muted dark:text-canvas-muted-dark">
+                                        {user.email}
+                                    </span>
+                                </span>
+                            ) : null}
+                        </span>
+                    </DropdownButton>
+                    <DropdownMenu className="min-w-72" anchor="top start">
+                        <UserDropdownContent mode={mode} setMode={setMode} onOpenProfile={onOpenProfile} />
+                    </DropdownMenu>
+                </Dropdown>
+            </SidebarFooter>
+        </Sidebar>
+    );
+}
+
 export default function Layout() {
     return (
         <MobilePageActionProvider>
@@ -202,11 +400,11 @@ export default function Layout() {
 
 function LayoutShell() {
     const { user, t } = useCanvas();
-    const { canManageTaxonomy, canManageUsers, canManageIntegrations } = usePermissions();
+    const { canManageTaxonomy, canManageUsers } = usePermissions();
     const { pathname } = useLocation();
-    const { posts: recentPosts } = useRecentPosts(5);
     const { mode, setMode } = useTheme();
     const { contribution: mobilePageContribution } = useMobilePageActionState();
+    const { collapsed, setCollapsed, toggleCollapsed } = useSidebarCollapsed();
     const mobilePageAction = useMemo(
         () =>
             resolveMobilePageAction({
@@ -240,12 +438,13 @@ function LayoutShell() {
     }, []);
 
     return (
-        <>
+        <SidebarChromeProvider collapsed={collapsed} setCollapsed={setCollapsed} toggleCollapsed={toggleCollapsed}>
             <CommandPalette key={String(paletteOpen)} open={paletteOpen} onClose={closePalette} />
             <Toaster />
             <UserDetailDrawer open={profileOpen} userId={profileOpen ? String(user.id) : null} onClose={closeProfile} />
 
             <SidebarLayout
+                collapsed={collapsed}
                 navbar={
                     <Navbar>
                         <NavbarSpacer />
@@ -286,120 +485,11 @@ function LayoutShell() {
                     </Navbar>
                 }
                 sidebar={
-                    <Sidebar>
-                        <SidebarHeader>
-                            <div className="flex items-center gap-2 lg:mb-2.5">
-                                <Headless.CloseButton
-                                    as={Link}
-                                    href="/"
-                                    className="inline-flex max-w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-base/6 font-medium text-zinc-950 focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500 sm:py-2 sm:text-sm/5 dark:text-white"
-                                >
-                                    <span
-                                        data-slot="avatar"
-                                        className="inline-grid size-7 shrink-0 place-items-center rounded-[20%] bg-zinc-900 text-white outline -outline-offset-1 outline-black/10 sm:size-6 dark:bg-white dark:text-zinc-900 dark:outline-white/10"
-                                        aria-hidden
-                                    >
-                                        <QuillIcon className="size-[65%]" />
-                                    </span>
-                                    <SidebarLabel>{t('nav.canvas')}</SidebarLabel>
-                                </Headless.CloseButton>
-                                <Headless.CloseButton
-                                    aria-label={t('common.close')}
-                                    className="-mr-1.5 ml-auto flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg text-zinc-500 focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500 lg:hidden dark:text-zinc-400"
-                                >
-                                    <CloseMenuIcon className="size-6" />
-                                </Headless.CloseButton>
-                            </div>
-                            <SidebarSection className="max-lg:hidden">
-                                <SidebarItem onClick={openPalette}>
-                                    <IconSearch data-slot="icon" />
-                                    <SidebarLabel>{t('nav.search')}</SidebarLabel>
-                                    <SidebarShortcut>
-                                        <KbdGroup keys={searchShortcutKeys()} />
-                                    </SidebarShortcut>
-                                </SidebarItem>
-                            </SidebarSection>
-                        </SidebarHeader>
-
-                        <SidebarBody>
-                            <SidebarSection>
-                                <SidebarItem href="/" current={pathname === '/'}>
-                                    <IconLayoutDashboard data-slot="icon" />
-                                    <SidebarLabel>{t('nav.dashboard')}</SidebarLabel>
-                                </SidebarItem>
-                                <SidebarItem href="/posts" current={pathname.startsWith('/posts')}>
-                                    <IconFileText data-slot="icon" />
-                                    <SidebarLabel>{t('nav.posts')}</SidebarLabel>
-                                </SidebarItem>
-                                <SidebarItem href="/media" current={pathname.startsWith('/media')}>
-                                    <IconPhoto data-slot="icon" />
-                                    <SidebarLabel>{t('nav.media')}</SidebarLabel>
-                                </SidebarItem>
-                                {canManageTaxonomy ? (
-                                    <SidebarItem href="/organize" current={pathname.startsWith('/organize')}>
-                                        <IconStack2 data-slot="icon" />
-                                        <SidebarLabel>{t('nav.organize')}</SidebarLabel>
-                                    </SidebarItem>
-                                ) : null}
-                                {canManageUsers ? (
-                                    <SidebarItem href="/users" current={pathname.startsWith('/users')}>
-                                        <IconUsers data-slot="icon" />
-                                        <SidebarLabel>{t('nav.users')}</SidebarLabel>
-                                    </SidebarItem>
-                                ) : null}
-                                {canManageIntegrations ? (
-                                    <SidebarItem href="/integrations" current={pathname.startsWith('/integrations')}>
-                                        <IconBuildingStore data-slot="icon" />
-                                        <SidebarLabel>{t('nav.integrations')}</SidebarLabel>
-                                    </SidebarItem>
-                                ) : null}
-                            </SidebarSection>
-
-                            {recentPosts.length > 0 && (
-                                <SidebarSection className="max-lg:hidden">
-                                    <SidebarHeading>{t('nav.recent_posts')}</SidebarHeading>
-                                    {recentPosts.map((post) => (
-                                        <SidebarItem key={post.id} href={`/posts/${post.id}`}>
-                                            {post.title ?? t('common.untitled')}
-                                        </SidebarItem>
-                                    ))}
-                                </SidebarSection>
-                            )}
-
-                            <SidebarSpacer />
-                        </SidebarBody>
-
-                        <SidebarFooter className="max-lg:hidden">
-                            <Dropdown>
-                                <DropdownButton as={SidebarItem}>
-                                    <span className="flex min-w-0 items-center gap-3">
-                                        <Avatar
-                                            src={user.avatar_url}
-                                            initials={userInitials(user.name)}
-                                            className="size-10"
-                                            square
-                                            alt=""
-                                        />
-                                        <span className="min-w-0">
-                                            <span className="block truncate text-sm/5 font-medium text-zinc-950 dark:text-white">
-                                                {user.name}
-                                            </span>
-                                            <span className="block truncate text-xs/5 font-normal text-canvas-muted dark:text-canvas-muted-dark">
-                                                {user.email}
-                                            </span>
-                                        </span>
-                                    </span>
-                                </DropdownButton>
-                                <DropdownMenu className="min-w-72" anchor="top start">
-                                    <UserDropdownContent mode={mode} setMode={setMode} onOpenProfile={openProfile} />
-                                </DropdownMenu>
-                            </Dropdown>
-                        </SidebarFooter>
-                    </Sidebar>
+                    <AppSidebar openPalette={openPalette} mode={mode} setMode={setMode} onOpenProfile={openProfile} />
                 }
             >
                 <AnimatedOutlet />
             </SidebarLayout>
-        </>
+        </SidebarChromeProvider>
     );
 }

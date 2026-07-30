@@ -17,20 +17,20 @@ You may also manage users from the admin UI as an Admin. Removing access deletes
 
 ## Roles
 
-| Role | Description |
-| ---- | ----------- |
-| Contributor | Manage their own posts and media |
-| Editor | Manage all posts and media |
-| Admin | Users, taxonomy, integrations, and full access |
+| Role        | Description                                    |
+| ----------- | ---------------------------------------------- |
+| Contributor | Manage their own posts and media               |
+| Editor      | Manage all posts and media                     |
+| Admin       | Users, taxonomy, integrations, and full access |
 
-| Capability | Contributor | Editor | Admin |
-| ---------- | ----------- | ------ | ----- |
-| Access admin | ✓ | ✓ | ✓ |
-| Own posts & media | ✓ | ✓ | ✓ |
-| All posts & media | | ✓ | ✓ |
-| Users | | | ✓ |
-| Taxonomy | | | ✓ |
-| Integrations | | | ✓ |
+| Capability        | Contributor | Editor | Admin |
+| ----------------- | ----------- | ------ | ----- |
+| Access admin      | ✓           | ✓      | ✓     |
+| Own posts & media | ✓           | ✓      | ✓     |
+| All posts & media |             | ✓      | ✓     |
+| Users             |             |        | ✓     |
+| Taxonomy          |             |        | ✓     |
+| Integrations      |             |        | ✓     |
 
 Roles are stored as integers: `1` Contributor, `2` Editor, `3` Admin.
 

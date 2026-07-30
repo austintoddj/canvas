@@ -21,10 +21,10 @@ $post = Post::published()
     ->firstWhere('slug', $slug);
 ```
 
-| Scope | Description |
-| ----- | ----------- |
-| `published()` | `published_at` is set and not in the future |
-| `draft()` | No `published_at`, or a future `published_at` |
+| Scope         | Description                                   |
+| ------------- | --------------------------------------------- |
+| `published()` | `published_at` is set and not in the future   |
+| `draft()`     | No `published_at`, or a future `published_at` |
 
 ### Published vs pending
 
@@ -32,18 +32,18 @@ While a post is live, the editor autosaves into a `pending` JSON column so the p
 
 ### Useful attributes
 
-| Attribute | Notes |
-| --------- | ----- |
-| `id` | UUID |
-| `slug` | Unique per author |
-| `title`, `summary` | Plain text |
-| `body` | HTML from the editor |
-| `published_at` | `null` draft · future scheduled · past/now live |
-| `featured_image` | URL or `/storage/...` path |
-| `meta` | SEO fields (`title`, `description`, `canonical_link`, …) |
-| `pending` | Unpublished edits (editor only) |
-| `user_id` | Host user id |
-| `topic_id` | Optional topic |
+| Attribute          | Notes                                                    |
+| ------------------ | -------------------------------------------------------- |
+| `id`               | UUID                                                     |
+| `slug`             | Unique per author                                        |
+| `title`, `summary` | Plain text                                               |
+| `body`             | HTML from the editor                                     |
+| `published_at`     | `null` draft · future scheduled · past/now live          |
+| `featured_image`   | URL or `/storage/...` path                               |
+| `meta`             | SEO fields (`title`, `description`, `canonical_link`, …) |
+| `pending`          | Unpublished edits (editor only)                          |
+| `user_id`          | Host user id                                             |
+| `topic_id`         | Optional topic                                           |
 
 ## Tags, topics, and authors
 
@@ -102,14 +102,14 @@ Apply `Canvas\Http\Middleware\Session` on that route so session keys stay tidy (
 
 `body` is HTML from the TipTap editor, not Markdown. Escape titles and summaries; render body as HTML intentionally (`{!! $post->body !!}` in Blade).
 
-| Content | Typical markup |
-| ------- | -------------- |
-| Text | `p`, `h1`–`h3`, lists, `blockquote` |
-| Images | `img.canvas-post-body-image` |
-| Code | `pre.canvas-post-body-code` |
-| YouTube | `div[data-youtube-video] > iframe` |
+| Content      | Typical markup                                 |
+| ------------ | ---------------------------------------------- |
+| Text         | `p`, `h1`–`h3`, lists, `blockquote`            |
+| Images       | `img.canvas-post-body-image`                   |
+| Code         | `pre.canvas-post-body-code`                    |
+| YouTube      | `div[data-youtube-video] > iframe`             |
 | Video embeds | `div[data-canvas-iframe][data-layout="video"]` |
-| X / Twitter | `div[data-canvas-iframe][data-layout="card"]` |
+| X / Twitter  | `div[data-canvas-iframe][data-layout="card"]`  |
 
 Canvas UI ships embed CSS and a small script for X card height in `ui/partials/embeds.blade.php`. Custom frontends should reuse that pattern — tweet iframes do not resize with CSS alone.
 

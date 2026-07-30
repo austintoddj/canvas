@@ -6,13 +6,13 @@ When a post's **public** snapshot changes, Canvas dispatches Laravel events and 
 
 ## Domain events
 
-| Event | When |
-| ----- | ---- |
-| `Canvas\Events\PostPublished` | Post becomes live |
-| `Canvas\Events\PostScheduled` | Future `published_at` is set |
-| `Canvas\Events\PostUpdated` | Live or scheduled content changes |
-| `Canvas\Events\PostUnpublished` | `published_at` cleared |
-| `Canvas\Events\PostDeleted` | Soft-deleted |
+| Event                           | When                              |
+| ------------------------------- | --------------------------------- |
+| `Canvas\Events\PostPublished`   | Post becomes live                 |
+| `Canvas\Events\PostScheduled`   | Future `published_at` is set      |
+| `Canvas\Events\PostUpdated`     | Live or scheduled content changes |
+| `Canvas\Events\PostUnpublished` | `published_at` cleared            |
+| `Canvas\Events\PostDeleted`     | Soft-deleted                      |
 
 ```php
 use Canvas\Events\PostPublished;
@@ -29,24 +29,24 @@ A scheduled post becomes visible when time passes without another write. Canvas 
 
 In the admin, open **Integrations → Webhooks**. Provide an HTTPS URL, choose events, and copy the signing secret (shown once). **Send test** delivers a signed `webhook.test` payload immediately.
 
-| Event id | Domain event |
-| -------- | ------------ |
-| `post.published` | `PostPublished` |
-| `post.scheduled` | `PostScheduled` |
-| `post.updated` | `PostUpdated` |
+| Event id           | Domain event      |
+| ------------------ | ----------------- |
+| `post.published`   | `PostPublished`   |
+| `post.scheduled`   | `PostScheduled`   |
+| `post.updated`     | `PostUpdated`     |
 | `post.unpublished` | `PostUnpublished` |
-| `post.deleted` | `PostDeleted` |
+| `post.deleted`     | `PostDeleted`     |
 
 ## Delivery
 
-| | |
-| - | - |
-| Method | `POST` |
-| Content-Type | `application/json` |
-| `Canvas-Event` | Event id |
-| `Canvas-Delivery-Id` | Delivery UUID |
-| `Canvas-Signature` | `t={unix},v1={hex}` |
-| Success | HTTP 2xx (retries with backoff) |
+|                      |                                 |
+| -------------------- | ------------------------------- |
+| Method               | `POST`                          |
+| Content-Type         | `application/json`              |
+| `Canvas-Event`       | Event id                        |
+| `Canvas-Delivery-Id` | Delivery UUID                   |
+| `Canvas-Signature`   | `t={unix},v1={hex}`             |
+| Success              | HTTP 2xx (retries with backoff) |
 
 The signature is HMAC-SHA256 of `{timestamp}.{rawBody}` using your secret. Verify with `Canvas\Support\WebhookSigner::verify($secret, $rawBody, $header)`, and reject stale timestamps.
 

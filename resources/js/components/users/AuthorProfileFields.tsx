@@ -104,9 +104,7 @@ function TimezoneSelectDropdown({
     // listTimezoneOptions reads the active dictionary (updated on locale switch via CanvasProvider).
     const catalog = listTimezoneOptions();
     const options: TimezoneOption[] =
-        value !== '' && !catalog.some((zone) => zone.value === value)
-            ? [{ value, label: value }, ...catalog]
-            : catalog;
+        value !== '' && !catalog.some((zone) => zone.value === value) ? [{ value, label: value }, ...catalog] : catalog;
 
     return (
         <Dropdown>
