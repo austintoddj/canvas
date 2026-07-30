@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://trycanvas.app">
-        <img src=".github/docs/readme.png" alt="Homepage for trycanvas.app">
+        <img src="docs/assets/readme.png" alt="Homepage for trycanvas.app">
     </a>
 </p>
 
@@ -40,17 +40,21 @@ Grant admin access to an existing user:
 php artisan canvas:make-admin your@email.com
 ```
 
-Visit `/canvas`.
+Visit `/canvas` in your browser.
 
-## Optional Frontend
+Learn more about configuration in the [documentation](docs/configuration.md). Or to manage users and roles, see [authorization](docs/authorization.md).
 
-Use the `canvas:ui` Artisan command to publish a starter reader frontend — Blade views, a controller stub, and routes. It gets you a public blog at `/canvas-ui` without building one from scratch. Customize whatever you like!
+## Canvas UI
+
+Canvas UI is an optional public-facing blog. It is not required for Canvas to work.
 
 ```bash
 php artisan canvas:ui
 ```
 
-Visit `/canvas-ui`.
+Visit `/canvas-ui` in your browser.
+
+Learn more about Canvas UI in the [documentation](docs/canvas-ui.md). Or to build and customize your own frontend, see [content](docs/content.md).
 
 ## Upgrading
 

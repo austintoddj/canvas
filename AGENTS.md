@@ -2,7 +2,7 @@
 
 Laravel publishing **package** (`austintoddj/canvas`): PHP API + React admin SPA. Not a full app. Hosts install via Composer; admin assets publish to `public/vendor/canvas`.
 
-**Docs authority:** `readme.md` = install/overview · `.github/CONTRIBUTING.md` = PR/host workflow · `.github/UPGRADE.md` = breaking host contracts · `AGENTS.md` = agent operating rules. Do not triplicate.
+**Docs authority:** `readme.md` = product blurb + minimal install flyer · **`docs/`** = living host manual (install, config, auth, Canvas UI, content, webhooks) · `.github/UPGRADE.md` = version-to-version breaking changes only · `.github/CONTRIBUTING.md` = contributor/PR workflow · `AGENTS.md` = agent operating rules. Do not triplicate — host how-tos go in `docs/`, not re-pasted into readme, UPGRADE, stubs, or this file.
 
 ## Working rules
 
@@ -23,11 +23,12 @@ Laravel publishing **package** (`austintoddj/canvas`): PHP API + React admin SPA
 | `routes/web.php` | Package routes (auth + API + SPA shell) |
 | `config/canvas.php` | Published config |
 | `database/migrations/`, `database/factories/` | Package schema + factories |
+| `docs/` | Host-facing documentation (versioned with the package) |
 | `resources/js/` | Admin SPA (React 19, TipTap, RR v7, Tailwind 4, Headless UI) |
 | `resources/js/__tests__/` | Vitest unit/component tests |
 | `resources/lang/{locale}/app.php` | UI catalog (17 locales; `en` is source of truth) |
 | `resources/dist/` | **Committed** Vite build — hosts serve this |
-| `resources/views/`, `resources/stubs/` | Blade layout/mail + `canvas:ui` stubs |
+| `resources/views/`, `resources/stubs/` | Blade layout/mail + `canvas:ui` stubs (code only; no host manuals) |
 | `tests/` | Pest (PHP); `tests/e2e/` Playwright |
 | `bin/` | `preflight.sh`, `install-smoke.sh`, `e2e-prepare.sh` |
 
@@ -111,6 +112,8 @@ Config touchpoints: `phpunit.xml.dist`, `phpstan.neon.dist`, `vitest.config.ts`,
 - **Native types first.** PHPDoc only for shapes/generics Larastan cannot infer (`list<>`, `array{…}`, `@use HasFactory`, relation generics) or non-obvious contracts.
 - **SPA:** React function components; state via `CanvasContext` + hooks (`resources/js/contexts/`, `hooks/`); API via `resources/js/lib/api*`; classes via `cn()` (`clsx` + `tailwind-merge`); UI strings via `t()` / `trans('canvas::app.…')`.
 - **i18n:** change `resources/lang/en/app.php` first, then **every** locale with real translations and identical keys. Wire keys before inventing duplicates.
+- **Host docs:** if a change alters a **host-visible contract** (config keys/env, artisan CLI for hosts, routes/middleware hosts rely on, Eloquent public scopes, post body HTML/embeds, webhooks/events, `canvas:ui` stubs/views, access/roles), update the matching file(s) under `docs/` **in the same PR**. Prefer editing `docs/` over expanding `readme.md` or stuffing living guide text into `UPGRADE.md`. Do not add host pages for the admin SPA JSON API or a troubleshooting dump unless hosts truly need them — consumers care about install, config, auth, UI, content, and webhooks. Pure SPA polish or internal refactors need no docs noise. Source and tests are authoritative when something drifts — fix the doc in that same change.
+- **Docs voice:** match official Laravel documentation — short introductions, scannable H2s, code-first examples, dense tables where useful, plain second person (“you may…”). Prefer less prose over exhaustive coverage. No agent/process meta in host docs (no “fix this file in the same PR”, ownership maps, or review checklists). Those rules live only here and in CONTRIBUTING.
 - **Tests:** Pest feature/unit under `tests/`; Vitest colocated under `resources/js/__tests__/`. Mark bugfixes `// Regression: GH-N`; long-lived behavior `// Invariant: …` (`tests/Pest.php`).
 - **Comments:** only non-obvious **why** or tooling contracts. Prefer delete over filler.
 
@@ -123,6 +126,9 @@ Config touchpoints: `phpunit.xml.dist`, `phpstan.neon.dist`, `vitest.config.ts`,
 - Use yarn/pnpm; leave uncommitted SPA dist after UI changes; land `en`-only lang keys or English placeholders in other locales.
 - Scaffold/AI filler comments, section banners (`// Stats routes…`), CSS style-array labels (`// Hover`), or PHPDoc that only mirrors native types.
 - Claim coverage without a fresh `composer test:coverage` run (floor **98%**).
+- Land host-contract changes without updating `docs/` when behavior hosts depend on changed.
+- Expand root `readme.md` into a second manual; put host manuals under `resources/stubs/` or recreate prose dumps under `.github/docs/`.
+- Write host docs in dense “spec dump” or AI-maintainer voice; do not put agent operating notes inside `docs/`.
 
 ## Domain notes
 

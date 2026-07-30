@@ -35,3 +35,21 @@ arch('actions are invokable')
 arch('debug helpers are not used in package code')
     ->expect(['dd', 'dump', 'die', 'var_dump'])
     ->not->toBeUsed();
+
+// Host-facing manual lives under docs/ — keep the page set so the wiki-replacement tree does not vanish by accident.
+it('keeps the host documentation page set', function (): void {
+    $root = dirname(__DIR__);
+
+    foreach ([
+        'docs/README.md',
+        'docs/installation.md',
+        'docs/configuration.md',
+        'docs/authorization.md',
+        'docs/canvas-ui.md',
+        'docs/content.md',
+        'docs/webhooks.md',
+        'docs/assets/readme.png',
+    ] as $relative) {
+        expect(is_file($root.'/'.$relative))->toBeTrue($relative.' is missing');
+    }
+});
