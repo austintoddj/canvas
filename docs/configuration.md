@@ -62,15 +62,20 @@ CANVAS_STORAGE_PATH=canvas
 
 The effective upload limit is the minimum of `upload_filesize` and PHP's `upload_max_filesize` / `post_max_size`. Oversized requests return HTTP 413.
 
-### Weekly digest
+### Scheduler
 
-When mail is enabled, Canvas schedules `canvas:digest` for Mondays at 08:00 in your application timezone. Recipients must opt in (`digest` on their Canvas profile) and should set an IANA timezone.
+Canvas registers scheduled Artisan commands on the host’s Laravel scheduler. Your host must run `php artisan schedule:run` every minute.
+
+| Command                     | When                         | Notes                                                                 |
+| --------------------------- | ---------------------------- | --------------------------------------------------------------------- |
+| `canvas:announce-scheduled` | Every minute                 | Fires `PostPublished` when a scheduled post’s `published_at` elapses  |
+| `canvas:digest`             | Mondays 08:00 (app timezone) | Only when mail is enabled; recipients must opt in via `digest`        |
 
 ```env
 CANVAS_MAIL_ENABLED=true
 ```
 
-Your host must run the scheduler (`php artisan schedule:run` every minute). Digest mail is queued, so run a queue worker unless `QUEUE_CONNECTION=sync`.
+Digest mail is queued, so run a queue worker unless `QUEUE_CONNECTION=sync`. See [webhooks](./webhooks.md) for outbound delivery after announce.
 
 ## Integrations
 

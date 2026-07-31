@@ -126,6 +126,8 @@ describe('post lifecycle domain events', function (): void {
         Event::assertNotDispatched(PostScheduled::class);
         Event::assertNotDispatched(PostUpdated::class);
         Event::assertNotDispatched(PostUnpublished::class);
+
+        expect($post->refresh()->published_notified_at)->not->toBeNull();
     });
 
     it('dispatches PostPublished when creating a new post that is immediately live', function (): void {
@@ -310,6 +312,8 @@ describe('post lifecycle domain events', function (): void {
         Event::assertNotDispatched(PostScheduled::class);
         Event::assertNotDispatched(PostUpdated::class);
         Event::assertNotDispatched(PostUnpublished::class);
+
+        expect($post->refresh()->published_notified_at)->not->toBeNull();
     });
 
     it('dispatches PostDeleted when a post is destroyed', function (): void {

@@ -1,6 +1,7 @@
 <?php
 
 use Canvas\Enums\WebhookEvent;
+use Canvas\Models\Post;
 use Canvas\Support\PostLifecycle;
 use Canvas\Support\PostSnapshot;
 use Illuminate\Support\Carbon;
@@ -196,4 +197,19 @@ it('does not emit updated when only non-fingerprint identity would differ and fi
     ]);
 
     expect(eventValues(PostLifecycle::classify($before, $after)))->toBe([]);
+});
+
+it('classifies asScheduled peer of a live post as scheduled → live', function (): void {
+    $post = Post::factory()->create([
+        'published_at' => now()->subHour(),
+        'title' => 'Timed',
+        'slug' => 'timed',
+    ]);
+
+    $before = PostSnapshot::asScheduled($post);
+    $after = PostSnapshot::from($post);
+
+    expect($before->visibility())->toBe('scheduled')
+        ->and($after->visibility())->toBe('live')
+        ->and(eventValues(PostLifecycle::classify($before, $after)))->toBe(['post.published']);
 });

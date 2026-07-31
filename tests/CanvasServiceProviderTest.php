@@ -36,6 +36,44 @@ it('registers the weekly digest schedule when mail is enabled', function (): voi
     expect((string) $event->timezone)->toBe('UTC');
 });
 
+it('registers announce-scheduled every minute regardless of mail', function (): void {
+    config([
+        'canvas.mail.enabled' => false,
+        'app.timezone' => 'UTC',
+    ]);
+
+    $provider = new CanvasServiceProvider($this->app);
+
+    $method = new ReflectionMethod(CanvasServiceProvider::class, 'registerScheduler');
+    $method->setAccessible(true);
+    $method->invoke($provider);
+
+    /** @var Schedule $schedule */
+    $schedule = $this->app->make(Schedule::class);
+
+    $event = collect($schedule->events())->first(function ($event): bool {
+        $command = (string) ($event->command ?? '');
+        $description = (string) ($event->description ?? '');
+
+        return str_contains($command, 'canvas:announce-scheduled')
+            || str_contains($description, 'canvas:announce-scheduled');
+    });
+
+    expect($event)->not->toBeNull();
+    expect((string) $event->expression)->toBe('* * * * *');
+    expect((string) $event->timezone)->toBe('UTC');
+
+    $digest = collect($schedule->events())->first(function ($event): bool {
+        $command = (string) ($event->command ?? '');
+        $description = (string) ($event->description ?? '');
+
+        return str_contains($command, 'canvas:digest')
+            || str_contains($description, 'canvas:digest');
+    });
+
+    expect($digest)->toBeNull();
+});
+
 it('does not register the digest schedule when mail is disabled', function (): void {
     config(['canvas.mail.enabled' => false]);
 
@@ -45,8 +83,18 @@ it('does not register the digest schedule when mail is disabled', function (): v
     $method->setAccessible(true);
     $method->invoke($provider);
 
-    // Early return path — mail disabled means no afterResolving callback from this invoke.
-    expect(config('canvas.mail.enabled'))->toBeFalse();
+    /** @var Schedule $schedule */
+    $schedule = $this->app->make(Schedule::class);
+
+    $digest = collect($schedule->events())->first(function ($event): bool {
+        $command = (string) ($event->command ?? '');
+        $description = (string) ($event->description ?? '');
+
+        return str_contains($command, 'canvas:digest')
+            || str_contains($description, 'canvas:digest');
+    });
+
+    expect($digest)->toBeNull();
 });
 
 it('returns early from command registration when not running in console', function (): void {

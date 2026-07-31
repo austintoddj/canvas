@@ -45,6 +45,7 @@ While a post is live, the editor autosaves into a `pending` JSON column so the p
 | `user_id`          | Host user id                                             |
 | `topic_id`         | Optional topic                                           |
 
+When a future `published_at` elapses, `published()` already includes the post. Canvas runs `canvas:announce-scheduled` every minute so domain events and outbound webhooks receive `PostPublished` without another editor save.
 ## Tags, topics, and authors
 
 ```php

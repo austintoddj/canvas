@@ -41,10 +41,16 @@ class Post extends Model
         'has_pending_changes',
     ];
 
+    /** @var list<string> */
+    protected $hidden = [
+        'published_notified_at',
+    ];
+
     /** @var array<string, string> */
     protected $casts = [
         'user_id' => 'integer',
         'published_at' => 'datetime',
+        'published_notified_at' => 'datetime',
         'meta' => 'array',
         'pending' => 'array',
     ];

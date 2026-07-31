@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Canvas;
 
+use Canvas\Console\AnnounceScheduledCommand;
 use Canvas\Console\AssignRoleCommand;
 use Canvas\Console\DigestCommand;
 use Canvas\Console\InstallCommand;
@@ -145,11 +146,15 @@ class CanvasServiceProvider extends ServiceProvider
 
     private function registerScheduler(): void
     {
-        if (! config('canvas.mail.enabled')) {
-            return;
-        }
-
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            $schedule->command('canvas:announce-scheduled')
+                ->everyMinute()
+                ->timezone(config('app.timezone'));
+
+            if (! config('canvas.mail.enabled')) {
+                return;
+            }
+
             $schedule->command('canvas:digest')
                 ->weekly()
                 ->mondays()
@@ -181,6 +186,7 @@ class CanvasServiceProvider extends ServiceProvider
         }
 
         $this->commands([
+            AnnounceScheduledCommand::class,
             AssignRoleCommand::class,
             DigestCommand::class,
             InstallCommand::class,

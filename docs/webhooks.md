@@ -23,7 +23,7 @@ Event::listen(PostPublished::class, function (PostPublished $event) {
 });
 ```
 
-A scheduled post becomes visible when time passes without another write. Canvas does not automatically fire `PostPublished` at that moment — you receive `PostScheduled` when the date is set.
+A scheduled post becomes visible when `published_at` elapses (no extra write is required for readers). Canvas also fires `PostPublished` at that moment via the scheduled `canvas:announce-scheduled` command (every minute). You still receive `PostScheduled` when a future date is set, and an editor save that moves a post to live fires `PostPublished` immediately without waiting for the poller.
 
 ## Configuring outbound webhooks
 
@@ -51,6 +51,8 @@ In the admin, open **Integrations → Webhooks**. Provide an HTTPS URL, choose e
 The signature is HMAC-SHA256 of `{timestamp}.{rawBody}` using your secret. Verify with `Canvas\Support\WebhookSigner::verify($secret, $rawBody, $header)`, and reject stale timestamps.
 
 Lifecycle deliveries are queued. With a non-`sync` queue driver, run `queue:work` or jobs will sit after publish. **Send test** runs synchronously so failures surface in the UI.
+
+Hosts must run the Laravel scheduler (`php artisan schedule:run` every minute) so `canvas:announce-scheduled` can emit `post.published` when scheduled posts go live by time.
 
 ## Payload
 
