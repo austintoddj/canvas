@@ -1,4 +1,6 @@
 import { api } from '@/lib/api';
+import { buildQueryString } from '@/lib/api/query';
+import type { Paginated } from '@/types/api';
 
 export type UnsplashIntegrationStatus = {
     configured: boolean;
@@ -63,6 +65,36 @@ export type WebhookTestResponse = {
     event: string;
 };
 
+export type WebhookDeliveryStatus = 'pending' | 'success' | 'failed';
+
+export type WebhookDelivery = {
+    id: string;
+    event: string;
+    url: string;
+    status: WebhookDeliveryStatus | string;
+    http_status: number | null;
+    attempts: number;
+    payload: Record<string, unknown> | null;
+    response_body: string | null;
+    error_message: string | null;
+    post_id: string | null;
+    finished_at: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+};
+
+export type WebhookDeliveriesIndexParams = {
+    page?: number;
+    status?: WebhookDeliveryStatus | string;
+    event?: string;
+};
+
+export type WebhookDeliveryRetryResponse = {
+    ok: boolean;
+    delivery: WebhookDelivery;
+    original_delivery_id: string;
+};
+
 export const integrationsApi = {
     show(signal?: AbortSignal) {
         return api.get<IntegrationsStatus>('/integrations', signal);
@@ -74,5 +106,24 @@ export const integrationsApi = {
 
     testWebhook(signal?: AbortSignal) {
         return api.post<WebhookTestResponse>('/integrations/webhooks/test', undefined, signal);
+    },
+
+    webhookDeliveries(params: WebhookDeliveriesIndexParams = {}, signal?: AbortSignal) {
+        return api.get<Paginated<WebhookDelivery>>(
+            `/integrations/webhooks/deliveries${buildQueryString(params)}`,
+            signal
+        );
+    },
+
+    webhookDelivery(id: string, signal?: AbortSignal) {
+        return api.get<WebhookDelivery>(`/integrations/webhooks/deliveries/${id}`, signal);
+    },
+
+    retryWebhookDelivery(id: string, signal?: AbortSignal) {
+        return api.post<WebhookDeliveryRetryResponse>(
+            `/integrations/webhooks/deliveries/${id}/retry`,
+            undefined,
+            signal
+        );
     },
 };

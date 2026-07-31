@@ -1,6 +1,8 @@
 <?php
 
+use Canvas\Enums\WebhookDeliveryStatus;
 use Canvas\Jobs\DeliverWebhookJob;
+use Canvas\Models\WebhookDelivery;
 use Canvas\Support\WebhookSigner;
 use Illuminate\Support\Facades\Http;
 
@@ -88,4 +90,118 @@ it('skips delivery when the url is not allowed', function (): void {
     $job->handle();
 
     Http::assertNothingSent();
+});
+
+it('marks a delivery row successful after a 2xx response', function (): void {
+    Http::fake([
+        'https://example.com/*' => Http::response(['ok' => true], 200),
+    ]);
+
+    $delivery = WebhookDelivery::factory()->create([
+        'id' => 'del-success',
+        'status' => WebhookDeliveryStatus::Pending,
+        'attempts' => 0,
+    ]);
+
+    $job = new DeliverWebhookJob(
+        url: 'https://example.com/hooks/canvas',
+        secret: 'whsec_test_secret',
+        event: 'post.published',
+        deliveryId: $delivery->id,
+        payload: ['api_version' => 1, 'event' => 'post.published', 'delivery_id' => $delivery->id, 'data' => []],
+    );
+
+    $job->handle();
+
+    $delivery->refresh();
+
+    expect($delivery->status)->toBe(WebhookDeliveryStatus::Success)
+        ->and($delivery->http_status)->toBe(200)
+        ->and($delivery->attempts)->toBe(1)
+        ->and($delivery->finished_at)->not->toBeNull()
+        ->and($delivery->response_body)->toContain('ok');
+});
+
+it('records attempt details when the remote returns non-2xx', function (): void {
+    Http::fake([
+        'https://example.com/*' => Http::response('boom', 502),
+    ]);
+
+    $delivery = WebhookDelivery::factory()->create([
+        'id' => 'del-fail-attempt',
+        'status' => WebhookDeliveryStatus::Pending,
+        'attempts' => 0,
+    ]);
+
+    $job = new DeliverWebhookJob(
+        url: 'https://example.com/hooks/canvas',
+        secret: 'whsec_test_secret',
+        event: 'post.published',
+        deliveryId: $delivery->id,
+        payload: ['api_version' => 1, 'event' => 'post.published', 'delivery_id' => $delivery->id, 'data' => []],
+    );
+
+    expect(fn () => $job->handle())->toThrow(RuntimeException::class);
+
+    $delivery->refresh();
+
+    expect($delivery->status)->toBe(WebhookDeliveryStatus::Pending)
+        ->and($delivery->http_status)->toBe(502)
+        ->and($delivery->attempts)->toBe(1)
+        ->and($delivery->response_body)->toBe('boom')
+        ->and($delivery->error_message)->toContain('502');
+});
+
+it('marks the delivery failed from the job failed hook', function (): void {
+    $delivery = WebhookDelivery::factory()->create([
+        'id' => 'del-final-fail',
+        'status' => WebhookDeliveryStatus::Pending,
+        'http_status' => 500,
+        'error_message' => 'temporary',
+        'attempts' => 3,
+    ]);
+
+    $job = new DeliverWebhookJob(
+        url: 'https://example.com/hooks/canvas',
+        secret: 'whsec_test_secret',
+        event: 'post.published',
+        deliveryId: $delivery->id,
+        payload: ['api_version' => 1, 'event' => 'post.published', 'data' => []],
+    );
+
+    $job->failed(new RuntimeException('final failure'));
+
+    $delivery->refresh();
+
+    expect($delivery->status)->toBe(WebhookDeliveryStatus::Failed)
+        ->and($delivery->error_message)->toBe('final failure')
+        ->and($delivery->finished_at)->not->toBeNull();
+});
+
+it('marks disallowed urls as failed without sending', function (): void {
+    Http::fake();
+
+    $delivery = WebhookDelivery::factory()->create([
+        'id' => 'del-blocked',
+        'status' => WebhookDeliveryStatus::Pending,
+        'url' => 'https://127.0.0.1/hooks',
+    ]);
+
+    $job = new DeliverWebhookJob(
+        url: 'https://127.0.0.1/hooks',
+        secret: 'whsec_test_secret',
+        event: 'post.published',
+        deliveryId: $delivery->id,
+        payload: ['api_version' => 1, 'event' => 'post.published', 'data' => []],
+    );
+
+    $job->handle();
+
+    Http::assertNothingSent();
+
+    $delivery->refresh();
+
+    expect($delivery->status)->toBe(WebhookDeliveryStatus::Failed)
+        ->and($delivery->attempts)->toBe(1)
+        ->and($delivery->error_message)->toContain('not allowed');
 });

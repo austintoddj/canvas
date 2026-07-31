@@ -1,11 +1,13 @@
 <?php
 
+use Canvas\Enums\WebhookDeliveryStatus;
 use Canvas\Enums\WebhookEvent;
 use Canvas\Events\PostDeleted;
 use Canvas\Events\PostPublished;
 use Canvas\Events\PostUpdated;
 use Canvas\Jobs\DeliverWebhookJob;
 use Canvas\Models\Post;
+use Canvas\Models\WebhookDelivery;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 
@@ -30,6 +32,14 @@ it('queues a delivery job when the domain event fires and the event is subscribe
             && ($job->payload['api_version'] ?? null) === 1
             && ! array_key_exists('body', $job->payload['data'] ?? []);
     });
+
+    $delivery = WebhookDelivery::query()->where('post_id', $post->id)->first();
+
+    expect($delivery)->not->toBeNull()
+        ->and($delivery->status)->toBe(WebhookDeliveryStatus::Pending)
+        ->and($delivery->event)->toBe(WebhookEvent::PostPublished->value)
+        ->and($delivery->url)->toBe('https://example.com/hooks/canvas')
+        ->and(json_encode($delivery->payload))->not->toContain('whsec_test_secret');
 });
 
 it('does not queue a job when webhooks are not configured', function (): void {

@@ -6,9 +6,11 @@ namespace Canvas\Http\Controllers;
 
 use Canvas\Enums\AiProvider;
 use Canvas\Enums\SettingKey;
+use Canvas\Enums\WebhookDeliveryStatus;
 use Canvas\Enums\WebhookEvent;
 use Canvas\Http\Requests\UpdateIntegrationsRequest;
 use Canvas\Jobs\DeliverWebhookJob;
+use Canvas\Models\WebhookDelivery;
 use Canvas\Support\Ai;
 use Canvas\Support\Localization;
 use Canvas\Support\SettingsRepository;
@@ -84,6 +86,17 @@ class IntegrationsController extends Controller
 
         $deliveryId = (string) Str::uuid();
         $payload = WebhookPayload::test($deliveryId);
+
+        WebhookDelivery::query()->create([
+            'id' => $deliveryId,
+            'event' => WebhookEvent::WebhookTest->value,
+            'url' => $url,
+            'status' => WebhookDeliveryStatus::Pending,
+            'attempts' => 0,
+            'payload' => WebhookDelivery::capPayload($payload),
+            'post_id' => null,
+        ]);
+
         $job = new DeliverWebhookJob(
             url: $url,
             secret: $secret,
@@ -96,10 +109,23 @@ class IntegrationsController extends Controller
             // Same job as lifecycle delivery; sync so the admin toast reflects a real POST.
             app(Dispatcher::class)->dispatchSync($job);
         } catch (Throwable $exception) {
+            $delivery = WebhookDelivery::query()->find($deliveryId);
+
+            if ($delivery !== null && $delivery->status === WebhookDeliveryStatus::Pending) {
+                $delivery->markFailed(
+                    httpStatus: $delivery->http_status,
+                    responseBody: $delivery->response_body,
+                    errorMessage: $exception instanceof RuntimeException
+                        ? $exception->getMessage()
+                        : 'The test webhook could not be delivered.',
+                );
+            }
+
             return response()->json([
                 'message' => 'The test webhook could not be delivered.',
                 'code' => 'webhooks_test_failed',
                 'detail' => $exception instanceof RuntimeException ? $exception->getMessage() : null,
+                'delivery_id' => $deliveryId,
             ], 502);
         }
 

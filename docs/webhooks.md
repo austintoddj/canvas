@@ -54,6 +54,19 @@ Lifecycle deliveries are queued. With a non-`sync` queue driver, run `queue:work
 
 Hosts must run the Laravel scheduler (`php artisan schedule:run` every minute) so `canvas:announce-scheduled` can emit `post.published` when scheduled posts go live by time.
 
+## Delivery history
+
+Canvas stores recent outbound attempts in `canvas_webhook_deliveries` (delivery id matches `Canvas-Delivery-Id`). Rows include event, URL, status (`pending` / `success` / `failed`), HTTP status, attempt count, a size-capped payload snapshot, truncated response body, and optional error message. The signing **secret is never stored**.
+
+Admins can open **Integrations → Webhooks** to inspect recent deliveries and **retry** a failed row. Retry queues a **new** delivery id and keeps the original row for audit. Retries use the currently configured URL and secret.
+
+Default retention is **30 days**. Canvas schedules `canvas:prune-webhook-deliveries` weekly; you may also run it manually:
+
+```bash
+php artisan canvas:prune-webhook-deliveries
+php artisan canvas:prune-webhook-deliveries --days=14
+```
+
 ## Payload
 
 Payloads include metadata (id, slug, title, summary, dates, featured image, SEO meta, topic, tags, author). They do **not** include the full HTML body. Fetch the post in your app when you need the body.

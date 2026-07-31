@@ -13,6 +13,7 @@ use Canvas\Http\Controllers\TranslationsController;
 use Canvas\Http\Controllers\UnsplashController;
 use Canvas\Http\Controllers\UserController;
 use Canvas\Http\Controllers\ViewController;
+use Canvas\Http\Controllers\WebhookDeliveryController;
 use Canvas\Http\Middleware\Authorize;
 use Canvas\Http\Middleware\EagerLoadCanvasUser;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,10 @@ Route::middleware([
             Route::put('/', [IntegrationsController::class, 'update']);
             Route::post('webhooks/test', [IntegrationsController::class, 'testWebhook'])
                 ->middleware('throttle:10,1');
+            Route::get('webhooks/deliveries', [WebhookDeliveryController::class, 'index']);
+            Route::get('webhooks/deliveries/{delivery}', [WebhookDeliveryController::class, 'show']);
+            Route::post('webhooks/deliveries/{delivery}/retry', [WebhookDeliveryController::class, 'retry'])
+                ->middleware('throttle:20,1');
         });
 
         Route::prefix('media')->controller(MediaController::class)->group(function (): void {

@@ -5,6 +5,7 @@ import { Alert, AlertActions, AlertBody, AlertDescription, AlertTitle } from '@/
 import { Button } from '@/components/button';
 import { Description, ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/fieldset';
 import { IntegrationDrawerChrome } from '@/components/integrations/IntegrationDrawerChrome';
+import { WebhookDeliveriesPanel } from '@/components/integrations/WebhookDeliveriesPanel';
 import { WebhookEventsField } from '@/components/integrations/WebhookEventsField';
 import { Input } from '@/components/input';
 import { SideDrawer } from '@/components/SideDrawer';
@@ -58,6 +59,7 @@ export function WebhookIntegrationDrawer({
     const [clearing, setClearing] = useState(false);
     const [confirmDisconnectOpen, setConfirmDisconnectOpen] = useState(false);
     const [secretDialog, setSecretDialog] = useState<SecretDialog>({ step: 'closed' });
+    const [deliveriesRefreshKey, setDeliveriesRefreshKey] = useState(0);
     const [fieldErrors, setFieldErrors] = useState<{
         url?: string;
         events?: string;
@@ -132,6 +134,10 @@ export function WebhookIntegrationDrawer({
         t(
             'integrations.webhooks_about_queue',
             'With Redis, database, or SQS queues, run a queue worker (php artisan queue:work). The default sync driver needs no worker.'
+        ),
+        t(
+            'integrations.webhooks_about_history',
+            'Recent deliveries appear below so you can inspect failures and retry with a new delivery id'
         ),
     ];
 
@@ -247,7 +253,10 @@ export function WebhookIntegrationDrawer({
         try {
             await integrationsApi.testWebhook();
             toast.success(t('integrations.webhooks_test_sent', 'Test webhook sent.'));
+            setDeliveriesRefreshKey((key) => key + 1);
         } catch (error) {
+            setDeliveriesRefreshKey((key) => key + 1);
+
             if (error instanceof ApiError) {
                 const code = apiErrorCode(error);
 
@@ -474,7 +483,7 @@ export function WebhookIntegrationDrawer({
                                         <p className="min-w-0 text-sm/5 text-zinc-600 dark:text-zinc-400">
                                             {t(
                                                 'integrations.webhooks_events_scheduled_note',
-                                                'A post that goes live only because its scheduled time arrived does not send Published. Subscribe to Scheduled for when the date is set.'
+                                                'When a scheduled post’s publish time arrives, Canvas also sends Published (host scheduler). Subscribe to Scheduled for when the future date is set.'
                                             )}
                                         </p>
                                     </div>
@@ -484,6 +493,15 @@ export function WebhookIntegrationDrawer({
                         </Fieldset>
                     </form>
                 </IntegrationDrawerChrome>
+                {configured ? (
+                    <div className="border-t border-zinc-950/5 px-5 py-5 dark:border-white/5">
+                        <WebhookDeliveriesPanel
+                            open={open}
+                            enabled={configured}
+                            refreshKey={deliveriesRefreshKey}
+                        />
+                    </div>
+                ) : null}
             </SideDrawer>
 
             <Alert
