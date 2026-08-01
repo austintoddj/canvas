@@ -31,6 +31,7 @@ import {
 import { CloseMenuIcon, SidebarLayout } from '@/components/sidebar-layout';
 import { Toaster } from '@/components/Toaster';
 import {
+    NavIconCalendar,
     NavIconDashboard,
     NavIconIntegrations,
     NavIconMedia,
@@ -308,6 +309,14 @@ function AppSidebar({
                     <SidebarItem href="/posts" current={pathname.startsWith('/posts')} tooltip={t('nav.posts')}>
                         <NavIconPosts />
                         <SidebarLabel>{t('nav.posts')}</SidebarLabel>
+                    </SidebarItem>
+                    <SidebarItem
+                        href="/calendar"
+                        current={pathname.startsWith('/calendar')}
+                        tooltip={t('nav.calendar')}
+                    >
+                        <NavIconCalendar />
+                        <SidebarLabel>{t('nav.calendar')}</SidebarLabel>
                     </SidebarItem>
                     <SidebarItem href="/media" current={pathname.startsWith('/media')} tooltip={t('nav.media')}>
                         <NavIconMedia />

@@ -53,6 +53,13 @@ export const NAVIGATION_PAGES: NavigationPage[] = [
         defaultVisible: true,
     },
     {
+        id: 'calendar',
+        labelKey: 'nav.calendar',
+        path: '/calendar',
+        keywords: ['schedule', 'scheduled', 'publishing', 'month', 'calendar'],
+        defaultVisible: true,
+    },
+    {
         id: 'media',
         labelKey: 'nav.media',
         path: '/media',

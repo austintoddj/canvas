@@ -73,14 +73,23 @@ describe('command palette helpers', () => {
         };
 
         const contributorPages = filterNavigationPages('', contributor).map((page) => page.id);
-        expect(contributorPages).toEqual(['dashboard', 'posts', 'new-post', 'media']);
+        expect(contributorPages).toEqual(['dashboard', 'posts', 'new-post', 'calendar', 'media']);
         expect(contributorPages).not.toContain('users');
         expect(contributorPages).not.toContain('integrations');
         expect(contributorPages).not.toContain('tags');
         expect(contributorPages).not.toContain('topics');
 
         const adminIds = filterNavigationPages('', admin).map((page) => page.id);
-        expect(adminIds).toEqual(['dashboard', 'posts', 'new-post', 'media', 'organize', 'users', 'integrations']);
+        expect(adminIds).toEqual([
+            'dashboard',
+            'posts',
+            'new-post',
+            'calendar',
+            'media',
+            'organize',
+            'users',
+            'integrations',
+        ]);
         expect(adminIds).not.toContain('tags');
         expect(adminIds).not.toContain('topics');
 

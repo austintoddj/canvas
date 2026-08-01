@@ -9,6 +9,7 @@ export {
 } from '@/lib/api/media';
 export { usersApi } from '@/lib/api/users';
 export { statsApi } from '@/lib/api/stats';
+export { calendarApi } from '@/lib/api/calendar';
 export { searchApi } from '@/lib/api/search';
 export { tagsApi } from '@/lib/api/tags';
 export { topicsApi } from '@/lib/api/topics';

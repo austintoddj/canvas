@@ -150,6 +150,29 @@ export type PostsIndexParams = {
     page?: number;
 };
 
+/** Calendar month range item (scheduled + published only). */
+export type CalendarPostStatus = 'scheduled' | 'published';
+
+export type CalendarPost = {
+    id: string;
+    title: string | null;
+    slug: string;
+    published_at: string;
+    featured_image: string | null;
+    status: CalendarPostStatus;
+    user?: PostAuthor | null;
+};
+
+export type CalendarPostsParams = {
+    from: string;
+    to: string;
+    scope?: 'user' | 'all';
+};
+
+export type CalendarPostsResponse = {
+    posts: CalendarPost[];
+};
+
 /** Lean revision row from index / rename (no body). */
 export type PostRevisionListItem = {
     id: string;

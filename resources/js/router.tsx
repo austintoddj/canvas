@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 
 import Page, {
+    CalendarIndex,
     Dashboard,
     MediaIndex,
     MediaShow,
@@ -28,6 +29,7 @@ export const router = createBrowserRouter(
                 { path: 'posts/new', element: <Page component={PostsEditor} /> },
                 { path: 'posts/:id/stats', element: <Page component={PostsStats} /> },
                 { path: 'posts/:id', element: <Page component={PostsEditor} /> },
+                { path: 'calendar', element: <Page component={CalendarIndex} /> },
                 { path: 'media', element: <Page component={MediaIndex} /> },
                 { path: 'media/:id', element: <Page component={MediaShow} /> },
                 {

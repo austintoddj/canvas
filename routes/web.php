@@ -1,6 +1,7 @@
 <?php
 
 use Canvas\Http\Controllers\AiRewriteController;
+use Canvas\Http\Controllers\CalendarController;
 use Canvas\Http\Controllers\IntegrationsController;
 use Canvas\Http\Controllers\MediaController;
 use Canvas\Http\Controllers\PostController;
@@ -25,6 +26,7 @@ Route::middleware([
 ])->group(function (): void {
     Route::prefix('api')->group(function (): void {
         Route::get('stats', StatsController::class);
+        Route::get('calendar/posts', CalendarController::class);
 
         Route::get('translations/{locale}', TranslationsController::class);
 

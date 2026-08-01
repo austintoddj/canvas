@@ -144,6 +144,19 @@ export function NavIconMedia(props: IconProps) {
     );
 }
 
+/** Calendar: page outline static; day mark pops then settles. */
+export function NavIconCalendar(props: IconProps) {
+    return (
+        <Svg {...props}>
+            <path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12" />
+            <path d="M16 3v4" />
+            <path d="M8 3v4" />
+            <path d="M4 11h16" />
+            <path d="M8 15h2v2h-2z" className="sidebar-icon-morph-calendar-day" />
+        </Svg>
+    );
+}
+
 /** Organize: layers peel apart then settle. */
 export function NavIconOrganize(props: IconProps) {
     return (
