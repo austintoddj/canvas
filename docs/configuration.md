@@ -66,10 +66,12 @@ The effective upload limit is the minimum of `upload_filesize` and PHP's `upload
 
 Canvas registers scheduled Artisan commands on the host’s Laravel scheduler. Your host must run `php artisan schedule:run` every minute.
 
-| Command                     | When                         | Notes                                                                 |
-| --------------------------- | ---------------------------- | --------------------------------------------------------------------- |
-| `canvas:announce-scheduled` | Every minute                 | Fires `PostPublished` when a scheduled post’s `published_at` elapses  |
-| `canvas:digest`             | Mondays 08:00 (app timezone) | Only when mail is enabled; recipients must opt in via `digest`        |
+| Command                          | When                         | Notes                                                                |
+| -------------------------------- | ---------------------------- | -------------------------------------------------------------------- |
+| `canvas:announce-scheduled`      | Every minute                 | Fires `PostPublished` when a scheduled post’s `published_at` elapses |
+| `canvas:prune-webhook-deliveries`| Sundays 03:15 (app timezone) | Delivery history older than 30 days                                  |
+| `canvas:prune-post-revisions`    | Sundays 03:30 (app timezone) | Keeps the newest 50 version-history rows per post                    |
+| `canvas:digest`                  | Mondays 08:00 (app timezone) | Only when mail is enabled; recipients must opt in via `digest`       |
 
 ```env
 CANVAS_MAIL_ENABLED=true

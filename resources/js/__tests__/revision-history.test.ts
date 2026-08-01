@@ -11,7 +11,9 @@ import {
     revisionAuthorName,
     revisionDisplayName,
     revisionListPrimaryLabel,
+    revisionListSecondaryLine,
     revisionMatchesEditor,
+    revisionReasonLabel,
     startOfWeekMonday,
 } from '@/lib/posts/revision-history';
 import type { PostRevisionListItem } from '@/types/api';
@@ -23,11 +25,14 @@ function revision(
         post_id: 'post-1',
         user_id: null,
         label: null,
+        reason: null,
         title: 'Title',
         updated_at: overrides.created_at,
         ...overrides,
     };
 }
+
+const t = (key: string, fallback: string) => fallback;
 
 function atLocal(year: number, monthIndex: number, day: number, hour = 12): string {
     return new Date(year, monthIndex, day, hour, 0, 0).toISOString();
@@ -172,6 +177,49 @@ describe('revisionMatchesEditor', () => {
         expect(revisionMatchesEditor({ title: 'Hello', body: '<p>World</p>' }, 'Hello', '<p>World</p>')).toBe(true);
 
         expect(revisionMatchesEditor({ title: 'Hello', body: '<p>World</p>' }, 'Hello', '<p>Changed</p>')).toBe(false);
+    });
+});
+
+describe('revisionReasonLabel', () => {
+    it('maps known reasons and ignores legacy null', () => {
+        expect(revisionReasonLabel('published', t)).toBe('Published');
+        expect(revisionReasonLabel('left', t)).toBe('Left editor');
+        expect(revisionReasonLabel(null, t)).toBeNull();
+        expect(revisionReasonLabel('unknown', t)).toBeNull();
+    });
+});
+
+describe('revisionListSecondaryLine', () => {
+    it('joins reason and author when both exist', () => {
+        const item = revision({
+            id: 'r1',
+            created_at: '2026-07-30T10:00:00.000Z',
+            reason: 'published',
+            user: { id: 1, name: 'Alice', username: 'alice', avatar_url: null },
+        });
+
+        expect(revisionListSecondaryLine(item, t)).toBe('Published · Alice');
+    });
+
+    it('falls back to reason or author alone', () => {
+        expect(
+            revisionListSecondaryLine(
+                revision({ id: 'a', created_at: '2026-07-30T10:00:00.000Z', reason: 'updated' }),
+                t
+            )
+        ).toBe('Updated');
+
+        expect(
+            revisionListSecondaryLine(
+                revision({
+                    id: 'b',
+                    created_at: '2026-07-30T10:00:00.000Z',
+                    reason: null,
+                    user: { id: 2, name: null, username: 'bob', avatar_url: null },
+                }),
+                t
+            )
+        ).toBe('bob');
     });
 });
 

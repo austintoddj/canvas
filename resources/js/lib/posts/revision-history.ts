@@ -1,5 +1,5 @@
 import { stripHtml } from '@/lib/posts/text-diff';
-import type { PostRevisionListItem } from '@/types/api';
+import type { PostRevisionListItem, RevisionReason } from '@/types/api';
 
 export type RevisionFilter = 'all' | 'named';
 
@@ -307,4 +307,63 @@ export function revisionAuthorName(revision: PostRevisionListItem): string | nul
     const username = revision.user?.username?.trim();
 
     return username || null;
+}
+
+const REASON_I18N_KEYS: Record<RevisionReason, string> = {
+    origin: 'editor.history_reason_origin',
+    published: 'editor.history_reason_published',
+    scheduled: 'editor.history_reason_scheduled',
+    unpublished: 'editor.history_reason_unpublished',
+    updated: 'editor.history_reason_updated',
+    manual: 'editor.history_reason_manual',
+    left: 'editor.history_reason_left',
+    restored: 'editor.history_reason_restored',
+};
+
+const REASON_FALLBACKS: Record<RevisionReason, string> = {
+    origin: 'First version',
+    published: 'Published',
+    scheduled: 'Scheduled',
+    unpublished: 'Unpublished',
+    updated: 'Updated',
+    manual: 'Saved version',
+    left: 'Left editor',
+    restored: 'Restored',
+};
+
+/**
+ * Localized label for a stored revision reason, or null when unknown/legacy.
+ */
+export function revisionReasonLabel(
+    reason: RevisionReason | string | null | undefined,
+    translate: (key: string, fallback: string) => string
+): string | null {
+    if (reason === null || reason === undefined || reason === '') {
+        return null;
+    }
+
+    if (!(reason in REASON_FALLBACKS)) {
+        return null;
+    }
+
+    const typed = reason as RevisionReason;
+
+    return translate(REASON_I18N_KEYS[typed], REASON_FALLBACKS[typed]);
+}
+
+/**
+ * Secondary list line: "Published · Alice" (reason and/or author when present).
+ */
+export function revisionListSecondaryLine(
+    revision: PostRevisionListItem,
+    translate: (key: string, fallback: string) => string
+): string | null {
+    const reason = revisionReasonLabel(revision.reason, translate);
+    const author = revisionAuthorName(revision);
+
+    if (reason && author) {
+        return `${reason} · ${author}`;
+    }
+
+    return reason ?? author;
 }

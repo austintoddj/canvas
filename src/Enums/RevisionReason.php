@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Canvas\Enums;
 
 /**
- * Why a post content checkpoint was recorded (not stored as a DB column day one).
+ * Why a post content checkpoint was recorded (`canvas_post_revisions.reason`).
  */
 enum RevisionReason: string
 {
@@ -18,4 +18,12 @@ enum RevisionReason: string
     /** Editor session ended (navigate away / close) with content to capture. */
     case Left = 'left';
     case Restored = 'restored';
+
+    /**
+     * @return list<string>
+     */
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
 }

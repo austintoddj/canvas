@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => 'Geçen hafta',
     'editor.history_save_empty' => 'Sürüm kaydetmeden önce bir başlık veya gövde ekleyin.',
     'editor.history_restored_pending' => 'Bekleyen düzenlemeler olarak geri yüklendi — yayınlamak için güncelleyin.',
+    'editor.history_reason_origin' => 'İlk sürüm',
+    'editor.history_reason_published' => 'Yayınlandı',
+    'editor.history_reason_scheduled' => 'Zamanlandı',
+    'editor.history_reason_unpublished' => 'Yayından kaldırıldı',
+    'editor.history_reason_updated' => 'Güncellendi',
+    'editor.history_reason_manual' => 'Kaydedilen sürüm',
+    'editor.history_reason_left' => 'Editörden ayrıldı',
+    'editor.history_reason_restored' => 'Geri yüklendi',
 ];

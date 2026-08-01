@@ -96,10 +96,12 @@ final class RecordPostRevision
 
         $resolvedLabel = self::resolveUserLabel($label);
 
-        return $post->revisions()->create([
+        /** @var PostRevision $revision */
+        $revision = $post->revisions()->create([
             'id' => (string) Str::orderedUuid(),
             'user_id' => $userId,
             'label' => $resolvedLabel,
+            'reason' => $reason,
             'title' => $normalized['title'],
             'slug' => $normalized['slug'],
             'summary' => $normalized['summary'],
@@ -108,6 +110,44 @@ final class RecordPostRevision
             'featured_image_caption' => $normalized['featured_image_caption'],
             'meta' => $normalized['meta'],
         ]);
+
+        self::pruneExcessForPost($post);
+
+        return $revision;
+    }
+
+    /**
+     * Keep the newest checkpoints per post so history cannot grow unbounded.
+     *
+     * @return int Number of rows deleted
+     */
+    public static function pruneExcessForPost(Post $post, ?int $keep = null): int
+    {
+        return self::pruneExcessForPostId((string) $post->getKey(), $keep);
+    }
+
+    /**
+     * @return int Number of rows deleted
+     */
+    public static function pruneExcessForPostId(string $postId, ?int $keep = null): int
+    {
+        $keep = max(1, $keep ?? PostRevision::DEFAULT_KEEP_PER_POST);
+
+        $keepIds = PostRevision::query()
+            ->where('post_id', $postId)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit($keep)
+            ->pluck('id');
+
+        if ($keepIds->isEmpty()) {
+            return 0;
+        }
+
+        return (int) PostRevision::query()
+            ->where('post_id', $postId)
+            ->whereNotIn('id', $keepIds)
+            ->delete();
     }
 
     /**

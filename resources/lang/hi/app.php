@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => 'पिछला सप्ताह',
     'editor.history_save_empty' => 'संस्करण सहेजने से पहले शीर्षक या मुख्य भाग जोड़ें।',
     'editor.history_restored_pending' => 'लंबित संपादन के रूप में पुनर्स्थापित — प्रकाशित करने के लिए अपडेट करें।',
+    'editor.history_reason_origin' => 'पहला संस्करण',
+    'editor.history_reason_published' => 'प्रकाशित',
+    'editor.history_reason_scheduled' => 'निर्धारित',
+    'editor.history_reason_unpublished' => 'अप्रकाशित',
+    'editor.history_reason_updated' => 'अपडेट किया',
+    'editor.history_reason_manual' => 'सहेजा गया संस्करण',
+    'editor.history_reason_left' => 'संपादक छोड़ा',
+    'editor.history_reason_restored' => 'पुनर्स्थापित',
 ];

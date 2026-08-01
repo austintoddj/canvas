@@ -12,8 +12,8 @@ import { postsApi } from '@/lib/api/posts';
 import {
     filterRevisions,
     groupRevisionsByPeriod,
-    revisionAuthorName,
     revisionListPrimaryLabel,
+    revisionListSecondaryLine,
     revisionMatchesEditor,
     type RevisionFilter,
 } from '@/lib/posts/revision-history';
@@ -421,6 +421,7 @@ export default function PostVersionHistoryDrawer({
                             post_id: selectedFull.post_id,
                             user_id: selectedFull.user_id,
                             label: selectedFull.label,
+                            reason: selectedFull.reason,
                             title: selectedFull.title,
                             created_at: selectedFull.created_at,
                             updated_at: selectedFull.updated_at,
@@ -499,8 +500,9 @@ type RevisionRowProps = {
 };
 
 function RevisionRow({ revision, selected, isFirst, isLast, showTopRule, onSelect }: RevisionRowProps) {
+    const { t } = useCanvas();
     const primary = revisionListPrimaryLabel(revision);
-    const author = revisionAuthorName(revision);
+    const secondary = revisionListSecondaryLine(revision, t);
 
     return (
         <li
@@ -510,6 +512,7 @@ function RevisionRow({ revision, selected, isFirst, isLast, showTopRule, onSelec
                 showTopRule && 'border-t border-zinc-950/5 dark:border-white/5'
             )}
             data-revision-row={revision.id}
+            data-revision-reason={revision.reason ?? undefined}
         >
             <button
                 type="button"
@@ -523,9 +526,9 @@ function RevisionRow({ revision, selected, isFirst, isLast, showTopRule, onSelec
                 data-revision-select="true"
             >
                 <span className="block truncate text-sm font-semibold text-zinc-950 dark:text-white">{primary}</span>
-                {author ? (
+                {secondary ? (
                     <span className="mt-0.5 block truncate text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                        {author}
+                        {secondary}
                     </span>
                 ) : null}
             </button>

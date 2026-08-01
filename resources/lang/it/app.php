@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => 'La scorsa settimana',
     'editor.history_save_empty' => 'Aggiungi un titolo o un corpo prima di salvare una versione.',
     'editor.history_restored_pending' => 'Ripristinato come modifiche in sospeso: aggiorna per pubblicare.',
+    'editor.history_reason_origin' => 'Prima versione',
+    'editor.history_reason_published' => 'Pubblicato',
+    'editor.history_reason_scheduled' => 'Programmato',
+    'editor.history_reason_unpublished' => 'Non pubblicato',
+    'editor.history_reason_updated' => 'Aggiornato',
+    'editor.history_reason_manual' => 'Versione salvata',
+    'editor.history_reason_left' => 'Ha lasciato l’editor',
+    'editor.history_reason_restored' => 'Ripristinato',
 ];

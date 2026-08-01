@@ -25,6 +25,7 @@ class PostRevisionController extends Controller
         'post_id',
         'user_id',
         'label',
+        'reason',
         'title',
         'created_at',
         'updated_at',

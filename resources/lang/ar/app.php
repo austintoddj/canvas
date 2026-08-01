@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => 'الأسبوع الماضي',
     'editor.history_save_empty' => 'أضف عنوانًا أو محتوى قبل حفظ إصدار.',
     'editor.history_restored_pending' => 'تمت الاستعادة كتحريرات معلّقة — حدّث للنشر.',
+    'editor.history_reason_origin' => 'الإصدار الأول',
+    'editor.history_reason_published' => 'نُشر',
+    'editor.history_reason_scheduled' => 'مجدول',
+    'editor.history_reason_unpublished' => 'ألغي النشر',
+    'editor.history_reason_updated' => 'حدّث',
+    'editor.history_reason_manual' => 'إصدار محفوظ',
+    'editor.history_reason_left' => 'غادر المحرر',
+    'editor.history_reason_restored' => 'استُعيد',
 ];

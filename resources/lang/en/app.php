@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => 'Last week',
     'editor.history_save_empty' => 'Add a title or body before saving a version.',
     'editor.history_restored_pending' => 'Restored as pending edits — Update to publish.',
+    'editor.history_reason_origin' => 'First version',
+    'editor.history_reason_published' => 'Published',
+    'editor.history_reason_scheduled' => 'Scheduled',
+    'editor.history_reason_unpublished' => 'Unpublished',
+    'editor.history_reason_updated' => 'Updated',
+    'editor.history_reason_manual' => 'Saved version',
+    'editor.history_reason_left' => 'Left editor',
+    'editor.history_reason_restored' => 'Restored',
 ];

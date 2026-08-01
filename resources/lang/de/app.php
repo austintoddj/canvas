@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => 'Letzte Woche',
     'editor.history_save_empty' => 'Füge einen Titel oder Inhalt hinzu, bevor du eine Version speicherst.',
     'editor.history_restored_pending' => 'Als ausstehende Änderungen wiederhergestellt — zum Veröffentlichen aktualisieren.',
+    'editor.history_reason_origin' => 'Erste Version',
+    'editor.history_reason_published' => 'Veröffentlicht',
+    'editor.history_reason_scheduled' => 'Geplant',
+    'editor.history_reason_unpublished' => 'Zurückgezogen',
+    'editor.history_reason_updated' => 'Aktualisiert',
+    'editor.history_reason_manual' => 'Gespeicherte Version',
+    'editor.history_reason_left' => 'Editor verlassen',
+    'editor.history_reason_restored' => 'Wiederhergestellt',
 ];

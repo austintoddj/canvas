@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => 'Minggu lalu',
     'editor.history_save_empty' => 'Tambahkan judul atau isi sebelum menyimpan versi.',
     'editor.history_restored_pending' => 'Dipulihkan sebagai suntingan tertunda — Perbarui untuk menerbitkan.',
+    'editor.history_reason_origin' => 'Versi pertama',
+    'editor.history_reason_published' => 'Diterbitkan',
+    'editor.history_reason_scheduled' => 'Dijadwalkan',
+    'editor.history_reason_unpublished' => 'Dibatalkan terbit',
+    'editor.history_reason_updated' => 'Diperbarui',
+    'editor.history_reason_manual' => 'Versi tersimpan',
+    'editor.history_reason_left' => 'Meninggalkan editor',
+    'editor.history_reason_restored' => 'Dipulihkan',
 ];

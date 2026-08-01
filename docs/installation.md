@@ -79,5 +79,7 @@ You may automate this in your application's `composer.json`:
 | `canvas:ui`                        | Publish the optional reader                    |
 | `canvas:digest`                    | Send the weekly digest                         |
 | `canvas:announce-scheduled`        | Fire `PostPublished` when schedules elapse     |
+| `canvas:prune-post-revisions`      | Keep newest N version-history rows per post    |
+| `canvas:prune-webhook-deliveries`  | Delete old outbound webhook delivery rows      |
 
 The `{user}` argument accepts an email address or user ID.

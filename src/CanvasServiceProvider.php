@@ -10,6 +10,7 @@ use Canvas\Console\DigestCommand;
 use Canvas\Console\InstallCommand;
 use Canvas\Console\MakeAdminCommand;
 use Canvas\Console\MigrateCommand;
+use Canvas\Console\PrunePostRevisionsCommand;
 use Canvas\Console\PruneWebhookDeliveriesCommand;
 use Canvas\Console\PublishCommand;
 use Canvas\Console\RemoveAccessCommand;
@@ -158,6 +159,12 @@ class CanvasServiceProvider extends ServiceProvider
                 ->at('03:15')
                 ->timezone(config('app.timezone'));
 
+            $schedule->command('canvas:prune-post-revisions')
+                ->weekly()
+                ->sundays()
+                ->at('03:30')
+                ->timezone(config('app.timezone'));
+
             if (! config('canvas.mail.enabled')) {
                 return;
             }
@@ -199,6 +206,7 @@ class CanvasServiceProvider extends ServiceProvider
             InstallCommand::class,
             MigrateCommand::class,
             MakeAdminCommand::class,
+            PrunePostRevisionsCommand::class,
             PruneWebhookDeliveriesCommand::class,
             PublishCommand::class,
             RemoveAccessCommand::class,

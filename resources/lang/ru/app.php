@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => 'На прошлой неделе',
     'editor.history_save_empty' => 'Добавьте заголовок или текст, прежде чем сохранять версию.',
     'editor.history_restored_pending' => 'Восстановлено как неопубликованные правки — обновите, чтобы опубликовать.',
+    'editor.history_reason_origin' => 'Первая версия',
+    'editor.history_reason_published' => 'Опубликовано',
+    'editor.history_reason_scheduled' => 'Запланировано',
+    'editor.history_reason_unpublished' => 'Снято с публикации',
+    'editor.history_reason_updated' => 'Обновлено',
+    'editor.history_reason_manual' => 'Сохранённая версия',
+    'editor.history_reason_left' => 'Вышел из редактора',
+    'editor.history_reason_restored' => 'Восстановлено',
 ];

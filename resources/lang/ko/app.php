@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => '지난주',
     'editor.history_save_empty' => '버전을 저장하기 전에 제목이나 본문을 추가하세요.',
     'editor.history_restored_pending' => '보류 중인 편집으로 복원했습니다. 게시하려면 업데이트하세요.',
+    'editor.history_reason_origin' => '첫 버전',
+    'editor.history_reason_published' => '게시됨',
+    'editor.history_reason_scheduled' => '예약됨',
+    'editor.history_reason_unpublished' => '게시 취소',
+    'editor.history_reason_updated' => '업데이트됨',
+    'editor.history_reason_manual' => '저장된 버전',
+    'editor.history_reason_left' => '편집기 나감',
+    'editor.history_reason_restored' => '복원됨',
 ];

@@ -46,6 +46,36 @@ While a post is live, the editor autosaves into a `pending` JSON column so the p
 | `topic_id`         | Optional topic                                           |
 
 When a future `published_at` elapses, `published()` already includes the post. Canvas runs `canvas:announce-scheduled` every minute so domain events and outbound webhooks receive `PostPublished` without another editor save.
+
+## Version history
+
+The admin stores **content checkpoints** in `canvas_post_revisions` for editorial recovery — not every autosave, and never for public readers.
+
+| What is stored | Full editor-visible snapshot: title, slug, summary, body, featured image fields, SEO `meta` |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| Why (`reason`) | Lifecycle moments such as first version, published, scheduled, updated, left editor, restored |
+| User labels    | Optional names (rename in the UI) for quick filtering                                       |
+
+Checkpoints are created when a post is first saved with content, when visibility changes (publish / schedule / unpublish), when a live **Update** promotes changed content, when the author leaves the editor with unsaved-session content, and when a revision is restored. Draft and live **pending** autosaves do not append history rows.
+
+### Restore vs `pending`
+
+- **Draft / scheduled:** restore writes the snapshot into the public columns (the editor’s working state).
+- **Live posts:** restore writes into `pending` so readers still see the live public columns until an editor promotes with **Update**.
+
+Public frontends must never join or expose revision rows. Use `Post::published()` and the live columns only.
+
+### Retention
+
+Canvas keeps the **newest 50 checkpoints per post** (prune-on-write after each new row). Operators may tighten or re-run:
+
+```bash
+php artisan canvas:prune-post-revisions
+php artisan canvas:prune-post-revisions --keep=25
+```
+
+The host scheduler runs the prune weekly.
+
 ## Tags, topics, and authors
 
 ```php

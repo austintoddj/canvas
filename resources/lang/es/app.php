@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => 'La semana pasada',
     'editor.history_save_empty' => 'Añade un título o cuerpo antes de guardar una versión.',
     'editor.history_restored_pending' => 'Restaurado como ediciones pendientes: actualiza para publicar.',
+    'editor.history_reason_origin' => 'Primera versión',
+    'editor.history_reason_published' => 'Publicado',
+    'editor.history_reason_scheduled' => 'Programado',
+    'editor.history_reason_unpublished' => 'Despublicado',
+    'editor.history_reason_updated' => 'Actualizado',
+    'editor.history_reason_manual' => 'Versión guardada',
+    'editor.history_reason_left' => 'Salió del editor',
+    'editor.history_reason_restored' => 'Restaurado',
 ];

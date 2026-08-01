@@ -101,6 +101,33 @@ it('registers webhook delivery prune weekly regardless of mail', function (): vo
         ->and((string) $event->timezone)->toBe('UTC');
 });
 
+it('registers prune-post-revisions on the weekly schedule', function (): void {
+    config([
+        'canvas.mail.enabled' => false,
+        'app.timezone' => 'UTC',
+    ]);
+
+    $provider = new CanvasServiceProvider($this->app);
+
+    $method = new ReflectionMethod(CanvasServiceProvider::class, 'registerScheduler');
+    $method->setAccessible(true);
+    $method->invoke($provider);
+
+    /** @var Schedule $schedule */
+    $schedule = $this->app->make(Schedule::class);
+
+    $event = collect($schedule->events())->first(function ($event): bool {
+        $command = (string) ($event->command ?? '');
+        $description = (string) ($event->description ?? '');
+
+        return str_contains($command, 'canvas:prune-post-revisions')
+            || str_contains($description, 'canvas:prune-post-revisions');
+    });
+
+    expect($event)->not->toBeNull()
+        ->and((string) $event->timezone)->toBe('UTC');
+});
+
 it('does not register the digest schedule when mail is disabled', function (): void {
     config(['canvas.mail.enabled' => false]);
 

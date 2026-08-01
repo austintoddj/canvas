@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => '上周',
     'editor.history_save_empty' => '保存版本前请先添加标题或正文。',
     'editor.history_restored_pending' => '已恢复为待发布编辑 — 更新以发布。',
+    'editor.history_reason_origin' => '第一个版本',
+    'editor.history_reason_published' => '已发布',
+    'editor.history_reason_scheduled' => '已排期',
+    'editor.history_reason_unpublished' => '已取消发布',
+    'editor.history_reason_updated' => '已更新',
+    'editor.history_reason_manual' => '已保存版本',
+    'editor.history_reason_left' => '离开编辑器',
+    'editor.history_reason_restored' => '已恢复',
 ];

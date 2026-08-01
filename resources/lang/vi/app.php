@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => 'Tuần trước',
     'editor.history_save_empty' => 'Thêm tiêu đề hoặc nội dung trước khi lưu phiên bản.',
     'editor.history_restored_pending' => 'Đã khôi phục thành chỉnh sửa đang chờ — Cập nhật để xuất bản.',
+    'editor.history_reason_origin' => 'Phiên bản đầu',
+    'editor.history_reason_published' => 'Đã xuất bản',
+    'editor.history_reason_scheduled' => 'Đã lên lịch',
+    'editor.history_reason_unpublished' => 'Đã hủy xuất bản',
+    'editor.history_reason_updated' => 'Đã cập nhật',
+    'editor.history_reason_manual' => 'Phiên bản đã lưu',
+    'editor.history_reason_left' => 'Rời trình soạn thảo',
+    'editor.history_reason_restored' => 'Đã khôi phục',
 ];

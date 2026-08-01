@@ -173,6 +173,17 @@ export type CalendarPostsResponse = {
     posts: CalendarPost[];
 };
 
+/** Why a checkpoint was recorded (`canvas_post_revisions.reason`). */
+export type RevisionReason =
+    | 'origin'
+    | 'published'
+    | 'scheduled'
+    | 'unpublished'
+    | 'updated'
+    | 'manual'
+    | 'left'
+    | 'restored';
+
 /** Lean revision row from index / rename (no body). */
 export type PostRevisionListItem = {
     id: string;
@@ -180,6 +191,8 @@ export type PostRevisionListItem = {
     user_id: number | null;
     /** User-assigned version name; null until renamed or saved with a name. */
     label: string | null;
+    /** Lifecycle / session reason; null for legacy rows written before reasons were stored. */
+    reason: RevisionReason | null;
     title: string | null;
     created_at: string;
     updated_at: string;

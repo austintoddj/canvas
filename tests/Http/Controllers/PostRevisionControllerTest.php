@@ -1,5 +1,6 @@
 <?php
 
+use Canvas\Enums\RevisionReason;
 use Canvas\Models\Post;
 use Canvas\Models\PostRevision;
 use Illuminate\Support\Str;
@@ -7,14 +8,14 @@ use Illuminate\Support\Str;
 describe('when listing post revisions', function (): void {
     it('lists lean revisions without body for a post the user can view', function (): void {
         $post = Post::factory()->create(['user_id' => $this->admin->id]);
-        $older = PostRevision::factory()->create([
+        $older = PostRevision::factory()->reason(RevisionReason::Origin)->create([
             'post_id' => $post->id,
             'user_id' => $this->admin->id,
             'title' => 'Older',
             'body' => 'Older body',
             'created_at' => now()->subHour(),
         ]);
-        $newer = PostRevision::factory()->create([
+        $newer = PostRevision::factory()->reason(RevisionReason::Published)->create([
             'post_id' => $post->id,
             'user_id' => $this->admin->id,
             'title' => 'Newer',
@@ -27,7 +28,7 @@ describe('when listing post revisions', function (): void {
             ->assertSuccessful()
             ->assertJsonStructure([
                 'revisions' => [
-                    ['id', 'post_id', 'label', 'title', 'created_at', 'user'],
+                    ['id', 'post_id', 'label', 'reason', 'title', 'created_at', 'user'],
                 ],
             ]);
 
@@ -37,6 +38,7 @@ describe('when listing post revisions', function (): void {
         expect($ids)->toBe([$newer->id, $older->id])
             ->and(array_key_exists('body', $first))->toBeFalse()
             ->and(array_key_exists('slug', $first))->toBeFalse()
+            ->and($first['reason'] ?? null)->toBe(RevisionReason::Published->value)
             ->and($first['user']['id'] ?? null)->toBe($this->admin->id)
             ->and($first['user']['name'] ?? null)->not->toBeNull();
     });
@@ -84,7 +86,8 @@ describe('when saving a post', function (): void {
 
         expect($post->revisions)->toHaveCount(1)
             ->and($post->revisions->first()?->title)->toBe('First draft')
-            ->and($post->revisions->first()?->body)->toBe('Hello world');
+            ->and($post->revisions->first()?->body)->toBe('Hello world')
+            ->and($post->revisions->first()?->reason)->toBe(RevisionReason::Origin);
     });
 
     // Invariant: draft content autosave after origin does not append history.
@@ -247,7 +250,8 @@ describe('when saving a post', function (): void {
 
         expect($post->revisions)->toHaveCount(1)
             ->and($post->revisions->first()?->label)->toBeNull()
-            ->and($post->revisions->first()?->title)->toBe('Go live');
+            ->and($post->revisions->first()?->title)->toBe('Go live')
+            ->and($post->revisions->first()?->reason)->toBe(RevisionReason::Published);
     });
 
     it('records a checkpoint on live update promote when content changes', function (): void {
@@ -282,8 +286,11 @@ describe('when saving a post', function (): void {
             ])
             ->assertSuccessful();
 
+        $reasons = $post->fresh()->revisions->pluck('reason')->all();
+
         expect($post->fresh()->revisions)->toHaveCount(2)
-            ->and($post->fresh()->revisions->pluck('title'))->toContain('Updated live');
+            ->and($post->fresh()->revisions->pluck('title'))->toContain('Updated live')
+            ->and($reasons)->toContain(RevisionReason::Updated);
     });
 
     it('skips no-op live update promote when content matches latest', function (): void {
@@ -335,9 +342,11 @@ describe('when creating a leave-editor revision', function (): void {
             ->postJson("canvas/api/posts/{$post->id}/revisions", [])
             ->assertCreated()
             ->assertJsonPath('revision.label', null)
-            ->assertJsonPath('revision.title', 'Draft');
+            ->assertJsonPath('revision.title', 'Draft')
+            ->assertJsonPath('revision.reason', RevisionReason::Left->value);
 
-        expect($post->fresh()->revisions)->toHaveCount(1);
+        expect($post->fresh()->revisions)->toHaveCount(1)
+            ->and($post->fresh()->revisions->first()?->reason)->toBe(RevisionReason::Left);
     });
 
     it('skips a leave checkpoint when content matches the latest revision', function (): void {
@@ -488,10 +497,16 @@ describe('when restoring a revision', function (): void {
 
         $post->refresh();
 
+        $branch = $post->revisions()
+            ->where('reason', RevisionReason::Restored)
+            ->first();
+
         expect($post->title)->toBe('Restored title')
             ->and($post->body)->toBe('Restored body')
             ->and($post->slug)->toBe('restored-slug')
-            ->and($post->revisions)->toHaveCount(2);
+            ->and($post->revisions)->toHaveCount(2)
+            ->and($branch)->not->toBeNull()
+            ->and($branch?->reason)->toBe(RevisionReason::Restored);
     });
 
     it('writes pending content when restoring onto a live post and records a branch', function (): void {
@@ -523,10 +538,16 @@ describe('when restoring a revision', function (): void {
 
         $post->refresh();
 
+        $branch = $post->revisions()
+            ->where('reason', RevisionReason::Restored)
+            ->first();
+
         expect($post->title)->toBe('Live title')
             ->and($post->has_pending_changes)->toBeTrue()
             ->and(data_get($post->pending, 'title'))->toBe('Old version')
-            ->and($post->revisions)->toHaveCount(2);
+            ->and($post->revisions)->toHaveCount(2)
+            ->and($branch)->not->toBeNull()
+            ->and($branch?->reason)->toBe(RevisionReason::Restored);
     });
 
     it('rejects restore for a revision on another post', function (): void {

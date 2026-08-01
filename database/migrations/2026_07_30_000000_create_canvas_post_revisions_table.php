@@ -13,6 +13,7 @@ return new class extends Migration
             $table->uuid('post_id')->index();
             $table->foreignId('user_id')->nullable()->index();
             $table->string('label')->nullable();
+            $table->string('reason')->nullable();
             $table->string('title')->nullable();
             $table->string('slug')->nullable();
             $table->text('summary')->nullable();

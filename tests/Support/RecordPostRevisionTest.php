@@ -143,6 +143,7 @@ describe('fromSnapshot equality policy', function (): void {
             ->and($revision->post_id)->toBe($post->id)
             ->and($revision->title)->toBe('Hello')
             ->and($revision->user_id)->toBe(1)
+            ->and($revision->reason)->toBe(RevisionReason::Origin)
             ->and($post->fresh()->revisions)->toHaveCount(1);
     });
 

@@ -2,6 +2,7 @@
 
 namespace Canvas\Database\Factories;
 
+use Canvas\Enums\RevisionReason;
 use Canvas\Models\Post;
 use Canvas\Models\PostRevision;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -21,6 +22,7 @@ class PostRevisionFactory extends Factory
             'post_id' => Post::factory(),
             'user_id' => null,
             'label' => null,
+            'reason' => RevisionReason::Manual,
             'title' => Str::headline(fake()->words(3, true)),
             'slug' => fake()->slug(),
             'summary' => fake()->sentence(),
@@ -29,5 +31,10 @@ class PostRevisionFactory extends Factory
             'featured_image_caption' => null,
             'meta' => null,
         ];
+    }
+
+    public function reason(RevisionReason $reason): static
+    {
+        return $this->state(fn (): array => ['reason' => $reason]);
     }
 }

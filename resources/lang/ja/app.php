@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => '先週',
     'editor.history_save_empty' => 'バージョンを保存する前にタイトルまたは本文を追加してください。',
     'editor.history_restored_pending' => '未公開の編集として復元しました。公開するには更新してください。',
+    'editor.history_reason_origin' => '最初のバージョン',
+    'editor.history_reason_published' => '公開済み',
+    'editor.history_reason_scheduled' => '予約済み',
+    'editor.history_reason_unpublished' => '非公開',
+    'editor.history_reason_updated' => '更新済み',
+    'editor.history_reason_manual' => '保存したバージョン',
+    'editor.history_reason_left' => 'エディターを離れました',
+    'editor.history_reason_restored' => '復元済み',
 ];

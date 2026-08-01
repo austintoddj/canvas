@@ -820,4 +820,12 @@ return [
     'editor.history_last_week' => 'গতলে গত সপ্তাহ',
     'editor.history_save_empty' => 'সংস্করণ সংরক্ষণের আগে শিরোনাম বা মূল অংশ যোগ করুন।',
     'editor.history_restored_pending' => 'মুলতুবি সম্পাদনা হিসেবে পুনরুদ্ধার — প্রকাশ করতে আপডেট করুন।',
+    'editor.history_reason_origin' => 'প্রথম সংস্করণ',
+    'editor.history_reason_published' => 'প্রকাশিত',
+    'editor.history_reason_scheduled' => 'নির্ধারিত',
+    'editor.history_reason_unpublished' => 'প্রকাশনা বাতিল',
+    'editor.history_reason_updated' => 'আপডেট',
+    'editor.history_reason_manual' => 'সংরক্ষিত সংস্করণ',
+    'editor.history_reason_left' => 'সম্পাদক ছেড়েছেন',
+    'editor.history_reason_restored' => 'পুনরুদ্ধার',
 ];
