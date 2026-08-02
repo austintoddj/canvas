@@ -63,4 +63,16 @@ describe('PostEditorLayout history control', () => {
 
         expect(document.querySelector('[data-post-history-trigger="true"]')).toBeNull();
     });
+
+    it('stacks editor chrome for narrow viewports (no single-row crush)', () => {
+        renderLayout(() => undefined);
+
+        const chrome = document.querySelector('[data-post-editor-chrome="true"]');
+        expect(chrome).not.toBeNull();
+        expect(chrome?.className).toMatch(/flex-col/);
+        expect(chrome?.className).toMatch(/sm:flex-row/);
+        // Back label collapses to icon-only under sm.
+        const back = document.querySelector('[data-post-back-to-posts="true"]');
+        expect(back?.querySelector('span.hidden.sm\\:inline') ?? back?.querySelector('span.hidden')).not.toBeNull();
+    });
 });

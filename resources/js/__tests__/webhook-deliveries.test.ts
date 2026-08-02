@@ -21,14 +21,8 @@ describe('webhook delivery helpers', () => {
     });
 
     it('returns status label translation keys', () => {
-        expect(webhookDeliveryStatusLabelKey('success')).toBe(
-            'integrations.webhooks_deliveries_status_success'
-        );
-        expect(webhookDeliveryStatusLabelKey('failed')).toBe(
-            'integrations.webhooks_deliveries_status_failed'
-        );
-        expect(webhookDeliveryStatusLabelKey('pending')).toBe(
-            'integrations.webhooks_deliveries_status_pending'
-        );
+        expect(webhookDeliveryStatusLabelKey('success')).toBe('integrations.webhooks_deliveries_status_success');
+        expect(webhookDeliveryStatusLabelKey('failed')).toBe('integrations.webhooks_deliveries_status_failed');
+        expect(webhookDeliveryStatusLabelKey('pending')).toBe('integrations.webhooks_deliveries_status_pending');
     });
 });

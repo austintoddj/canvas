@@ -57,7 +57,7 @@ export function WebhookEventsField({
             data-webhook-events="true"
             data-invalid={invalid ? true : undefined}
         >
-            <div className="flex items-center justify-between gap-3 border-b border-zinc-950/10 bg-zinc-50/80 px-3.5 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+            <div className="flex items-center justify-between gap-3 border-b border-zinc-950/10 bg-zinc-50/80 px-3 py-2.5 dark:border-white/10 dark:bg-white/[0.03]">
                 <CheckboxField disabled={disabled || total === 0} className="min-w-0">
                     <Checkbox
                         color="dark/zinc"
@@ -85,7 +85,7 @@ export function WebhookEventsField({
                 </p>
             </div>
 
-            <CheckboxGroup className="p-3.5 sm:p-4">
+            <CheckboxGroup className="p-3 sm:p-3.5 !space-y-2.5 has-data-[slot=description]:!space-y-2.5">
                 {options.map((option) => {
                     const isChecked = selected.has(option.id);
 
@@ -98,13 +98,15 @@ export function WebhookEventsField({
                                 onChange={(next) => toggle(option.id, next)}
                                 data-webhook-event={option.id}
                             />
-                            <Label className="cursor-pointer">{option.label}</Label>
-                            <Description>
-                                <span className="font-mono text-xs/5">{option.id}</span>
-                                {option.description ? (
-                                    <span className="mt-0.5 block text-xs/5">{option.description}</span>
-                                ) : null}
-                            </Description>
+                            <Label className="cursor-pointer">
+                                <span className="font-medium">{option.label}</span>
+                                <span className="ml-1.5 font-mono text-xs font-normal text-zinc-400 dark:text-zinc-500">
+                                    {option.id}
+                                </span>
+                            </Label>
+                            {option.description ? (
+                                <Description className="line-clamp-1">{option.description}</Description>
+                            ) : null}
                         </CheckboxField>
                     );
                 })}

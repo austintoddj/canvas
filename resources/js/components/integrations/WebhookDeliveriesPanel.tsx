@@ -3,9 +3,15 @@ import { useCallback, useEffect, useState } from 'react';
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
 import { Subheading } from '@/components/heading';
+import { Select } from '@/components/select';
 import { useCanvas } from '@/hooks/useCanvas';
 import { ApiError, apiErrorCode } from '@/lib/api';
-import { integrationsApi, type WebhookDelivery } from '@/lib/api/integrations';
+import {
+    integrationsApi,
+    type WebhookDelivery,
+    type WebhookDeliveryStatus,
+    type WebhookEventOption,
+} from '@/lib/api/integrations';
 import { formatRelativeTime } from '@/lib/format-relative-time';
 import {
     isRetryableWebhookDelivery,
@@ -16,20 +22,68 @@ import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { IconChevronDown, IconRefresh } from '@tabler/icons-react';
 
+type StatusFilter = '' | WebhookDeliveryStatus;
+
 type WebhookDeliveriesPanelProps = {
     open: boolean;
     enabled: boolean;
-    /** Bump after send-test so the list reloads without closing the drawer. */
+    /** Bump after send-test so the list reloads without remounting. */
     refreshKey?: number;
+    /** Parent section already provides title/help (page layout). */
+    embedded?: boolean;
+    /** Subscribable events for the event filter (plus webhook.test). */
+    eventOptions?: WebhookEventOption[];
 };
 
-export function WebhookDeliveriesPanel({ open, enabled, refreshKey = 0 }: WebhookDeliveriesPanelProps) {
+const STATUS_FILTERS: { value: StatusFilter; labelKey: string; fallback: string }[] = [
+    { value: '', labelKey: 'integrations.webhooks_deliveries_filter_all_statuses', fallback: 'All statuses' },
+    { value: 'pending', labelKey: 'integrations.webhooks_deliveries_status_pending', fallback: 'Pending' },
+    { value: 'success', labelKey: 'integrations.webhooks_deliveries_status_success', fallback: 'Success' },
+    { value: 'failed', labelKey: 'integrations.webhooks_deliveries_status_failed', fallback: 'Failed' },
+];
+
+const FALLBACK_EVENT_OPTIONS: WebhookEventOption[] = [
+    { id: 'post.published', label: 'Published' },
+    { id: 'post.scheduled', label: 'Scheduled' },
+    { id: 'post.updated', label: 'Updated' },
+    { id: 'post.unpublished', label: 'Unpublished' },
+    { id: 'post.deleted', label: 'Deleted' },
+];
+
+export function WebhookDeliveriesPanel({
+    open,
+    enabled,
+    refreshKey = 0,
+    embedded = false,
+    eventOptions,
+}: WebhookDeliveriesPanelProps) {
     const { t } = useCanvas();
     const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [retryingId, setRetryingId] = useState<string | null>(null);
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
+    const [eventFilter, setEventFilter] = useState('');
+
+    const filterActive = statusFilter !== '' || eventFilter !== '';
+
+    const eventsForSelect = (() => {
+        const base = eventOptions && eventOptions.length > 0 ? eventOptions : FALLBACK_EVENT_OPTIONS;
+        const hasTest = base.some((option) => option.id === 'webhook.test');
+
+        if (hasTest) {
+            return base;
+        }
+
+        return [
+            ...base,
+            {
+                id: 'webhook.test',
+                label: t('integrations.webhooks_event_test', 'Test'),
+            },
+        ];
+    })();
 
     const load = useCallback(
         async (signal?: AbortSignal) => {
@@ -37,7 +91,14 @@ export function WebhookDeliveriesPanel({ open, enabled, refreshKey = 0 }: Webhoo
             setLoadError(null);
 
             try {
-                const page = await integrationsApi.webhookDeliveries({ page: 1 }, signal);
+                const page = await integrationsApi.webhookDeliveries(
+                    {
+                        page: 1,
+                        status: statusFilter === '' ? undefined : statusFilter,
+                        event: eventFilter === '' ? undefined : eventFilter,
+                    },
+                    signal
+                );
                 setDeliveries(page.data);
                 setLoading(false);
             } catch {
@@ -45,14 +106,12 @@ export function WebhookDeliveriesPanel({ open, enabled, refreshKey = 0 }: Webhoo
                     return;
                 }
 
-                setLoadError(
-                    t('integrations.webhooks_deliveries_load_error', 'Unable to load delivery history.')
-                );
+                setLoadError(t('integrations.webhooks_deliveries_load_error', 'Unable to load delivery history.'));
                 setDeliveries([]);
                 setLoading(false);
             }
         },
-        [t]
+        [t, statusFilter, eventFilter]
     );
 
     useEffect(() => {
@@ -95,20 +154,13 @@ export function WebhookDeliveriesPanel({ open, enabled, refreshKey = 0 }: Webhoo
                 const code = apiErrorCode(error);
 
                 if (code === 'webhooks_not_configured') {
-                    toast.error(
-                        t('integrations.webhooks_not_configured', 'Configure webhooks before sending a test.')
-                    );
+                    toast.error(t('integrations.webhooks_not_configured', 'Configure webhooks before sending a test.'));
                 } else if (code === 'webhooks_delivery_not_failed') {
                     toast.error(
-                        t(
-                            'integrations.webhooks_deliveries_retry_not_failed',
-                            'Only failed deliveries can be retried.'
-                        )
+                        t('integrations.webhooks_deliveries_retry_not_failed', 'Only failed deliveries can be retried.')
                     );
                 } else {
-                    toast.error(
-                        t('integrations.webhooks_deliveries_retry_error', 'Unable to retry this delivery.')
-                    );
+                    toast.error(t('integrations.webhooks_deliveries_retry_error', 'Unable to retry this delivery.'));
                 }
             } else {
                 toast.error(t('integrations.webhooks_deliveries_retry_error', 'Unable to retry this delivery.'));
@@ -122,32 +174,77 @@ export function WebhookDeliveriesPanel({ open, enabled, refreshKey = 0 }: Webhoo
         return null;
     }
 
+    const refreshButton = (
+        <Button
+            type="button"
+            outline
+            disabled={loading || retryingId !== null}
+            onClick={() => void load()}
+            data-webhook-deliveries-refresh="true"
+        >
+            <IconRefresh data-slot="icon" className={cn(loading && 'animate-spin')} aria-hidden="true" />
+            <span className={embedded ? undefined : 'sr-only'}>
+                {t('integrations.webhooks_deliveries_refresh', 'Refresh')}
+            </span>
+        </Button>
+    );
+
     return (
-        <section className="min-w-0 space-y-3" data-webhook-deliveries="true">
-            <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="min-w-0 space-y-1">
-                    <Subheading level={3}>
-                        {t('integrations.webhooks_deliveries', 'Recent deliveries')}
-                    </Subheading>
-                    <p className="text-xs text-canvas-muted dark:text-canvas-muted-dark">
-                        {t(
-                            'integrations.webhooks_deliveries_help',
-                            'Outbound attempts from the last 30 days. Failed rows can be retried with a new delivery id.'
-                        )}
-                    </p>
+        <div className="min-w-0 space-y-3" data-webhook-deliveries="true">
+            {embedded ? (
+                <div className="flex justify-end">{refreshButton}</div>
+            ) : (
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0 space-y-1">
+                        <Subheading level={3}>{t('integrations.webhooks_deliveries', 'Recent deliveries')}</Subheading>
+                        <p className="text-xs text-canvas-muted dark:text-canvas-muted-dark">
+                            {t(
+                                'integrations.webhooks_deliveries_help',
+                                'Outbound attempts from the last 30 days. Failed rows can be retried with a new delivery id.'
+                            )}
+                        </p>
+                    </div>
+                    {refreshButton}
                 </div>
-                <Button
-                    type="button"
-                    outline
-                    disabled={loading || retryingId !== null}
-                    onClick={() => void load()}
-                    data-webhook-deliveries-refresh="true"
+            )}
+
+            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2" data-webhook-deliveries-filters="true">
+                <Select
+                    name="webhook-delivery-status"
+                    className="min-w-0"
+                    aria-label={t('integrations.webhooks_deliveries_filter_status', 'Filter by status')}
+                    value={statusFilter}
+                    onChange={(event) => {
+                        setExpandedId(null);
+                        setStatusFilter(event.target.value as StatusFilter);
+                    }}
+                    data-webhook-deliveries-status-filter="true"
                 >
-                    <IconRefresh className={cn('size-4', loading && 'animate-spin')} aria-hidden="true" />
-                    <span className="sr-only">
-                        {t('integrations.webhooks_deliveries_refresh', 'Refresh')}
-                    </span>
-                </Button>
+                    {STATUS_FILTERS.map((option) => (
+                        <option key={option.value || 'all'} value={option.value}>
+                            {t(option.labelKey, option.fallback)}
+                        </option>
+                    ))}
+                </Select>
+
+                <Select
+                    name="webhook-delivery-event"
+                    className="min-w-0"
+                    aria-label={t('integrations.webhooks_deliveries_filter_event', 'Filter by event')}
+                    value={eventFilter}
+                    onChange={(event) => {
+                        setExpandedId(null);
+                        setEventFilter(event.target.value);
+                    }}
+                    data-webhook-deliveries-event-filter="true"
+                >
+                    <option value="">{t('integrations.webhooks_deliveries_filter_all_events', 'All events')}</option>
+                    {eventsForSelect.map((option) => (
+                        <option key={option.id} value={option.id}>
+                            {option.label}
+                        </option>
+                    ))}
+                </Select>
             </div>
 
             {loadError ? (
@@ -166,134 +263,151 @@ export function WebhookDeliveriesPanel({ open, enabled, refreshKey = 0 }: Webhoo
                 <p
                     className="rounded-lg border border-dashed border-zinc-950/10 px-3 py-4 text-sm text-canvas-muted dark:border-white/10 dark:text-canvas-muted-dark"
                     data-webhook-deliveries-empty="true"
+                    data-webhook-deliveries-filtered={filterActive ? 'true' : undefined}
                 >
-                    {t(
-                        'integrations.webhooks_deliveries_empty',
-                        'No deliveries yet. Publish a post or send a test webhook to see history here.'
-                    )}
+                    {filterActive
+                        ? t('integrations.webhooks_deliveries_filtered_empty', 'No deliveries match these filters.')
+                        : t(
+                              'integrations.webhooks_deliveries_empty',
+                              'No deliveries yet. Publish a post or send a test webhook to see history here.'
+                          )}
                 </p>
             ) : null}
 
             {deliveries.length > 0 ? (
-                <ul className="divide-y divide-zinc-950/5 overflow-hidden rounded-xl border border-zinc-950/10 dark:divide-white/5 dark:border-white/10">
-                    {deliveries.map((delivery) => {
-                        const expanded = expandedId === delivery.id;
-                        const status = String(delivery.status);
-                        const color = webhookDeliveryStatusColor(status);
-                        const statusLabel = t(webhookDeliveryStatusLabelKey(status), status);
-                        const when = formatRelativeTime(delivery.created_at);
-                        const canRetry = isRetryableWebhookDelivery(status);
+                <div
+                    className="max-h-[min(22rem,50vh)] overflow-y-auto overflow-x-hidden rounded-lg border border-zinc-950/10 dark:border-white/10"
+                    data-webhook-deliveries-scroll="true"
+                >
+                    <ul className="divide-y divide-zinc-950/5 dark:divide-white/5">
+                        {deliveries.map((delivery) => {
+                            const expanded = expandedId === delivery.id;
+                            const status = String(delivery.status);
+                            const color = webhookDeliveryStatusColor(status);
+                            const statusLabel = t(webhookDeliveryStatusLabelKey(status), status);
+                            const when = formatRelativeTime(delivery.created_at);
+                            const canRetry = isRetryableWebhookDelivery(status);
 
-                        return (
-                            <li key={delivery.id} className="min-w-0" data-webhook-delivery={delivery.id}>
-                                <div className="flex min-w-0 items-start gap-2 px-3 py-2.5">
-                                    <button
-                                        type="button"
-                                        className="min-w-0 flex-1 text-left"
-                                        onClick={() => setExpandedId(expanded ? null : delivery.id)}
+                            function toggleExpanded() {
+                                setExpandedId(expanded ? null : delivery.id);
+                            }
+
+                            return (
+                                <li key={delivery.id} className="min-w-0" data-webhook-delivery={delivery.id}>
+                                    <div
+                                        role="button"
+                                        tabIndex={0}
                                         aria-expanded={expanded}
+                                        className={
+                                            expanded
+                                                ? 'group/list-row flex min-w-0 cursor-pointer items-center gap-2 bg-zinc-950/5 px-3 py-2.5 dark:bg-white/5'
+                                                : 'group/list-row flex min-w-0 cursor-pointer items-center gap-2 px-3 py-2.5 hover:bg-zinc-950/5 dark:hover:bg-white/5'
+                                        }
+                                        onClick={toggleExpanded}
+                                        onKeyDown={(event) => {
+                                            if (event.key === 'Enter' || event.key === ' ') {
+                                                event.preventDefault();
+                                                toggleExpanded();
+                                            }
+                                        }}
                                         data-webhook-delivery-toggle="true"
                                     >
-                                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                                            <Badge color={color}>{statusLabel}</Badge>
-                                            <span className="truncate text-sm font-medium text-zinc-950 dark:text-white">
-                                                {delivery.event}
-                                            </span>
-                                            {delivery.http_status != null ? (
-                                                <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                        <div className="min-w-0 flex-1 text-left">
+                                            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                                                <Badge color={color}>{statusLabel}</Badge>
+                                                <span className="truncate text-sm font-medium text-zinc-950 dark:text-white">
+                                                    {delivery.event}
+                                                </span>
+                                                {delivery.http_status != null ? (
+                                                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                                        {t(
+                                                            'integrations.webhooks_deliveries_http',
+                                                            { status: String(delivery.http_status) },
+                                                            'HTTP :status'
+                                                        )}
+                                                    </span>
+                                                ) : null}
+                                            </div>
+                                            <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                                {when ? <span>{when}</span> : null}
+                                                <span>
                                                     {t(
-                                                        'integrations.webhooks_deliveries_http',
-                                                        { status: String(delivery.http_status) },
-                                                        'HTTP :status'
+                                                        'integrations.webhooks_deliveries_attempts',
+                                                        { count: delivery.attempts },
+                                                        'Attempts: :count'
                                                     )}
                                                 </span>
+                                            </div>
+                                            {delivery.error_message && !expanded ? (
+                                                <p className="mt-0.5 line-clamp-1 text-xs text-red-600 dark:text-red-400">
+                                                    {delivery.error_message}
+                                                </p>
                                             ) : null}
                                         </div>
-                                        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                            {when ? <span>{when}</span> : null}
-                                            <span>
-                                                {t(
-                                                    'integrations.webhooks_deliveries_attempts',
-                                                    { count: delivery.attempts },
-                                                    'Attempts: :count'
+                                        <div className="flex shrink-0 items-center gap-1.5 self-center">
+                                            {canRetry ? (
+                                                <Button
+                                                    type="button"
+                                                    outline
+                                                    disabled={retryingId !== null}
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        void handleRetry(delivery);
+                                                    }}
+                                                    data-webhook-delivery-retry="true"
+                                                >
+                                                    {retryingId === delivery.id
+                                                        ? t('integrations.webhooks_deliveries_retrying', 'Retrying…')
+                                                        : t('integrations.webhooks_deliveries_retry', 'Retry')}
+                                                </Button>
+                                            ) : null}
+                                            <IconChevronDown
+                                                className={cn(
+                                                    'size-4 shrink-0 text-zinc-400 transition-transform',
+                                                    expanded && 'rotate-180'
                                                 )}
-                                            </span>
+                                                aria-hidden="true"
+                                            />
                                         </div>
-                                        {delivery.error_message && !expanded ? (
-                                            <p className="mt-1 line-clamp-1 text-xs text-red-600 dark:text-red-400">
-                                                {delivery.error_message}
-                                            </p>
-                                        ) : null}
-                                    </button>
-                                    <div className="flex shrink-0 items-center gap-1">
-                                        {canRetry ? (
-                                            <Button
-                                                type="button"
-                                                outline
-                                                disabled={retryingId !== null}
-                                                onClick={() => void handleRetry(delivery)}
-                                                data-webhook-delivery-retry="true"
-                                            >
-                                                {retryingId === delivery.id
-                                                    ? t(
-                                                          'integrations.webhooks_deliveries_retrying',
-                                                          'Retrying…'
-                                                      )
-                                                    : t('integrations.webhooks_deliveries_retry', 'Retry')}
-                                            </Button>
-                                        ) : null}
-                                        <IconChevronDown
-                                            className={cn(
-                                                'size-4 shrink-0 text-zinc-400 transition-transform',
-                                                expanded && 'rotate-180'
-                                            )}
-                                            aria-hidden="true"
-                                        />
                                     </div>
-                                </div>
-                                {expanded ? (
-                                    <div
-                                        className="space-y-2 border-t border-zinc-950/5 bg-zinc-50/60 px-3 py-2.5 dark:border-white/5 dark:bg-white/[0.03]"
-                                        data-webhook-delivery-detail="true"
-                                    >
-                                        <DetailRow
-                                            label={t('integrations.webhooks_deliveries_id', 'Delivery id')}
-                                            value={delivery.id}
-                                            mono
-                                        />
-                                        <DetailRow
-                                            label={t('integrations.webhooks_url', 'Endpoint URL')}
-                                            value={delivery.url}
-                                            mono
-                                        />
-                                        {delivery.error_message ? (
+                                    {expanded ? (
+                                        <div
+                                            className="space-y-2 border-t border-zinc-950/5 bg-zinc-50/60 px-3 py-2.5 dark:border-white/5 dark:bg-white/[0.03]"
+                                            data-webhook-delivery-detail="true"
+                                        >
                                             <DetailRow
-                                                label={t(
-                                                    'integrations.webhooks_deliveries_error',
-                                                    'Error'
-                                                )}
-                                                value={delivery.error_message}
-                                            />
-                                        ) : null}
-                                        {delivery.response_body ? (
-                                            <DetailRow
-                                                label={t(
-                                                    'integrations.webhooks_deliveries_response',
-                                                    'Response'
-                                                )}
-                                                value={delivery.response_body}
+                                                label={t('integrations.webhooks_deliveries_id', 'Delivery id')}
+                                                value={delivery.id}
                                                 mono
-                                                pre
                                             />
-                                        ) : null}
-                                    </div>
-                                ) : null}
-                            </li>
-                        );
-                    })}
-                </ul>
+                                            <DetailRow
+                                                label={t('integrations.webhooks_url', 'Endpoint URL')}
+                                                value={delivery.url}
+                                                mono
+                                            />
+                                            {delivery.error_message ? (
+                                                <DetailRow
+                                                    label={t('integrations.webhooks_deliveries_error', 'Error')}
+                                                    value={delivery.error_message}
+                                                />
+                                            ) : null}
+                                            {delivery.response_body ? (
+                                                <DetailRow
+                                                    label={t('integrations.webhooks_deliveries_response', 'Response')}
+                                                    value={delivery.response_body}
+                                                    mono
+                                                    pre
+                                                />
+                                            ) : null}
+                                        </div>
+                                    ) : null}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
             ) : null}
-        </section>
+        </div>
     );
 }
 
@@ -321,14 +435,7 @@ function DetailRow({
                     {value}
                 </pre>
             ) : (
-                <p
-                    className={cn(
-                        'break-all text-xs text-zinc-800 dark:text-zinc-200',
-                        mono && 'font-mono'
-                    )}
-                >
-                    {value}
-                </p>
+                <p className={cn('break-all text-xs text-zinc-800 dark:text-zinc-200', mono && 'font-mono')}>{value}</p>
             )}
         </div>
     );

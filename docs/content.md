@@ -51,10 +51,10 @@ When a future `published_at` elapses, `published()` already includes the post. C
 
 The admin stores **content checkpoints** in `canvas_post_revisions` for editorial recovery — not every autosave, and never for public readers.
 
-| What is stored | Full editor-visible snapshot: title, slug, summary, body, featured image fields, SEO `meta` |
-| -------------- | ------------------------------------------------------------------------------------------- |
+| What is stored | Full editor-visible snapshot: title, slug, summary, body, featured image fields, SEO `meta`   |
+| -------------- | --------------------------------------------------------------------------------------------- |
 | Why (`reason`) | Lifecycle moments such as first version, published, scheduled, updated, left editor, restored |
-| User labels    | Optional names (rename in the UI) for quick filtering                                       |
+| User labels    | Optional names (rename in the UI) for quick filtering                                         |
 
 Checkpoints are created when a post is first saved with content, when visibility changes (publish / schedule / unpublish), when a live **Update** promotes changed content, when the author leaves the editor with unsaved-session content, and when a revision is restored. Draft and live **pending** autosaves do not append history rows.
 

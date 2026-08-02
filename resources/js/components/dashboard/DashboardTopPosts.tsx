@@ -39,7 +39,7 @@ function TopPostRows({ posts, total }: { posts: DashboardTopPost[]; total: numbe
                         />
                         <Link
                             href={`/posts/${post.id}/stats`}
-                            className="relative flex items-center gap-3 px-2.5 py-2 text-sm focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500"
+                            className="relative flex min-w-0 items-center gap-2 px-2.5 py-2 text-sm focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500 sm:gap-3"
                         >
                             <span className="w-4 shrink-0 text-xs tabular-nums text-canvas-muted dark:text-canvas-muted-dark">
                                 {index + 1}
@@ -86,7 +86,7 @@ export function DashboardTopPosts({
             <div
                 onPointerEnter={() => setHovered(true)}
                 onPointerLeave={() => setHovered(false)}
-                className="relative flex h-full flex-col rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5"
+                className="relative flex h-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5"
                 data-dashboard-top-posts="true"
             >
                 <div className="shrink-0">

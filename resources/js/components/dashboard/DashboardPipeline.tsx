@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Subheading } from '@/components/heading';
 import { Link } from '@/components/link';
 import { useCanvas } from '@/hooks/useCanvas';
+import { calendarIndexPath } from '@/lib/calendar/month';
 import { pipelineHasItems, type DashboardScope } from '@/lib/dashboard';
 import { formatListDate } from '@/lib/format-list-date';
 import { postsIndexPath } from '@/lib/posts/list';
@@ -43,7 +44,8 @@ const COLUMNS: ColumnConfig[] = [
     {
         key: 'scheduled',
         titleKey: 'dashboard.pipeline_scheduled',
-        viewAllHref: (scope) => postsIndexPath({ tab: 'draft', scope }),
+        // Calendar is the dedicated scheduled + published month view (not the mixed drafts tab).
+        viewAllHref: (scope) => calendarIndexPath({ scope }),
     },
 ];
 

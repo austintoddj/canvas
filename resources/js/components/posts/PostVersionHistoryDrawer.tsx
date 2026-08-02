@@ -7,6 +7,7 @@ import { Input } from '@/components/input';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
 import RevisionDiffModal from '@/components/posts/RevisionDiffModal';
 import { SideDrawer } from '@/components/SideDrawer';
+import { Skeleton } from '@/components/Skeleton';
 import { useCanvas } from '@/hooks/useCanvas';
 import { postsApi } from '@/lib/api/posts';
 import {
@@ -46,7 +47,8 @@ export default function PostVersionHistoryDrawer({
     const { t } = useCanvas();
     const [revisions, setRevisions] = useState<PostRevisionListItem[]>([]);
     const [fullById, setFullById] = useState<Map<string, PostRevision>>(() => new Map());
-    const [loading, setLoading] = useState(false);
+    // Start loading when opened so the skeleton paints before the first paint frame.
+    const [loading, setLoading] = useState(() => open && postId !== null);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [filter, setFilter] = useState<RevisionFilter>('all');
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -264,9 +266,27 @@ export default function PostVersionHistoryDrawer({
             >
                 <div className="flex min-h-0 flex-1 flex-col" data-version-history-drawer="true">
                     {loading ? (
-                        <p className="px-5 py-4 text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                            {t('common.loading')}
-                        </p>
+                        <div className="space-y-5 px-5 py-4" aria-busy="true" data-version-history-skeleton="true">
+                            <Skeleton className="h-10 w-full rounded-lg" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-3 w-16 rounded-md" />
+                                <div className="overflow-hidden rounded-xl border border-zinc-950/10 dark:border-white/10">
+                                    {Array.from({ length: 4 }, (_, index) => (
+                                        <div
+                                            key={index}
+                                            className={
+                                                index > 0
+                                                    ? 'space-y-2 border-t border-zinc-950/5 px-4 py-3.5 dark:border-white/5 sm:px-5'
+                                                    : 'space-y-2 px-4 py-3.5 sm:px-5'
+                                            }
+                                        >
+                                            <Skeleton className="h-4 w-2/3 max-w-[12rem] rounded-md" />
+                                            <Skeleton className="h-3.5 w-1/2 max-w-[9rem] rounded-md" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                     ) : null}
 
                     {loadError !== null ? (

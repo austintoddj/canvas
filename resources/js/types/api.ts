@@ -175,14 +175,7 @@ export type CalendarPostsResponse = {
 
 /** Why a checkpoint was recorded (`canvas_post_revisions.reason`). */
 export type RevisionReason =
-    | 'origin'
-    | 'published'
-    | 'scheduled'
-    | 'unpublished'
-    | 'updated'
-    | 'manual'
-    | 'left'
-    | 'restored';
+    'origin' | 'published' | 'scheduled' | 'unpublished' | 'updated' | 'manual' | 'left' | 'restored';
 
 /** Lean revision row from index / rename (no body). */
 export type PostRevisionListItem = {

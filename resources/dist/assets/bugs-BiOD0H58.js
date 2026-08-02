@@ -1,0 +1,1 @@
+import{V as e,z as t}from"./dialog-hMiSwn0p.js";function n(n){let i=n.parentElement,a=null;for(;i&&!e(i);)t(i)&&(a=i),i=i.parentElement;let o=i?.getAttribute(`disabled`)===``;return o&&r(a)?!1:o}function r(e){if(!e)return!1;let n=e.previousElementSibling;for(;n!==null;){if(t(n))return!1;n=n.previousElementSibling}return!0}export{n as t};

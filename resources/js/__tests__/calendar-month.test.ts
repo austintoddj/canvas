@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
     addMonths,
     buildMonthGrid,
+    calendarIndexPath,
     dateKeyFromIso,
     formatDateKey,
     formatYearMonth,
@@ -103,5 +104,15 @@ describe('calendar month helpers', () => {
         expect(weekStartsOnForLocale('en-US')).toBe(0);
         expect(weekStartsOnForLocale('de')).toBe(1);
         expect(weekStartsOnForLocale('ja')).toBe(1);
+    });
+
+    it('builds calendar index paths with optional query params', () => {
+        expect(calendarIndexPath()).toBe('/calendar');
+        expect(calendarIndexPath({ scope: 'user' })).toBe('/calendar');
+        expect(calendarIndexPath({ scope: 'all' })).toBe('/calendar?scope=all');
+        expect(calendarIndexPath({ month: { year: 2026, month: 7 } })).toBe('/calendar?month=2026-08');
+        expect(calendarIndexPath({ month: '2026-09', scope: 'all', day: '2026-09-15' })).toBe(
+            '/calendar?month=2026-09&scope=all&day=2026-09-15'
+        );
     });
 });

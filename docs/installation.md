@@ -66,20 +66,20 @@ You may automate this in your application's `composer.json`:
 
 ## Artisan commands
 
-| Command                            | Description                                    |
-| ---------------------------------- | ---------------------------------------------- |
-| `canvas:install`                   | Migrate, publish assets, link storage          |
-| `canvas:migrate`                   | Run package migrations                         |
-| `canvas:publish`                   | Publish admin assets                           |
-| `canvas:make-admin {user}`         | Grant Admin access                             |
-| `canvas:assign-role {user} {role}` | Assign Contributor, Editor, or Admin           |
-| `canvas:remove-access {user}`      | Remove Canvas access                           |
-| `canvas:users`                     | List or inspect Canvas users                   |
-| `canvas:roles`                     | List roles                                     |
-| `canvas:ui`                        | Publish the optional reader                    |
-| `canvas:digest`                    | Send the weekly digest                         |
-| `canvas:announce-scheduled`        | Fire `PostPublished` when schedules elapse     |
-| `canvas:prune-post-revisions`      | Keep newest N version-history rows per post    |
-| `canvas:prune-webhook-deliveries`  | Delete old outbound webhook delivery rows      |
+| Command                            | Description                                 |
+| ---------------------------------- | ------------------------------------------- |
+| `canvas:install`                   | Migrate, publish assets, link storage       |
+| `canvas:migrate`                   | Run package migrations                      |
+| `canvas:publish`                   | Publish admin assets                        |
+| `canvas:make-admin {user}`         | Grant Admin access                          |
+| `canvas:assign-role {user} {role}` | Assign Contributor, Editor, or Admin        |
+| `canvas:remove-access {user}`      | Remove Canvas access                        |
+| `canvas:users`                     | List or inspect Canvas users                |
+| `canvas:roles`                     | List roles                                  |
+| `canvas:ui`                        | Publish the optional reader                 |
+| `canvas:digest`                    | Send the weekly digest                      |
+| `canvas:announce-scheduled`        | Fire `PostPublished` when schedules elapse  |
+| `canvas:prune-post-revisions`      | Keep newest N version-history rows per post |
+| `canvas:prune-webhook-deliveries`  | Delete old outbound webhook delivery rows   |
 
 The `{user}` argument accepts an email address or user ID.

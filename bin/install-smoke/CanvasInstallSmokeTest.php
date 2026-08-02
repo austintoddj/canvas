@@ -32,6 +32,9 @@ class CanvasInstallSmokeTest extends TestCase
         $this->assertTrue(Schema::hasTable('canvas_topics'));
         $this->assertTrue(Schema::hasTable('canvas_media'));
         $this->assertTrue(Schema::hasTable('canvas_settings'));
+        $this->assertTrue(Schema::hasTable('canvas_post_revisions'));
+        $this->assertTrue(Schema::hasTable('canvas_webhook_deliveries'));
+        $this->assertTrue(Schema::hasColumn('canvas_posts', 'published_notified_at'));
     }
 
     public function test_admin_can_load_shell_list_and_publish_a_post(): void

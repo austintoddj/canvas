@@ -127,6 +127,17 @@ if [[ ! -L public/storage ]]; then
     exit 1
 fi
 
+echo "==> schedule:list includes Canvas 7.1 commands"
+SCHEDULE_LIST="$(php artisan schedule:list 2>&1 || true)"
+for cmd in canvas:announce-scheduled canvas:prune-webhook-deliveries canvas:prune-post-revisions; do
+    if ! grep -Fq "${cmd}" <<<"${SCHEDULE_LIST}"; then
+        echo "error: schedule:list missing ${cmd}" >&2
+        echo "${SCHEDULE_LIST}" >&2
+        exit 1
+    fi
+done
+echo "    schedule commands OK"
+
 echo "==> Seed host user + canvas:make-admin"
 php artisan tinker --execute="
 \\App\\Models\\User::factory()->create([

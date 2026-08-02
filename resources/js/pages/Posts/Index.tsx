@@ -20,6 +20,7 @@ import {
     PaginationPrevious,
 } from '@/components/pagination';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
+import { Link } from '@/components/link';
 import { Table, TableBody, TableCell, TableRow } from '@/components/table';
 import { TableListSkeleton } from '@/components/TableListSkeleton';
 import { Text, PageDescription, ErrorText } from '@/components/text';
@@ -31,6 +32,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { invalidateRecentPosts } from '@/hooks/useRecentPosts';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { postsApi } from '@/lib/api/posts';
+import { calendarIndexPath } from '@/lib/calendar/month';
 import { formatListDate } from '@/lib/format-list-date';
 import { paginationWindow, shouldGoToPreviousPageAfterDelete } from '@/lib/list-pagination';
 import {
@@ -218,32 +220,55 @@ export default function PostsIndex() {
                 <PageDescription>{t('posts.description')}</PageDescription>
             </PageHeader>
 
-            <div className="flex flex-wrap items-center justify-between gap-4">
+            <div
+                className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4"
+                data-posts-list-filters="true"
+            >
                 <PillNav
                     value={filters.tab}
                     onChange={(tab) => setFilters({ tab }, true)}
                     aria-label={t('posts.type_label')}
+                    className="w-full sm:w-auto"
                 >
-                    <PillNavItem value="published">
+                    <PillNavItem value="published" className="flex-1 justify-center sm:flex-none">
                         {t('posts.type_published')}
                         {response ? <Badge color="zinc">{response.publishedCount}</Badge> : null}
                     </PillNavItem>
-                    <PillNavItem value="draft">
+                    <PillNavItem value="draft" className="flex-1 justify-center sm:flex-none">
                         {t('posts.type_drafts')}
                         {response ? <Badge color="zinc">{response.draftCount}</Badge> : null}
                     </PillNavItem>
                 </PillNav>
 
-                {canViewAllPosts ? (
-                    <PillNav
-                        value={filters.scope}
-                        onChange={(scope) => setFilters({ scope }, true)}
-                        aria-label={t('posts.scope_label')}
-                    >
-                        <PillNavItem value="user">{t('posts.scope_mine')}</PillNavItem>
-                        <PillNavItem value="all">{t('posts.scope_all')}</PillNavItem>
-                    </PillNav>
-                ) : null}
+                <div className="flex flex-wrap items-center gap-3 sm:ms-auto">
+                    {canViewAllPosts ? (
+                        <PillNav
+                            value={filters.scope}
+                            onChange={(scope) => setFilters({ scope }, true)}
+                            aria-label={t('posts.scope_label')}
+                            className="w-full sm:w-auto"
+                        >
+                            <PillNavItem value="user" className="flex-1 justify-center sm:flex-none">
+                                {t('posts.scope_mine')}
+                            </PillNavItem>
+                            <PillNavItem value="all" className="flex-1 justify-center sm:flex-none">
+                                {t('posts.scope_all')}
+                            </PillNavItem>
+                        </PillNav>
+                    ) : null}
+
+                    {filters.tab === 'draft' ? (
+                        <Link
+                            href={calendarIndexPath({
+                                scope: canViewAllPosts && filters.scope === 'all' ? 'all' : 'user',
+                            })}
+                            className="text-sm font-medium text-zinc-700 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white"
+                            data-posts-calendar-link="true"
+                        >
+                            {t('posts.view_calendar', 'View calendar')}
+                        </Link>
+                    ) : null}
+                </div>
             </div>
 
             {error ? <ErrorText>{error}</ErrorText> : null}
@@ -266,7 +291,8 @@ export default function PostsIndex() {
                 </EmptyStateReveal>
             ) : posts ? (
                 <ContentReveal busy={refreshing} animate={animateContent}>
-                    <Table striped>
+                    {/* Allow wrap so dense mobile rows don't force horizontal page scroll. */}
+                    <Table striped className="whitespace-normal">
                         <TableBody>
                             {posts.data.map((post) => {
                                 const status = postListStatus(post.published_at);
@@ -281,6 +307,10 @@ export default function PostsIndex() {
                                           ? t('posts.scheduled_badge')
                                           : t('posts.draft_badge');
                                 const thumb = (post.featured_image ?? '').trim();
+                                const listDate = formatListDate(post.updated_at);
+                                const summaryLine = post.summary?.trim()
+                                    ? post.summary
+                                    : `${post.views_count.toLocaleString()} views`;
 
                                 return (
                                     <TableRow
@@ -296,18 +326,18 @@ export default function PostsIndex() {
                                             }
                                         }}
                                     >
-                                        <TableCell className="w-full max-w-0">
-                                            <div className="flex min-w-0 items-center gap-3">
+                                        <TableCell className="w-full max-w-0 whitespace-normal">
+                                            <div className="flex min-w-0 items-start gap-3 sm:items-center">
                                                 {thumb !== '' ? (
                                                     <FadeInImage
                                                         src={thumb}
                                                         alt=""
-                                                        className="size-9 shrink-0 rounded-lg object-cover"
+                                                        className="mt-0.5 size-9 shrink-0 rounded-lg object-cover sm:mt-0"
                                                     />
                                                 ) : null}
-                                                <div className="min-w-0">
+                                                <div className="min-w-0 flex-1">
                                                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                                        <span className="truncate font-medium text-zinc-950 dark:text-white">
+                                                        <span className="min-w-0 break-words font-medium text-zinc-950 sm:truncate dark:text-white">
                                                             {title}
                                                         </span>
                                                         <Badge color={badgeColor} data-publish-status={status}>
@@ -319,16 +349,19 @@ export default function PostsIndex() {
                                                             </Badge>
                                                         ) : null}
                                                     </div>
-                                                    <Text className="mt-1 line-clamp-1 text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                                                        {post.summary?.trim()
-                                                            ? post.summary
-                                                            : `${post.views_count.toLocaleString()} views`}
+                                                    <Text className="mt-1 line-clamp-2 text-sm text-canvas-muted sm:line-clamp-1 dark:text-canvas-muted-dark">
+                                                        <span className="sm:hidden">{listDate} · </span>
+                                                        {summaryLine}
                                                     </Text>
                                                 </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="w-px whitespace-nowrap">
-                                            <ListRowEnd date={formatListDate(post.updated_at)}>
+                                        <TableCell className="w-px whitespace-nowrap align-top sm:align-middle">
+                                            {/* Date lives under the title on mobile; end rail is icons only there. */}
+                                            <ListRowEnd
+                                                date={listDate}
+                                                className="max-sm:[&_[data-list-row-date]]:hidden"
+                                            >
                                                 {status === 'published' ? (
                                                     <ListRowActionLink
                                                         href={`/posts/${post.id}/stats`}

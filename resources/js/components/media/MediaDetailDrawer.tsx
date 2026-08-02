@@ -8,7 +8,8 @@ import { ErrorMessage, Field, FieldGroup, Label } from '@/components/fieldset';
 import { Subheading } from '@/components/heading';
 import { Input } from '@/components/input';
 import { SideDrawer } from '@/components/SideDrawer';
-import { Text, ErrorText } from '@/components/text';
+import { Skeleton } from '@/components/Skeleton';
+import { ErrorText } from '@/components/text';
 import { Textarea } from '@/components/textarea';
 import { useCanvas } from '@/hooks/useCanvas';
 import { ValidationError } from '@/lib/api';
@@ -58,7 +59,8 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
     const [media, setMedia] = useState<Media | null>(null);
     const [form, setForm] = useState<MediaFormState>({ original_name: '', alt: '', caption: '' });
     const [baseline, setBaseline] = useState('');
-    const [loading, setLoading] = useState(false);
+    // Start loading when opened so the skeleton paints before the first paint frame.
+    const [loading, setLoading] = useState(() => open && mediaId !== null);
     const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
     const [saving, setSaving] = useState(false);
@@ -213,8 +215,23 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                 }
             >
                 {loading ? (
-                    <div className="px-5 py-8">
-                        <Text className="text-sm text-zinc-500">{t('media.loading')}</Text>
+                    <div className="flex flex-1 flex-col" aria-busy="true" data-media-detail-skeleton="true">
+                        <Skeleton className="h-48 w-full rounded-none" />
+                        <div className="space-y-6 px-5 py-5">
+                            <div className="space-y-3">
+                                <Skeleton className="h-4 w-20 rounded-md" />
+                                <Skeleton className="h-3.5 w-full rounded-md" />
+                                <Skeleton className="h-3.5 w-4/5 rounded-md" />
+                                <Skeleton className="h-3.5 w-3/5 rounded-md" />
+                                <Skeleton className="h-3.5 w-2/3 rounded-md" />
+                            </div>
+                            <div className="space-y-3">
+                                <Skeleton className="h-4 w-24 rounded-md" />
+                                <Skeleton className="h-10 w-full rounded-lg" />
+                                <Skeleton className="h-10 w-full rounded-lg" />
+                                <Skeleton className="h-20 w-full rounded-lg" />
+                            </div>
+                        </div>
                     </div>
                 ) : null}
 

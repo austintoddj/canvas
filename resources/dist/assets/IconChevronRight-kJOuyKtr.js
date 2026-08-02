@@ -1,1 +1,0 @@
-import{t as e}from"./createReactComponent-CX9ofYtY.js";var t=e(`outline`,`chevron-left`,`ChevronLeft`,[[`path`,{d:`M15 6l-6 6l6 6`,key:`svg-0`}]]),n=e(`outline`,`chevron-right`,`ChevronRight`,[[`path`,{d:`M9 6l6 6l-6 6`,key:`svg-0`}]]);export{t as n,n as t};

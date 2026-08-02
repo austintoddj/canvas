@@ -1,11 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
 import { ContentReveal } from '@/components/ContentReveal';
-import { EmptyState } from '@/components/EmptyState';
-import { EmptyStateReveal } from '@/components/EmptyStateReveal';
 import { PageHeader } from '@/components/PageHeader';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Skeleton } from '@/components/Skeleton';
@@ -14,7 +12,7 @@ import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { usePermissions } from '@/hooks/usePermissions';
-import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
+import { isInitialLoading, isRefreshing } from '@/lib/async-ui';
 import { calendarApi } from '@/lib/api/calendar';
 import {
     addMonths,
@@ -36,7 +34,9 @@ import { cn } from '@/lib/utils';
 import type { CalendarPost } from '@/types/api';
 import { IconChevronLeft, IconChevronRight, IconPlus } from '@tabler/icons-react';
 
-const CELL_PREVIEW_LIMIT = 2;
+/** Title chips on sm+; mobile uses compact status dots instead. */
+const CELL_PREVIEW_LIMIT = 3;
+const CELL_DOT_LIMIT = 4;
 
 function CalendarSkeleton() {
     return (
@@ -83,8 +83,7 @@ function updateSearchParams(
         } else {
             // Drop day when navigating months if it falls outside the visible intent —
             // callers pass null to clear, or a Y-m-d to select.
-            const monthKey =
-                patch.month !== undefined ? formatYearMonth(patch.month) : formatYearMonth(currentMonth);
+            const monthKey = patch.month !== undefined ? formatYearMonth(patch.month) : formatYearMonth(currentMonth);
 
             if (patch.day.startsWith(monthKey)) {
                 next.set('day', patch.day);
@@ -119,6 +118,8 @@ export default function CalendarIndex() {
     const [posts, setPosts] = useState<CalendarPost[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    /** Bumped on “Today” so the today marker remounts and re-runs its one-shot pulse. */
+    const [todayPulseKey, setTodayPulseKey] = useState(0);
 
     useDocumentTitle(t('calendar.title'));
 
@@ -169,13 +170,16 @@ export default function CalendarIndex() {
 
     const byDate = useMemo(() => groupPostsByDate(posts), [posts]);
     const inMonthPosts = useMemo(() => postsInMonth(posts, yearMonth), [posts, yearMonth]);
-    const itemCount = inMonthPosts.length;
-    const isEmpty = shouldShowEmpty(loading, itemCount);
-    const showInitialSkeleton = isInitialLoading(loading, itemCount);
-    const refreshing = isRefreshing(loading, itemCount);
-    const { animateEmpty, animateContent } = useAsyncReveal(loading, itemCount, queryKey);
+    // Use full fetch size for skeleton/refresh so month switches keep the grid
+    // instead of flashing skeleton when the target month is empty.
+    const fetchCount = posts.length;
+    const showInitialSkeleton = isInitialLoading(loading, fetchCount);
+    const refreshing = isRefreshing(loading, fetchCount);
+    const { animateContent } = useAsyncReveal(loading, fetchCount, queryKey);
+    const monthEmpty = !loading && inMonthPosts.length === 0;
 
     const selectedPosts = selectedDay ? (byDate.get(selectedDay) ?? []) : [];
+    const dayPanelRef = useRef<HTMLElement | null>(null);
 
     function setMonth(next: YearMonth) {
         setSearchParams((current) => updateSearchParams(current, { month: next, day: null }), {
@@ -198,6 +202,10 @@ export default function CalendarIndex() {
         );
     }
 
+    function clearDay() {
+        setSearchParams((current) => updateSearchParams(current, { day: null }), { replace: true });
+    }
+
     function goToday() {
         const now = new Date();
         setSearchParams(
@@ -208,7 +216,35 @@ export default function CalendarIndex() {
                 }),
             { replace: true }
         );
+        setTodayPulseKey((key) => key + 1);
     }
+
+    function handleGridKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+        if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            setMonth(addMonths(yearMonth, -1));
+            return;
+        }
+
+        if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            setMonth(addMonths(yearMonth, 1));
+            return;
+        }
+
+        if (event.key === 'Escape' && selectedDay) {
+            event.preventDefault();
+            clearDay();
+        }
+    }
+
+    useEffect(() => {
+        if (!selectedDay || !dayPanelRef.current) {
+            return;
+        }
+
+        dayPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, [selectedDay]);
 
     return (
         <div className="space-y-8">
@@ -266,53 +302,66 @@ export default function CalendarIndex() {
 
             {showInitialSkeleton ? (
                 <CalendarSkeleton />
-            ) : isEmpty ? (
-                <EmptyStateReveal animate={animateEmpty}>
-                    <EmptyState
-                        headline={t('calendar.empty_title')}
-                        description={t('calendar.empty_blurb')}
-                        action={
-                            <Button href="/posts/new" color="dark/zinc">
-                                <IconPlus data-slot="icon" />
-                                {t('posts.empty_cta')}
-                            </Button>
-                        }
-                    />
-                </EmptyStateReveal>
             ) : (
                 <ContentReveal busy={refreshing} animate={animateContent}>
                     <div className="space-y-6">
+                        {monthEmpty ? (
+                            <p
+                                className="text-sm text-canvas-muted dark:text-canvas-muted-dark"
+                                data-calendar-month-empty="true"
+                            >
+                                <span className="font-medium text-canvas-fg dark:text-canvas-fg-dark">
+                                    {t('calendar.empty_title')}
+                                </span>
+                                <span className="mx-1.5 text-canvas-border dark:text-canvas-border-dark">·</span>
+                                {t('calendar.empty_blurb')}
+                            </p>
+                        ) : null}
+
                         <div
                             className="overflow-hidden rounded-2xl border border-canvas-border bg-canvas-border dark:border-canvas-border-dark dark:bg-canvas-border-dark"
                             data-calendar-grid="true"
+                            role="grid"
+                            aria-label={monthTitle}
+                            tabIndex={0}
+                            onKeyDown={handleGridKeyDown}
                         >
-                            <div className="grid grid-cols-7 gap-px border-b border-canvas-border bg-zinc-50 dark:border-canvas-border-dark dark:bg-zinc-900/60">
+                            <div
+                                className="grid grid-cols-7 gap-px border-b border-canvas-border bg-zinc-50 dark:border-canvas-border-dark dark:bg-zinc-900/60"
+                                role="row"
+                            >
                                 {weekdays.map((label) => (
                                     <div
                                         key={label}
-                                        className="px-2 py-2 text-center text-xs font-medium text-canvas-muted dark:text-canvas-muted-dark"
+                                        role="columnheader"
+                                        className="px-1 py-2 text-center text-[11px] font-medium text-canvas-muted sm:px-2 sm:text-xs dark:text-canvas-muted-dark"
                                     >
                                         {label}
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="grid grid-cols-7 gap-px">
+                            <div className="grid grid-cols-7 gap-px" role="rowgroup">
                                 {cells.map((cell) => {
                                     const dayPosts = byDate.get(cell.date) ?? [];
                                     const isSelected = selectedDay === cell.date;
                                     const preview = dayPosts.slice(0, CELL_PREVIEW_LIMIT);
                                     const overflow = dayPosts.length - preview.length;
+                                    const dots = dayPosts.slice(0, CELL_DOT_LIMIT);
+                                    const dotOverflow = dayPosts.length - dots.length;
+                                    const pulseToday = cell.isToday && todayPulseKey > 0;
 
                                     return (
                                         <button
                                             key={cell.date}
                                             type="button"
+                                            role="gridcell"
                                             onClick={() => selectDay(cell.date)}
                                             data-calendar-day={cell.date}
                                             data-selected={isSelected ? 'true' : undefined}
+                                            aria-selected={isSelected}
                                             className={cn(
-                                                'flex min-h-24 flex-col gap-1 bg-white p-1.5 text-left transition-colors sm:min-h-28 sm:p-2',
+                                                'flex min-h-16 flex-col gap-0.5 bg-white p-1 text-left transition-colors sm:min-h-28 sm:gap-1 sm:p-1.5',
                                                 'hover:bg-zinc-50 focus:outline-hidden focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-blue-500',
                                                 'dark:bg-zinc-950 dark:hover:bg-zinc-900/80',
                                                 !cell.inMonth && 'bg-zinc-50/80 dark:bg-zinc-950/50',
@@ -321,31 +370,60 @@ export default function CalendarIndex() {
                                             )}
                                         >
                                             <span
+                                                key={pulseToday ? `today-pulse-${todayPulseKey}` : `day-${cell.date}`}
+                                                data-calendar-today={cell.isToday ? 'true' : undefined}
+                                                data-calendar-today-pulse={pulseToday ? 'true' : undefined}
                                                 className={cn(
-                                                    'inline-flex size-7 items-center justify-center rounded-full text-xs font-medium',
-                                                    cell.isToday &&
-                                                        'bg-blue-600 text-white dark:bg-blue-500',
+                                                    'inline-flex size-6 items-center justify-center rounded-full text-[11px] font-medium sm:size-7 sm:text-xs',
+                                                    cell.isToday && 'bg-blue-600 text-white dark:bg-blue-500',
+                                                    pulseToday && 'canvas-calendar-today-pulse',
                                                     !cell.isToday &&
                                                         cell.inMonth &&
                                                         'text-canvas-fg dark:text-canvas-fg-dark',
-                                                    !cell.isToday &&
-                                                        !cell.inMonth &&
-                                                        'text-zinc-400 dark:text-zinc-600'
+                                                    !cell.isToday && !cell.inMonth && 'text-zinc-400 dark:text-zinc-600'
                                                 )}
                                             >
                                                 {cell.day}
                                             </span>
 
-                                            <div className="flex min-h-0 flex-1 flex-col gap-0.5">
+                                            {/* Mobile: compact status dots so multi-post days stay scannable. */}
+                                            {dayPosts.length > 0 ? (
+                                                <div
+                                                    className="mt-auto flex flex-wrap items-center gap-0.5 px-0.5 sm:hidden"
+                                                    data-calendar-day-dots="true"
+                                                    aria-hidden="true"
+                                                >
+                                                    {dots.map((post) => (
+                                                        <span
+                                                            key={post.id}
+                                                            className={cn(
+                                                                'size-1.5 shrink-0 rounded-full',
+                                                                post.status === 'scheduled'
+                                                                    ? 'bg-blue-500'
+                                                                    : 'bg-emerald-500',
+                                                                !cell.inMonth && 'opacity-50'
+                                                            )}
+                                                        />
+                                                    ))}
+                                                    {dotOverflow > 0 ? (
+                                                        <span className="text-[9px] font-medium leading-none text-canvas-muted dark:text-canvas-muted-dark">
+                                                            +{dotOverflow}
+                                                        </span>
+                                                    ) : null}
+                                                </div>
+                                            ) : null}
+
+                                            {/* sm+: title chips with denser packing. */}
+                                            <div className="hidden min-h-0 flex-1 flex-col gap-0.5 sm:flex">
                                                 {preview.map((post) => {
-                                                    const title =
-                                                        (post.title ?? '').trim() || t('common.untitled');
+                                                    const title = (post.title ?? '').trim() || t('common.untitled');
 
                                                     return (
                                                         <span
                                                             key={post.id}
+                                                            data-calendar-chip={post.status}
                                                             className={cn(
-                                                                'truncate rounded px-1 py-0.5 text-[10px] font-medium leading-tight sm:text-[11px]',
+                                                                'truncate rounded px-1 py-px text-[10px] font-medium leading-tight sm:text-[11px]',
                                                                 post.status === 'scheduled'
                                                                     ? 'bg-blue-500/15 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300'
                                                                     : 'bg-emerald-500/15 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300',
@@ -371,6 +449,7 @@ export default function CalendarIndex() {
 
                         {selectedDay ? (
                             <section
+                                ref={dayPanelRef}
                                 className="space-y-3 rounded-2xl border border-canvas-border p-4 sm:p-5 dark:border-canvas-border-dark"
                                 data-calendar-day-panel="true"
                                 aria-label={selectedDay}
@@ -396,10 +475,8 @@ export default function CalendarIndex() {
                                 ) : (
                                     <ul className="divide-y divide-canvas-border dark:divide-canvas-border-dark">
                                         {selectedPosts.map((post) => {
-                                            const title =
-                                                (post.title ?? '').trim() || t('common.untitled');
-                                            const badgeColor =
-                                                post.status === 'scheduled' ? 'blue' : 'green';
+                                            const title = (post.title ?? '').trim() || t('common.untitled');
+                                            const badgeColor = post.status === 'scheduled' ? 'blue' : 'green';
                                             const badgeLabel =
                                                 post.status === 'scheduled'
                                                     ? t('calendar.scheduled')
@@ -426,13 +503,9 @@ export default function CalendarIndex() {
                                                                 {title}
                                                             </span>
                                                             <span className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-canvas-muted dark:text-canvas-muted-dark">
-                                                                <span>
-                                                                    {formatListDate(post.published_at)}
-                                                                </span>
+                                                                <span>{formatListDate(post.published_at)}</span>
                                                                 {post.user?.name ? (
-                                                                    <span className="truncate">
-                                                                        {post.user.name}
-                                                                    </span>
+                                                                    <span className="truncate">{post.user.name}</span>
                                                                 ) : null}
                                                             </span>
                                                         </span>

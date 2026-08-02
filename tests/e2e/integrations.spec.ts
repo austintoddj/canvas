@@ -11,11 +11,15 @@ test.describe('Integrations webhooks', () => {
 
         await expect(page.getByRole('heading', { name: 'Integrations' })).toBeVisible({ timeout: 20_000 });
 
-        const webhooksRow = page.locator('[data-integration-row="webhooks"]');
-        await expect(webhooksRow).toBeVisible({ timeout: 15_000 });
-        await webhooksRow.getByRole('button', { name: /Configure|Manage/i }).click();
+        const webhooksCard = page.locator('[data-integration-card="webhooks"], [data-integration-row="webhooks"]');
+        await expect(webhooksCard).toBeVisible({ timeout: 15_000 });
+        await webhooksCard.getByRole('link', { name: /Configure|Manage/i }).click();
 
-        await expect(page.locator('[data-integration-drawer="webhooks"]')).toBeVisible({ timeout: 15_000 });
+        await expect(page).toHaveURL(/\/canvas\/integrations\/webhooks$/);
+        await expect(page.locator('[data-integration-page="true"]')).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator('[data-integration-hero="webhooks"]')).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator('[data-integration-section="settings"]')).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator('[data-integration-back]')).toBeVisible();
 
         const urlInput = page.locator('[data-webhook-url="true"], input[name="webhook_url"]');
         await expect(urlInput).toBeVisible();
@@ -40,7 +44,8 @@ test.describe('Integrations webhooks', () => {
         await save.click();
         await saveResponse;
 
-        // First enable opens the one-time signing secret dialog; later saves toast only.
+        // First enable opens the one-time signing secret dialog; later saves toast only
+        // (and navigates back to the list when there is no plain secret to reveal).
         await expect(
             page
                 .locator('[data-webhook-plain-secret="true"]')
@@ -54,21 +59,20 @@ test.describe('Integrations webhooks', () => {
             await secretDone.click();
         }
 
-        // Parent status refresh re-mounts the drawer footer — re-query after settle.
-        await expect(page.locator('[data-integration-row="webhooks"]')).toContainText(/Enabled/i, {
-            timeout: 15_000,
-        });
-
-        // Re-open if the drawer closed after save-without-plain-secret path.
+        // If save-without-plain-secret navigated home, go back to the detail page.
         if (
             !(await page
-                .locator('[data-integration-drawer="webhooks"]')
+                .locator('[data-integration-hero="webhooks"]')
                 .isVisible()
                 .catch(() => false))
         ) {
-            await webhooksRow.getByRole('button', { name: /Configure|Manage/i }).click();
-            await expect(page.locator('[data-integration-drawer="webhooks"]')).toBeVisible({ timeout: 10_000 });
+            await page.goto('/canvas/integrations/webhooks');
+            await expect(page.locator('[data-integration-hero="webhooks"]')).toBeVisible({ timeout: 15_000 });
         }
+
+        await expect(page.locator('[data-integration-hero="webhooks"]')).toContainText(/Enabled/i, {
+            timeout: 15_000,
+        });
 
         const sendTest = page.getByRole('button', { name: /^Send test$/i });
         await expect(sendTest).toBeVisible({ timeout: 15_000 });

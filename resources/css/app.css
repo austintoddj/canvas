@@ -487,6 +487,45 @@
     transform-origin: 9px 16px;
 }
 
+/* Calendar: one-shot “Today” marker pulse (re-triggered by remount + key). */
+@keyframes canvas-calendar-today-pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgb(37 99 235 / 0.45);
+    }
+    45% {
+        transform: scale(1.14);
+        box-shadow: 0 0 0 8px rgb(37 99 235 / 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgb(37 99 235 / 0);
+    }
+}
+
+.canvas-calendar-today-pulse {
+    animation: canvas-calendar-today-pulse 0.7s cubic-bezier(0.33, 1, 0.68, 1) 1;
+}
+
+.dark .canvas-calendar-today-pulse {
+    animation-name: canvas-calendar-today-pulse-dark;
+}
+
+@keyframes canvas-calendar-today-pulse-dark {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgb(59 130 246 / 0.5);
+    }
+    45% {
+        transform: scale(1.14);
+        box-shadow: 0 0 0 8px rgb(59 130 246 / 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgb(59 130 246 / 0);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .group\/sidebar-item:hover .sidebar-icon-morph-rotate,
     .group\/sidebar-item:hover .sidebar-icon-morph-tile-tall,
@@ -502,6 +541,11 @@
     .group\/sidebar-item:hover .sidebar-icon-morph-users-right,
     .group\/sidebar-item:hover .sidebar-icon-morph-awning,
     .group\/sidebar-item:hover .sidebar-icon-morph-calendar-day {
+        animation: none;
+    }
+
+    .canvas-calendar-today-pulse,
+    .dark .canvas-calendar-today-pulse {
         animation: none;
     }
 }

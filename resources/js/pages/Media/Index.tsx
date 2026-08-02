@@ -638,7 +638,7 @@ export default function MediaIndex() {
                     <PageDescription>{t('media.description')}</PageDescription>
                 </PageHeader>
 
-                <div className="space-y-3">
+                <div className="space-y-3" data-media-list-filters="true">
                     <Field className="w-full">
                         <Label className="sr-only">{t('media.search_label')}</Label>
                         <Input
@@ -649,11 +649,12 @@ export default function MediaIndex() {
                         />
                     </Field>
 
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                        <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-md">
+                    {/* Stack type/sort on mobile; scope on its own full-width row to avoid toolbar crush. */}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+                        <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:max-w-md sm:flex-1 sm:items-center">
                             <Select
                                 name="media-mime"
-                                className="min-w-0 flex-1"
+                                className="min-w-0"
                                 aria-label={t('media.file_type')}
                                 value={filters.mime}
                                 onChange={(event) => setFilters({ mime: event.target.value as MediaMimeFilter })}
@@ -667,7 +668,7 @@ export default function MediaIndex() {
 
                             <Select
                                 name="media-sort"
-                                className="min-w-0 flex-1"
+                                className="min-w-0"
                                 aria-label={t('media.sort_label')}
                                 value={filters.sort}
                                 onChange={(event) => setFilters({ sort: event.target.value as MediaListSort })}
@@ -685,13 +686,13 @@ export default function MediaIndex() {
                                 value={filters.scope}
                                 onChange={(scope) => setFilters({ scope })}
                                 aria-label={t('media.scope_label')}
-                                className="shrink-0"
+                                className="w-full shrink-0 sm:w-auto"
                                 indicator="slide"
                             >
-                                <PillNavItem value="user" className="justify-center">
+                                <PillNavItem value="user" className="flex-1 justify-center sm:flex-none">
                                     {t('media.scope_mine')}
                                 </PillNavItem>
-                                <PillNavItem value="all" className="justify-center">
+                                <PillNavItem value="all" className="flex-1 justify-center sm:flex-none">
                                     {t('media.scope_all')}
                                 </PillNavItem>
                             </PillNav>

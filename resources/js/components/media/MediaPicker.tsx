@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/button';
-import { Dialog, DialogBody, DialogDescription, DialogTitle } from '@/components/dialog';
+import { Dialog, DialogBody, DialogCloseButton, DialogDescription, DialogTitle } from '@/components/dialog';
 import { Field, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import { MediaDropzone } from '@/components/media/MediaDropzone';
@@ -221,9 +221,14 @@ type MediaPickerProps = {
 
 export default function MediaPicker({ open, onClose, onSelect }: MediaPickerProps) {
     return (
-        <Dialog open={open} onClose={onClose} size="4xl">
-            <DialogTitle>{t('editor.choose_image')}</DialogTitle>
-            <DialogDescription>{t('media.browse')}</DialogDescription>
+        <Dialog open={open} onClose={onClose} size="4xl" data-media-picker="true">
+            <div className="relative flex items-start justify-between gap-3">
+                <div className="min-w-0 pe-2">
+                    <DialogTitle>{t('editor.choose_image')}</DialogTitle>
+                    <DialogDescription>{t('media.browse')}</DialogDescription>
+                </div>
+                <DialogCloseButton label={t('common.close')} className="-me-1 -mt-1" />
+            </div>
 
             <DialogBody>
                 <MediaPickerPanel

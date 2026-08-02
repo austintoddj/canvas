@@ -208,3 +208,34 @@ export function postsInMonth(posts: CalendarPost[], { year, month }: YearMonth):
         return key !== null && key.startsWith(prefix);
     });
 }
+
+/** Build `/calendar` with optional month, scope, and selected day query params. */
+export function calendarIndexPath(
+    options: {
+        month?: YearMonth | string | null;
+        scope?: CalendarScope;
+        day?: string | null;
+    } = {}
+): string {
+    const params = new URLSearchParams();
+
+    if (options.month != null && options.month !== '') {
+        const monthKey = typeof options.month === 'string' ? options.month : formatYearMonth(options.month);
+
+        if (/^\d{4}-\d{2}$/.test(monthKey)) {
+            params.set('month', monthKey);
+        }
+    }
+
+    if (options.scope === 'all') {
+        params.set('scope', 'all');
+    }
+
+    if (options.day != null && options.day !== '' && /^\d{4}-\d{2}-\d{2}$/.test(options.day)) {
+        params.set('day', options.day);
+    }
+
+    const query = params.toString();
+
+    return query === '' ? '/calendar' : `/calendar?${query}`;
+}

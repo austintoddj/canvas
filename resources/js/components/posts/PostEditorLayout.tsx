@@ -128,15 +128,17 @@ export default function PostEditorLayout({
     const chrome = (
         <div
             className={clsx(
-                'flex items-center justify-between gap-2 border-b border-zinc-950/10 sm:gap-4 dark:border-white/10',
+                // Stack status + actions on narrow viewports so Preview / icons never crush the badge.
+                'flex flex-col gap-2 border-b border-zinc-950/10 sm:flex-row sm:items-center sm:justify-between sm:gap-4 dark:border-white/10',
                 focusMode ? 'shrink-0 bg-white px-4 py-3 sm:px-6 sm:py-4 lg:px-10 dark:bg-zinc-900' : 'pb-3 sm:pb-4'
             )}
+            data-post-editor-chrome="true"
         >
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
                 {!focusMode ? (
-                    <Button href="/posts" plain data-post-back-to-posts>
+                    <Button href="/posts" plain data-post-back-to-posts aria-label={t('posts.title')}>
                         <IconArrowLeft data-slot="icon" />
-                        {t('posts.title')}
+                        <span className="hidden sm:inline">{t('posts.title')}</span>
                     </Button>
                 ) : null}
                 <div className="flex min-w-0 items-center gap-2">
@@ -173,7 +175,7 @@ export default function PostEditorLayout({
                                     key={`${saveStatus}-${saveActivity}`}
                                     data-post-save-status={saveStatus}
                                     className={clsx(
-                                        'whitespace-nowrap text-xs sm:text-sm',
+                                        'truncate text-xs sm:text-sm',
                                         saveStatus === 'error'
                                             ? 'text-canvas-danger dark:text-canvas-danger-dark'
                                             : 'text-canvas-muted dark:text-canvas-muted-dark'
@@ -194,7 +196,7 @@ export default function PostEditorLayout({
                 </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <div className="flex shrink-0 items-center gap-1 self-end sm:gap-2 sm:self-auto">
                 {!focusMode && onPreview !== undefined ? (
                     <Button type="button" outline disabled={disabled} onClick={onPreview} data-post-preview-trigger>
                         {t('editor.preview')}

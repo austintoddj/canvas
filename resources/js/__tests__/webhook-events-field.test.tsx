@@ -27,13 +27,16 @@ function eventControls() {
 }
 
 describe('WebhookEventsField', () => {
-    it('renders event labels, ids, and descriptions', () => {
+    it('renders event labels, ids, and descriptions in a dense row', () => {
         render(withCanvas(<ControlledField />));
 
         expect(screen.getByText('Published')).toBeInTheDocument();
         expect(screen.getByText('post.published')).toBeInTheDocument();
         expect(screen.getByText('When a draft goes live.')).toBeInTheDocument();
         expect(document.querySelector('[data-webhook-event="post.published"]')).not.toBeNull();
+        // Event id sits inline with the label (compact checklist).
+        const label = screen.getByText('Published').closest('[data-slot="label"]');
+        expect(label).toHaveTextContent('post.published');
     });
 
     it('shows the selection count in the list header', () => {

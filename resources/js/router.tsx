@@ -10,7 +10,10 @@ import Page, {
     PostsEditor,
     PostsIndex,
     PostsStats,
+    IntegrationsAi,
     IntegrationsIndex,
+    IntegrationsUnsplash,
+    IntegrationsWebhooks,
     UsersIndex,
 } from '@/components/Page';
 import { RequirePermission } from '@/components/RequirePermission';
@@ -53,6 +56,30 @@ export const router = createBrowserRouter(
                     element: (
                         <RequirePermission permission="canManageIntegrations">
                             <Page component={IntegrationsIndex} />
+                        </RequirePermission>
+                    ),
+                },
+                {
+                    path: 'integrations/unsplash',
+                    element: (
+                        <RequirePermission permission="canManageIntegrations">
+                            <Page component={IntegrationsUnsplash} />
+                        </RequirePermission>
+                    ),
+                },
+                {
+                    path: 'integrations/ai',
+                    element: (
+                        <RequirePermission permission="canManageIntegrations">
+                            <Page component={IntegrationsAi} />
+                        </RequirePermission>
+                    ),
+                },
+                {
+                    path: 'integrations/webhooks',
+                    element: (
+                        <RequirePermission permission="canManageIntegrations">
+                            <Page component={IntegrationsWebhooks} />
                         </RequirePermission>
                     ),
                 },

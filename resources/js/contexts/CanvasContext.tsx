@@ -44,6 +44,15 @@ export function CanvasProvider({ children, boot: initialBoot = window.Canvas }: 
 
     const setIntegrationFlags = useCallback((flags: Partial<CanvasBootIntegrationFlags>) => {
         setBoot((current) => {
+            // Bail when nothing changed — a new boot object recreates `t` and can
+            // re-trigger effects that depend on the translator (flash/load loops).
+            if (
+                (flags.ai === undefined || flags.ai === current.ai) &&
+                (flags.unsplash === undefined || flags.unsplash === current.unsplash)
+            ) {
+                return current;
+            }
+
             const next = {
                 ...current,
                 ...flags,

@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IconInfoCircle } from '@tabler/icons-react';
 
 import { Alert, AlertActions, AlertBody, AlertDescription, AlertTitle } from '@/components/alert';
 import { Button } from '@/components/button';
 import { Description, ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/fieldset';
 import { IntegrationDrawerChrome } from '@/components/integrations/IntegrationDrawerChrome';
+import { IntegrationPageLayout, IntegrationSection } from '@/components/integrations/IntegrationPageLayout';
 import { WebhookDeliveriesPanel } from '@/components/integrations/WebhookDeliveriesPanel';
 import { WebhookEventsField } from '@/components/integrations/WebhookEventsField';
 import { Input } from '@/components/input';
-import { SideDrawer } from '@/components/SideDrawer';
 import { Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { ApiError, ValidationError, apiErrorCode } from '@/lib/api';
@@ -16,7 +15,6 @@ import { integrationsApi, type IntegrationsStatus, type WebhookEventOption } fro
 import { toast } from '@/lib/toast';
 
 type WebhookIntegrationDrawerProps = {
-    open: boolean;
     configured: boolean;
     url?: string | null;
     maskedSecret?: string | null;
@@ -40,7 +38,6 @@ const DEFAULT_EVENTS: WebhookEventOption[] = [
 ];
 
 export function WebhookIntegrationDrawer({
-    open,
     configured,
     url: initialUrl = null,
     maskedSecret = null,
@@ -52,7 +49,10 @@ export function WebhookIntegrationDrawer({
 }: WebhookIntegrationDrawerProps) {
     const { t } = useCanvas();
     const [url, setUrl] = useState(initialUrl ?? '');
-    const [events, setEvents] = useState<string[]>(initialEvents);
+    const [events, setEvents] = useState<string[]>(() => {
+        const options = availableEvents.length > 0 ? availableEvents : DEFAULT_EVENTS;
+        return initialEvents.length > 0 ? initialEvents : options.map((option) => option.id);
+    });
     const [saving, setSaving] = useState(false);
     const [testing, setTesting] = useState(false);
     const [rotating, setRotating] = useState(false);
@@ -65,14 +65,10 @@ export function WebhookIntegrationDrawer({
         events?: string;
     }>({});
 
-    // Hydrate form state only when the drawer opens. Parent status updates (after
-    // save/rotate) pass new events/availableEvents array references — resetting on
-    // those deps was wiping one-time secret UI before the user could copy it.
+    // Hydrate form state only on mount. Parent status updates (after save/rotate)
+    // pass new events/availableEvents array references — resetting on those deps
+    // was wiping one-time secret UI before the user could copy it.
     useEffect(() => {
-        if (!open) {
-            return;
-        }
-
         let cancelled = false;
 
         queueMicrotask(() => {
@@ -95,8 +91,8 @@ export function WebhookIntegrationDrawer({
         return () => {
             cancelled = true;
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps -- open-only reset; read latest props when opening
-    }, [open]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only reset; read latest props when mounting
+    }, []);
 
     const eventOptions = useMemo(() => {
         if (availableEvents.length > 0) {
@@ -113,33 +109,6 @@ export function WebhookIntegrationDrawer({
         events.length > 0 &&
         (!configured || trimmedUrl !== (initialUrl ?? '') || !sameEventSet(events, initialEvents));
     const secretDialogOpen = secretDialog.step !== 'closed';
-
-    const aboutItems = [
-        t(
-            'integrations.webhooks_about_outbound',
-            'Canvas queues a POST for the events you select when a post is published, scheduled, updated, unpublished, or deleted'
-        ),
-        t(
-            'integrations.webhooks_about_signed',
-            'Each request is signed with your secret so receivers can verify Canvas-Signature'
-        ),
-        t(
-            'integrations.webhooks_about_payload',
-            'Payloads include metadata only (title, slug, author, …) — never the full post body'
-        ),
-        t(
-            'integrations.webhooks_about_https',
-            'Your endpoint must be a public HTTPS URL (localhost and private IPs are blocked)'
-        ),
-        t(
-            'integrations.webhooks_about_queue',
-            'With Redis, database, or SQS queues, run a queue worker (php artisan queue:work). The default sync driver needs no worker.'
-        ),
-        t(
-            'integrations.webhooks_about_history',
-            'Recent deliveries appear below so you can inspect failures and retry with a new delivery id'
-        ),
-    ];
 
     function closeSecretDialog() {
         if (rotating) {
@@ -314,53 +283,74 @@ export function WebhookIntegrationDrawer({
 
     return (
         <>
-            <SideDrawer
-                open={open}
-                onClose={onClose}
-                closeLabel={t('common.close')}
+            <IntegrationPageLayout
+                kind="webhooks"
                 title={t('integrations.webhooks', 'Webhooks')}
-                footer={
-                    <div className="flex flex-wrap gap-2">
-                        <Button
-                            type="button"
-                            color="dark/zinc"
-                            disabled={busy || !canSave}
-                            onClick={() => void handleSave()}
-                        >
-                            {saving
-                                ? t('common.saving')
-                                : configured
-                                  ? t('integrations.save_settings', 'Save settings')
-                                  : t('integrations.webhooks_connect', 'Enable webhooks')}
-                        </Button>
-                        {configured ? (
-                            <Button type="button" outline disabled={busy} onClick={() => void handleTest()}>
-                                {testing
-                                    ? t('integrations.webhooks_testing', 'Sending…')
-                                    : t('integrations.webhooks_send_test', 'Send test')}
-                            </Button>
-                        ) : null}
-                        <Button type="button" outline disabled={busy} onClick={onClose}>
-                            {t('common.cancel')}
-                        </Button>
-                    </div>
-                }
+                description={t(
+                    'integrations.webhooks_help',
+                    'Notify external services when posts are published, scheduled, updated, or deleted.'
+                )}
+                enabled={configured}
+                enabledAt={enabledAt}
             >
                 <IntegrationDrawerChrome
-                    kind="webhooks"
-                    title={t('integrations.webhooks', 'Webhooks')}
-                    description={t(
-                        'integrations.webhooks_help',
-                        'Notify external services when posts are published, scheduled, updated, or deleted.'
-                    )}
-                    enabled={configured}
-                    enabledAt={enabledAt}
-                    permissions={aboutItems}
-                    permissionsTitle={t('integrations.webhooks_about', 'How it works')}
-                    permissionsHelp={t(
-                        'integrations.webhooks_about_help',
-                        'Lifecycle events use your app queue (same idea as the weekly digest). Send test runs immediately so you can verify the URL.'
-                    )}
+                    settingsDescription={
+                        configured
+                            ? t(
+                                  'integrations.webhooks_settings_connected_help',
+                                  'Update the endpoint or events, then save. Use Send test to verify delivery.'
+                              )
+                            : t(
+                                  'integrations.webhooks_settings_setup_help',
+                                  'Add a public HTTPS endpoint and choose which post events to send.'
+                              )
+                    }
+                    actions={
+                        <>
+                            <Button
+                                type="button"
+                                color="dark/zinc"
+                                disabled={busy || !canSave}
+                                onClick={() => void handleSave()}
+                            >
+                                {saving
+                                    ? t('common.saving')
+                                    : configured
+                                      ? t('integrations.save_settings', 'Save settings')
+                                      : t('integrations.webhooks_connect', 'Enable webhooks')}
+                            </Button>
+                            {configured ? (
+                                <Button type="button" outline disabled={busy} onClick={() => void handleTest()}>
+                                    {testing
+                                        ? t('integrations.webhooks_testing', 'Sending…')
+                                        : t('integrations.webhooks_send_test', 'Send test')}
+                                </Button>
+                            ) : null}
+                            <Button type="button" outline disabled={busy} onClick={onClose}>
+                                {t('common.cancel')}
+                            </Button>
+                        </>
+                    }
+                    afterSettings={
+                        configured ? (
+                            <IntegrationSection
+                                title={t('integrations.webhooks_deliveries', 'Recent deliveries')}
+                                description={t(
+                                    'integrations.webhooks_deliveries_help',
+                                    'Outbound attempts from the last 30 days. Failed rows can be retried with a new delivery id.'
+                                )}
+                                data-section="deliveries"
+                            >
+                                <WebhookDeliveriesPanel
+                                    open
+                                    enabled={configured}
+                                    refreshKey={deliveriesRefreshKey}
+                                    embedded
+                                    eventOptions={eventOptions}
+                                />
+                            </IntegrationSection>
+                        ) : null
+                    }
                     cautionZoneTitle={configured ? t('integrations.webhooks_secret', 'Signing secret') : undefined}
                     cautionZone={
                         configured ? (
@@ -430,15 +420,17 @@ export function WebhookIntegrationDrawer({
                             <Legend className="sr-only">
                                 {t('integrations.webhooks_settings', 'Webhook settings')}
                             </Legend>
-                            <FieldGroup className="space-y-5">
+                            <FieldGroup className="space-y-4">
                                 <Field>
                                     <Label>{t('integrations.webhooks_url', 'Endpoint URL')}</Label>
-                                    <Description>
-                                        {t(
-                                            'integrations.webhooks_url_help',
-                                            'Public HTTPS URL that accepts POST requests (Zapier, Make, n8n, or your own API).'
-                                        )}
-                                    </Description>
+                                    {!configured ? (
+                                        <Description>
+                                            {t(
+                                                'integrations.webhooks_url_help',
+                                                'Public HTTPS URL that accepts POST requests (Zapier, Make, n8n, or your own API).'
+                                            )}
+                                        </Description>
+                                    ) : null}
                                     <Input
                                         type="url"
                                         name="webhook_url"
@@ -456,12 +448,14 @@ export function WebhookIntegrationDrawer({
 
                                 <Field>
                                     <Label>{t('integrations.webhooks_events', 'Events')}</Label>
-                                    <Description>
-                                        {t(
-                                            'integrations.webhooks_events_help',
-                                            'Choose which post lifecycle events to send.'
-                                        )}
-                                    </Description>
+                                    {!configured ? (
+                                        <Description>
+                                            {t(
+                                                'integrations.webhooks_events_help',
+                                                'Choose which post lifecycle events to send.'
+                                            )}
+                                        </Description>
+                                    ) : null}
                                     <WebhookEventsField
                                         options={eventOptions}
                                         value={events}
@@ -472,37 +466,13 @@ export function WebhookIntegrationDrawer({
                                         disabled={busy}
                                         invalid={Boolean(fieldErrors.events)}
                                     />
-                                    <div
-                                        className="mt-3 flex gap-2.5 rounded-lg border border-zinc-950/10 bg-zinc-50/80 px-3 py-2.5 dark:border-white/10 dark:bg-white/[0.03]"
-                                        data-webhook-events-scheduled-note="true"
-                                    >
-                                        <IconInfoCircle
-                                            className="mt-0.5 size-4 shrink-0 text-zinc-500 dark:text-zinc-400"
-                                            aria-hidden="true"
-                                        />
-                                        <p className="min-w-0 text-sm/5 text-zinc-600 dark:text-zinc-400">
-                                            {t(
-                                                'integrations.webhooks_events_scheduled_note',
-                                                'When a scheduled post’s publish time arrives, Canvas also sends Published (host scheduler). Subscribe to Scheduled for when the future date is set.'
-                                            )}
-                                        </p>
-                                    </div>
                                     {fieldErrors.events ? <ErrorMessage>{fieldErrors.events}</ErrorMessage> : null}
                                 </Field>
                             </FieldGroup>
                         </Fieldset>
                     </form>
                 </IntegrationDrawerChrome>
-                {configured ? (
-                    <div className="border-t border-zinc-950/5 px-5 py-5 dark:border-white/5">
-                        <WebhookDeliveriesPanel
-                            open={open}
-                            enabled={configured}
-                            refreshKey={deliveriesRefreshKey}
-                        />
-                    </div>
-                ) : null}
-            </SideDrawer>
+            </IntegrationPageLayout>
 
             <Alert
                 open={secretDialogOpen}

@@ -145,6 +145,27 @@ afterEach(() => {
 });
 
 describe('PostVersionHistoryDrawer', () => {
+    it('shows a skeleton while revisions are loading', async () => {
+        let resolveRevisions: (value: { revisions: PostRevisionListItem[] }) => void = () => undefined;
+        revisionsMock.mockReturnValue(
+            new Promise((resolve) => {
+                resolveRevisions = resolve;
+            })
+        );
+
+        renderDrawer();
+
+        expect(document.querySelector('[data-version-history-skeleton="true"]')).not.toBeNull();
+        expect(screen.queryByText('Loading…')).toBeNull();
+
+        resolveRevisions({ revisions: [] });
+
+        await waitFor(() => {
+            expect(document.querySelector('[data-version-history-skeleton="true"]')).toBeNull();
+        });
+        expect(document.querySelector('[data-version-history-empty="true"]')).not.toBeNull();
+    });
+
     it('renders period blocks with plain rows (no row menus)', async () => {
         const today = new Date();
         today.setHours(15, 0, 0, 0);

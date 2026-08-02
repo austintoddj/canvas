@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import type React from 'react';
 import { createContext, useContext, useState } from 'react';
+import { cn } from '@/lib/utils';
 import { Link } from './link';
 
 const TableContext = createContext<{ bleed: boolean; dense: boolean; grid: boolean; striped: boolean }>({
@@ -24,7 +25,7 @@ export function Table({
             <div className="flow-root">
                 <div
                     {...props}
-                    className={clsx(className, 'overflow-x-auto whitespace-nowrap', bleed && '-mx-(--gutter)')}
+                    className={cn('overflow-x-auto whitespace-nowrap', bleed && '-mx-(--gutter)', className)}
                 >
                     <div
                         className={clsx(

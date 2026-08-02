@@ -4,8 +4,8 @@ import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/
 import { Button } from '@/components/button';
 import { Description, ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/fieldset';
 import { IntegrationDrawerChrome } from '@/components/integrations/IntegrationDrawerChrome';
+import { IntegrationPageLayout, IntegrationSummarySep } from '@/components/integrations/IntegrationPageLayout';
 import { Input } from '@/components/input';
-import { SideDrawer } from '@/components/SideDrawer';
 import { Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { ValidationError } from '@/lib/api';
@@ -17,7 +17,6 @@ const externalLinkClass =
     'text-blue-600 underline decoration-blue-600/30 underline-offset-2 hover:decoration-blue-600 dark:text-blue-400';
 
 type UnsplashIntegrationDrawerProps = {
-    open: boolean;
     configured: boolean;
     maskedKey?: string | null;
     enabledAt?: string | null;
@@ -26,7 +25,6 @@ type UnsplashIntegrationDrawerProps = {
 };
 
 export function UnsplashIntegrationDrawer({
-    open,
     configured,
     maskedKey = null,
     enabledAt = null,
@@ -41,10 +39,6 @@ export function UnsplashIntegrationDrawer({
     const [fieldError, setFieldError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!open) {
-            return;
-        }
-
         let cancelled = false;
 
         queueMicrotask(() => {
@@ -62,7 +56,7 @@ export function UnsplashIntegrationDrawer({
         return () => {
             cancelled = true;
         };
-    }, [open]);
+    }, []);
 
     async function handleSave() {
         if (saving || accessKey.trim() === '') {
@@ -142,39 +136,67 @@ export function UnsplashIntegrationDrawer({
 
     return (
         <>
-            <SideDrawer
-                open={open}
-                onClose={onClose}
-                closeLabel={t('common.close')}
+            <IntegrationPageLayout
+                kind="unsplash"
                 title={t('integrations.unsplash')}
-                footer={
-                    <div className="flex flex-wrap gap-2">
-                        <Button
-                            type="button"
-                            color="dark/zinc"
-                            disabled={busy || accessKey.trim() === ''}
-                            onClick={() => void handleSave()}
-                        >
-                            {saving
-                                ? t('common.saving')
-                                : configured
-                                  ? t('integrations.save_key', 'Save key')
-                                  : t('integrations.connect_unsplash', 'Connect Unsplash')}
-                        </Button>
-                        <Button type="button" outline disabled={busy} onClick={onClose}>
-                            {t('common.cancel')}
-                        </Button>
-                    </div>
+                description={t('integrations.unsplash_help')}
+                enabled={configured}
+                enabledAt={enabledAt}
+                developer={UNSPLASH_DEVELOPER}
+                summary={
+                    configured ? (
+                        <>
+                            <span data-unsplash-summary-status="true">
+                                {t('integrations.key_on_file', 'Access key on file')}
+                            </span>
+                            {maskedKey ? (
+                                <>
+                                    <IntegrationSummarySep />
+                                    <code
+                                        className="min-w-0 max-w-[14rem] truncate font-mono text-xs text-zinc-500 dark:text-zinc-400"
+                                        data-masked-key="true"
+                                    >
+                                        {maskedKey}
+                                    </code>
+                                </>
+                            ) : null}
+                        </>
+                    ) : null
                 }
             >
                 <IntegrationDrawerChrome
-                    kind="unsplash"
-                    title={t('integrations.unsplash')}
-                    description={t('integrations.unsplash_help')}
-                    enabled={configured}
-                    enabledAt={enabledAt}
-                    developer={UNSPLASH_DEVELOPER}
                     permissions={permissions}
+                    aboutDefaultOpen={!configured}
+                    settingsDescription={
+                        configured
+                            ? t(
+                                  'integrations.unsplash_settings_connected_help',
+                                  'Paste a new access key only when rotating credentials.'
+                              )
+                            : t(
+                                  'integrations.unsplash_settings_setup_help',
+                                  'Connect an Unsplash application access key to search photos in the editor.'
+                              )
+                    }
+                    actions={
+                        <>
+                            <Button
+                                type="button"
+                                color="dark/zinc"
+                                disabled={busy || accessKey.trim() === ''}
+                                onClick={() => void handleSave()}
+                            >
+                                {saving
+                                    ? t('common.saving')
+                                    : configured
+                                      ? t('integrations.save_key', 'Save key')
+                                      : t('integrations.connect_unsplash', 'Connect Unsplash')}
+                            </Button>
+                            <Button type="button" outline disabled={busy} onClick={onClose}>
+                                {t('common.cancel')}
+                            </Button>
+                        </>
+                    }
                     dangerZone={
                         configured ? (
                             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -210,32 +232,27 @@ export function UnsplashIntegrationDrawer({
                     >
                         <Fieldset>
                             <Legend className="sr-only">{t('integrations.unsplash_key')}</Legend>
-                            <FieldGroup className="space-y-5">
-                                {configured && maskedKey ? (
-                                    <Field>
-                                        <Label>{t('integrations.current_key', 'Current key')}</Label>
-                                        <code
-                                            className="mt-2 block max-w-full truncate font-mono text-sm text-zinc-600 dark:text-zinc-400"
-                                            data-masked-key="true"
-                                        >
-                                            {maskedKey}
-                                        </code>
-                                    </Field>
-                                ) : null}
+                            <FieldGroup className="space-y-4">
                                 <Field>
-                                    <Label>{t('integrations.access_key')}</Label>
-                                    <Description>
-                                        Create an app at{' '}
-                                        <a
-                                            href="https://unsplash.com/oauth/applications"
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className={externalLinkClass}
-                                        >
-                                            unsplash.com/oauth/applications
-                                        </a>
-                                        . Demo apps are limited to 50 requests/hour.
-                                    </Description>
+                                    <Label>
+                                        {configured
+                                            ? t('integrations.access_key_replace', 'Replace access key')
+                                            : t('integrations.access_key')}
+                                    </Label>
+                                    {!configured ? (
+                                        <Description>
+                                            Create an app at{' '}
+                                            <a
+                                                href="https://unsplash.com/oauth/applications"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className={externalLinkClass}
+                                            >
+                                                unsplash.com/oauth/applications
+                                            </a>
+                                            . Demo apps are limited to 50 requests/hour.
+                                        </Description>
+                                    ) : null}
                                     <Input
                                         type="password"
                                         name="unsplash_access_key"
@@ -263,7 +280,7 @@ export function UnsplashIntegrationDrawer({
                         </Fieldset>
                     </form>
                 </IntegrationDrawerChrome>
-            </SideDrawer>
+            </IntegrationPageLayout>
 
             <Alert open={confirmDisconnectOpen} onClose={closeDisconnectConfirm} size="sm">
                 <AlertTitle>{t('integrations.disconnect_unsplash_title', 'Disconnect Unsplash?')}</AlertTitle>

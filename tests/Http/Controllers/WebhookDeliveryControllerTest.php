@@ -23,6 +23,18 @@ it('lists recent webhook deliveries for admins', function (): void {
         ->assertJsonMissing(['whsec_test_secret', 'secret']);
 });
 
+it('filters deliveries by event', function (): void {
+    WebhookDelivery::factory()->success()->create(['event' => 'post.published']);
+    $updated = WebhookDelivery::factory()->failed()->create(['event' => 'post.updated']);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/integrations/webhooks/deliveries?event=post.updated')
+        ->assertSuccessful()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $updated->id)
+        ->assertJsonPath('data.0.event', 'post.updated');
+});
+
 it('filters deliveries by status', function (): void {
     WebhookDelivery::factory()->success()->create();
     $failed = WebhookDelivery::factory()->failed()->create();
