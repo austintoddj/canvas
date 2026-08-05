@@ -10,6 +10,7 @@ use Canvas\Http\Requests\StorePostRevisionRequest;
 use Canvas\Models\Post;
 use Canvas\Models\PostRevision;
 use Canvas\Support\PostAuthor;
+use Canvas\Support\PostLastRevision;
 use Canvas\Support\RecordPostRevision;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -228,6 +229,7 @@ class PostRevisionController extends Controller
 
         $payload = $post->toArray();
         $payload['user'] = $author;
+        $payload['last_revision'] = PostLastRevision::for($post);
 
         return $payload;
     }

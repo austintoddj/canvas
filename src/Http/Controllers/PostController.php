@@ -10,6 +10,7 @@ use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Canvas\Support\PostAuthor;
+use Canvas\Support\PostLastRevision;
 use Canvas\Support\PostLifecycleEvents;
 use Canvas\Support\PostSnapshot;
 use Canvas\Support\PublishedAt;
@@ -222,6 +223,7 @@ class PostController extends Controller
 
         $payload = $post->toArray();
         $payload['user'] = $author;
+        $payload['last_revision'] = PostLastRevision::for($post);
 
         return $payload;
     }

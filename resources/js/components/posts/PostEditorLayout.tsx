@@ -16,6 +16,8 @@ import {
     type PostFormState,
     type PostSaveStatus,
 } from '@/lib/posts/form';
+import { lastEditTooltip } from '@/lib/posts/history-activity';
+import type { PostLastRevision } from '@/types/api';
 import { IconArrowLeft, IconChartBar, IconHistory, IconLayoutSidebarRight } from '@tabler/icons-react';
 
 export type PostEditorFocusControls = {
@@ -37,6 +39,8 @@ type PostEditorLayoutProps = {
     historyOpen?: boolean;
     /** When set, show history control (saved posts only). */
     onOpenHistory?: () => void;
+    /** Tip checkpoint for last-edit tooltip. */
+    lastRevision?: PostLastRevision | null;
     onTitleChange: (title: string) => void;
     onOpenInspector: () => void;
     onPreview?: () => void;
@@ -56,6 +60,7 @@ export default function PostEditorLayout({
     inspectorOpen = false,
     historyOpen = false,
     onOpenHistory,
+    lastRevision = null,
     onTitleChange,
     onOpenInspector,
     onPreview,
@@ -65,10 +70,25 @@ export default function PostEditorLayout({
     disabled = false,
     publishBusy = false,
 }: PostEditorLayoutProps) {
-    const { t } = useCanvas();
+    const { t, user, boot } = useCanvas();
+    const locale = user.canvas?.locale ?? boot.defaultLocale;
     const reducedMotion = useReducedMotion();
     const animateStatus = shouldAnimateReveal({ reducedMotion: reducedMotion === true, animate: true });
     const published = isPublished(form);
+    const historyFallback = t('editor.history', 'History');
+    const historyTitleFallback = t('editor.history_title', 'Version history');
+    const historyTooltip = lastEditTooltip(lastRevision, {
+        t,
+        currentUserId: user.id,
+        locale,
+        fallback: historyFallback,
+    });
+    const historyAriaLabel = lastEditTooltip(lastRevision, {
+        t,
+        currentUserId: user.id,
+        locale,
+        fallback: historyTitleFallback,
+    });
     const status = publishStatus(form);
     const badge = editorStatusBadge(status, hasPendingChanges, {
         draft: t('editor.draft_badge'),
@@ -237,14 +257,14 @@ export default function PostEditorLayout({
                     </Tooltip>
                 ) : null}
                 {!focusMode && onOpenHistory !== undefined ? (
-                    <Tooltip content={t('editor.history', 'History')} placement="bottom">
+                    <Tooltip content={historyTooltip} placement="bottom">
                         <Button
                             type="button"
                             plain
                             className={editorChromeIconButtonClassName}
                             disabled={disabled}
                             onClick={onOpenHistory}
-                            aria-label={t('editor.history_title', 'Version history')}
+                            aria-label={historyAriaLabel}
                             aria-expanded={historyOpen}
                             data-post-history-trigger
                         >

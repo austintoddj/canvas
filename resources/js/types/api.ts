@@ -66,6 +66,15 @@ export type PostAuthor = {
     avatar_url: string | null;
 };
 
+/** Tip of version history on post show/store (no body). */
+export type PostLastRevision = {
+    id: string;
+    user_id: number | null;
+    created_at: string;
+    /** Display-only revision actor (never written back). */
+    user?: PostAuthor | null;
+};
+
 export type Post = PostListItem & {
     slug: string;
     body: string | null;
@@ -80,6 +89,8 @@ export type Post = PostListItem & {
     topic?: TaxonomyOption & { id: string };
     /** Present on show/store/discard; omit from list rows. */
     user?: PostAuthor | null;
+    /** Newest checkpoint; null when the post has no revision rows yet. */
+    last_revision?: PostLastRevision | null;
 };
 
 export type PostsIndexResponse = {

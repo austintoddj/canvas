@@ -138,9 +138,8 @@ export const SidebarItem = forwardRef(function SidebarItem(
     const { rail } = useSidebarChrome();
 
     const classes = clsx(
-        'group/sidebar-item flex cursor-pointer items-center rounded-lg text-left text-base/6 font-medium text-zinc-950 sm:text-sm/5 data-disabled:cursor-not-allowed',
+        'flex cursor-pointer items-center rounded-lg text-left text-base/6 font-medium text-zinc-950 sm:text-sm/5 data-disabled:cursor-not-allowed',
         rail ? 'size-9 shrink-0 justify-center gap-0 p-0 sm:size-9' : 'w-full gap-3 px-2 py-2.5 sm:py-2',
-        // Constant stroke weight — no hover thickening (avoids “fat” morphs)
         '*:data-[slot=icon]:size-5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-zinc-500',
         !rail && '*:data-[slot=icon]:size-6 sm:*:data-[slot=icon]:size-5',
         '*:last:data-[slot=icon]:ml-auto *:last:data-[slot=icon]:size-5 sm:*:last:data-[slot=icon]:size-4',

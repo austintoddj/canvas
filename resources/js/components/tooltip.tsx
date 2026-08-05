@@ -66,7 +66,7 @@ export function Tooltip({
     children,
     placement = 'right',
     disabled = false,
-    delayMs = 160,
+    delayMs = 50,
     className,
     triggerClassName,
 }: TooltipProps) {
