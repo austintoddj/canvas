@@ -192,11 +192,25 @@ export default function CalendarIndex() {
     }
 
     function selectDay(date: string) {
+        // Toggle off when the same day is already selected.
+        if (selectedDay === date) {
+            setSearchParams((current) => updateSearchParams(current, { day: null }), { replace: true });
+
+            return;
+        }
+
+        // Out-of-month padding cells: switch the visible month so the day query sticks
+        // (updateSearchParams drops day when it falls outside the active month key).
+        const year = Number.parseInt(date.slice(0, 4), 10);
+        const month = Number.parseInt(date.slice(5, 7), 10) - 1;
+        const targetMonth: YearMonth =
+            Number.isFinite(year) && Number.isFinite(month) && month >= 0 && month <= 11 ? { year, month } : yearMonth;
+
         setSearchParams(
             (current) =>
                 updateSearchParams(current, {
-                    day: selectedDay === date ? null : date,
-                    month: yearMonth,
+                    day: date,
+                    month: targetMonth,
                 }),
             { replace: true }
         );
@@ -486,6 +500,7 @@ export default function CalendarIndex() {
                                                 <li key={post.id}>
                                                     <button
                                                         type="button"
+                                                        data-calendar-post={post.id}
                                                         onClick={() => navigate(`/posts/${post.id}`)}
                                                         className="flex w-full items-center gap-3 py-3 text-left transition-colors hover:bg-zinc-50 focus:outline-hidden focus-visible:bg-zinc-50 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
                                                     >

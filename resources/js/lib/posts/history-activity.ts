@@ -51,11 +51,7 @@ export function lastEditTooltip(
     const isSelf = lastRevision.user_id !== null && lastRevision.user_id === currentUserId;
 
     if (isSelf) {
-        return t(
-            'editor.history_last_edit_you',
-            { time },
-            'Last edit was :time by you'
-        );
+        return t('editor.history_last_edit_you', { time }, 'Last edit was :time by you');
     }
 
     const name = actorDisplayName(lastRevision.user);

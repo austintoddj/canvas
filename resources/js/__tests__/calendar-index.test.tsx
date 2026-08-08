@@ -113,4 +113,40 @@ describe('CalendarIndex', () => {
             expect(document.querySelector('h2')?.textContent).not.toBe(before);
         });
     });
+
+    it('selecting an out-of-month padding day switches month and opens the day panel', async () => {
+        const user = userEvent.setup();
+        postsMock.mockResolvedValue({
+            posts: [
+                {
+                    id: 'post-sep-1',
+                    title: 'September post',
+                    slug: 'september-post',
+                    // Trailing cell of the August 2026 Sunday-start grid is 2026-09-05.
+                    published_at: '2026-09-05T15:00:00.000Z',
+                    featured_image: null,
+                    status: 'scheduled',
+                    user: null,
+                },
+            ],
+        });
+
+        renderCalendar('/calendar?month=2026-08');
+
+        await waitFor(() => {
+            expect(document.querySelector('[data-calendar-day="2026-09-05"]')).not.toBeNull();
+        });
+
+        await user.click(document.querySelector('[data-calendar-day="2026-09-05"]') as HTMLElement);
+
+        // Month advances so the day query sticks (updateSearchParams drops out-of-month days).
+        await waitFor(() => {
+            expect(document.querySelector('h2')?.textContent).toMatch(/September/i);
+            expect(document.querySelector('[data-calendar-day-panel="true"]')).not.toBeNull();
+            expect(document.querySelector('[data-calendar-post="post-sep-1"]')).not.toBeNull();
+            expect(document.querySelector('[data-calendar-day="2026-09-05"]')?.getAttribute('data-selected')).toBe(
+                'true'
+            );
+        });
+    });
 });

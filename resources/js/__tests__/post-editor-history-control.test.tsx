@@ -36,10 +36,7 @@ const otherTip: PostLastRevision = {
     },
 };
 
-function renderLayout(
-    onOpenHistory?: () => void,
-    options: { lastRevision?: PostLastRevision | null } = {}
-) {
+function renderLayout(onOpenHistory?: () => void, options: { lastRevision?: PostLastRevision | null } = {}) {
     const base = makeBoot();
     const catalog = {
         ...JSON.parse(base.translations),

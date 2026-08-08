@@ -17,10 +17,7 @@ const tip = (overrides: Partial<PostLastRevision> = {}): PostLastRevision => ({
 });
 
 const t = (key: string, replacementsOrFallback?: string | Record<string, string | number>, fallback?: string) => {
-    const template =
-        typeof replacementsOrFallback === 'string'
-            ? replacementsOrFallback
-            : (fallback ?? key);
+    const template = typeof replacementsOrFallback === 'string' ? replacementsOrFallback : (fallback ?? key);
 
     if (typeof replacementsOrFallback === 'object' && replacementsOrFallback !== null) {
         return Object.entries(replacementsOrFallback).reduce(

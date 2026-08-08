@@ -72,7 +72,18 @@ export async function publishNow(page: Page): Promise<void> {
     await expect(page.locator('[data-publish-status="published"]')).toBeVisible({ timeout: 20_000 });
 }
 
-export async function scheduleForLater(page: Page): Promise<void> {
+export type ScheduleResult = {
+    /** ISO-8601 instant from the schedule store request. */
+    publishedAt: string;
+    /** Post id from the store URL. */
+    postId: string;
+};
+
+/**
+ * Open the publish dialog, pick "Next Monday", and schedule.
+ * Returns the wire published_at + post id so callers can deep-link (e.g. calendar).
+ */
+export async function scheduleForLater(page: Page): Promise<ScheduleResult> {
     await waitForAutosaveQuiet(page);
 
     await page.locator('[data-post-publish-trigger]').click();
@@ -116,8 +127,31 @@ export async function scheduleForLater(page: Page): Promise<void> {
     expect(payload?.promote, 'schedule promote required').toBe(true);
     expect(response.ok(), `schedule store failed: ${response.status()}`).toBeTruthy();
 
+    const postIdMatch = response.url().match(/\/canvas\/api\/posts\/([0-9a-f-]{36})/i);
+    expect(postIdMatch?.[1], 'schedule store URL must include post id').toBeTruthy();
+
     await expect(submit).toBeHidden({ timeout: 20_000 });
     await expect(page.locator('[data-publish-status="scheduled"]')).toBeVisible({ timeout: 20_000 });
+
+    return {
+        publishedAt: payload!.published_at as string,
+        postId: postIdMatch![1]!,
+    };
+}
+
+/** Local Y-m-d for a wire ISO instant — matches calendar day bucketing in the SPA. */
+export function localDateKeyFromIso(iso: string): string {
+    const date = new Date(iso);
+
+    if (Number.isNaN(date.getTime())) {
+        throw new Error(`Invalid ISO datetime: ${iso}`);
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
 }
 
 export async function openPostInspector(page: Page): Promise<void> {
