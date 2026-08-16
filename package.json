@@ -32,7 +32,7 @@
         "@tiptap/extension-text-align": "^3.27.3",
         "@tiptap/extension-typography": "^3.27.3",
         "@tiptap/extension-underline": "^3.27.3",
-        "@tiptap/extension-youtube": "^3.27.3",
+        "@tiptap/extension-youtube": "^3.29.2",
         "@tiptap/pm": "^3.27.3",
         "@tiptap/react": "^3.27.3",
         "@tiptap/starter-kit": "^3.27.3",
