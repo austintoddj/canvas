@@ -22,7 +22,7 @@
         "@tiptap/extension-audio": "^3.27.3",
         "@tiptap/extension-character-count": "^3.27.3",
         "@tiptap/extension-code-block-lowlight": "^3.27.3",
-        "@tiptap/extension-highlight": "^3.27.3",
+        "@tiptap/extension-highlight": "^3.29.2",
         "@tiptap/extension-image": "^3.27.3",
         "@tiptap/extension-link": "^3.27.3",
         "@tiptap/extension-placeholder": "^3.27.3",
