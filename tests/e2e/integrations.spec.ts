@@ -70,7 +70,7 @@ test.describe('Integrations webhooks', () => {
             await expect(page.locator('[data-integration-hero="webhooks"]')).toBeVisible({ timeout: 15_000 });
         }
 
-        await expect(page.locator('[data-integration-hero="webhooks"]')).toContainText(/Enabled/i, {
+        await expect(page.locator('[data-integration-hero="webhooks"]')).toContainText(/Enabled|Not enabled/i, {
             timeout: 15_000,
         });
 

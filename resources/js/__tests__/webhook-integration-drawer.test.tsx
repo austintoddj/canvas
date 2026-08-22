@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WebhookIntegrationDrawer } from '@/components/integrations/WebhookIntegrationDrawer';
 import type { IntegrationsStatus, WebhookEventOption } from '@/lib/api/integrations';
@@ -48,10 +48,12 @@ const AVAILABLE: WebhookEventOption[] = [
 
 function baseStatus(overrides: Partial<IntegrationsStatus['webhooks']> = {}): IntegrationsStatus {
     return {
-        unsplash: { configured: false, masked_key: null, enabled_at: null },
-        ai: { configured: false, provider: null, masked_key: null, model: null, enabled_at: null },
+        unsplash: { status: 'off', configured: false, masked_key: null, enabled_at: null },
+        ai: { status: 'off', configured: false, provider: null, masked_key: null, model: null, enabled_at: null },
         webhooks: {
+            status: 'enabled',
             configured: true,
+            pending: false,
             url: 'https://example.com/hooks/canvas',
             masked_secret: '••••abcd',
             events: ['post.published'],
@@ -90,6 +92,11 @@ const boot = makeBoot({
         'integrations.webhooks_help': 'Notify external services.',
         'integrations.enabled': 'Enabled',
         'integrations.not_enabled': 'Not enabled',
+        'integrations.connecting_progress': 'Connecting…',
+        'integrations.webhooks_pending_help':
+            'Copy the signing secret into your receiver, then send a test. Events wait until the endpoint returns 2xx.',
+        'integrations.webhooks_verify_failed':
+            'The endpoint did not accept the test webhook. Webhooks stay off until a test succeeds.',
         'integrations.webhooks_rotate_secret': 'Rotate secret',
         'integrations.webhooks_rotate_title': 'Rotate signing secret?',
         'integrations.webhooks_rotate_body': 'A new secret is generated and shown once.',
@@ -114,6 +121,10 @@ function renderPage(ui: React.ReactElement) {
 }
 
 describe('WebhookIntegrationDrawer secret dialog', () => {
+    afterEach(() => {
+        cleanup();
+    });
+
     beforeEach(() => {
         updateMock.mockReset();
     });
@@ -185,5 +196,28 @@ describe('WebhookIntegrationDrawer secret dialog', () => {
         expect(back).not.toBeNull();
         expect(back?.getAttribute('href')).toBe('/integrations');
         expect(back).toHaveTextContent(/Integrations/i);
+    });
+
+    it('keeps not-enabled and send-test when credentials are stored but unverified', () => {
+        renderPage(
+            <WebhookIntegrationDrawer
+                configured={false}
+                pending
+                url="https://example.com/hooks/canvas"
+                maskedSecret="••••abcd"
+                events={['post.published']}
+                availableEvents={AVAILABLE}
+                onClose={() => undefined}
+                onStatusChange={() => undefined}
+            />
+        );
+
+        expect(document.querySelector('[data-integration-status="off"]')).not.toBeNull();
+        expect(screen.getByText('Not enabled')).toBeInTheDocument();
+        expect(screen.queryByText('Connecting')).toBeNull();
+        expect(screen.getByText(/Copy the signing secret into your receiver/i)).toBeInTheDocument();
+        expect(screen.getAllByRole('button', { name: /Send test/i }).length).toBeGreaterThan(0);
+        expect(document.querySelector('[data-integration-section="caution"]')).not.toBeNull();
+        expect(document.querySelector('[data-integration-section="danger"]')).not.toBeNull();
     });
 });

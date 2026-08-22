@@ -47,10 +47,12 @@ const boot = makeBoot({
 
 function statusFixture(overrides: Partial<IntegrationsStatus> = {}): IntegrationsStatus {
     return {
-        unsplash: { configured: true, masked_key: '••••key1', enabled_at: '2026-01-01T00:00:00Z' },
-        ai: { configured: false, provider: null, masked_key: null, model: null, enabled_at: null },
+        unsplash: { status: 'enabled', configured: true, masked_key: '••••key1', enabled_at: '2026-01-01T00:00:00Z' },
+        ai: { status: 'off', configured: false, provider: null, masked_key: null, model: null, enabled_at: null },
         webhooks: {
+            status: 'off',
             configured: false,
+            pending: false,
             url: null,
             masked_secret: null,
             events: [],
@@ -112,6 +114,34 @@ describe('IntegrationsIndex card layout', () => {
 
         // Real page path called integrationsApi.show
         expect(showMock).toHaveBeenCalled();
+    });
+
+    it('shows not enabled when webhooks have credentials but are not verified', async () => {
+        showMock.mockResolvedValue(
+            statusFixture({
+                webhooks: {
+                    status: 'off',
+                    configured: false,
+                    pending: true,
+                    url: 'https://example.com/hooks/canvas',
+                    masked_secret: '••••abcd',
+                    events: ['post.published'],
+                    enabled_at: null,
+                    available_events: [],
+                },
+            })
+        );
+
+        renderIndex();
+
+        await waitFor(() => {
+            expect(document.querySelector('[data-integration-card="webhooks"]')).not.toBeNull();
+        });
+
+        const card = document.querySelector('[data-integration-card="webhooks"]');
+        expect(card?.getAttribute('data-integration-status')).toBe('off');
+        expect(screen.getAllByText('Not enabled')).toHaveLength(2);
+        expect(screen.queryByText('Connecting')).toBeNull();
     });
 
     it('shows a card-shaped loading skeleton before status resolves', () => {

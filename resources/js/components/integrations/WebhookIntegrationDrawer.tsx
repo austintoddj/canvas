@@ -16,6 +16,7 @@ import { toast } from '@/lib/toast';
 
 type WebhookIntegrationDrawerProps = {
     configured: boolean;
+    pending?: boolean;
     url?: string | null;
     maskedSecret?: string | null;
     events?: string[];
@@ -39,6 +40,7 @@ const DEFAULT_EVENTS: WebhookEventOption[] = [
 
 export function WebhookIntegrationDrawer({
     configured,
+    pending = false,
     url: initialUrl = null,
     maskedSecret = null,
     events: initialEvents = [],
@@ -104,10 +106,14 @@ export function WebhookIntegrationDrawer({
 
     const busy = saving || testing || rotating || clearing;
     const trimmedUrl = url.trim();
+    const hasCredentials = configured || pending;
     const canSave =
         trimmedUrl !== '' &&
         events.length > 0 &&
-        (!configured || trimmedUrl !== (initialUrl ?? '') || !sameEventSet(events, initialEvents));
+        (!hasCredentials ||
+            pending ||
+            trimmedUrl !== (initialUrl ?? '') ||
+            !sameEventSet(events, initialEvents));
     const secretDialogOpen = secretDialog.step !== 'closed';
 
     function closeSecretDialog() {
@@ -151,9 +157,20 @@ export function WebhookIntegrationDrawer({
                 typeof next.webhooks.plain_secret === 'string' && next.webhooks.plain_secret !== ''
                     ? next.webhooks.plain_secret
                     : null;
+            const stillPending = next.webhooks.pending === true;
 
             if (nextPlain !== null) {
                 setSecretDialog({ step: 'reveal', secret: nextPlain, reason: 'create' });
+            }
+
+            if (stillPending) {
+                toast.error(
+                    t(
+                        'integrations.webhooks_verify_failed',
+                        'The endpoint did not accept the test webhook. Webhooks stay off until a test succeeds.'
+                    )
+                );
+            } else if (nextPlain !== null) {
                 toast.success(
                     configured
                         ? t('integrations.webhooks_saved', 'Webhook settings saved.')
@@ -179,7 +196,7 @@ export function WebhookIntegrationDrawer({
     }
 
     async function confirmRotateSecret() {
-        if (rotating || !configured) {
+        if (rotating || !hasCredentials) {
             return;
         }
 
@@ -213,7 +230,7 @@ export function WebhookIntegrationDrawer({
     }
 
     async function handleTest() {
-        if (testing || !configured) {
+        if (testing || !hasCredentials) {
             return;
         }
 
@@ -221,6 +238,8 @@ export function WebhookIntegrationDrawer({
 
         try {
             await integrationsApi.testWebhook();
+            const next = await integrationsApi.show();
+            onStatusChange(next);
             toast.success(t('integrations.webhooks_test_sent', 'Test webhook sent.'));
             setDeliveriesRefreshKey((key) => key + 1);
         } catch (error) {
@@ -300,10 +319,15 @@ export function WebhookIntegrationDrawer({
                                   'integrations.webhooks_settings_connected_help',
                                   'Update the endpoint or events, then save. Use Send test to verify delivery.'
                               )
-                            : t(
-                                  'integrations.webhooks_settings_setup_help',
-                                  'Add a public HTTPS endpoint and choose which post events to send.'
-                              )
+                            : pending
+                              ? t(
+                                    'integrations.webhooks_pending_help',
+                                    'Copy the signing secret into your receiver, then send a test. Events wait until the endpoint returns 2xx.'
+                                )
+                              : t(
+                                    'integrations.webhooks_settings_setup_help',
+                                    'Add a public HTTPS endpoint and choose which post events to send.'
+                                )
                     }
                     actions={
                         <>
@@ -314,12 +338,14 @@ export function WebhookIntegrationDrawer({
                                 onClick={() => void handleSave()}
                             >
                                 {saving
-                                    ? t('common.saving')
+                                    ? !configured || pending || trimmedUrl !== (initialUrl ?? '')
+                                        ? t('integrations.connecting_progress', 'Connecting…')
+                                        : t('common.saving')
                                     : configured
                                       ? t('integrations.save_settings', 'Save settings')
                                       : t('integrations.webhooks_connect', 'Enable webhooks')}
                             </Button>
-                            {configured ? (
+                            {hasCredentials ? (
                                 <Button type="button" outline disabled={busy} onClick={() => void handleTest()}>
                                     {testing
                                         ? t('integrations.webhooks_testing', 'Sending…')
@@ -332,7 +358,7 @@ export function WebhookIntegrationDrawer({
                         </>
                     }
                     afterSettings={
-                        configured ? (
+                        hasCredentials ? (
                             <IntegrationSection
                                 title={t('integrations.webhooks_deliveries', 'Recent deliveries')}
                                 description={t(
@@ -343,7 +369,7 @@ export function WebhookIntegrationDrawer({
                             >
                                 <WebhookDeliveriesPanel
                                     open
-                                    enabled={configured}
+                                    enabled={hasCredentials}
                                     refreshKey={deliveriesRefreshKey}
                                     embedded
                                     eventOptions={eventOptions}
@@ -351,9 +377,9 @@ export function WebhookIntegrationDrawer({
                             </IntegrationSection>
                         ) : null
                     }
-                    cautionZoneTitle={configured ? t('integrations.webhooks_secret', 'Signing secret') : undefined}
+                    cautionZoneTitle={hasCredentials ? t('integrations.webhooks_secret', 'Signing secret') : undefined}
                     cautionZone={
-                        configured ? (
+                        hasCredentials ? (
                             <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div className="min-w-0 flex-1 space-y-1">
                                     {maskedSecret ? (
@@ -384,7 +410,7 @@ export function WebhookIntegrationDrawer({
                         ) : null
                     }
                     dangerZone={
-                        configured ? (
+                        hasCredentials ? (
                             <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div className="min-w-0 space-y-1">
                                     <Text className="text-sm font-medium text-zinc-950 dark:text-white">
@@ -423,7 +449,7 @@ export function WebhookIntegrationDrawer({
                             <FieldGroup className="space-y-4">
                                 <Field>
                                     <Label>{t('integrations.webhooks_url', 'Endpoint URL')}</Label>
-                                    {!configured ? (
+                                    {!hasCredentials ? (
                                         <Description>
                                             {t(
                                                 'integrations.webhooks_url_help',
@@ -448,7 +474,7 @@ export function WebhookIntegrationDrawer({
 
                                 <Field>
                                     <Label>{t('integrations.webhooks_events', 'Events')}</Label>
-                                    {!configured ? (
+                                    {!hasCredentials ? (
                                         <Description>
                                             {t(
                                                 'integrations.webhooks_events_help',

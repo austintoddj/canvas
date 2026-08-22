@@ -187,7 +187,7 @@ export function UnsplashIntegrationDrawer({
                                 onClick={() => void handleSave()}
                             >
                                 {saving
-                                    ? t('common.saving')
+                                    ? t('integrations.connecting_progress', 'Connecting…')
                                     : configured
                                       ? t('integrations.save_key', 'Save key')
                                       : t('integrations.connect_unsplash', 'Connect Unsplash')}

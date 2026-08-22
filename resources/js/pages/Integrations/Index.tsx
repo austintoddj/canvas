@@ -40,9 +40,9 @@ export default function IntegrationsIndex() {
         return () => controller.abort();
     }, [t]);
 
-    const unsplashConfigured = status?.unsplash.configured === true;
-    const aiConfigured = status?.ai.configured === true;
-    const webhooksConfigured = status?.webhooks.configured === true;
+    const unsplashStatus = status?.unsplash.status ?? 'off';
+    const aiStatus = status?.ai.status ?? 'off';
+    const webhooksStatus = status?.webhooks.status ?? 'off';
     const configureLabel = t('integrations.configure', 'Configure');
     const enabledLabel = t('integrations.enabled', 'Enabled');
     const notEnabledLabel = t('integrations.not_enabled', 'Not enabled');
@@ -69,7 +69,7 @@ export default function IntegrationsIndex() {
                         kind="unsplash"
                         title={t('integrations.unsplash')}
                         description={t('integrations.unsplash_help')}
-                        configured={unsplashConfigured}
+                        status={unsplashStatus}
                         configuredLabel={enabledLabel}
                         notConfiguredLabel={notEnabledLabel}
                         actionLabel={configureLabel}
@@ -79,7 +79,7 @@ export default function IntegrationsIndex() {
                         kind="ai"
                         title={t('integrations.ai')}
                         description={t('integrations.ai_help', 'Rewrite and SEO tools with Grok, ChatGPT, or Claude.')}
-                        configured={aiConfigured}
+                        status={aiStatus}
                         configuredLabel={enabledLabel}
                         notConfiguredLabel={notEnabledLabel}
                         actionLabel={configureLabel}
@@ -92,7 +92,7 @@ export default function IntegrationsIndex() {
                             'integrations.webhooks_help',
                             'Notify external services when posts are published, scheduled, updated, or deleted.'
                         )}
-                        configured={webhooksConfigured}
+                        status={webhooksStatus}
                         configuredLabel={enabledLabel}
                         notConfiguredLabel={notEnabledLabel}
                         actionLabel={configureLabel}

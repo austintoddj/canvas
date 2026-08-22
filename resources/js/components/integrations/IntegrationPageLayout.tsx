@@ -8,6 +8,7 @@ import { IntegrationIcon, type IntegrationKind } from '@/components/integrations
 import { PageDescription, Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { formatRelativeTime } from '@/lib/format-relative-time';
+import type { IntegrationConnectionStatus } from '@/lib/api/integrations';
 import type { IntegrationDeveloper } from '@/lib/integrations/ai-providers';
 import { cn } from '@/lib/utils';
 
@@ -40,7 +41,8 @@ type IntegrationPageLayoutProps = {
     kind: IntegrationKind;
     title: string;
     description: string;
-    enabled: boolean;
+    status?: IntegrationConnectionStatus;
+    enabled?: boolean;
     enabledAt?: string | null;
     developer?: IntegrationDeveloper | null;
     /** Compact connection facts under the hero (endpoint, provider, key). */
@@ -61,7 +63,8 @@ export function IntegrationPageLayout({
     kind,
     title,
     description,
-    enabled,
+    status,
+    enabled = false,
     enabledAt = null,
     developer = null,
     summary = null,
@@ -69,8 +72,13 @@ export function IntegrationPageLayout({
     children,
 }: IntegrationPageLayoutProps) {
     const { t } = useCanvas();
-    const relative = enabled ? formatRelativeTime(enabledAt) : null;
+    const connectionStatus: IntegrationConnectionStatus = status ?? (enabled ? 'enabled' : 'off');
+    const relative = connectionStatus === 'enabled' ? formatRelativeTime(enabledAt) : null;
     const enabledAgo = relative === null ? null : t('integrations.enabled_ago', { relative }, 'Enabled :relative');
+    const statusLabel =
+        connectionStatus === 'enabled'
+            ? t('integrations.enabled', 'Enabled')
+            : t('integrations.not_enabled', 'Not enabled');
     const developedByPrefix = t('integrations.developed_by_prefix', 'Developed by');
 
     return (
@@ -81,10 +89,11 @@ export function IntegrationPageLayout({
                     <div className="min-w-0 flex-1 space-y-2">
                         <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1.5">
                             <Heading className="min-w-0 truncate">{title}</Heading>
-                            <Badge color={enabled ? 'green' : 'zinc'}>
-                                {enabled
-                                    ? t('integrations.enabled', 'Enabled')
-                                    : t('integrations.not_enabled', 'Not enabled')}
+                            <Badge
+                                color={connectionStatus === 'enabled' ? 'green' : 'zinc'}
+                                data-integration-status={connectionStatus}
+                            >
+                                {statusLabel}
                             </Badge>
                         </div>
                         <PageDescription className="mt-0 max-w-2xl text-balance">{description}</PageDescription>

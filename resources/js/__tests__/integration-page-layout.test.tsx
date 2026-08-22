@@ -57,6 +57,19 @@ describe('IntegrationPageLayout', () => {
         expect(document.querySelector('[data-integration-section="settings"]')).not.toBeNull();
     });
 
+    it('renders a not-enabled badge when the integration is not live', () => {
+        renderWithRouter(
+            <IntegrationPageLayout kind="webhooks" title="Webhooks" description="Notify services" enabled={false}>
+                <div />
+            </IntegrationPageLayout>
+        );
+
+        expect(document.querySelector('[data-integration-status="off"]')).not.toBeNull();
+        expect(screen.getByText('Not enabled')).toBeInTheDocument();
+        expect(screen.queryByText('Enabled')).toBeNull();
+        expect(screen.queryByText('Connecting')).toBeNull();
+    });
+
     it('renders a connection summary strip when provided', () => {
         renderWithRouter(
             <IntegrationPageLayout
@@ -118,7 +131,7 @@ describe('IntegrationCard', () => {
                 kind="webhooks"
                 title="Webhooks"
                 description="Notify external services"
-                configured={false}
+                status="off"
                 configuredLabel="Enabled"
                 notConfiguredLabel="Not enabled"
                 actionLabel="Configure"
@@ -145,7 +158,7 @@ describe('IntegrationCard', () => {
                 kind="unsplash"
                 title="Unsplash"
                 description="Stock photos"
-                configured
+                status="enabled"
                 configuredLabel="Enabled"
                 notConfiguredLabel="Not enabled"
                 actionLabel="Configure"
@@ -178,7 +191,7 @@ describe('IntegrationCard', () => {
                         kind={item.kind}
                         title={item.title}
                         description={`${item.title} help`}
-                        configured={false}
+                        status="off"
                         configuredLabel="Enabled"
                         notConfiguredLabel="Not enabled"
                         actionLabel="Configure"

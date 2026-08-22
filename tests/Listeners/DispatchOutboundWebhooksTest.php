@@ -42,6 +42,21 @@ it('queues a delivery job when the domain event fires and the event is subscribe
         ->and(json_encode($delivery->payload))->not->toContain('whsec_test_secret');
 });
 
+it('does not queue a job when webhooks are pending verification', function (): void {
+    Bus::fake([DeliverWebhookJob::class]);
+    configureWebhooks(events: ['post.published']);
+    markWebhooksPending();
+
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subHour(),
+    ]);
+
+    event(new PostPublished($post));
+
+    Bus::assertNotDispatched(DeliverWebhookJob::class);
+});
+
 it('does not queue a job when webhooks are not configured', function (): void {
     Bus::fake([DeliverWebhookJob::class]);
 

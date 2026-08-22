@@ -2,7 +2,10 @@ import { api } from '@/lib/api';
 import { buildQueryString } from '@/lib/api/query';
 import type { Paginated } from '@/types/api';
 
+export type IntegrationConnectionStatus = 'off' | 'enabled';
+
 export type UnsplashIntegrationStatus = {
+    status: IntegrationConnectionStatus;
     configured: boolean;
     masked_key: string | null;
     enabled_at: string | null;
@@ -11,6 +14,7 @@ export type UnsplashIntegrationStatus = {
 export type AiProviderValue = 'xai' | 'openai' | 'anthropic';
 
 export type AiIntegrationStatus = {
+    status: IntegrationConnectionStatus;
     configured: boolean;
     provider: AiProviderValue | null;
     masked_key: string | null;
@@ -27,7 +31,10 @@ export type WebhookEventOption = {
 };
 
 export type WebhooksIntegrationStatus = {
+    status: IntegrationConnectionStatus;
     configured: boolean;
+    /** Credentials stored, but the signed test has not succeeded yet. Still `off`. */
+    pending: boolean;
     url: string | null;
     masked_secret: string | null;
     events: string[];
@@ -35,6 +42,8 @@ export type WebhooksIntegrationStatus = {
     available_events: WebhookEventOption[];
     /** Present only immediately after create/rotate. */
     plain_secret?: string | null;
+    /** Present when a save persisted credentials but the test delivery failed. */
+    verify_error?: string | null;
 };
 
 export type IntegrationsStatus = {

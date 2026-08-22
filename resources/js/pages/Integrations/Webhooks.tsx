@@ -78,6 +78,7 @@ export default function WebhooksIntegrationPage() {
     return (
         <WebhookIntegrationDrawer
             configured={status.webhooks.configured === true}
+            pending={status.webhooks.pending === true}
             url={status.webhooks.url ?? null}
             maskedSecret={status.webhooks.masked_secret ?? null}
             events={status.webhooks.events ?? []}

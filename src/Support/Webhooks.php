@@ -4,16 +4,56 @@ declare(strict_types=1);
 
 namespace Canvas\Support;
 
+use Canvas\Enums\IntegrationStatus;
 use Canvas\Enums\SettingKey;
 use Canvas\Enums\WebhookEvent;
 
 final class Webhooks
 {
+    /**
+     * Lifecycle events fire only when status is explicitly enabled.
+     */
     public static function configured(): bool
+    {
+        return self::status() === IntegrationStatus::Enabled;
+    }
+
+    /**
+     * URL, secret, and events are stored, but a signed test has not succeeded.
+     * Incomplete setup is still Off — not a third durable connection status.
+     */
+    public static function pending(): bool
+    {
+        return self::hasCredentials() && self::status() !== IntegrationStatus::Enabled;
+    }
+
+    public static function hasCredentials(): bool
     {
         return filled(self::url())
             && filled(self::secret())
             && self::events() !== [];
+    }
+
+    /**
+     * Enabled only after a successful webhook.test. Credentials without that
+     * handshake — including a leftover `pending` row from earlier builds — are off.
+     */
+    public static function status(): IntegrationStatus
+    {
+        if (! self::hasCredentials()) {
+            return IntegrationStatus::Off;
+        }
+
+        return app(SettingsRepository::class)->get(SettingKey::WebhookStatus) === IntegrationStatus::Enabled->value
+            ? IntegrationStatus::Enabled
+            : IntegrationStatus::Off;
+    }
+
+    public static function verifiedAt(): ?string
+    {
+        $value = app(SettingsRepository::class)->get(SettingKey::WebhookVerifiedAt);
+
+        return filled($value) ? $value : null;
     }
 
     public static function url(): ?string

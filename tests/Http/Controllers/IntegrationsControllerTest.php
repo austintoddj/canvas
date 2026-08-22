@@ -15,15 +15,19 @@ it('returns unconfigured integrations status for admins', function (): void {
     $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/integrations')
         ->assertSuccessful()
+        ->assertJsonPath('unsplash.status', 'off')
         ->assertJsonPath('unsplash.configured', false)
         ->assertJsonPath('unsplash.masked_key', null)
         ->assertJsonPath('unsplash.enabled_at', null)
+        ->assertJsonPath('ai.status', 'off')
         ->assertJsonPath('ai.configured', false)
         ->assertJsonPath('ai.provider', null)
         ->assertJsonPath('ai.masked_key', null)
         ->assertJsonPath('ai.model', null)
         ->assertJsonPath('ai.enabled_at', null)
+        ->assertJsonPath('webhooks.status', 'off')
         ->assertJsonPath('webhooks.configured', false)
+        ->assertJsonPath('webhooks.pending', false)
         ->assertJsonPath('webhooks.url', null)
         ->assertJsonPath('webhooks.masked_secret', null)
         ->assertJsonPath('webhooks.events', [])
@@ -32,6 +36,8 @@ it('returns unconfigured integrations status for admins', function (): void {
 });
 
 it('stores an encrypted unsplash access key', function (): void {
+    fakeSuccessfulIntegrationProbes();
+
     $response = $this->actingAs($this->admin, 'canvas')
         ->putJson('canvas/api/integrations', [
             'unsplash' => ['access_key' => 'secret-unsplash-key'],
@@ -72,6 +78,8 @@ it('clears the unsplash access key when null is sent', function (): void {
 });
 
 it('stores an encrypted ai api key and provider', function (): void {
+    fakeSuccessfulIntegrationProbes();
+
     $response = $this->actingAs($this->admin, 'canvas')
         ->putJson('canvas/api/integrations', [
             'ai' => [
@@ -104,6 +112,8 @@ it('stores an encrypted ai api key and provider', function (): void {
 });
 
 it('strips a bearer prefix and whitespace from ai api keys', function (): void {
+    fakeSuccessfulIntegrationProbes();
+
     $this->actingAs($this->admin, 'canvas')
         ->putJson('canvas/api/integrations', [
             'ai' => [
@@ -118,6 +128,8 @@ it('strips a bearer prefix and whitespace from ai api keys', function (): void {
 });
 
 it('stores an optional ai model override', function (): void {
+    fakeSuccessfulIntegrationProbes();
+
     $this->actingAs($this->admin, 'canvas')
         ->putJson('canvas/api/integrations', [
             'ai' => [
@@ -154,6 +166,7 @@ it('clears the ai api key when null is sent', function (): void {
 });
 
 it('allows partial updates without requiring both integrations', function (): void {
+    fakeSuccessfulIntegrationProbes();
     setAiIntegration(AiProvider::Xai, 'keep-me');
 
     $this->actingAs($this->admin, 'canvas')
@@ -225,6 +238,8 @@ it('requires authentication for integrations', function (): void {
 });
 
 it('configures webhooks with an auto-generated secret', function (): void {
+    fakeSuccessfulIntegrationProbes();
+
     $response = $this->actingAs($this->admin, 'canvas')
         ->putJson('canvas/api/integrations', [
             'webhooks' => [
@@ -233,7 +248,9 @@ it('configures webhooks with an auto-generated secret', function (): void {
             ],
         ])
         ->assertSuccessful()
+        ->assertJsonPath('webhooks.status', 'enabled')
         ->assertJsonPath('webhooks.configured', true)
+        ->assertJsonPath('webhooks.pending', false)
         ->assertJsonPath('webhooks.url', 'https://example.com/hooks/canvas')
         ->assertJsonPath('webhooks.events', ['post.published', 'post.deleted'])
         ->assertJsonStructure(['webhooks' => ['plain_secret', 'masked_secret', 'enabled_at']]);
@@ -418,4 +435,249 @@ it('forbids non-admins from testing webhooks', function (): void {
     $this->actingAs($this->editor, 'canvas')
         ->postJson('canvas/api/integrations/webhooks/test')
         ->assertForbidden();
+});
+
+it('rejects an unsplash key that the unsplash api does not accept', function (): void {
+    Http::fake([
+        'api.unsplash.com/*' => Http::response(['errors' => ['OAuth error']], 401),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'unsplash' => ['access_key' => 'bogus-unsplash-key'],
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['unsplash.access_key']);
+
+    expect(Unsplash::configured())->toBeFalse()
+        ->and(Unsplash::accessKey())->toBeNull();
+});
+
+it('treats an unsplash rate limit as a valid key', function (): void {
+    Http::fake([
+        'api.unsplash.com/*' => Http::response(['errors' => ['Rate Limit Exceeded']], 429),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'unsplash' => ['access_key' => 'throttled-unsplash-key'],
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('unsplash.configured', true);
+
+    expect(Unsplash::accessKey())->toBe('throttled-unsplash-key');
+});
+
+it('keeps the previous unsplash key when a replacement key is rejected', function (): void {
+    setUnsplashAccessKey('existing-unsplash-key');
+
+    Http::fake([
+        'api.unsplash.com/*' => Http::response(['errors' => ['OAuth error']], 401),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'unsplash' => ['access_key' => 'replacement-unsplash-key'],
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['unsplash.access_key']);
+
+    expect(Unsplash::accessKey())->toBe('existing-unsplash-key');
+});
+
+it('rejects an ai key that the selected provider does not accept', function (): void {
+    Http::fake([
+        'api.openai.com/*' => Http::response(['error' => ['message' => 'Incorrect API key']], 401),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'ai' => [
+                'provider' => AiProvider::OpenAi->value,
+                'api_key' => 'xai-wrong-host-key',
+            ],
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['ai.api_key']);
+
+    expect(Ai::configured())->toBeFalse()
+        ->and(Ai::apiKey())->toBeNull();
+});
+
+it('treats an ai rate limit as a valid key', function (): void {
+    Http::fake([
+        'api.x.ai/*' => Http::response(['error' => ['message' => 'rate limited']], 429),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'ai' => [
+                'provider' => AiProvider::Xai->value,
+                'api_key' => 'throttled-xai-key',
+            ],
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('ai.configured', true);
+
+    expect(Ai::apiKey())->toBe('throttled-xai-key');
+});
+
+it('rejects a custom ai model that the provider does not list', function (): void {
+    fakeSuccessfulIntegrationProbes();
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'ai' => [
+                'provider' => AiProvider::OpenAi->value,
+                'api_key' => 'secret-openai-key',
+                'model' => 'not-a-real-model',
+            ],
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['ai.model']);
+
+    expect(Ai::configured())->toBeFalse();
+});
+
+it('keeps the previous ai key when a replacement key is rejected', function (): void {
+    setAiIntegration(AiProvider::OpenAi, 'existing-openai-key');
+
+    Http::fake([
+        'api.openai.com/*' => Http::response(['error' => ['message' => 'Incorrect API key']], 401),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'ai' => [
+                'provider' => AiProvider::OpenAi->value,
+                'api_key' => 'bogus-replacement',
+            ],
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['ai.api_key']);
+
+    expect(Ai::apiKey())->toBe('existing-openai-key')
+        ->and(Ai::configured())->toBeTrue();
+});
+
+it('keeps webhooks off when the test delivery fails', function (): void {
+    Http::fake([
+        'https://example.com/*' => Http::response('nope', 500),
+    ]);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'webhooks' => [
+                'url' => 'https://example.com/hooks/canvas',
+                'events' => ['post.published'],
+            ],
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('webhooks.status', 'off')
+        ->assertJsonPath('webhooks.configured', false)
+        ->assertJsonPath('webhooks.pending', true)
+        ->assertJsonPath('webhooks.url', 'https://example.com/hooks/canvas')
+        ->assertJsonStructure(['webhooks' => ['plain_secret', 'verify_error']]);
+
+    expect($response->json('webhooks.plain_secret'))->toBeString()->toHaveLength(64)
+        ->and(Webhooks::configured())->toBeFalse()
+        ->and(Webhooks::pending())->toBeTrue()
+        ->and(Webhooks::hasCredentials())->toBeTrue()
+        ->and(Webhooks::status()->value)->toBe('off');
+});
+
+it('promotes pending webhooks to enabled after a successful test', function (): void {
+    fakeSuccessfulIntegrationProbes();
+    configureWebhooks();
+    markWebhooksPending();
+
+    expect(Webhooks::pending())->toBeTrue()
+        ->and(Webhooks::configured())->toBeFalse();
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/integrations/webhooks/test')
+        ->assertSuccessful()
+        ->assertJsonPath('ok', true);
+
+    expect(Webhooks::configured())->toBeTrue()
+        ->and(Webhooks::pending())->toBeFalse()
+        ->and(Webhooks::verifiedAt())->toBeString();
+});
+
+it('allows sending a test while webhooks are pending', function (): void {
+    fakeSuccessfulIntegrationProbes();
+    configureWebhooks();
+    markWebhooksPending();
+
+    $this->actingAs($this->admin, 'canvas')
+        ->postJson('canvas/api/integrations/webhooks/test')
+        ->assertSuccessful();
+});
+
+it('re-verifies when the webhook url changes and stays off if the new url fails', function (): void {
+    configureWebhooks();
+
+    Http::fake([
+        'https://example.com/hooks/new' => Http::response('nope', 500),
+        'https://example.com/*' => Http::response(['ok' => true], 200),
+    ]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'webhooks' => [
+                'url' => 'https://example.com/hooks/new',
+                'events' => ['post.published'],
+            ],
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('webhooks.status', 'off')
+        ->assertJsonPath('webhooks.configured', false)
+        ->assertJsonPath('webhooks.pending', true)
+        ->assertJsonPath('webhooks.url', 'https://example.com/hooks/new');
+
+    expect(Webhooks::configured())->toBeFalse()
+        ->and(Webhooks::pending())->toBeTrue()
+        ->and(Webhooks::status()->value)->toBe('off')
+        ->and(Webhooks::url())->toBe('https://example.com/hooks/new');
+});
+
+it('does not re-verify when only webhook events change', function (): void {
+    configureWebhooks(events: ['post.published']);
+
+    Http::fake(function () {
+        expect(false)->toBeTrue('Events-only updates must not probe the endpoint.');
+
+        return Http::response(['ok' => true], 200);
+    });
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'webhooks' => [
+                'events' => ['post.published', 'post.deleted'],
+            ],
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('webhooks.configured', true)
+        ->assertJsonPath('webhooks.pending', false)
+        ->assertJsonPath('webhooks.events', ['post.published', 'post.deleted']);
+});
+
+it('does not re-verify when rotating the webhook secret', function (): void {
+    configureWebhooks();
+
+    Http::fake(function () {
+        expect(false)->toBeTrue('Secret rotation must not probe the endpoint.');
+
+        return Http::response(['ok' => true], 200);
+    });
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson('canvas/api/integrations', [
+            'webhooks' => [
+                'rotate_secret' => true,
+            ],
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('webhooks.configured', true)
+        ->assertJsonPath('webhooks.pending', false);
 });

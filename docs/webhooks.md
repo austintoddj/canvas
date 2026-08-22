@@ -27,7 +27,11 @@ A scheduled post becomes visible when `published_at` elapses (no extra write is 
 
 ## Configuring outbound webhooks
 
-In the admin, open **Integrations → Webhooks**. Provide an HTTPS URL, choose events, and copy the signing secret (shown once). **Send test** delivers a signed `webhook.test` payload immediately.
+In the admin, open **Integrations → Webhooks**. Provide an HTTPS URL, choose events, and copy the signing secret (shown once). The integration is **Not enabled** until a signed `webhook.test` returns HTTP 2xx, then **Enabled**. Lifecycle events do not fire while it is Not enabled.
+
+Canvas sends that test immediately on save. If the endpoint is not ready yet, credentials stay stored so you can copy the signing secret — the card still reads **Not enabled**. **Send test** retries the handshake and flips the integration to Enabled on success. The signing secret is generated when you first save the URL, even if the first test fails, so HMAC-strict receivers can be configured before the handshake succeeds.
+
+A stored URL and secret without an Enabled status is **Not enabled**. Open Integrations and enable the endpoint again after upgrading.
 
 | Event id           | Domain event      |
 | ------------------ | ----------------- |

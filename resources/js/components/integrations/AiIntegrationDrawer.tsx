@@ -292,7 +292,7 @@ export function AiIntegrationDrawer({
                                 onClick={() => void handleSave()}
                             >
                                 {saving
-                                    ? t('common.saving')
+                                    ? t('integrations.connecting_progress', 'Connecting…')
                                     : configured
                                       ? t('integrations.save_settings', 'Save settings')
                                       : t('integrations.connect_ai', 'Connect AI')}

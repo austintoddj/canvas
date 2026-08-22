@@ -62,7 +62,7 @@ class WebhookDeliveryController extends Controller
             ], 422);
         }
 
-        if (! Webhooks::configured()) {
+        if (! Webhooks::hasCredentials()) {
             return response()->json([
                 'message' => 'Configure a webhook URL, secret, and at least one event before retrying.',
                 'code' => 'webhooks_not_configured',

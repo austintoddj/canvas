@@ -4,13 +4,14 @@ import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
 import { IntegrationIcon, type IntegrationKind } from '@/components/integrations/IntegrationIcon';
 import { Text } from '@/components/text';
+import type { IntegrationConnectionStatus } from '@/lib/api/integrations';
 import { cn } from '@/lib/utils';
 
 type IntegrationCardProps = {
     kind: IntegrationKind;
     title: string;
     description: string;
-    configured: boolean;
+    status?: IntegrationConnectionStatus;
     configuredLabel: string;
     notConfiguredLabel: string;
     actionLabel: string;
@@ -23,7 +24,7 @@ export function IntegrationCard({
     kind,
     title,
     description,
-    configured,
+    status = 'off',
     configuredLabel,
     notConfiguredLabel,
     actionLabel,
@@ -41,10 +42,13 @@ export function IntegrationCard({
             )}
             data-integration-card={kind}
             data-integration-row={kind}
+            data-integration-status={status}
         >
             <div className="flex items-start justify-between gap-3">
                 <IntegrationIcon kind={kind} size="md" />
-                <Badge color={configured ? 'green' : 'zinc'}>{configured ? configuredLabel : notConfiguredLabel}</Badge>
+                <Badge color={status === 'enabled' ? 'green' : 'zinc'}>
+                    {status === 'enabled' ? configuredLabel : notConfiguredLabel}
+                </Badge>
             </div>
 
             <div className="mt-4 min-w-0 flex-1">
