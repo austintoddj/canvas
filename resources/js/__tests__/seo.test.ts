@@ -135,6 +135,15 @@ describe('seo helpers', () => {
         expect(updatePostMeta({ title: 'Custom title' }, { title: '' })).toBeNull();
     });
 
+    it('preserves spaces in nonblank meta values', () => {
+        expect(updatePostMeta(null, { title: 'Pirates stole my hamsters! ' })).toEqual({
+            title: 'Pirates stole my hamsters! ',
+        });
+        expect(updatePostMeta(null, { description: ' A description with spaces ' })).toEqual({
+            description: ' A description with spaces ',
+        });
+    });
+
     it('packs post content for SEO AI generation', () => {
         expect(seoSourceText({ title: '', summary: '', body: null })).toBeNull();
         expect(seoSourceText({ title: '  ', summary: '', body: '<p></p>' })).toBeNull();

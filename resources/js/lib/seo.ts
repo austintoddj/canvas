@@ -128,7 +128,7 @@ export function updatePostMeta(meta: PostMeta | null, patch: Partial<PostMeta>):
         if (trimmed === '') {
             delete next[key];
         } else {
-            next[key] = trimmed;
+            next[key] = value;
         }
     }
 
