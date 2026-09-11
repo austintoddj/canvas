@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 const fixturesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures');
 
@@ -225,4 +225,90 @@ export async function closePreview(page: Page): Promise<void> {
     await expect(page.locator('[data-post-preview-body="true"], [data-post-preview-empty="true"]')).toHaveCount(0, {
         timeout: 10_000,
     });
+}
+
+const bodyToolbarSelector = '[data-post-body-toolbar="true"]';
+const bodySurfaceSelector = '[data-post-body-surface="true"]';
+const bodyEditorSelector = '.ProseMirror[contenteditable="true"]';
+
+/** Fill the body with enough paragraphs that the editor is taller than the viewport. */
+export async function fillLongPostBody(page: Page, paragraphs = 60): Promise<Locator> {
+    const editor = page.locator(bodyEditorSelector).first();
+    await expect(editor).toBeVisible({ timeout: 20_000 });
+    await editor.click();
+
+    // insertText skips per-key events, so this stays fast; Enter is a real key so
+    // ProseMirror splits the paragraph.
+    await page.keyboard.insertText('Sticky toolbar filler paragraph.');
+    for (let index = 1; index < paragraphs; index += 1) {
+        await page.keyboard.press('Enter');
+        await page.keyboard.insertText(`Sticky toolbar filler paragraph ${index}.`);
+    }
+
+    return editor;
+}
+
+export async function enterFocusMode(page: Page): Promise<void> {
+    await page.locator('[data-post-focus-toggle="true"]').click();
+    await expect(page.locator('[data-post-editor-focus="true"]')).toBeVisible({ timeout: 10_000 });
+}
+
+export async function exitFocusMode(page: Page): Promise<void> {
+    await page.getByRole('button', { name: 'Exit focus mode' }).click();
+    await expect(page.locator('[data-post-editor-focus="false"]')).toBeVisible({ timeout: 10_000 });
+}
+
+async function boxOf(locator: Locator): Promise<{ x: number; y: number; width: number; height: number }> {
+    const box = await locator.boundingBox();
+    expect(box, 'element must be rendered').not.toBeNull();
+
+    return box!;
+}
+
+/**
+ * Scroll the editor's scroll container and assert the body toolbar pins in place
+ * while the body scrolls beneath it. Container-agnostic: works whether the page
+ * (normal mode) or the focus-mode pane owns the scroll.
+ */
+export async function expectBodyToolbarPinnedWhileScrolling(page: Page, editor: Locator): Promise<void> {
+    const toolbar = page.locator(bodyToolbarSelector);
+    const surface = page.locator(bodySurfaceSelector);
+    const viewport = page.viewportSize();
+    expect(viewport).not.toBeNull();
+
+    // Typing leaves the caret (and therefore the scroll position) at the bottom of
+    // the body. Hovering the editor's top-left scrolls it back into view, which is
+    // the baseline we measure from — reading the box before this would record a
+    // position that is already scrolled past the toolbar.
+    await editor.hover({ position: { x: 20, y: 20 } });
+    const surfaceBefore = await boxOf(surface);
+
+    // Wheel over the editor so the nearest scrollable ancestor receives it.
+    await page.mouse.wheel(0, 2_000);
+
+    // The surface (whose top edge sits above the toolbar) must scroll well out of view.
+    await expect.poll(async () => (await boxOf(surface)).y, { timeout: 5_000 }).toBeLessThan(surfaceBefore.y - 500);
+
+    const pinned = await boxOf(toolbar);
+    const surfaceAfter = await boxOf(surface);
+
+    // Surface top is above the toolbar => the toolbar stuck instead of scrolling away.
+    expect(surfaceAfter.y, 'surface top should have scrolled past the toolbar').toBeLessThan(pinned.y);
+    expect(pinned.y, 'toolbar must remain on screen').toBeGreaterThanOrEqual(0);
+    expect(pinned.y + pinned.height, 'toolbar must remain on screen').toBeLessThanOrEqual(viewport!.height);
+
+    // Keep scrolling: the body moves, the toolbar does not.
+    await page.mouse.wheel(0, 400);
+    await expect.poll(async () => (await boxOf(surface)).y, { timeout: 5_000 }).toBeLessThan(surfaceAfter.y - 100);
+
+    const stillPinned = await boxOf(toolbar);
+    expect(Math.abs(stillPinned.y - pinned.y), 'toolbar should not move while scrolling').toBeLessThanOrEqual(1);
+
+    // A pinned toolbar is only useful if it is clickable — Playwright's actionability
+    // check fails here if something (e.g. a header) is painted over it.
+    const bold = toolbar.getByRole('button', { name: 'Bold' });
+    await bold.click();
+    await expect(bold).toHaveAttribute('aria-pressed', 'true');
+    await bold.click();
+    await expect(bold).toHaveAttribute('aria-pressed', 'false');
 }

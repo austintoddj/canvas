@@ -213,7 +213,7 @@ function EditorToolbar({
 
     return (
         <div
-            className="flex flex-nowrap items-center border-b border-zinc-950/10 py-1.5 dark:border-white/10"
+            className="sticky top-0 z-10 flex flex-nowrap items-center rounded-t-lg border-b py-1.5 border-zinc-950/10 bg-white dark:border-white/10 dark:bg-zinc-900"
             data-post-body-toolbar="true"
             role="toolbar"
             aria-label={t('editor.formatting')}
@@ -1086,7 +1086,7 @@ export default function PostBodyEditor({
 
     return (
         <div
-            className="overflow-hidden rounded-lg border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-zinc-900"
+            className="rounded-lg border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-zinc-900"
             data-post-body-surface="true"
         >
             {editor ? (
