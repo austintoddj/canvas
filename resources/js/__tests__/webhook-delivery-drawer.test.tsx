@@ -1,14 +1,15 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WebhookDeliveryDrawer } from '@/components/integrations/WebhookDeliveryDrawer';
 import type { WebhookDelivery } from '@/lib/api/integrations';
 import { toast } from '@/lib/toast';
 
-import { makeBoot, withCanvas } from './helpers/boot';
+import { makeBoot } from './helpers/boot';
+import { renderWithCanvas } from './helpers/render';
 
 const retryWebhookDeliveryMock = vi.fn();
 
@@ -32,7 +33,7 @@ vi.mock('@/lib/toast', () => ({
 }));
 
 const boot = makeBoot({
-    translations: JSON.stringify({
+    translations: {
         'integrations.webhooks_delivery_summary': 'Summary',
         'integrations.webhooks_delivery_payload': 'Payload',
         'integrations.webhooks_delivery_http_status': 'HTTP status',
@@ -57,8 +58,7 @@ const boot = makeBoot({
         'integrations.webhooks_deliveries_retry_error': 'Unable to retry this delivery.',
         'integrations.webhooks_deliveries_retry_not_failed': 'Only failed deliveries can be retried.',
         'common.type': 'Type',
-        'common.close': 'Close',
-    }),
+    },
 });
 
 function delivery(partial: Partial<WebhookDelivery> = {}): WebhookDelivery {
@@ -84,12 +84,8 @@ function renderDrawer(props: Partial<React.ComponentProps<typeof WebhookDelivery
     const onClose = props.onClose ?? (() => undefined);
     const item = props.delivery === undefined ? delivery() : props.delivery;
 
-    return render(withCanvas(<WebhookDeliveryDrawer open delivery={item} onClose={onClose} {...props} />, boot));
+    return renderWithCanvas(<WebhookDeliveryDrawer open delivery={item} onClose={onClose} {...props} />, { boot });
 }
-
-afterEach(() => {
-    cleanup();
-});
 
 describe('WebhookDeliveryDrawer', () => {
     beforeEach(() => {

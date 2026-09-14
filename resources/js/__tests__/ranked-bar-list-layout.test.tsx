@@ -1,17 +1,11 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 
 import RankedBarList from '@/components/analytics/RankedBarList';
 import { DashboardTopPosts } from '@/components/dashboard/DashboardTopPosts';
-import { CanvasContext } from '@/contexts/CanvasContext';
-import { makeCanvasValue } from '@/__tests__/helpers/boot';
-
-afterEach(() => {
-    cleanup();
-});
+import { renderWithCanvas } from '@/__tests__/helpers/render';
 
 describe('ranked list overflow constraints', () => {
     it('keeps RankedBarList card within a shrinkable overflow-hidden shell', () => {
@@ -51,22 +45,16 @@ describe('ranked list overflow constraints', () => {
     });
 
     it('keeps DashboardTopPosts card within a shrinkable overflow-hidden shell', () => {
-        const value = makeCanvasValue();
-
-        render(
-            <MemoryRouter>
-                <CanvasContext.Provider value={value}>
-                    <DashboardTopPosts
-                        posts={[
-                            {
-                                id: 'post-1',
-                                title: 'Shipping a Calm Writing Surface With A Very Long Title',
-                                views: 26677,
-                            },
-                        ]}
-                    />
-                </CanvasContext.Provider>
-            </MemoryRouter>
+        renderWithCanvas(
+            <DashboardTopPosts
+                posts={[
+                    {
+                        id: 'post-1',
+                        title: 'Shipping a Calm Writing Surface With A Very Long Title',
+                        views: 26677,
+                    },
+                ]}
+            />
         );
 
         const card = document.querySelector('[data-dashboard-top-posts="true"]');

@@ -1,20 +1,17 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import IntegrationsIndex from '@/pages/Integrations/Index';
 import type { IntegrationsStatus } from '@/lib/api/integrations';
 
-import { makeBoot, withCanvas } from './helpers/boot';
+import { makeBoot } from './helpers/boot';
+import { matchMediaFinePointerHover, stubMatchMedia } from './helpers/dom';
+import { renderWithCanvas } from './helpers/render';
 
 const showMock = vi.fn();
-
-afterEach(() => {
-    cleanup();
-});
 
 vi.mock('@/lib/api/integrations', async () => {
     const actual = await vi.importActual<typeof import('@/lib/api/integrations')>('@/lib/api/integrations');
@@ -43,7 +40,7 @@ vi.mock('@/lib/toast', () => ({
 }));
 
 const boot = makeBoot({
-    translations: JSON.stringify({
+    translations: {
         'integrations.title': 'Integrations',
         'integrations.description': 'Connect Canvas to the tools you already use.',
         'integrations.configure': 'Configure',
@@ -70,10 +67,7 @@ const boot = makeBoot({
         'integrations.webhooks_logs_sent_at': 'Sent at',
         'integrations.webhooks_status': 'Status',
         'integrations.webhooks_deliveries_empty': 'No deliveries yet.',
-        'common.close': 'Close',
-        'common.cancel': 'Cancel',
-        'common.save': 'Save',
-    }),
+    },
 });
 
 function statusFixture(overrides: Partial<IntegrationsStatus> = {}): IntegrationsStatus {
@@ -95,28 +89,13 @@ function statusFixture(overrides: Partial<IntegrationsStatus> = {}): Integration
 }
 
 function renderIndex() {
-    return render(
-        withCanvas(
-            <MemoryRouter initialEntries={['/integrations']}>
-                <IntegrationsIndex />
-            </MemoryRouter>,
-            boot
-        )
-    );
+    return renderWithCanvas(<IntegrationsIndex />, { boot, path: '/integrations' });
 }
 
 describe('IntegrationsIndex card layout', () => {
     beforeEach(() => {
         showMock.mockReset();
-        Object.defineProperty(window, 'matchMedia', {
-            writable: true,
-            value: vi.fn().mockImplementation((query: string) => ({
-                matches: query.includes('hover') && query.includes('pointer: fine'),
-                media: query,
-                addEventListener: vi.fn(),
-                removeEventListener: vi.fn(),
-            })),
-        });
+        stubMatchMedia(matchMediaFinePointerHover);
     });
 
     it('renders a multi-card grid with clickable cards for each integration', async () => {

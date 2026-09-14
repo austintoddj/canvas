@@ -1,24 +1,14 @@
 // @vitest-environment happy-dom
 
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Tooltip } from '@/components/tooltip';
 
-afterEach(() => {
-    cleanup();
-});
+import { matchMediaFinePointerHover, stubMatchMedia } from './helpers/dom';
 
 beforeEach(() => {
-    Object.defineProperty(window, 'matchMedia', {
-        writable: true,
-        value: vi.fn().mockImplementation((query: string) => ({
-            matches: query.includes('hover') && query.includes('pointer: fine'),
-            media: query,
-            addEventListener: vi.fn(),
-            removeEventListener: vi.fn(),
-        })),
-    });
+    stubMatchMedia(matchMediaFinePointerHover);
 });
 
 describe('Tooltip', () => {

@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 
 import { Navbar, NavbarItem, NavbarSection } from '@/components/navbar';
@@ -11,10 +11,6 @@ import { MobilePageActionProvider, useMobilePageActionState } from '@/contexts/M
 import { useMobilePageAction } from '@/hooks/useMobilePageAction';
 import { mobilePageActionKindForPath } from '@/lib/mobile-page-action';
 import { resolveMobilePageAction } from '@/lib/resolve-mobile-page-action';
-
-afterEach(() => {
-    cleanup();
-});
 
 function t(key: string, replacementsOrFallback?: string | Record<string, string | number>, fallback?: string): string {
     const map: Record<string, string> = {

@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { WebhookEventsField } from '@/components/integrations/WebhookEventsField';
 import type { WebhookEventOption } from '@/lib/api/integrations';
@@ -38,10 +38,6 @@ function eventControls(options: WebhookEventOption[] = OPTIONS) {
 }
 
 describe('WebhookEventsField', () => {
-    afterEach(() => {
-        cleanup();
-    });
-
     it('renders a Post group expanded with event labels, ids, and descriptions', () => {
         render(withCanvas(<ControlledField />));
 

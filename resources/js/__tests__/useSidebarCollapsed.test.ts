@@ -1,6 +1,6 @@
-// @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, renderHook } from '@testing-library/react';
+// @vitest-environment happy-dom
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { act, renderHook } from '@testing-library/react';
 
 import {
     readSidebarCollapsed,
@@ -10,27 +10,12 @@ import {
 } from '@/hooks/useSidebarCollapsed';
 
 describe('useSidebarCollapsed', () => {
-    let storage: Record<string, string>;
-
     beforeEach(() => {
-        storage = {};
-        vi.stubGlobal('localStorage', {
-            getItem: (key: string) => storage[key] ?? null,
-            setItem: (key: string, value: string) => {
-                storage[key] = value;
-            },
-            removeItem: (key: string) => {
-                delete storage[key];
-            },
-            clear: () => {
-                storage = {};
-            },
-        });
+        localStorage.clear();
     });
 
     afterEach(() => {
-        cleanup();
-        vi.unstubAllGlobals();
+        localStorage.clear();
     });
 
     it('defaults to expanded when storage is empty', () => {

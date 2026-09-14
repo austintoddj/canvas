@@ -1,25 +1,15 @@
 // @vitest-environment happy-dom
 
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ListRowActionButton, ListRowActionLink } from '@/components/ListRowEnd';
 import { MemoryRouter } from 'react-router-dom';
 
-afterEach(() => {
-    cleanup();
-});
+import { matchMediaFinePointerHover, stubMatchMedia } from './helpers/dom';
 
 beforeEach(() => {
-    Object.defineProperty(window, 'matchMedia', {
-        writable: true,
-        value: vi.fn().mockImplementation((query: string) => ({
-            matches: query.includes('hover') && query.includes('pointer: fine'),
-            media: query,
-            addEventListener: vi.fn(),
-            removeEventListener: vi.fn(),
-        })),
-    });
+    stubMatchMedia(matchMediaFinePointerHover);
 });
 
 describe('ListRowActionButton', () => {
@@ -41,15 +31,7 @@ describe('ListRowActionButton', () => {
     });
 
     it('does not show a tooltip without fine-pointer hover', () => {
-        Object.defineProperty(window, 'matchMedia', {
-            writable: true,
-            value: vi.fn().mockImplementation(() => ({
-                matches: false,
-                media: '',
-                addEventListener: vi.fn(),
-                removeEventListener: vi.fn(),
-            })),
-        });
+        stubMatchMedia(() => false);
 
         render(
             <ListRowActionButton label="Delete Hello World" tooltip="Delete">

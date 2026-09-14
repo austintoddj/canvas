@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MediaDetailDrawer } from '@/components/media/MediaDetailDrawer';
 import { CanvasContext, type CanvasContextValue } from '@/contexts/CanvasContext';
@@ -96,10 +96,6 @@ function renderDrawer(props: Partial<React.ComponentProps<typeof MediaDetailDraw
 
 beforeEach(() => {
     showMock.mockReset();
-});
-
-afterEach(() => {
-    cleanup();
 });
 
 describe('MediaDetailDrawer loading', () => {

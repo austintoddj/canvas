@@ -1,13 +1,14 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WebhookDeliveriesPanel } from '@/components/integrations/WebhookDeliveriesPanel';
 import type { WebhookDelivery } from '@/lib/api/integrations';
 
-import { makeBoot, withCanvas } from './helpers/boot';
+import { makeBoot } from './helpers/boot';
+import { renderWithCanvas } from './helpers/render';
 
 const webhookDeliveriesMock = vi.fn();
 
@@ -32,7 +33,7 @@ vi.mock('@/lib/toast', () => ({
 }));
 
 const boot = makeBoot({
-    translations: JSON.stringify({
+    translations: {
         'integrations.webhooks_logs': 'Webhook logs',
         'integrations.webhooks_logs_retention': 'Retains logs for 30 days.',
         'integrations.webhooks_logs_event': 'Event',
@@ -57,7 +58,7 @@ const boot = makeBoot({
         'common.previous_page': 'Previous page',
         'common.next_page': 'Next page',
         'common.page_number': 'Page :page',
-    }),
+    },
 });
 
 function delivery(partial: Partial<WebhookDelivery> = {}): WebhookDelivery {
@@ -95,10 +96,6 @@ function pageResult(
     };
 }
 
-afterEach(() => {
-    cleanup();
-});
-
 describe('WebhookDeliveriesPanel', () => {
     beforeEach(() => {
         webhookDeliveriesMock.mockReset();
@@ -106,11 +103,9 @@ describe('WebhookDeliveriesPanel', () => {
     });
 
     it('loads deliveries into a table without an accordion', async () => {
-        render(
-            withCanvas(
-                <WebhookDeliveriesPanel open enabled eventOptions={[{ id: 'post.published', label: 'Published' }]} />,
-                boot
-            )
+        renderWithCanvas(
+            <WebhookDeliveriesPanel open enabled eventOptions={[{ id: 'post.published', label: 'Published' }]} />,
+            { boot }
         );
 
         await waitFor(() => {
@@ -139,7 +134,7 @@ describe('WebhookDeliveriesPanel', () => {
         const user = userEvent.setup();
         const onSelectDelivery = vi.fn();
 
-        render(withCanvas(<WebhookDeliveriesPanel open enabled onSelectDelivery={onSelectDelivery} />, boot));
+        renderWithCanvas(<WebhookDeliveriesPanel open enabled onSelectDelivery={onSelectDelivery} />, { boot });
 
         await waitFor(() => {
             expect(document.querySelector('[data-webhook-delivery="del-1"]')).not.toBeNull();
@@ -157,7 +152,7 @@ describe('WebhookDeliveriesPanel', () => {
     it('shows empty copy inside the table', async () => {
         webhookDeliveriesMock.mockResolvedValue(pageResult([]));
 
-        render(withCanvas(<WebhookDeliveriesPanel open enabled />, boot));
+        renderWithCanvas(<WebhookDeliveriesPanel open enabled />, { boot });
 
         await waitFor(() => {
             expect(document.querySelector('[data-webhook-deliveries-empty="true"]')).not.toBeNull();
@@ -171,11 +166,9 @@ describe('WebhookDeliveriesPanel', () => {
     it('fires webhookDeliveries with page, status, and event filters', async () => {
         const user = userEvent.setup();
 
-        render(
-            withCanvas(
-                <WebhookDeliveriesPanel open enabled eventOptions={[{ id: 'post.published', label: 'Published' }]} />,
-                boot
-            )
+        renderWithCanvas(
+            <WebhookDeliveriesPanel open enabled eventOptions={[{ id: 'post.published', label: 'Published' }]} />,
+            { boot }
         );
 
         await waitFor(() => {
@@ -204,7 +197,7 @@ describe('WebhookDeliveriesPanel', () => {
 
         const user = userEvent.setup();
 
-        render(withCanvas(<WebhookDeliveriesPanel open enabled />, boot));
+        renderWithCanvas(<WebhookDeliveriesPanel open enabled />, { boot });
 
         await waitFor(() => {
             expect(document.querySelector('[data-webhook-deliveries-empty="true"]')).not.toBeNull();
@@ -234,7 +227,7 @@ describe('WebhookDeliveriesPanel', () => {
             );
         });
 
-        render(withCanvas(<WebhookDeliveriesPanel open enabled />, boot));
+        renderWithCanvas(<WebhookDeliveriesPanel open enabled />, { boot });
 
         await waitFor(() => {
             expect(screen.getByText('post.page-1')).toBeInTheDocument();

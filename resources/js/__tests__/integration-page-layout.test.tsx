@@ -1,31 +1,27 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { IntegrationCard } from '@/components/integrations/IntegrationCard';
 import { IntegrationPageShell } from '@/components/integrations/IntegrationPageLayout';
 import { IntegrationsListSkeleton } from '@/components/integrations/IntegrationsListSkeleton';
 
-import { withCanvas, makeBoot } from './helpers/boot';
-
-afterEach(() => {
-    cleanup();
-});
+import { makeBoot } from './helpers/boot';
+import { renderWithCanvas } from './helpers/render';
 
 const boot = makeBoot({
-    translations: JSON.stringify({
+    translations: {
         'integrations.title': 'Integrations',
         'integrations.configure': 'Configure',
         'integrations.enabled': 'Enabled',
         'integrations.not_enabled': 'Not enabled',
-    }),
+    },
 });
 
 function renderWithRouter(ui: React.ReactElement, path = '/integrations/webhooks') {
-    return render(withCanvas(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>, boot));
+    return renderWithCanvas(ui, { boot, path });
 }
 
 describe('IntegrationPageShell', () => {

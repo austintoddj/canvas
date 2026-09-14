@@ -1,15 +1,15 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AiIntegrationDrawer } from '@/components/integrations/AiIntegrationDrawer';
 import type { IntegrationsStatus } from '@/lib/api/integrations';
 import { toast } from '@/lib/toast';
 
-import { makeBoot, withCanvas } from './helpers/boot';
+import { makeBoot } from './helpers/boot';
+import { canvasTree, renderWithCanvas } from './helpers/render';
 
 const updateMock = vi.fn();
 
@@ -58,7 +58,7 @@ function baseStatus(overrides: Partial<IntegrationsStatus['ai']> = {}): Integrat
 }
 
 const boot = makeBoot({
-    translations: JSON.stringify({
+    translations: {
         'integrations.ai': 'AI writing',
         'integrations.connect_ai': 'Connect AI',
         'integrations.ai_settings': 'AI provider settings',
@@ -74,25 +74,17 @@ const boot = makeBoot({
         'integrations.model_tier_auto': 'Default',
         'integrations.select_provider': 'Select a provider',
         'integrations.placeholder_api_key': 'Paste your API key',
-        'common.close': 'Close',
-        'common.cancel': 'Cancel',
-        'common.save': 'Save',
-        'common.saving': 'Saving…',
         'integrations.disconnect': 'Disconnect',
         'integrations.disconnect_ai_title': 'Disconnect AI writing?',
         'integrations.ai_usage_help': 'Usage and billing:',
-    }),
+    },
 });
-
-function renderPage(ui: React.ReactElement) {
-    return render(withCanvas(<MemoryRouter initialEntries={['/integrations/ai']}>{ui}</MemoryRouter>, boot));
-}
 
 function renderDrawer(props: Partial<React.ComponentProps<typeof AiIntegrationDrawer>> = {}) {
     const onClose = props.onClose ?? (() => undefined);
     const onStatusChange = props.onStatusChange ?? (() => undefined);
 
-    return renderPage(
+    return renderWithCanvas(
         <AiIntegrationDrawer
             open
             configured
@@ -102,15 +94,12 @@ function renderDrawer(props: Partial<React.ComponentProps<typeof AiIntegrationDr
             onClose={onClose}
             onStatusChange={onStatusChange}
             {...props}
-        />
+        />,
+        { boot, path: '/integrations/ai' }
     );
 }
 
 describe('AiIntegrationDrawer', () => {
-    afterEach(() => {
-        cleanup();
-    });
-
     beforeEach(() => {
         updateMock.mockReset();
         vi.mocked(toast.success).mockReset();
@@ -142,19 +131,17 @@ describe('AiIntegrationDrawer', () => {
         expect(onClose).toHaveBeenCalledTimes(1);
 
         rerender(
-            withCanvas(
-                <MemoryRouter initialEntries={['/integrations/ai']}>
-                    <AiIntegrationDrawer
-                        open={false}
-                        configured
-                        provider="xai"
-                        model={null}
-                        maskedKey="••••key1"
-                        onClose={onClose}
-                        onStatusChange={() => undefined}
-                    />
-                </MemoryRouter>,
-                boot
+            canvasTree(
+                <AiIntegrationDrawer
+                    open={false}
+                    configured
+                    provider="xai"
+                    model={null}
+                    maskedKey="••••key1"
+                    onClose={onClose}
+                    onStatusChange={() => undefined}
+                />,
+                { boot, path: '/integrations/ai' }
             )
         );
 

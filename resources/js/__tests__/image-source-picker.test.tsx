@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 import ImageSourcePicker from '@/components/media/ImageSourcePicker';
 import MediaPicker from '@/components/media/MediaPicker';
@@ -34,10 +34,6 @@ vi.mock('@/lib/api/unsplash', () => ({
         search: vi.fn().mockResolvedValue({ results: [], total_pages: 1 }),
     },
 }));
-
-afterEach(() => {
-    cleanup();
-});
 
 describe('image pickers close control', () => {
     it('exposes a close button on ImageSourcePicker (library-only)', () => {

@@ -1,14 +1,13 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { afterEach, describe, expect, it } from 'vitest';
+import { screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 
 import PostEditorLayout from '@/components/posts/PostEditorLayout';
-import { CanvasContext } from '@/contexts/CanvasContext';
 import type { PostFormState } from '@/lib/posts/form';
 import type { PostLastRevision } from '@/types/api';
-import { makeBoot, makeCanvasValue } from '@/__tests__/helpers/boot';
+import { makeBoot } from '@/__tests__/helpers/boot';
+import { renderWithCanvas } from '@/__tests__/helpers/render';
 
 const form: PostFormState = {
     title: 'Draft',
@@ -37,58 +36,46 @@ const otherTip: PostLastRevision = {
 };
 
 function renderLayout(onOpenHistory?: () => void, options: { lastRevision?: PostLastRevision | null } = {}) {
-    const base = makeBoot();
-    const catalog = {
-        ...JSON.parse(base.translations),
-        'editor.history': 'History',
-        'editor.history_title': 'Version history',
-        'editor.history_last_edit': 'Last edit was :time by :name',
-        'editor.history_last_edit_you': 'Last edit was :time by you',
-        'editor.history_last_edit_unknown': 'Last edit was :time',
-        'editor.stats': 'Stats',
-        'editor.view_stats': 'View stats',
-        'editor.settings': 'Settings',
-        'editor.post_settings': 'Post settings',
-        'editor.draft_badge': 'Draft',
-        'editor.scheduled_badge': 'Scheduled',
-        'editor.published_badge': 'Published',
-        'editor.pending_edits_badge': 'Pending edits',
-        'editor.pending_edits_badge_short': 'Pending',
-        'editor.back_to_posts': 'Posts',
-        'editor.preview': 'Preview',
-        'editor.publish': 'Publish',
-        'editor.update': 'Update',
-        'editor.updating': 'Updating…',
-        'editor.publishing': 'Publishing…',
-        'editor.untitled_post': 'Untitled post',
-    };
-    const value = makeCanvasValue(
-        makeBoot({
-            translations: JSON.stringify(catalog),
-        })
-    );
+    const boot = makeBoot({
+        translations: {
+            'editor.history': 'History',
+            'editor.history_title': 'Version history',
+            'editor.history_last_edit': 'Last edit was :time by :name',
+            'editor.history_last_edit_you': 'Last edit was :time by you',
+            'editor.history_last_edit_unknown': 'Last edit was :time',
+            'editor.stats': 'Stats',
+            'editor.view_stats': 'View stats',
+            'editor.settings': 'Settings',
+            'editor.post_settings': 'Post settings',
+            'editor.draft_badge': 'Draft',
+            'editor.scheduled_badge': 'Scheduled',
+            'editor.published_badge': 'Published',
+            'editor.pending_edits_badge': 'Pending edits',
+            'editor.pending_edits_badge_short': 'Pending',
+            'editor.back_to_posts': 'Posts',
+            'editor.preview': 'Preview',
+            'editor.publish': 'Publish',
+            'editor.update': 'Update',
+            'editor.updating': 'Updating…',
+            'editor.publishing': 'Publishing…',
+            'editor.untitled_post': 'Untitled post',
+        },
+    });
 
-    return render(
-        <MemoryRouter>
-            <CanvasContext.Provider value={value}>
-                <PostEditorLayout
-                    form={form}
-                    postId="post-1"
-                    saveStatus="idle"
-                    lastRevision={options.lastRevision ?? null}
-                    onTitleChange={() => undefined}
-                    onOpenInspector={() => undefined}
-                    onOpenHistory={onOpenHistory}
-                    body={<div>Body</div>}
-                />
-            </CanvasContext.Provider>
-        </MemoryRouter>
+    return renderWithCanvas(
+        <PostEditorLayout
+            form={form}
+            postId="post-1"
+            saveStatus="idle"
+            lastRevision={options.lastRevision ?? null}
+            onTitleChange={() => undefined}
+            onOpenInspector={() => undefined}
+            onOpenHistory={onOpenHistory}
+            body={<div>Body</div>}
+        />,
+        { boot, path: '/posts/post-1' }
     );
 }
-
-afterEach(() => {
-    cleanup();
-});
 
 describe('PostEditorLayout history control', () => {
     it('renders the history Tabler control when onOpenHistory is provided', () => {

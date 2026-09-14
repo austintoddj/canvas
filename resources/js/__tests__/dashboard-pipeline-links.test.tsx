@@ -1,16 +1,16 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { afterEach, describe, expect, it } from 'vitest';
+import { screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 
 import { DashboardPipeline } from '@/components/dashboard/DashboardPipeline';
 import type { DashboardPipeline as Pipeline } from '@/types/api';
 
-import { makeBoot, withCanvas } from './helpers/boot';
+import { makeBoot } from './helpers/boot';
+import { renderWithCanvas } from './helpers/render';
 
 const boot = makeBoot({
-    translations: JSON.stringify({
+    translations: {
         'dashboard.pipeline_title': 'In progress',
         'dashboard.pipeline_pending': 'Pending updates',
         'dashboard.pipeline_drafts': 'Drafts',
@@ -21,11 +21,7 @@ const boot = makeBoot({
         'dashboard.pipeline_updated': 'Updated :date',
         'dashboard.recent_edit_aria': 'Edit :title',
         'editor.untitled_post': 'Untitled',
-    }),
-});
-
-afterEach(() => {
-    cleanup();
+    },
 });
 
 describe('DashboardPipeline scheduled view-all', () => {
@@ -44,17 +40,9 @@ describe('DashboardPipeline scheduled view-all', () => {
         };
 
         // totals.scheduled > listed length so View all renders
-        render(
-            withCanvas(
-                <MemoryRouter>
-                    <DashboardPipeline
-                        pipeline={pipeline}
-                        scope="user"
-                        totals={{ drafts: 0, scheduled: 3, pending: 0 }}
-                    />
-                </MemoryRouter>,
-                boot
-            )
+        renderWithCanvas(
+            <DashboardPipeline pipeline={pipeline} scope="user" totals={{ drafts: 0, scheduled: 3, pending: 0 }} />,
+            { boot }
         );
 
         const link = screen.getByRole('link', { name: 'View all' });
@@ -76,17 +64,9 @@ describe('DashboardPipeline scheduled view-all', () => {
             ],
         };
 
-        render(
-            withCanvas(
-                <MemoryRouter>
-                    <DashboardPipeline
-                        pipeline={pipeline}
-                        scope="all"
-                        totals={{ drafts: 0, scheduled: 2, pending: 0 }}
-                    />
-                </MemoryRouter>,
-                boot
-            )
+        renderWithCanvas(
+            <DashboardPipeline pipeline={pipeline} scope="all" totals={{ drafts: 0, scheduled: 2, pending: 0 }} />,
+            { boot }
         );
 
         expect(screen.getByRole('link', { name: 'View all' })).toHaveAttribute('href', '/calendar?scope=all');

@@ -1,27 +1,19 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { stubMatchMedia } from './helpers/dom';
 
 import { Sidebar, SidebarItem, SidebarLabel } from '@/components/sidebar';
 import { SidebarChromeProvider } from '@/contexts/SidebarChromeContext';
 import { IconLayoutDashboard } from '@tabler/icons-react';
 
-afterEach(() => {
-    cleanup();
-});
-
 beforeEach(() => {
-    Object.defineProperty(window, 'matchMedia', {
-        writable: true,
-        value: vi.fn().mockImplementation((query: string) => ({
-            matches: query.includes('min-width: 1024px') || (query.includes('hover') && query.includes('fine')),
-            media: query,
-            addEventListener: vi.fn(),
-            removeEventListener: vi.fn(),
-        })),
-    });
+    stubMatchMedia(
+        (query) => query.includes('min-width: 1024px') || (query.includes('hover') && query.includes('fine'))
+    );
 });
 
 function renderSidebar(collapsed: boolean) {

@@ -1,15 +1,11 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes, Link } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 
 import { AnimatedOutlet } from '@/components/AnimatedOutlet';
-
-afterEach(() => {
-    cleanup();
-});
 
 describe('AnimatedOutlet scroll-to-top', () => {
     beforeEach(() => {

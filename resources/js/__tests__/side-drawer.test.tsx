@@ -1,14 +1,10 @@
 // @vitest-environment happy-dom
 
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { useState } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { SideDrawer } from '@/components/SideDrawer';
-
-afterEach(() => {
-    cleanup();
-});
 
 function mockScrollMetrics(
     el: HTMLElement,

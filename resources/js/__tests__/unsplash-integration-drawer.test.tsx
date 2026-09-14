@@ -1,15 +1,15 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UnsplashIntegrationDrawer } from '@/components/integrations/UnsplashIntegrationDrawer';
 import type { IntegrationsStatus } from '@/lib/api/integrations';
 import { toast } from '@/lib/toast';
 
-import { makeBoot, withCanvas } from './helpers/boot';
+import { makeBoot } from './helpers/boot';
+import { canvasTree, renderWithCanvas } from './helpers/render';
 
 const updateMock = vi.fn();
 
@@ -56,7 +56,7 @@ function baseStatus(overrides: Partial<IntegrationsStatus['unsplash']> = {}): In
 }
 
 const boot = makeBoot({
-    translations: JSON.stringify({
+    translations: {
         'integrations.unsplash': 'Unsplash',
         'integrations.connect_unsplash': 'Connect Unsplash',
         'integrations.unsplash_settings': 'Unsplash settings',
@@ -67,24 +67,16 @@ const boot = makeBoot({
         'integrations.copy': 'Copy',
         'integrations.copied': 'Copied.',
         'integrations.copy_error': 'Unable to copy.',
-        'common.close': 'Close',
-        'common.cancel': 'Cancel',
-        'common.save': 'Save',
-        'common.saving': 'Saving…',
         'integrations.disconnect': 'Disconnect',
         'integrations.disconnect_unsplash_title': 'Disconnect Unsplash?',
-    }),
+    },
 });
-
-function renderPage(ui: React.ReactElement) {
-    return render(withCanvas(<MemoryRouter initialEntries={['/integrations/unsplash']}>{ui}</MemoryRouter>, boot));
-}
 
 function renderDrawer(props: Partial<React.ComponentProps<typeof UnsplashIntegrationDrawer>> = {}) {
     const onClose = props.onClose ?? (() => undefined);
     const onStatusChange = props.onStatusChange ?? (() => undefined);
 
-    return renderPage(
+    return renderWithCanvas(
         <UnsplashIntegrationDrawer
             open
             configured
@@ -92,15 +84,12 @@ function renderDrawer(props: Partial<React.ComponentProps<typeof UnsplashIntegra
             onClose={onClose}
             onStatusChange={onStatusChange}
             {...props}
-        />
+        />,
+        { boot, path: '/integrations/unsplash' }
     );
 }
 
 describe('UnsplashIntegrationDrawer', () => {
-    afterEach(() => {
-        cleanup();
-    });
-
     beforeEach(() => {
         updateMock.mockReset();
         vi.mocked(toast.success).mockReset();
@@ -148,17 +137,15 @@ describe('UnsplashIntegrationDrawer', () => {
         expect(onClose).toHaveBeenCalledTimes(1);
 
         rerender(
-            withCanvas(
-                <MemoryRouter initialEntries={['/integrations/unsplash']}>
-                    <UnsplashIntegrationDrawer
-                        open={false}
-                        configured
-                        maskedKey="••••key1"
-                        onClose={onClose}
-                        onStatusChange={() => undefined}
-                    />
-                </MemoryRouter>,
-                boot
+            canvasTree(
+                <UnsplashIntegrationDrawer
+                    open={false}
+                    configured
+                    maskedKey="••••key1"
+                    onClose={onClose}
+                    onStatusChange={() => undefined}
+                />,
+                { boot, path: '/integrations/unsplash' }
             )
         );
 

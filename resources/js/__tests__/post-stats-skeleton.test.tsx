@@ -1,12 +1,12 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Route, Routes } from 'react-router-dom';
 
 import PostsStats from '@/pages/Posts/Stats';
-import { CanvasContext } from '@/contexts/CanvasContext';
-import { makeBoot, makeCanvasValue } from '@/__tests__/helpers/boot';
+import { makeBoot } from '@/__tests__/helpers/boot';
+import { renderWithCanvas } from '@/__tests__/helpers/render';
 
 const statsMock = vi.fn();
 
@@ -19,10 +19,6 @@ vi.mock('@/lib/api/posts', () => ({
 vi.mock('@/lib/redirect-home', () => ({
     redirectHomeWithError: vi.fn(),
 }));
-
-afterEach(() => {
-    cleanup();
-});
 
 beforeEach(() => {
     statsMock.mockReset();
@@ -37,45 +33,40 @@ describe('PostsStats loading header', () => {
             })
         );
 
-        const value = makeCanvasValue(
-            makeBoot({
-                translations: JSON.stringify({
-                    'stats.title': 'Stats',
-                    'stats.description': 'Views and visitors for this post.',
-                    'stats.back_to_post': 'Back to post',
-                    'stats.load_error': 'Unable to load stats.',
-                    'stats.views_month': 'Views this month',
-                    'stats.visits_month': 'Visitors this month',
-                    'stats.all_time_views': 'All-time views',
-                    'stats.reading_time': 'Reading time',
-                    'stats.vs_last_month': 'vs last month',
-                    'stats.change_new_month': 'New this month',
-                    'stats.last_30_days': 'Last 30 days',
-                    'stats.no_data': 'No data',
-                    'stats.top_referers': 'Where readers are coming from',
-                    'stats.top_browsers': 'Browsers',
-                    'stats.popular_times': 'Popular times',
-                    'stats.search_list': 'Search',
-                    'stats.export_csv': 'Export CSV',
-                    'stats.close_list': 'Close',
-                    'stats.view_all': 'View all',
-                    'stats.metric_views': 'Views',
-                    'stats.share': 'Share',
-                    'editor.untitled_post': 'Untitled',
-                    'posts.not_found': 'Post not found',
-                    'stats.published_only': 'Published only',
-                }),
-            })
-        );
+        const boot = makeBoot({
+            translations: {
+                'stats.title': 'Stats',
+                'stats.description': 'Views and visitors for this post.',
+                'stats.back_to_post': 'Back to post',
+                'stats.load_error': 'Unable to load stats.',
+                'stats.views_month': 'Views this month',
+                'stats.visits_month': 'Visitors this month',
+                'stats.all_time_views': 'All-time views',
+                'stats.reading_time': 'Reading time',
+                'stats.vs_last_month': 'vs last month',
+                'stats.change_new_month': 'New this month',
+                'stats.last_30_days': 'Last 30 days',
+                'stats.no_data': 'No data',
+                'stats.top_referers': 'Where readers are coming from',
+                'stats.top_browsers': 'Browsers',
+                'stats.popular_times': 'Popular times',
+                'stats.search_list': 'Search',
+                'stats.export_csv': 'Export CSV',
+                'stats.close_list': 'Close',
+                'stats.view_all': 'View all',
+                'stats.metric_views': 'Views',
+                'stats.share': 'Share',
+                'editor.untitled_post': 'Untitled',
+                'posts.not_found': 'Post not found',
+                'stats.published_only': 'Published only',
+            },
+        });
 
-        render(
-            <MemoryRouter initialEntries={['/posts/post-1/stats']}>
-                <CanvasContext.Provider value={value}>
-                    <Routes>
-                        <Route path="/posts/:id/stats" element={<PostsStats />} />
-                    </Routes>
-                </CanvasContext.Provider>
-            </MemoryRouter>
+        renderWithCanvas(
+            <Routes>
+                <Route path="/posts/:id/stats" element={<PostsStats />} />
+            </Routes>,
+            { boot, path: '/posts/post-1/stats' }
         );
 
         expect(document.querySelector('[data-post-stats-header-skeleton="true"]')).not.toBeNull();

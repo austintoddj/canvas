@@ -1,35 +1,16 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CalendarIndex from '@/pages/Calendar/Index';
 
-import { makeBoot, withCanvas } from './helpers/boot';
+import { makeBoot } from './helpers/boot';
+import { matchMediaReducedMotion, stubMatchMedia } from './helpers/dom';
+import { renderWithCanvas } from './helpers/render';
 
 const postsMock = vi.fn();
-
-afterEach(() => {
-    cleanup();
-});
-
-beforeAll(() => {
-    Object.defineProperty(window, 'matchMedia', {
-        writable: true,
-        value: vi.fn().mockImplementation((query: string) => ({
-            matches: query.includes('prefers-reduced-motion'),
-            media: query,
-            onchange: null,
-            addListener: vi.fn(),
-            removeListener: vi.fn(),
-            addEventListener: vi.fn(),
-            removeEventListener: vi.fn(),
-            dispatchEvent: vi.fn(),
-        })),
-    });
-});
 
 vi.mock('@/lib/api/calendar', () => ({
     calendarApi: {
@@ -37,8 +18,12 @@ vi.mock('@/lib/api/calendar', () => ({
     },
 }));
 
+beforeAll(() => {
+    stubMatchMedia(matchMediaReducedMotion);
+});
+
 const boot = makeBoot({
-    translations: JSON.stringify({
+    translations: {
         'calendar.title': 'Calendar',
         'calendar.description': 'See what is scheduled and what has already gone live.',
         'calendar.empty_title': 'Nothing this month',
@@ -61,18 +46,11 @@ const boot = makeBoot({
         'dashboard.recent_edit_aria': 'Edit :title',
         'dashboard.recent_stats_aria': 'View stats for :title',
         'editor.stats': 'Stats',
-    }),
+    },
 });
 
 function renderCalendar(path = '/calendar') {
-    return render(
-        withCanvas(
-            <MemoryRouter initialEntries={[path]}>
-                <CalendarIndex />
-            </MemoryRouter>,
-            boot
-        )
-    );
+    return renderWithCanvas(<CalendarIndex />, { boot, path });
 }
 
 describe('CalendarIndex', () => {

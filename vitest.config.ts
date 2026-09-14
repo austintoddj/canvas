@@ -16,7 +16,8 @@ export default defineConfig({
     test: {
         environment: 'node',
         include: ['resources/js/__tests__/**/*.{test,spec}.{ts,tsx}'],
-        setupFiles: ['resources/js/__tests__/setup.ts'],
+        setupFiles: ['resources/js/__tests__/setup.ts', 'resources/js/__tests__/setup-dom.ts'],
+        clearMocks: true,
         // Editor embed tests insert real Twitter/Vimeo iframe srcs. happy-dom
         // otherwise fetches those pages (and their scripts) over the network.
         environmentOptions: {
@@ -34,6 +35,14 @@ export default defineConfig({
             reportsDirectory: './coverage',
             include: ['resources/js/**/*.{ts,tsx}'],
             exclude: ['resources/js/__tests__/**', 'resources/js/types/**', 'resources/js/types.d.ts'],
+            thresholds: {
+                'resources/js/lib/**': {
+                    lines: 85,
+                    statements: 85,
+                    functions: 85,
+                    branches: 75,
+                },
+            },
         },
     },
 });

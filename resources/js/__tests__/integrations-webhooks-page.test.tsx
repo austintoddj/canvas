@@ -1,14 +1,15 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import WebhooksLogsPage from '@/pages/Integrations/Webhooks';
 import type { IntegrationsStatus, WebhookEventOption } from '@/lib/api/integrations';
 
-import { makeBoot, withCanvas } from './helpers/boot';
+import { makeBoot } from './helpers/boot';
+import { matchMediaFinePointerHover, stubMatchMedia } from './helpers/dom';
+import { renderWithCanvas } from './helpers/render';
 
 const showMock = vi.fn();
 const webhookDeliveriesMock = vi.fn();
@@ -58,7 +59,7 @@ function statusFixture(overrides: Partial<IntegrationsStatus['webhooks']> = {}):
 }
 
 const boot = makeBoot({
-    translations: JSON.stringify({
+    translations: {
         'integrations.title': 'Integrations',
         'integrations.webhooks_logs': 'Webhook logs',
         'integrations.webhooks_logs_retention': 'Retains logs for 30 days.',
@@ -84,28 +85,15 @@ const boot = makeBoot({
         'integrations.webhooks_deliveries_status_failed': 'Failed',
         'integrations.webhooks_deliveries_retry': 'Retry',
         'common.type': 'Type',
-        'common.cancel': 'Cancel',
-        'common.close': 'Close',
         'integrations.load_error': 'Unable to load integrations.',
-    }),
+    },
 });
 
 function renderPage() {
-    return render(
-        withCanvas(
-            <MemoryRouter initialEntries={['/integrations/webhooks']}>
-                <WebhooksLogsPage />
-            </MemoryRouter>,
-            boot
-        )
-    );
+    return renderWithCanvas(<WebhooksLogsPage />, { boot, path: '/integrations/webhooks' });
 }
 
 describe('Integrations webhook logs page', () => {
-    afterEach(() => {
-        cleanup();
-    });
-
     beforeEach(() => {
         showMock.mockReset();
         webhookDeliveriesMock.mockReset();
@@ -116,15 +104,7 @@ describe('Integrations webhook logs page', () => {
             per_page: 15,
             total: 0,
         });
-        Object.defineProperty(window, 'matchMedia', {
-            writable: true,
-            value: vi.fn().mockImplementation((query: string) => ({
-                matches: query.includes('hover') && query.includes('pointer: fine'),
-                media: query,
-                addEventListener: vi.fn(),
-                removeEventListener: vi.fn(),
-            })),
-        });
+        stubMatchMedia(matchMediaFinePointerHover);
     });
 
     it('is a standalone logs page with no webhook settings hub', async () => {

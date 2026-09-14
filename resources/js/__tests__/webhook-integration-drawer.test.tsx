@@ -1,10 +1,9 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WebhookIntegrationDrawer } from '@/components/integrations/WebhookIntegrationDrawer';
 import {
@@ -16,7 +15,8 @@ import {
 import type { Paginated } from '@/types/api';
 import { toast } from '@/lib/toast';
 
-import { makeBoot, withCanvas } from './helpers/boot';
+import { makeBoot } from './helpers/boot';
+import { canvasTree, renderWithCanvas } from './helpers/render';
 
 const updateMock = vi.fn();
 
@@ -94,7 +94,7 @@ function ControlledDrawer({ open = true }: { open?: boolean }) {
 }
 
 const boot = makeBoot({
-    translations: JSON.stringify({
+    translations: {
         'integrations.title': 'Integrations',
         'integrations.webhooks': 'Webhooks',
         'integrations.webhooks_help': 'Notify external services.',
@@ -111,10 +111,6 @@ const boot = makeBoot({
         'integrations.copied': 'Copied.',
         'integrations.copy_error': 'Unable to copy.',
         'integrations.webhooks_test_failed': 'The test webhook could not be delivered.',
-        'common.close': 'Close',
-        'common.cancel': 'Cancel',
-        'common.save': 'Save',
-        'common.saving': 'Saving…',
         'integrations.webhooks_send_test': 'Send test',
         'integrations.disconnect': 'Disconnect',
         'integrations.disconnect_webhooks_title': 'Disconnect webhooks?',
@@ -127,11 +123,11 @@ const boot = makeBoot({
         'integrations.webhooks_secret': 'Signing secret',
         'integrations.webhooks_url': 'Endpoint URL',
         'integrations.webhooks_events': 'Events',
-    }),
+    },
 });
 
 function renderPage(ui: React.ReactElement) {
-    return render(withCanvas(<MemoryRouter initialEntries={['/integrations/webhooks']}>{ui}</MemoryRouter>, boot));
+    return renderWithCanvas(ui, { boot, path: '/integrations/webhooks' });
 }
 
 function renderDrawer(props: Partial<React.ComponentProps<typeof WebhookIntegrationDrawer>> = {}) {
@@ -154,10 +150,6 @@ function renderDrawer(props: Partial<React.ComponentProps<typeof WebhookIntegrat
 }
 
 describe('WebhookIntegrationDrawer', () => {
-    afterEach(() => {
-        cleanup();
-    });
-
     beforeEach(() => {
         updateMock.mockReset();
         vi.mocked(toast.success).mockReset();
@@ -243,20 +235,18 @@ describe('WebhookIntegrationDrawer', () => {
         expect(onClose).toHaveBeenCalledTimes(1);
 
         rerender(
-            withCanvas(
-                <MemoryRouter initialEntries={['/integrations/webhooks']}>
-                    <WebhookIntegrationDrawer
-                        open={false}
-                        configured
-                        url="https://example.com/hooks/canvas"
-                        maskedSecret="••••abcd"
-                        events={['post.published']}
-                        availableEvents={AVAILABLE}
-                        onClose={onClose}
-                        onStatusChange={() => undefined}
-                    />
-                </MemoryRouter>,
-                boot
+            canvasTree(
+                <WebhookIntegrationDrawer
+                    open={false}
+                    configured
+                    url="https://example.com/hooks/canvas"
+                    maskedSecret="••••abcd"
+                    events={['post.published']}
+                    availableEvents={AVAILABLE}
+                    onClose={onClose}
+                    onStatusChange={() => undefined}
+                />,
+                { boot, path: '/integrations/webhooks' }
             )
         );
 
