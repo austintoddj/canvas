@@ -38,7 +38,10 @@ final class DeliverWebhookJob implements ShouldQueue
         public readonly string $event,
         public readonly string $deliveryId,
         public readonly array $payload,
-    ) {}
+    ) {
+        // After the surrounding DB transaction so the delivery row is visible to workers.
+        $this->afterCommit = true;
+    }
 
     /**
      * @return list<int>
@@ -71,6 +74,7 @@ final class DeliverWebhookJob implements ShouldQueue
         $signature = WebhookSigner::sign($this->secret, $body, $timestamp);
 
         $response = Http::timeout(10)
+            ->withoutRedirecting()
             ->withHeaders([
                 'User-Agent' => 'Canvas-Webhooks/1.0',
                 'Canvas-Event' => $this->event,

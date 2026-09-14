@@ -205,3 +205,56 @@ it('marks disallowed urls as failed without sending', function (): void {
         ->and($delivery->attempts)->toBe(1)
         ->and($delivery->error_message)->toContain('not allowed');
 });
+
+it('treats redirect responses as a failed delivery without following them', function (): void {
+    Http::fake([
+        'https://example.com/hooks/canvas' => Http::response('moved', 302, [
+            'Location' => 'https://example.com/elsewhere',
+        ]),
+        'https://example.com/elsewhere' => Http::response('ok', 200),
+    ]);
+
+    $delivery = WebhookDelivery::factory()->create([
+        'id' => 'del-redirect',
+        'status' => WebhookDeliveryStatus::Pending,
+        'attempts' => 0,
+    ]);
+
+    $job = new DeliverWebhookJob(
+        url: 'https://example.com/hooks/canvas',
+        secret: 'whsec_test_secret',
+        event: 'post.published',
+        deliveryId: $delivery->id,
+        payload: ['api_version' => 1, 'event' => 'post.published', 'delivery_id' => $delivery->id, 'data' => []],
+    );
+
+    expect(fn () => $job->handle())->toThrow(RuntimeException::class);
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://example.com/hooks/canvas');
+    Http::assertNotSent(fn ($request): bool => $request->url() === 'https://example.com/elsewhere');
+
+    $delivery->refresh();
+
+    expect($delivery->status)->toBe(WebhookDeliveryStatus::Pending)
+        ->and($delivery->http_status)->toBe(302)
+        ->and($delivery->error_message)->toContain('302');
+});
+
+it('caps stored error messages to the column length', function (): void {
+    $delivery = WebhookDelivery::factory()->create([
+        'id' => 'del-long-error',
+        'status' => WebhookDeliveryStatus::Pending,
+    ]);
+
+    $job = new DeliverWebhookJob(
+        url: 'https://example.com/hooks/canvas',
+        secret: 'whsec_test_secret',
+        event: 'post.published',
+        deliveryId: $delivery->id,
+        payload: ['api_version' => 1, 'event' => 'post.published', 'data' => []],
+    );
+
+    $job->failed(new RuntimeException(str_repeat('x', 400)));
+
+    expect(mb_strlen((string) $delivery->refresh()->error_message))->toBe(WebhookDelivery::MAX_ERROR_CHARS);
+});

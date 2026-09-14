@@ -65,6 +65,7 @@ Canvas follows [Semantic Versioning](https://semver.org) and increments versions
 
 ```bash
 composer update austintoddj/canvas
+php artisan canvas:migrate
 php artisan canvas:publish
 ```
 

@@ -25,7 +25,9 @@ final class PostLifecycleEvents
     {
         $after = $deleted ? null : PostSnapshot::from($post);
 
-        foreach (PostLifecycle::classify($before, $after, $deleted) as $event) {
+        $events = PostLifecycle::classify($before, $after, $deleted);
+
+        foreach ($events as $event) {
             event(self::toDomainEvent($event, $post));
         }
 
@@ -33,7 +35,7 @@ final class PostLifecycleEvents
             return;
         }
 
-        self::syncPublishedNotificationMarker($post, $after);
+        self::syncPublishedNotificationMarker($post, $after, $events);
     }
 
     /**
@@ -47,9 +49,12 @@ final class PostLifecycleEvents
         self::dispatch(PostSnapshot::asScheduled($post), $post);
     }
 
-    private static function syncPublishedNotificationMarker(Post $post, PostSnapshot $after): void
+    /**
+     * @param  list<WebhookEvent>  $events
+     */
+    private static function syncPublishedNotificationMarker(Post $post, PostSnapshot $after, array $events): void
     {
-        if ($after->visibility() === 'live') {
+        if (in_array(WebhookEvent::PostPublished, $events, true)) {
             if ($post->published_notified_at !== null) {
                 return;
             }
@@ -59,7 +64,7 @@ final class PostLifecycleEvents
             return;
         }
 
-        if ($post->published_notified_at === null) {
+        if ($after->visibility() === 'live' || $post->published_notified_at === null) {
             return;
         }
 

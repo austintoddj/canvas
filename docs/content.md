@@ -45,7 +45,7 @@ While a post is live, the editor autosaves into a `pending` JSON column so the p
 | `user_id`          | Host user id                                             |
 | `topic_id`         | Optional topic                                           |
 
-When a future `published_at` elapses, `published()` already includes the post. Canvas runs `canvas:announce-scheduled` every minute so domain events and outbound webhooks receive `PostPublished` without another editor save.
+When a future `published_at` elapses, `published()` already includes the post. Canvas runs `canvas:announce-scheduled` every minute so domain events and outbound webhooks receive `PostPublished` without another editor save. Opening the editor or promoting pending changes after the clock has elapsed does not itself fire `PostPublished`; the scheduler still announces once.
 
 ## Version history
 
@@ -67,7 +67,7 @@ Public frontends must never join or expose revision rows. Use `Post::published()
 
 ### Retention
 
-Canvas keeps the **newest 50 checkpoints per post** (prune-on-write after each new row). Operators may tighten or re-run:
+Canvas keeps the **newest 50 checkpoints per post** (prune-on-write after each new row). Named revisions are not exempt — a label does not protect a row from retention. Operators may tighten or re-run:
 
 ```bash
 php artisan canvas:prune-post-revisions

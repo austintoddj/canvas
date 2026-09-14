@@ -9,6 +9,7 @@ use Canvas\Support\PostLifecycleEvents;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class AnnounceScheduledCommand extends Command
 {
@@ -20,18 +21,26 @@ class AnnounceScheduledCommand extends Command
 
     public function handle(): int
     {
+        $failed = 0;
+
         Post::query()
             ->published()
             ->whereNull('published_notified_at')
             ->orderBy('id')
-            ->chunkById(self::CHUNK, function (Collection $posts): void {
+            ->chunkById(self::CHUNK, function (Collection $posts) use (&$failed): void {
                 foreach ($posts as $post) {
                     /** @var Post $post */
-                    $this->announce($post);
+                    try {
+                        $this->announce($post);
+                    } catch (Throwable $exception) {
+                        $failed++;
+                        report($exception);
+                        $this->error("Failed to announce post [{$post->id}]: {$exception->getMessage()}");
+                    }
                 }
             });
 
-        return self::SUCCESS;
+        return $failed === 0 ? self::SUCCESS : self::FAILURE;
     }
 
     private function announce(Post $post): void

@@ -9,6 +9,7 @@ use Canvas\Enums\WebhookDeliveryStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 /**
  * @use HasFactory<WebhookDeliveryFactory>
@@ -22,7 +23,7 @@ class WebhookDelivery extends Model
 
     public const int MAX_RESPONSE_BYTES = 4_096;
 
-    public const int MAX_ERROR_BYTES = 500;
+    public const int MAX_ERROR_CHARS = 255;
 
     protected $table = 'canvas_webhook_deliveries';
 
@@ -100,11 +101,7 @@ class WebhookDelivery extends Model
             return null;
         }
 
-        if (strlen($message) <= self::MAX_ERROR_BYTES) {
-            return $message;
-        }
-
-        return substr($message, 0, self::MAX_ERROR_BYTES).'…';
+        return Str::limit($message, self::MAX_ERROR_CHARS, '');
     }
 
     public function markSuccess(?int $httpStatus, ?string $responseBody): void

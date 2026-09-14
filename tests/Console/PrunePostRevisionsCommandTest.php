@@ -83,6 +83,30 @@ it('prunes on write so history cannot grow unbounded', function (): void {
         ->and($newest?->title)->toBe('Title '.($limit + 2));
 });
 
+it('prunes named revisions along with unlabeled ones', function (): void {
+    $post = Post::factory()->create();
+
+    $named = PostRevision::factory()->create([
+        'post_id' => $post->id,
+        'label' => 'Keep me please',
+        'created_at' => now()->subHour(),
+        'updated_at' => now()->subHour(),
+    ]);
+
+    for ($i = 0; $i < 3; $i++) {
+        PostRevision::factory()->create([
+            'post_id' => $post->id,
+            'created_at' => now()->subMinutes(3 - $i),
+            'updated_at' => now()->subMinutes(3 - $i),
+        ]);
+    }
+
+    $this->artisan('canvas:prune-post-revisions', ['--keep' => 2])->assertSuccessful();
+
+    expect(PostRevision::query()->find($named->id))->toBeNull()
+        ->and($post->fresh()->revisions()->count())->toBe(2);
+});
+
 it('stores the revision reason on create', function (): void {
     $post = Post::factory()->create();
 

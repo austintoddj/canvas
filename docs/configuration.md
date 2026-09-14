@@ -81,4 +81,4 @@ Digest mail is queued, so run a queue worker unless `QUEUE_CONNECTION=sync`. See
 
 ## Integrations
 
-Unsplash, AI providers, and webhooks are configured in the admin under **Integrations**. Each integration is **Not enabled** or **Enabled**. Webhooks are stored only after a test delivery returns HTTP 2xx. Secrets are stored encrypted; the SPA only receives readiness fields. See [webhooks](./webhooks.md).
+Unsplash, AI providers, and webhooks are configured in the admin under **Integrations**. Each integration is **Not enabled** or **Enabled**. Canvas probes credentials live before flipping to Enabled: Unsplash with a photo request, AI with a models list request (HTTP 2xx and 429 count as valid; 401/403, timeouts, and unknown model ids do not replace stored secrets). Webhooks are stored only after a signed test delivery returns HTTP 2xx. Secrets are stored encrypted; the SPA only receives readiness fields. See [webhooks](./webhooks.md).

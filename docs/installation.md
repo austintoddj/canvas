@@ -47,10 +47,11 @@ See [Canvas UI](./canvas-ui.md).
 
 ## Updating
 
-After Composer updates, republish assets:
+After Composer updates, run pending package migrations and republish admin assets:
 
 ```bash
 composer update austintoddj/canvas
+php artisan canvas:migrate
 php artisan canvas:publish
 ```
 
