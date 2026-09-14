@@ -108,8 +108,9 @@ export function DashboardAudience({
         <section className="space-y-4" data-dashboard-audience="active">
             <AudienceHeader rangeDays={rangeDays} onRangeChange={onRangeChange} />
 
-            <div className="grid items-stretch gap-4 lg:grid-cols-2">
+            <div className="grid min-w-0 items-stretch gap-4 lg:grid-cols-2">
                 <MetricHero
+                    className="min-w-0"
                     label={viewsCard.label}
                     value={viewsCard.value}
                     change={viewsCard.change}
@@ -120,6 +121,7 @@ export function DashboardAudience({
                     emptyLabel={t('stats.no_data')}
                 />
                 <MetricHero
+                    className="min-w-0"
                     label={visitsCard.label}
                     value={visitsCard.value}
                     change={visitsCard.change}
@@ -131,7 +133,7 @@ export function DashboardAudience({
                 />
             </div>
 
-            <div className="grid items-stretch gap-4 lg:grid-cols-2">
+            <div className="grid min-w-0 items-stretch gap-4 lg:grid-cols-2">
                 <DashboardTopPosts posts={topPosts} rangeLabel={rangeLabel} previewLimit={DASHBOARD_RANKED_PREVIEW} />
                 <RankedBarList
                     title={t('stats.top_referers')}

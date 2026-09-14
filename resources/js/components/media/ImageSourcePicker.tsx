@@ -4,7 +4,7 @@ import { FadeInImage } from '@/components/FadeInImage';
 import { JustifiedMediaGrid } from '@/components/media/JustifiedMediaGrid';
 import { MediaPickerPanel } from '@/components/media/MediaPicker';
 import { Button } from '@/components/button';
-import { Dialog, DialogBody, DialogDescription, DialogTitle } from '@/components/dialog';
+import { Dialog, DialogBody, DialogCloseButton, DialogDescription, DialogTitle } from '@/components/dialog';
 import { Field, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
@@ -232,9 +232,14 @@ export default function ImageSourcePicker({ open, onClose, onSelect, title, desc
 
     if (!showUnsplash) {
         return (
-            <Dialog open={open} onClose={handleClose} size="4xl">
-                <DialogTitle>{resolvedTitle}</DialogTitle>
-                <DialogDescription>{resolvedDescription}</DialogDescription>
+            <Dialog open={open} onClose={handleClose} size="4xl" data-image-source-picker="true">
+                <div className="relative flex items-start justify-between gap-3">
+                    <div className="min-w-0 pe-2">
+                        <DialogTitle>{resolvedTitle}</DialogTitle>
+                        <DialogDescription>{resolvedDescription}</DialogDescription>
+                    </div>
+                    <DialogCloseButton label={t('common.close')} className="-me-1 -mt-1" />
+                </div>
                 <DialogBody>
                     <MediaPickerPanel onSelect={selectLibrary} />
                 </DialogBody>
@@ -251,9 +256,14 @@ export default function ImageSourcePicker({ open, onClose, onSelect, title, desc
     const thumbUrl = (photo: UnsplashPhoto) => (unsplashDensity === 'large' ? photo.urls.regular : photo.urls.small);
 
     return (
-        <Dialog open={open} onClose={handleClose} size="4xl">
-            <DialogTitle>{resolvedTitle}</DialogTitle>
-            <DialogDescription>{resolvedDescription}</DialogDescription>
+        <Dialog open={open} onClose={handleClose} size="4xl" data-image-source-picker="true">
+            <div className="relative flex items-start justify-between gap-3">
+                <div className="min-w-0 pe-2">
+                    <DialogTitle>{resolvedTitle}</DialogTitle>
+                    <DialogDescription>{resolvedDescription}</DialogDescription>
+                </div>
+                <DialogCloseButton label={t('common.close')} className="-me-1 -mt-1" />
+            </div>
 
             <div className="mt-4 flex gap-2 border-b border-zinc-950/10 pb-3 dark:border-white/10">
                 <Button

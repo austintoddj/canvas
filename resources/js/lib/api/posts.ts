@@ -1,13 +1,18 @@
 import { api } from '@/lib/api';
 import { buildQueryString } from '@/lib/api/query';
 import type {
+    CreatePostRevisionPayload,
     Post,
     PostCreateResponse,
+    PostRevisionListResponse,
+    PostRevisionResponse,
+    PostRevisionsResponse,
     PostShowResponse,
     PostStatsResponse,
     PostsIndexParams,
     PostsIndexResponse,
     PostStorePayload,
+    RenamePostRevisionPayload,
 } from '@/types/api';
 
 export const postsApi = {
@@ -37,5 +42,25 @@ export const postsApi = {
 
     destroy(id: string, signal?: AbortSignal) {
         return api.delete<null>(`/posts/${id}`, signal);
+    },
+
+    revisions(postId: string, signal?: AbortSignal) {
+        return api.get<PostRevisionsResponse>(`/posts/${postId}/revisions`, signal);
+    },
+
+    revision(postId: string, revisionId: string, signal?: AbortSignal) {
+        return api.get<PostRevisionResponse>(`/posts/${postId}/revisions/${revisionId}`, signal);
+    },
+
+    createRevision(postId: string, payload: CreatePostRevisionPayload = {}, signal?: AbortSignal) {
+        return api.post<PostRevisionResponse>(`/posts/${postId}/revisions`, payload, signal);
+    },
+
+    renameRevision(postId: string, revisionId: string, payload: RenamePostRevisionPayload, signal?: AbortSignal) {
+        return api.put<PostRevisionListResponse>(`/posts/${postId}/revisions/${revisionId}`, payload, signal);
+    },
+
+    restoreRevision(postId: string, revisionId: string, signal?: AbortSignal) {
+        return api.post<Post>(`/posts/${postId}/revisions/${revisionId}/restore`, {}, signal);
     },
 };

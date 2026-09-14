@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
 import { ErrorText } from '@/components/text';
+import { Tooltip } from '@/components/tooltip';
 import { useCanvas } from '@/hooks/useCanvas';
 import { CONTENT_REVEAL_MS, shouldAnimateReveal } from '@/lib/async-ui';
 import {
@@ -15,12 +16,18 @@ import {
     type PostFormState,
     type PostSaveStatus,
 } from '@/lib/posts/form';
-import { IconArrowLeft, IconChartBar, IconLayoutSidebarRight } from '@tabler/icons-react';
+import { lastEditTooltip } from '@/lib/posts/history-activity';
+import type { PostLastRevision } from '@/types/api';
+import { IconArrowLeft, IconChartBar, IconHistory, IconLayoutSidebarRight } from '@tabler/icons-react';
 
 export type PostEditorFocusControls = {
     focusMode: boolean;
     onToggleFocusMode: () => void;
 };
+
+/** Icon-only plain controls: match label text weight (no adjacent text to carry contrast). */
+const editorChromeIconButtonClassName =
+    '![--btn-icon:var(--color-zinc-950)] data-hover:![--btn-icon:var(--color-zinc-950)] data-active:![--btn-icon:var(--color-zinc-950)] dark:![--btn-icon:var(--color-white)] dark:data-hover:![--btn-icon:var(--color-white)] dark:data-active:![--btn-icon:var(--color-white)]';
 
 type PostEditorLayoutProps = {
     form: PostFormState;
@@ -29,6 +36,11 @@ type PostEditorLayoutProps = {
     saveStatus: PostSaveStatus;
     hasPendingChanges?: boolean;
     inspectorOpen?: boolean;
+    historyOpen?: boolean;
+    /** When set, show history control (saved posts only). */
+    onOpenHistory?: () => void;
+    /** Tip checkpoint for last-edit tooltip. */
+    lastRevision?: PostLastRevision | null;
     onTitleChange: (title: string) => void;
     onOpenInspector: () => void;
     onPreview?: () => void;
@@ -46,6 +58,9 @@ export default function PostEditorLayout({
     saveStatus,
     hasPendingChanges = false,
     inspectorOpen = false,
+    historyOpen = false,
+    onOpenHistory,
+    lastRevision = null,
     onTitleChange,
     onOpenInspector,
     onPreview,
@@ -55,10 +70,25 @@ export default function PostEditorLayout({
     disabled = false,
     publishBusy = false,
 }: PostEditorLayoutProps) {
-    const { t } = useCanvas();
+    const { t, user, boot } = useCanvas();
+    const locale = user.canvas?.locale ?? boot.defaultLocale;
     const reducedMotion = useReducedMotion();
     const animateStatus = shouldAnimateReveal({ reducedMotion: reducedMotion === true, animate: true });
     const published = isPublished(form);
+    const historyFallback = t('editor.history', 'History');
+    const historyTitleFallback = t('editor.history_title', 'Version history');
+    const historyTooltip = lastEditTooltip(lastRevision, {
+        t,
+        currentUserId: user.id,
+        locale,
+        fallback: historyFallback,
+    });
+    const historyAriaLabel = lastEditTooltip(lastRevision, {
+        t,
+        currentUserId: user.id,
+        locale,
+        fallback: historyTitleFallback,
+    });
     const status = publishStatus(form);
     const badge = editorStatusBadge(status, hasPendingChanges, {
         draft: t('editor.draft_badge'),
@@ -118,15 +148,17 @@ export default function PostEditorLayout({
     const chrome = (
         <div
             className={clsx(
-                'flex items-center justify-between gap-2 border-b border-zinc-950/10 sm:gap-4 dark:border-white/10',
+                // Stack status + actions on narrow viewports so Preview / icons never crush the badge.
+                'flex flex-col gap-2 border-b border-zinc-950/10 sm:flex-row sm:items-center sm:justify-between sm:gap-4 dark:border-white/10',
                 focusMode ? 'shrink-0 bg-white px-4 py-3 sm:px-6 sm:py-4 lg:px-10 dark:bg-zinc-900' : 'pb-3 sm:pb-4'
             )}
+            data-post-editor-chrome="true"
         >
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
                 {!focusMode ? (
-                    <Button href="/posts" plain data-post-back-to-posts>
+                    <Button href="/posts" plain data-post-back-to-posts aria-label={t('posts.title')}>
                         <IconArrowLeft data-slot="icon" />
-                        {t('posts.title')}
+                        <span className="hidden sm:inline">{t('posts.title')}</span>
                     </Button>
                 ) : null}
                 <div className="flex min-w-0 items-center gap-2">
@@ -163,7 +195,7 @@ export default function PostEditorLayout({
                                     key={`${saveStatus}-${saveActivity}`}
                                     data-post-save-status={saveStatus}
                                     className={clsx(
-                                        'whitespace-nowrap text-xs sm:text-sm',
+                                        'truncate text-xs sm:text-sm',
                                         saveStatus === 'error'
                                             ? 'text-canvas-danger dark:text-canvas-danger-dark'
                                             : 'text-canvas-muted dark:text-canvas-muted-dark'
@@ -184,7 +216,7 @@ export default function PostEditorLayout({
                 </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <div className="flex shrink-0 items-center gap-1 self-end sm:gap-2 sm:self-auto">
                 {!focusMode && onPreview !== undefined ? (
                     <Button type="button" outline disabled={disabled} onClick={onPreview} data-post-preview-trigger>
                         {t('editor.preview')}
@@ -213,28 +245,47 @@ export default function PostEditorLayout({
                     </Button>
                 ) : null}
                 {published && postId !== null && !focusMode ? (
-                    <Button
-                        href={`/posts/${postId}/stats`}
-                        plain
-                        aria-label={t('editor.view_stats')}
-                        title={t('editor.stats')}
-                    >
-                        <IconChartBar data-slot="icon" />
-                        <span className="hidden sm:inline">{t('editor.stats')}</span>
-                    </Button>
+                    <Tooltip content={t('editor.stats')} placement="bottom">
+                        <Button
+                            href={`/posts/${postId}/stats`}
+                            plain
+                            className={editorChromeIconButtonClassName}
+                            aria-label={t('editor.view_stats')}
+                        >
+                            <IconChartBar data-slot="icon" />
+                        </Button>
+                    </Tooltip>
                 ) : null}
-                <Button
-                    type="button"
-                    plain
-                    disabled={disabled}
-                    onClick={onOpenInspector}
-                    aria-label={t('editor.post_settings')}
-                    title={t('editor.post_settings')}
-                    aria-expanded={inspectorOpen}
-                    data-post-inspector-trigger
-                >
-                    <IconLayoutSidebarRight data-slot="icon" />
-                </Button>
+                {!focusMode && onOpenHistory !== undefined ? (
+                    <Tooltip content={historyTooltip} placement="bottom">
+                        <Button
+                            type="button"
+                            plain
+                            className={editorChromeIconButtonClassName}
+                            disabled={disabled}
+                            onClick={onOpenHistory}
+                            aria-label={historyAriaLabel}
+                            aria-expanded={historyOpen}
+                            data-post-history-trigger
+                        >
+                            <IconHistory data-slot="icon" />
+                        </Button>
+                    </Tooltip>
+                ) : null}
+                <Tooltip content={t('editor.settings', 'Settings')} placement="bottom">
+                    <Button
+                        type="button"
+                        plain
+                        className={editorChromeIconButtonClassName}
+                        disabled={disabled}
+                        onClick={onOpenInspector}
+                        aria-label={t('editor.post_settings')}
+                        aria-expanded={inspectorOpen}
+                        data-post-inspector-trigger
+                    >
+                        <IconLayoutSidebarRight data-slot="icon" />
+                    </Button>
+                </Tooltip>
             </div>
         </div>
     );

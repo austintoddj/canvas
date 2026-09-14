@@ -1,86 +1,87 @@
-# Contributing Guide
+# Contribution Guide
 
-Thank you for considering a contribution to Canvas.
+Thank you for considering contributing to Canvas.
 
-If you're fixing docs, translations, bugs, or features, please open a pull request and keep it focused on one change.
+Please read the [code of conduct](CODE_OF_CONDUCT.md). If you discover a security vulnerability, report it privately as described in [SECURITY.md](SECURITY.md) — do not open a public issue.
 
-## Before you start
+## Bug reports
 
-- Use PHP 8.3+ and a Laravel major supported by the package (see `composer.json` and CI).
-- CI runs JavaScript checks on **Node 22** — match that locally when possible.
-- Read `readme.md` for install basics.
-- Host contracts, clean-break install, and the support matrix live in [`UPGRADE.md`](UPGRADE.md).
-- Search for existing patterns before adding a new layer or abstraction.
-- Translations go under `resources/lang` (see [Language catalog](#language-catalog) below).
-- Follow the [Code of Conduct](CODE_OF_CONDUCT.md).
-- Security vulnerabilities: report privately per [`SECURITY.md`](SECURITY.md) — do not open public issues for vulns.
+When filing a bug, include a clear title, a short description, and enough detail for someone else to reproduce the problem. A small code sample or steps in a host Laravel app are especially helpful.
 
-## Local Laravel app
+Pull requests are welcome and preferred when you already have a fix. Keep each pull request focused on one change.
 
-If you want to work locally, use a Laravel app with a sibling Canvas checkout:
+## Which branch?
 
-1. From the root of your Laravel app, add the local Canvas checkout as a Composer path repository:
+Open pull requests against the `develop` branch unless an issue or maintainer asks you to use another branch (for example a version branch during a major release).
 
-    ```bash
-    composer config repositories.canvas '{"type": "path", "url": "../canvas"}' --file composer.json
-    ```
+## Local development
 
-2. Require Canvas and finish the install:
+Canvas is a package, not a full application. To work on it locally, use a Laravel app with a sibling checkout of this repository.
 
-    ```bash
-    composer require austintoddj/canvas @dev
-    php artisan canvas:install
-    ```
+From your Laravel application, register the path repository and require Canvas:
 
-3. To avoid re-publishing frontend assets every time you make a change, symlink the Canvas package build output into your Laravel app instead:
+```bash
+composer config repositories.canvas '{"type": "path", "url": "../canvas"}' --file composer.json
+composer require austintoddj/canvas @dev
+php artisan canvas:install
+```
 
-    ```bash
-    rm -rf public/vendor/canvas
-    ln -s "$(cd .. && pwd)/canvas/resources/dist" public/vendor/canvas
-    ```
+Symlink the package build into your app so you do not need to republish assets on every change:
 
-    Package builds land in `resources/dist` (including `assets`, `manifest.json`, and the `canvas.hot` file from the Vite dev server). Hosts still serve them from `public/vendor/canvas` after publish or this symlink.
+```bash
+rm -rf public/vendor/canvas
+ln -s "$(cd .. && pwd)/canvas/resources/dist" public/vendor/canvas
+```
 
-4. From the Canvas package directory, start the Vite dev server:
+From the Canvas package directory, install JavaScript dependencies and start Vite when working on the admin SPA:
 
-    ```bash
-    npm install
-    npm run dev
-    ```
+```bash
+npm install
+npm run dev
+```
 
-    Canvas uses Laravel's Vite integration: the package writes builds to `resources/dist`, while production base URLs stay `/vendor/canvas/...` so they match the host publish path. Running `npm run dev` starts the dev server and writes `resources/dist/canvas.hot` — that file tells Canvas to serve assets from the dev server rather than the production build. For a production-style build, run `npm run build` instead.
+Use PHP 8.3+ and a Laravel major supported by the package (`composer.json` and CI). Node 22 matches CI for JavaScript checks.
 
-5. Adjust `/canvas` if your folder layout is different.
+Host installation and usage are documented under [`docs/`](../docs/).
 
-## Before opening a pull request
+## Pull requests
 
-- Run `npm run typecheck`, `npm run lint`, and `npm test`
-- Run `npm run build` and **commit** updated assets in `resources/dist` — hosts serve published package assets; CI does not rebuild dist for them
-- Run `composer pint` (or `composer pint:test` to check without fixing)
-- Run `composer lint` (PHPStan)
-- Run `composer test:ci` to match the PHP matrix locally
-- Optional: `composer test:install-smoke` (real Laravel host install), `composer test:database` (driver group; set `DB_CONNECTION=mysql|pgsql` against a local server), and `npm run e2e:prepare && npm run e2e` (Playwright specs in `tests/e2e/`)
+Before submitting a pull request, please:
 
-Once you've made your changes, create a pull request from your fork to the `develop` branch of the project repository. For large majors, work may land on a version branch (e.g. `v7`) first; open PRs against the branch maintainers are merging, defaulting to `develop` unless the issue or PR says otherwise.
+1. Run the test suite and static checks that apply to your change.
+2. If you changed the admin SPA, run `npm run build` and **commit** the updated files in `resources/dist`. Hosts serve those published assets; CI does not rebuild them for consumers.
+3. If you changed host-facing behavior, update the matching page under [`docs/`](../docs/).
+4. If you changed UI copy, update every language file (see [translations](#translations)).
 
-## Language catalog
+Useful commands from the package root:
 
-UI copy lives under `resources/lang`. **A feature that introduces or changes UI strings is not complete until the full catalog is updated.**
+```bash
+composer pint
+composer lint
+composer test
 
-| Rule                        | Detail                                                                                                                                                |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Source of truth**         | `resources/lang/en/app.php`                                                                                                                           |
-| **Every other locale**      | Same key set as `en` — no missing keys, no extra keys                                                                                                 |
-| **New / updated keys**      | Add or update the key in **every** `resources/lang/{locale}/app.php` with a **real translation** for that language — not a copy of the English string |
-| **Allowed English overlap** | Only true cognates, loanwords, brands, or identical short words (e.g. `SEO`, `URL`, `API`, `Unsplash`, `Canvas`, `Avatar`, `OK`)                      |
-| **Removed / renamed keys**  | Apply in **every** locale file in the same change                                                                                                     |
-| **Proof**                   | `composer test -- --filter=LocalizationTest` must pass (key parity). Also spot-check that new strings are not English clones in non-`en` files        |
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
 
-Do not leave English placeholders or “translate later” TODOs for other locales.
+## Translations
 
-## Before a release
+UI strings live in `resources/lang/{locale}/app.php`. English (`en`) is the source of truth.
 
-- Run the full quality gate: `composer pint:test`, `composer lint`, `composer test:ci`, `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` when SPA assets change
-- Regenerate coverage once with `composer test:coverage` (or `test:coverage:html`; floor is 98%) and do not claim percentages without a fresh run
-- Prefer CI install-smoke + Playwright e2e for host confidence; still smoke the admin SPA manually when UI paths are hard to automate: media upload/delete → roles → integrations
-- Finish the [language catalog](#language-catalog) for any UI copy changes — key parity alone is not enough
+When you add or change a string:
+
+- Update `en` first, then every other locale with the same keys.
+- Use a real translation for each language — not a copy of the English text (except true cognates and brand names such as `SEO`, `Canvas`, or `Unsplash`).
+- Remove or rename keys in every locale in the same change.
+
+You may verify key parity with:
+
+```bash
+composer test -- --filter=LocalizationTest
+```
+
+## Coding style
+
+PHP is formatted with [Laravel Pint](https://laravel.com/docs/pint). Match the patterns already used in neighboring controllers, pages, and tests rather than introducing new layers or abstractions without precedent.

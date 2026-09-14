@@ -75,6 +75,33 @@ final readonly class PostSnapshot
     }
 
     /**
+     * Same public fields as {@see from()}, but forced to scheduled visibility.
+     *
+     * Used when a post is already live by the clock so lifecycle classification
+     * can still see scheduled → live (time elapsed without an editor write).
+     */
+    public static function asScheduled(Post $post): self
+    {
+        $base = self::from($post);
+
+        return new self(
+            isLive: false,
+            isScheduled: true,
+            isDraft: false,
+            title: $base->title,
+            slug: $base->slug,
+            summary: $base->summary,
+            body: $base->body,
+            featuredImage: $base->featuredImage,
+            featuredImageCaption: $base->featuredImageCaption,
+            publishedAt: $base->publishedAt,
+            meta: $base->meta,
+            topicId: $base->topicId,
+            tagSlugs: $base->tagSlugs,
+        );
+    }
+
+    /**
      * Build a snapshot from explicit public fields (unit tests / classifiers without DB).
      *
      * @param  array{

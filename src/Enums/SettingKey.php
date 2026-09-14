@@ -13,12 +13,14 @@ enum SettingKey: string
     case WebhookUrl = 'webhooks.url';
     case WebhookSecret = 'webhooks.secret';
     case WebhookEvents = 'webhooks.events';
+    case WebhookStatus = 'webhooks.status';
+    case WebhookVerifiedAt = 'webhooks.verified_at';
 
     public function isSecret(): bool
     {
         return match ($this) {
             self::UnsplashAccessKey, self::AiApiKey, self::WebhookSecret => true,
-            self::AiProvider, self::AiModel, self::WebhookUrl, self::WebhookEvents => false,
+            self::AiProvider, self::AiModel, self::WebhookUrl, self::WebhookEvents, self::WebhookStatus, self::WebhookVerifiedAt => false,
         };
     }
 }

@@ -1,9 +1,11 @@
 <?php
 
 use Canvas\Http\Controllers\AiRewriteController;
+use Canvas\Http\Controllers\CalendarController;
 use Canvas\Http\Controllers\IntegrationsController;
 use Canvas\Http\Controllers\MediaController;
 use Canvas\Http\Controllers\PostController;
+use Canvas\Http\Controllers\PostRevisionController;
 use Canvas\Http\Controllers\SearchController;
 use Canvas\Http\Controllers\StatsController;
 use Canvas\Http\Controllers\TagController;
@@ -12,6 +14,7 @@ use Canvas\Http\Controllers\TranslationsController;
 use Canvas\Http\Controllers\UnsplashController;
 use Canvas\Http\Controllers\UserController;
 use Canvas\Http\Controllers\ViewController;
+use Canvas\Http\Controllers\WebhookDeliveryController;
 use Canvas\Http\Middleware\Authorize;
 use Canvas\Http\Middleware\EagerLoadCanvasUser;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +26,7 @@ Route::middleware([
 ])->group(function (): void {
     Route::prefix('api')->group(function (): void {
         Route::get('stats', StatsController::class);
+        Route::get('calendar/posts', CalendarController::class);
 
         Route::get('translations/{locale}', TranslationsController::class);
 
@@ -35,6 +39,10 @@ Route::middleware([
             Route::put('/', [IntegrationsController::class, 'update']);
             Route::post('webhooks/test', [IntegrationsController::class, 'testWebhook'])
                 ->middleware('throttle:10,1');
+            Route::get('webhooks/deliveries', [WebhookDeliveryController::class, 'index']);
+            Route::get('webhooks/deliveries/{delivery}', [WebhookDeliveryController::class, 'show']);
+            Route::post('webhooks/deliveries/{delivery}/retry', [WebhookDeliveryController::class, 'retry'])
+                ->middleware('throttle:20,1');
         });
 
         Route::prefix('media')->controller(MediaController::class)->group(function (): void {
@@ -50,6 +58,11 @@ Route::middleware([
             Route::get('/', 'index');
             Route::get('create', 'create');
             Route::get('{post}/stats', 'stats');
+            Route::get('{post}/revisions', [PostRevisionController::class, 'index']);
+            Route::post('{post}/revisions', [PostRevisionController::class, 'store']);
+            Route::get('{post}/revisions/{revision}', [PostRevisionController::class, 'show']);
+            Route::put('{post}/revisions/{revision}', [PostRevisionController::class, 'update']);
+            Route::post('{post}/revisions/{revision}/restore', [PostRevisionController::class, 'restore']);
             Route::get('{post}', 'show');
             Route::post('{post}/discard', 'discard');
             Route::post('{id}', 'store');

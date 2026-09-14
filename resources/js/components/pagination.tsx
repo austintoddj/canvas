@@ -17,13 +17,16 @@ export function Pagination({ 'aria-label': ariaLabel, className, ...props }: Rea
 
 export function PaginationPrevious({
     href = null,
+    onClick,
     className,
     children = 'Previous',
-}: React.PropsWithChildren<{ href?: string | null; className?: string }>) {
+}: React.PropsWithChildren<{ href?: string | null; onClick?: () => void; className?: string }>) {
+    const disabled = href === null && onClick === undefined;
+
     return (
         <span className={clsx(className, 'grow basis-0')}>
             <Button
-                {...(href === null ? { disabled: true } : { href })}
+                {...(disabled ? { disabled: true } : href !== null ? { href } : { onClick })}
                 plain
                 aria-label={t('common.previous_page', 'Previous page')}
             >
@@ -43,13 +46,16 @@ export function PaginationPrevious({
 
 export function PaginationNext({
     href = null,
+    onClick,
     className,
     children = 'Next',
-}: React.PropsWithChildren<{ href?: string | null; className?: string }>) {
+}: React.PropsWithChildren<{ href?: string | null; onClick?: () => void; className?: string }>) {
+    const disabled = href === null && onClick === undefined;
+
     return (
         <span className={clsx(className, 'flex grow basis-0 justify-end')}>
             <Button
-                {...(href === null ? { disabled: true } : { href })}
+                {...(disabled ? { disabled: true } : href !== null ? { href } : { onClick })}
                 plain
                 aria-label={t('common.next_page', 'Next page')}
             >
@@ -73,13 +79,14 @@ export function PaginationList({ className, ...props }: React.ComponentPropsWith
 
 export function PaginationPage({
     href,
+    onClick,
     className,
     current = false,
     children,
-}: React.PropsWithChildren<{ href: string; className?: string; current?: boolean }>) {
+}: React.PropsWithChildren<{ href?: string; onClick?: () => void; className?: string; current?: boolean }>) {
     return (
         <Button
-            href={href}
+            {...(href !== undefined ? { href } : { onClick })}
             plain
             aria-label={t('common.page_number', { page: String(children) })}
             aria-current={current ? 'page' : undefined}

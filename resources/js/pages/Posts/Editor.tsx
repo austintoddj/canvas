@@ -8,10 +8,12 @@ import PostEditorLayout from '@/components/posts/PostEditorLayout';
 import PostInspectorDrawer, { type PostInspectorSection } from '@/components/posts/PostInspectorDrawer';
 import PostPreviewDialog from '@/components/posts/PostPreviewDialog';
 import PostPublishDialog from '@/components/posts/PostPublishDialog';
+import PostVersionHistoryDrawer from '@/components/posts/PostVersionHistoryDrawer';
 import { Skeleton } from '@/components/Skeleton';
 import { ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useLeaveRevisionCheckpoint } from '@/hooks/useLeaveRevisionCheckpoint';
 import { usePostAutosave } from '@/hooks/usePostAutosave';
 import { invalidateRecentPosts } from '@/hooks/useRecentPosts';
 import { ApiError } from '@/lib/api';
@@ -30,7 +32,7 @@ import {
 } from '@/lib/posts/form';
 import { redirectHomeWithError } from '@/lib/redirect-home';
 import { toast } from '@/lib/toast';
-import type { Post, TaxonomyOption } from '@/types/api';
+import type { Post, PostLastRevision, TaxonomyOption } from '@/types/api';
 
 const emptyForm = (): PostFormState => ({
     title: '',
@@ -62,6 +64,8 @@ export default function PostsEditor() {
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
     const [inspectorOpen, setInspectorOpen] = useState(false);
     const [inspectorSection, setInspectorSection] = useState<PostInspectorSection>('post');
+    const [historyOpen, setHistoryOpen] = useState(false);
+    const [lastRevision, setLastRevision] = useState<PostLastRevision | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [pendingDelete, setPendingDelete] = useState(false);
     const [hasPendingChanges, setHasPendingChanges] = useState(false);
@@ -91,6 +95,9 @@ export default function PostsEditor() {
     const handleSaved = useCallback((post: Post) => {
         setDraftPersisted(true);
         setHasPendingChanges(postHasPendingChanges(post));
+        if (post.last_revision !== undefined) {
+            setLastRevision(post.last_revision);
+        }
         // Keep sidebar recent posts in sync after create/autosave (title, order).
         invalidateRecentPosts();
 
@@ -134,6 +141,9 @@ export default function PostsEditor() {
         enabled: autosaveEnabled,
         onSaved: handleSaved,
     });
+
+    // Session-boundary checkpoint when leaving this post (SPA nav / tab close).
+    useLeaveRevisionCheckpoint(postId, draftPersisted && !loading && loadError === null && postId !== null);
 
     useEffect(() => {
         syncBaselineRef.current = syncBaseline;
@@ -200,6 +210,18 @@ export default function PostsEditor() {
         } catch {
             toast.error(t('editor.discard_error', 'Unable to discard changes.'));
         }
+    }
+
+    function handleRevisionRestored(post: Post) {
+        const next = postToFormState(post);
+        setForm(next);
+        setHasPendingChanges(postHasPendingChanges(post));
+        if (post.last_revision !== undefined) {
+            setLastRevision(post.last_revision);
+        }
+        setSlugManuallyEdited(next.slug !== '' && next.slug !== slugify(next.title));
+        resetBaseline(serializeFormState(next));
+        invalidateRecentPosts();
     }
 
     async function handleSchedule(datetimeLocal: string) {
@@ -341,6 +363,7 @@ export default function PostsEditor() {
 
                 const response = await postsApi.show(id, controller.signal);
                 setDraftPersisted(true);
+                setLastRevision(response.post.last_revision ?? null);
                 hydrateEditor(
                     postToFormState(response.post),
                     response.tags,
@@ -459,10 +482,13 @@ export default function PostsEditor() {
                 saveStatus={saveStatus}
                 hasPendingChanges={hasPendingChanges}
                 inspectorOpen={inspectorOpen}
+                historyOpen={historyOpen}
+                lastRevision={lastRevision}
                 disabled={!autosaveEnabled}
                 publishBusy={publishBusy}
                 onTitleChange={handleTitleChange}
                 onOpenInspector={() => setInspectorOpen(true)}
+                onOpenHistory={draftPersisted ? () => setHistoryOpen(true) : undefined}
                 onPreview={draftPersisted ? () => setPreviewOpen(true) : undefined}
                 onPublishRequest={draftPersisted ? openPublishDialog : undefined}
                 onUpdateRequest={() => setUpdateConfirmOpen(true)}
@@ -476,6 +502,15 @@ export default function PostsEditor() {
                         onChange={handleBodyChange}
                     />
                 )}
+            />
+
+            <PostVersionHistoryDrawer
+                open={historyOpen}
+                onClose={() => setHistoryOpen(false)}
+                postId={postId}
+                currentTitle={form.title}
+                currentBody={form.body}
+                onRestored={handleRevisionRestored}
             />
 
             <PostInspectorDrawer

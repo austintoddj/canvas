@@ -278,6 +278,7 @@ export default function UsersIndex() {
                                                 {!isSelf ? (
                                                     <ListRowActionButton
                                                         label={`${t('users.revoke')} — ${user.name}`}
+                                                        tooltip={t('users.revoke')}
                                                         danger
                                                         onClick={() => setPendingRevoke(user)}
                                                     >

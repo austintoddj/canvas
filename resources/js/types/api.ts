@@ -66,6 +66,15 @@ export type PostAuthor = {
     avatar_url: string | null;
 };
 
+/** Tip of version history on post show/store (no body). */
+export type PostLastRevision = {
+    id: string;
+    user_id: number | null;
+    created_at: string;
+    /** Display-only revision actor (never written back). */
+    user?: PostAuthor | null;
+};
+
 export type Post = PostListItem & {
     slug: string;
     body: string | null;
@@ -80,6 +89,8 @@ export type Post = PostListItem & {
     topic?: TaxonomyOption & { id: string };
     /** Present on show/store/discard; omit from list rows. */
     user?: PostAuthor | null;
+    /** Newest checkpoint; null when the post has no revision rows yet. */
+    last_revision?: PostLastRevision | null;
 };
 
 export type PostsIndexResponse = {
@@ -148,6 +159,79 @@ export type PostsIndexParams = {
     type?: 'draft';
     scope?: 'user' | 'all';
     page?: number;
+};
+
+/** Calendar month range item (scheduled + published only). */
+export type CalendarPostStatus = 'scheduled' | 'published';
+
+export type CalendarPost = {
+    id: string;
+    title: string | null;
+    slug: string;
+    published_at: string;
+    featured_image: string | null;
+    status: CalendarPostStatus;
+    user?: PostAuthor | null;
+};
+
+export type CalendarPostsParams = {
+    from: string;
+    to: string;
+    scope?: 'user' | 'all';
+};
+
+export type CalendarPostsResponse = {
+    posts: CalendarPost[];
+};
+
+/** Why a checkpoint was recorded (`canvas_post_revisions.reason`). */
+export type RevisionReason =
+    'origin' | 'published' | 'scheduled' | 'unpublished' | 'updated' | 'manual' | 'left' | 'restored';
+
+/** Lean revision row from index / rename (no body). */
+export type PostRevisionListItem = {
+    id: string;
+    post_id: string;
+    user_id: number | null;
+    /** User-assigned version name; null until renamed or saved with a name. */
+    label: string | null;
+    /** Lifecycle / session reason; null for legacy rows written before reasons were stored. */
+    reason: RevisionReason | null;
+    title: string | null;
+    created_at: string;
+    updated_at: string;
+    /** Display-only revision actor (never written back). */
+    user?: PostAuthor | null;
+};
+
+/** Full snapshot for diff/restore (show + create). */
+export type PostRevision = PostRevisionListItem & {
+    slug: string | null;
+    summary: string | null;
+    body: string | null;
+    featured_image: string | null;
+    featured_image_caption: string | null;
+    meta: PostMeta | null;
+};
+
+export type PostRevisionsResponse = {
+    revisions: PostRevisionListItem[];
+};
+
+export type PostRevisionResponse = {
+    revision: PostRevision;
+};
+
+export type PostRevisionListResponse = {
+    revision: PostRevisionListItem;
+};
+
+export type RenamePostRevisionPayload = {
+    label: string | null;
+};
+
+export type CreatePostRevisionPayload = {
+    label?: string | null;
 };
 
 /** Display-only uploader on media show/store responses. */

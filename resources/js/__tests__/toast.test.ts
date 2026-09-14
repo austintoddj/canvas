@@ -1,5 +1,3 @@
-// @vitest-environment happy-dom
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { dismissToast, getToasts, subscribeToasts, toast, toastFromTone } from '@/lib/toast';

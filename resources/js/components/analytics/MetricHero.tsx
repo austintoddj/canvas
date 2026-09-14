@@ -34,7 +34,7 @@ export default function MetricHero({
     return (
         <div
             className={clsx(
-                'flex h-full flex-col rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5 sm:p-6',
+                'flex h-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5 sm:p-6',
                 className
             )}
         >

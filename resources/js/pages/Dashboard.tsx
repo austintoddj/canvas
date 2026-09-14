@@ -35,6 +35,7 @@ import {
     type DashboardScope,
 } from '@/lib/dashboard';
 import type { DashboardRangeDays } from '@/types/api';
+import { IconPlus } from '@tabler/icons-react';
 
 function DashboardSkeleton() {
     return (
@@ -196,6 +197,7 @@ export default function Dashboard() {
                 actions={
                     showHeaderNewPost ? (
                         <Button href="/posts/new" outline>
+                            <IconPlus data-slot="icon" />
                             {t('posts.new')}
                         </Button>
                     ) : undefined

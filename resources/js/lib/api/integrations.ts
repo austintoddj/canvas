@@ -1,6 +1,11 @@
 import { api } from '@/lib/api';
+import { buildQueryString } from '@/lib/api/query';
+import type { Paginated } from '@/types/api';
+
+export type IntegrationConnectionStatus = 'off' | 'enabled';
 
 export type UnsplashIntegrationStatus = {
+    status: IntegrationConnectionStatus;
     configured: boolean;
     masked_key: string | null;
     enabled_at: string | null;
@@ -9,6 +14,7 @@ export type UnsplashIntegrationStatus = {
 export type AiProviderValue = 'xai' | 'openai' | 'anthropic';
 
 export type AiIntegrationStatus = {
+    status: IntegrationConnectionStatus;
     configured: boolean;
     provider: AiProviderValue | null;
     masked_key: string | null;
@@ -25,7 +31,10 @@ export type WebhookEventOption = {
 };
 
 export type WebhooksIntegrationStatus = {
+    status: IntegrationConnectionStatus;
     configured: boolean;
+    /** Credentials stored, but the signed test has not succeeded yet. Still `off`. */
+    pending: boolean;
     url: string | null;
     masked_secret: string | null;
     events: string[];
@@ -33,6 +42,8 @@ export type WebhooksIntegrationStatus = {
     available_events: WebhookEventOption[];
     /** Present only immediately after create/rotate. */
     plain_secret?: string | null;
+    /** Present when a save persisted credentials but the test delivery failed. */
+    verify_error?: string | null;
 };
 
 export type IntegrationsStatus = {
@@ -63,6 +74,37 @@ export type WebhookTestResponse = {
     event: string;
 };
 
+export type WebhookDeliveryStatus = 'pending' | 'success' | 'failed';
+
+export type WebhookDelivery = {
+    id: string;
+    event: string;
+    url: string;
+    status: WebhookDeliveryStatus | string;
+    http_status: number | null;
+    attempts: number;
+    payload: Record<string, unknown> | null;
+    response_body: string | null;
+    error_message: string | null;
+    post_id: string | null;
+    finished_at: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+};
+
+export type WebhookDeliveriesIndexParams = {
+    page?: number;
+    per_page?: number;
+    status?: WebhookDeliveryStatus | string;
+    event?: string;
+};
+
+export type WebhookDeliveryRetryResponse = {
+    ok: boolean;
+    delivery: WebhookDelivery;
+    original_delivery_id: string;
+};
+
 export const integrationsApi = {
     show(signal?: AbortSignal) {
         return api.get<IntegrationsStatus>('/integrations', signal);
@@ -74,5 +116,24 @@ export const integrationsApi = {
 
     testWebhook(signal?: AbortSignal) {
         return api.post<WebhookTestResponse>('/integrations/webhooks/test', undefined, signal);
+    },
+
+    webhookDeliveries(params: WebhookDeliveriesIndexParams = {}, signal?: AbortSignal) {
+        return api.get<Paginated<WebhookDelivery>>(
+            `/integrations/webhooks/deliveries${buildQueryString(params)}`,
+            signal
+        );
+    },
+
+    webhookDelivery(id: string, signal?: AbortSignal) {
+        return api.get<WebhookDelivery>(`/integrations/webhooks/deliveries/${id}`, signal);
+    },
+
+    retryWebhookDelivery(id: string, signal?: AbortSignal) {
+        return api.post<WebhookDeliveryRetryResponse>(
+            `/integrations/webhooks/deliveries/${id}/retry`,
+            undefined,
+            signal
+        );
     },
 };

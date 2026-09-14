@@ -141,8 +141,18 @@ export default function PostsStats() {
                     <IconArrowLeft data-slot="icon" />
                 </Button>
                 <div className="min-w-0">
-                    {title ? <Heading>{title}</Heading> : <Skeleton className="h-8 w-48 max-w-full" />}
-                    <PageDescription>{t('stats.description')}</PageDescription>
+                    {title ? (
+                        <>
+                            <Heading>{title}</Heading>
+                            <PageDescription>{t('stats.description')}</PageDescription>
+                        </>
+                    ) : (
+                        <div className="space-y-2" data-post-stats-header-skeleton="true">
+                            <Skeleton className="h-8 w-48 max-w-full" />
+                            {/* Keep subtitle shape in the skeleton so real copy doesn't flash alone. */}
+                            <Skeleton className="h-4 w-64 max-w-full" />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -176,7 +186,7 @@ export default function PostsStats() {
                         <StatCard label={t('stats.reading_time')} valueLabel={stats.readTime} />
                     </div>
 
-                    <div className="grid gap-4 lg:grid-cols-3">
+                    <div className="grid min-w-0 gap-4 lg:grid-cols-3">
                         <RankedBarList
                             title={t('stats.top_referers')}
                             entries={referers}

@@ -466,7 +466,8 @@ export default function OrganizeIndex() {
                                         <TableCell className="w-px whitespace-nowrap">
                                             <ListRowEnd date={formatListDate(item.created_at)}>
                                                 <ListRowActionButton
-                                                    label={`Delete ${name}`}
+                                                    label={t('common.delete_aria', { name })}
+                                                    tooltip={t('common.delete')}
                                                     danger
                                                     onClick={() => setPendingDelete(item)}
                                                 >

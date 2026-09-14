@@ -4,6 +4,62 @@ import { Role } from '@/lib/permissions';
 import type { CanvasBoot, UserResource } from '@/types/boot';
 import { createElement, type ReactElement, type ReactNode } from 'react';
 
+const defaultTranslations: Record<string, string> = {
+    'common.close': 'Close',
+    'common.cancel': 'Cancel',
+    'common.save': 'Save',
+    'common.saving': 'Saving…',
+    'editor.publish_dialog_title': 'Looks good to me.',
+    'editor.publish_dialog_subtitle': 'Choose when readers should see it.',
+    'editor.publish_needs_title': 'Add a title before publishing.',
+    'editor.publish_timing_label': 'When to publish',
+    'editor.publish_now': 'Publish now',
+    'editor.schedule_for_later': 'Schedule for later',
+    'editor.publish_now_help': 'The post goes live immediately.',
+    'editor.schedule_time': 'Time',
+    'editor.schedule_prev_month': 'Previous month',
+    'editor.schedule_next_month': 'Next month',
+    'editor.schedule_pick': 'Choose a date and time',
+    'editor.schedule_timezone_hint': "Times are chosen in this device's local timezone.",
+    'editor.schedule_app_timezone': 'App: :timezone · :when',
+    'editor.schedule_presets.in_one_hour': 'In 1 hour',
+    'editor.schedule_presets.tomorrow_morning': 'Tomorrow 9am',
+    'editor.schedule_presets.next_monday': 'Next Monday',
+    'editor.scheduling': 'Scheduling…',
+    'editor.publishing': 'Publishing…',
+    'editor.schedule': 'Schedule',
+    'editor.publish': 'Publish',
+    assets_are_not_up_to_date: 'Assets are not up to date',
+    to_update_run: 'To update, run:',
+    assets_docs_link: 'Upgrade docs',
+};
+
+export type BootOverrides = Omit<Partial<CanvasBoot>, 'translations'> & {
+    translations?: string | Record<string, string>;
+};
+
+function parseTranslationOverride(value: string | Record<string, string> | undefined): Record<string, string> | null {
+    if (value === undefined) {
+        return {};
+    }
+
+    if (typeof value !== 'string') {
+        return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, String(entry)]));
+    }
+
+    try {
+        const parsed: unknown = JSON.parse(value);
+
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+            return {};
+        }
+
+        return Object.fromEntries(Object.entries(parsed).map(([key, entry]) => [key, String(entry)]));
+    } catch {
+        return null;
+    }
+}
+
 export function makeUser(role: number | null = Role.Admin, overrides: Partial<UserResource> = {}): UserResource {
     return {
         id: 1,
@@ -31,7 +87,10 @@ export function makeUser(role: number | null = Role.Admin, overrides: Partial<Us
     };
 }
 
-export function makeBoot(overrides: Partial<CanvasBoot> = {}): CanvasBoot {
+export function makeBoot(overrides: BootOverrides = {}): CanvasBoot {
+    const { translations: translationOverride, ...rest } = overrides;
+    const parsed = parseTranslationOverride(translationOverride);
+
     return {
         path: '/canvas',
         languages: [{ code: 'en', label: 'English', rtl: false }],
@@ -43,39 +102,14 @@ export function makeBoot(overrides: Partial<CanvasBoot> = {}): CanvasBoot {
         },
         appTimezone: 'UTC',
         defaultLocale: 'en',
-        translations: JSON.stringify({
-            'common.close': 'Close',
-            'common.cancel': 'Cancel',
-            'editor.publish_dialog_title': 'Looks good to me.',
-            'editor.publish_dialog_subtitle': 'Choose when readers should see it.',
-            'editor.publish_needs_title': 'Add a title before publishing.',
-            'editor.publish_timing_label': 'When to publish',
-            'editor.publish_now': 'Publish now',
-            'editor.schedule_for_later': 'Schedule for later',
-            'editor.publish_now_help': 'The post goes live immediately.',
-            'editor.schedule_time': 'Time',
-            'editor.schedule_prev_month': 'Previous month',
-            'editor.schedule_next_month': 'Next month',
-            'editor.schedule_pick': 'Choose a date and time',
-            'editor.schedule_timezone_hint': "Times are chosen in this device's local timezone.",
-            'editor.schedule_app_timezone': 'App: :timezone · :when',
-            'editor.schedule_presets.in_one_hour': 'In 1 hour',
-            'editor.schedule_presets.tomorrow_morning': 'Tomorrow 9am',
-            'editor.schedule_presets.next_monday': 'Next Monday',
-            'editor.scheduling': 'Scheduling…',
-            'editor.publishing': 'Publishing…',
-            'editor.schedule': 'Schedule',
-            'editor.publish': 'Publish',
-            assets_are_not_up_to_date: 'Assets are not up to date',
-            to_update_run: 'To update, run:',
-            assets_docs_link: 'Upgrade docs',
-        }),
+        translations:
+            parsed === null ? (translationOverride as string) : JSON.stringify({ ...defaultTranslations, ...parsed }),
         unsplash: false,
         ai: false,
         assetsUpToDate: true,
         version: '7.0.0-test',
         user: makeUser(Role.Admin),
-        ...overrides,
+        ...rest,
     };
 }
 

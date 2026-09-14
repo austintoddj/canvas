@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { AiIntegrationDrawer } from '@/components/integrations/AiIntegrationDrawer';
-import { IntegrationRow } from '@/components/integrations/IntegrationRow';
+import { IntegrationCard } from '@/components/integrations/IntegrationCard';
 import { IntegrationsListSkeleton } from '@/components/integrations/IntegrationsListSkeleton';
 import { UnsplashIntegrationDrawer } from '@/components/integrations/UnsplashIntegrationDrawer';
 import { WebhookIntegrationDrawer } from '@/components/integrations/WebhookIntegrationDrawer';
@@ -11,24 +11,31 @@ import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { integrationsApi, type IntegrationsStatus } from '@/lib/api/integrations';
 
-type OpenDrawer = 'unsplash' | 'ai' | 'webhooks' | null;
+type IntegrationDrawer = 'unsplash' | 'ai' | 'webhooks';
 
 export default function IntegrationsIndex() {
     const { t, setIntegrationFlags } = useCanvas();
     const [status, setStatus] = useState<IntegrationsStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [openDrawer, setOpenDrawer] = useState<OpenDrawer>(null);
+    const [openDrawer, setOpenDrawer] = useState<IntegrationDrawer | null>(null);
 
     useDocumentTitle(t('integrations.title'));
 
-    function handleStatusChange(next: IntegrationsStatus) {
-        setStatus(next);
-        setIntegrationFlags({
-            ai: next.ai.configured === true,
-            unsplash: next.unsplash.configured === true,
-        });
-    }
+    const handleStatusChange = useCallback(
+        (next: IntegrationsStatus) => {
+            setStatus(next);
+            setIntegrationFlags({
+                ai: next.ai.configured === true,
+                unsplash: next.unsplash.configured === true,
+            });
+        },
+        [setIntegrationFlags]
+    );
+
+    const closeDrawer = useCallback(() => {
+        setOpenDrawer(null);
+    }, []);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -54,15 +61,15 @@ export default function IntegrationsIndex() {
         return () => controller.abort();
     }, [t]);
 
-    const unsplashConfigured = status?.unsplash.configured === true;
-    const aiConfigured = status?.ai.configured === true;
-    const webhooksConfigured = status?.webhooks.configured === true;
+    const unsplashStatus = status?.unsplash.status ?? 'off';
+    const aiStatus = status?.ai.status ?? 'off';
+    const webhooksStatus = status?.webhooks.status ?? 'off';
     const configureLabel = t('integrations.configure', 'Configure');
     const enabledLabel = t('integrations.enabled', 'Enabled');
     const notEnabledLabel = t('integrations.not_enabled', 'Not enabled');
 
     return (
-        <div className="mx-auto max-w-3xl space-y-8">
+        <div className="space-y-8">
             <PageHeader title={t('integrations.title')}>
                 <PageDescription>{t('integrations.description')}</PageDescription>
             </PageHeader>
@@ -75,74 +82,80 @@ export default function IntegrationsIndex() {
                 </div>
             ) : (
                 <div
-                    className="divide-y divide-zinc-950/5 overflow-hidden rounded-xl border border-zinc-950/10 dark:divide-white/5 dark:border-white/10"
+                    className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                     data-integrations-list="true"
+                    data-integrations-cards="true"
                 >
-                    <IntegrationRow
+                    <IntegrationCard
                         kind="unsplash"
                         title={t('integrations.unsplash')}
                         description={t('integrations.unsplash_help')}
-                        configured={unsplashConfigured}
+                        status={unsplashStatus}
                         configuredLabel={enabledLabel}
                         notConfiguredLabel={notEnabledLabel}
                         actionLabel={configureLabel}
-                        onConfigure={() => setOpenDrawer('unsplash')}
+                        selected={openDrawer === 'unsplash'}
+                        onClick={() => setOpenDrawer('unsplash')}
                     />
-                    <IntegrationRow
+                    <IntegrationCard
                         kind="ai"
                         title={t('integrations.ai')}
                         description={t('integrations.ai_help', 'Rewrite and SEO tools with Grok, ChatGPT, or Claude.')}
-                        configured={aiConfigured}
+                        status={aiStatus}
                         configuredLabel={enabledLabel}
                         notConfiguredLabel={notEnabledLabel}
                         actionLabel={configureLabel}
-                        onConfigure={() => setOpenDrawer('ai')}
+                        selected={openDrawer === 'ai'}
+                        onClick={() => setOpenDrawer('ai')}
                     />
-                    <IntegrationRow
+                    <IntegrationCard
                         kind="webhooks"
                         title={t('integrations.webhooks', 'Webhooks')}
                         description={t(
                             'integrations.webhooks_help',
                             'Notify external services when posts are published, scheduled, updated, or deleted.'
                         )}
-                        configured={webhooksConfigured}
+                        status={webhooksStatus}
                         configuredLabel={enabledLabel}
-                        notConfiguredLabel={notEnabledLabel}
+                        notConfiguredLabel={
+                            status?.webhooks.pending === true
+                                ? t('integrations.webhooks_status_pending', 'Pending')
+                                : notEnabledLabel
+                        }
                         actionLabel={configureLabel}
-                        onConfigure={() => setOpenDrawer('webhooks')}
+                        selected={openDrawer === 'webhooks'}
+                        onClick={() => setOpenDrawer('webhooks')}
                     />
                 </div>
             )}
 
             <UnsplashIntegrationDrawer
                 open={openDrawer === 'unsplash'}
-                configured={unsplashConfigured}
+                configured={status?.unsplash.configured === true}
                 maskedKey={status?.unsplash.masked_key ?? null}
-                enabledAt={status?.unsplash.enabled_at ?? null}
-                onClose={() => setOpenDrawer(null)}
+                onClose={closeDrawer}
                 onStatusChange={handleStatusChange}
             />
 
             <AiIntegrationDrawer
                 open={openDrawer === 'ai'}
-                configured={aiConfigured}
+                configured={status?.ai.configured === true}
                 provider={status?.ai.provider ?? null}
                 model={status?.ai.model ?? null}
                 maskedKey={status?.ai.masked_key ?? null}
-                enabledAt={status?.ai.enabled_at ?? null}
-                onClose={() => setOpenDrawer(null)}
+                onClose={closeDrawer}
                 onStatusChange={handleStatusChange}
             />
 
             <WebhookIntegrationDrawer
                 open={openDrawer === 'webhooks'}
-                configured={webhooksConfigured}
+                configured={status?.webhooks.configured === true}
+                pending={status?.webhooks.pending === true}
                 url={status?.webhooks.url ?? null}
                 maskedSecret={status?.webhooks.masked_secret ?? null}
                 events={status?.webhooks.events ?? []}
                 availableEvents={status?.webhooks.available_events ?? []}
-                enabledAt={status?.webhooks.enabled_at ?? null}
-                onClose={() => setOpenDrawer(null)}
+                onClose={closeDrawer}
                 onStatusChange={handleStatusChange}
             />
         </div>

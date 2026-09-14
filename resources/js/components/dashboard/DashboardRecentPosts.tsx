@@ -110,6 +110,7 @@ export function DashboardRecentPosts({ posts, scope }: DashboardRecentPostsProps
                                             <ListRowActionLink
                                                 href={`/posts/${post.id}/stats`}
                                                 label={t('dashboard.recent_stats_aria', { title })}
+                                                tooltip={t('editor.stats')}
                                             >
                                                 <IconChartBar className="size-5" aria-hidden="true" />
                                             </ListRowActionLink>

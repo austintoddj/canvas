@@ -25,9 +25,50 @@ final class PostLifecycleEvents
     {
         $after = $deleted ? null : PostSnapshot::from($post);
 
-        foreach (PostLifecycle::classify($before, $after, $deleted) as $event) {
+        $events = PostLifecycle::classify($before, $after, $deleted);
+
+        foreach ($events as $event) {
             event(self::toDomainEvent($event, $post));
         }
+
+        if ($deleted || $after === null) {
+            return;
+        }
+
+        self::syncPublishedNotificationMarker($post, $after, $events);
+    }
+
+    /**
+     * Announce that a scheduled post became live because time elapsed.
+     *
+     * Visibility is already live on the row; classification uses a synthetic
+     * scheduled "before" so the same scheduled → live path runs as an editor save.
+     */
+    public static function dispatchScheduledWentLive(Post $post): void
+    {
+        self::dispatch(PostSnapshot::asScheduled($post), $post);
+    }
+
+    /**
+     * @param  list<WebhookEvent>  $events
+     */
+    private static function syncPublishedNotificationMarker(Post $post, PostSnapshot $after, array $events): void
+    {
+        if (in_array(WebhookEvent::PostPublished, $events, true)) {
+            if ($post->published_notified_at !== null) {
+                return;
+            }
+
+            $post->forceFill(['published_notified_at' => now()])->saveQuietly();
+
+            return;
+        }
+
+        if ($after->visibility() === 'live' || $post->published_notified_at === null) {
+            return;
+        }
+
+        $post->forceFill(['published_notified_at' => null])->saveQuietly();
     }
 
     private static function toDomainEvent(WebhookEvent $event, Post $post): object

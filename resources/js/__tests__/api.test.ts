@@ -10,6 +10,7 @@ import {
     api,
     apiBaseUrl,
     apiErrorCode,
+    apiErrorDetail,
     apiErrorMessage,
     apiRequest,
     messageFromApiBody,
@@ -88,6 +89,15 @@ describe('api client', () => {
         expect(apiErrorCode(new ApiError(422, { code: 'stats_published_only' }))).toBe('stats_published_only');
         expect(apiErrorCode(new ApiError(404, { message: 'Not found' }))).toBeNull();
         expect(apiErrorCode(new Error('nope'))).toBeNull();
+        expect(
+            apiErrorDetail(
+                new ApiError(502, {
+                    code: 'webhooks_test_failed',
+                    detail: 'Canvas webhook delivery failed with HTTP 405 for event [webhook.test].',
+                })
+            )
+        ).toBe('Canvas webhook delivery failed with HTTP 405 for event [webhook.test].');
+        expect(apiErrorDetail(new ApiError(502, { code: 'webhooks_test_failed' }))).toBeNull();
     });
 
     it('requests JSON with CSRF on writes and maps response errors', async () => {

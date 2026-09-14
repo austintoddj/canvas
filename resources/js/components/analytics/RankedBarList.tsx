@@ -50,7 +50,7 @@ function RankedRows({
                             style={{ width: `${Math.max(barWidth, entry.share > 0 ? 2 : 0)}%` }}
                             aria-hidden="true"
                         />
-                        <div className="relative flex items-center gap-3 px-2.5 py-2 text-sm">
+                        <div className="relative flex min-w-0 items-center gap-2 px-2.5 py-2 text-sm sm:gap-3">
                             {iconKind ? (
                                 <AnalyticsEntryIcon kind={iconKind} label={entry.label} />
                             ) : (
@@ -68,7 +68,7 @@ function RankedRows({
                                 {entry.displayValue}
                             </span>
                             {entry.shareLabel ? (
-                                <span className="w-12 shrink-0 text-right tabular-nums text-canvas-muted dark:text-canvas-muted-dark">
+                                <span className="w-10 shrink-0 text-right tabular-nums text-canvas-muted sm:w-12 dark:text-canvas-muted-dark">
                                     {entry.shareLabel}
                                 </span>
                             ) : null}
@@ -137,7 +137,8 @@ export default function RankedBarList({
                 onPointerEnter={() => setHovered(true)}
                 onPointerLeave={() => setHovered(false)}
                 className={clsx(
-                    'relative flex h-full flex-col rounded-xl border border-zinc-950/10 p-5',
+                    // min-w-0 + overflow-hidden keep long labels (referer URLs) inside the chart column.
+                    'relative flex h-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-zinc-950/10 p-5',
                     'dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5',
                     className
                 )}

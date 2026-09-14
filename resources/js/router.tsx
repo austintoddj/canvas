@@ -1,6 +1,7 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 import Page, {
+    CalendarIndex,
     Dashboard,
     MediaIndex,
     MediaShow,
@@ -10,6 +11,7 @@ import Page, {
     PostsIndex,
     PostsStats,
     IntegrationsIndex,
+    IntegrationsWebhooks,
     UsersIndex,
 } from '@/components/Page';
 import { RequirePermission } from '@/components/RequirePermission';
@@ -28,6 +30,7 @@ export const router = createBrowserRouter(
                 { path: 'posts/new', element: <Page component={PostsEditor} /> },
                 { path: 'posts/:id/stats', element: <Page component={PostsStats} /> },
                 { path: 'posts/:id', element: <Page component={PostsEditor} /> },
+                { path: 'calendar', element: <Page component={CalendarIndex} /> },
                 { path: 'media', element: <Page component={MediaIndex} /> },
                 { path: 'media/:id', element: <Page component={MediaShow} /> },
                 {
@@ -51,6 +54,30 @@ export const router = createBrowserRouter(
                     element: (
                         <RequirePermission permission="canManageIntegrations">
                             <Page component={IntegrationsIndex} />
+                        </RequirePermission>
+                    ),
+                },
+                {
+                    path: 'integrations/unsplash',
+                    element: (
+                        <RequirePermission permission="canManageIntegrations">
+                            <Navigate to="/integrations" replace />
+                        </RequirePermission>
+                    ),
+                },
+                {
+                    path: 'integrations/ai',
+                    element: (
+                        <RequirePermission permission="canManageIntegrations">
+                            <Navigate to="/integrations" replace />
+                        </RequirePermission>
+                    ),
+                },
+                {
+                    path: 'integrations/webhooks',
+                    element: (
+                        <RequirePermission permission="canManageIntegrations">
+                            <Page component={IntegrationsWebhooks} />
                         </RequirePermission>
                     ),
                 },

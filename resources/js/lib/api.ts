@@ -36,6 +36,20 @@ export function apiErrorCode(error: unknown): string | null {
     return typeof code === 'string' && code.trim() !== '' ? code : null;
 }
 
+export function apiErrorDetail(error: unknown): string | null {
+    if (!(error instanceof ApiError)) {
+        return null;
+    }
+
+    if (typeof error.body !== 'object' || error.body === null || !('detail' in error.body)) {
+        return null;
+    }
+
+    const detail = (error.body as { detail: unknown }).detail;
+
+    return typeof detail === 'string' && detail.trim() !== '' ? detail.trim() : null;
+}
+
 /** Prefer JSON `message` / field errors over a bare HTTP status string. */
 export function messageFromApiBody(body: unknown): string | null {
     if (typeof body === 'string' && body.trim() !== '') {

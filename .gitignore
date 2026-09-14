@@ -20,4 +20,3 @@ phpunit.xml
 /playwright-report
 /blob-report
 /playwright/.cache
-AGENTS.md

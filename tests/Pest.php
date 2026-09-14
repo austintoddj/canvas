@@ -1,6 +1,7 @@
 <?php
 
 use Canvas\Enums\AiProvider;
+use Canvas\Enums\IntegrationStatus;
 use Canvas\Enums\SettingKey;
 use Canvas\Models\Post;
 use Canvas\Policies\UserPolicy;
@@ -9,6 +10,7 @@ use Canvas\Tests\Models\BareUser;
 use Canvas\Tests\TestCase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 
 uses(TestCase::class)->in('.');
 
@@ -113,4 +115,44 @@ function configureWebhooks(
     $settings->set(SettingKey::WebhookUrl, $url);
     $settings->set(SettingKey::WebhookSecret, $secret);
     $settings->set(SettingKey::WebhookEvents, json_encode(array_values($events), JSON_THROW_ON_ERROR));
+    $settings->set(SettingKey::WebhookStatus, IntegrationStatus::Enabled->value);
+    $settings->set(SettingKey::WebhookVerifiedAt, now()->toIso8601String());
+}
+
+/**
+ * Keep stored webhook credentials without a successful test handshake.
+ */
+function markWebhooksPending(): void
+{
+    $settings = app(SettingsRepository::class);
+    $settings->forget(SettingKey::WebhookStatus);
+    $settings->forget(SettingKey::WebhookVerifiedAt);
+}
+
+function fakeSuccessfulIntegrationProbes(): void
+{
+    Http::fake([
+        'api.unsplash.com/*' => Http::response([['id' => 'photo']], 200),
+        'api.openai.com/*' => Http::response([
+            'data' => [
+                ['id' => 'gpt-4o-mini'],
+                ['id' => 'gpt-4o'],
+                ['id' => 'gpt-5.6-terra'],
+            ],
+        ], 200),
+        'api.x.ai/*' => Http::response([
+            'data' => [
+                ['id' => 'grok-4.3'],
+                ['id' => 'grok-4.5'],
+                ['id' => 'grok-custom'],
+            ],
+        ], 200),
+        'api.anthropic.com/*' => Http::response([
+            'data' => [
+                ['id' => 'claude-haiku-4-5'],
+                ['id' => 'claude-sonnet-5'],
+            ],
+        ], 200),
+        'https://example.com/*' => Http::response(['ok' => true], 200),
+    ]);
 }

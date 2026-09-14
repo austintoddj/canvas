@@ -126,6 +126,8 @@ describe('post lifecycle domain events', function (): void {
         Event::assertNotDispatched(PostScheduled::class);
         Event::assertNotDispatched(PostUpdated::class);
         Event::assertNotDispatched(PostUnpublished::class);
+
+        expect($post->refresh()->published_notified_at)->not->toBeNull();
     });
 
     it('dispatches PostPublished when creating a new post that is immediately live', function (): void {
@@ -242,6 +244,7 @@ describe('post lifecycle domain events', function (): void {
             'title' => 'Live Title',
             'slug' => 'live-slug',
             'published_at' => now()->subDay(),
+            'published_notified_at' => now()->subDay(),
         ]);
 
         $this->actingAs($this->admin, 'canvas')
@@ -256,6 +259,7 @@ describe('post lifecycle domain events', function (): void {
         Event::assertNotDispatched(PostPublished::class);
         Event::assertNotDispatched(PostScheduled::class);
         Event::assertNotDispatched(PostUpdated::class);
+        expect($post->refresh()->published_notified_at)->toBeNull();
     });
 
     it('dispatches PostUnpublished then PostScheduled when a live post is moved to the future', function (): void {
@@ -310,6 +314,8 @@ describe('post lifecycle domain events', function (): void {
         Event::assertNotDispatched(PostScheduled::class);
         Event::assertNotDispatched(PostUpdated::class);
         Event::assertNotDispatched(PostUnpublished::class);
+
+        expect($post->refresh()->published_notified_at)->not->toBeNull();
     });
 
     it('dispatches PostDeleted when a post is destroyed', function (): void {
@@ -332,5 +338,39 @@ describe('post lifecycle domain events', function (): void {
         Event::assertDispatched(PostDeleted::class, fn (PostDeleted $event): bool => $event->post->id === $post->id);
         Event::assertNotDispatched(PostPublished::class);
         Event::assertNotDispatched(PostUnpublished::class);
+    });
+
+    it('does not emit PostPublished when promoting after the schedule has elapsed', function (): void {
+        Event::fake([PostPublished::class, PostScheduled::class, PostUpdated::class, PostUnpublished::class]);
+
+        $post = Post::factory()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Soon',
+            'slug' => 'soon',
+            'body' => 'Original body',
+            'published_at' => now()->addMinutes(5),
+            'published_notified_at' => null,
+        ]);
+
+        $this->travel(10)->minutes();
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}", [
+                'title' => 'Soon promoted',
+                'slug' => 'soon',
+                'body' => 'Promoted body',
+                'published_at' => $post->published_at?->toIso8601String(),
+                'promote' => true,
+            ])
+            ->assertOk();
+
+        Event::assertDispatched(PostUpdated::class);
+        Event::assertNotDispatched(PostPublished::class);
+        expect($post->refresh()->published_notified_at)->toBeNull();
+
+        $this->artisan('canvas:announce-scheduled')->assertSuccessful();
+
+        Event::assertDispatchedTimes(PostPublished::class, 1);
+        expect($post->refresh()->published_notified_at)->not->toBeNull();
     });
 });

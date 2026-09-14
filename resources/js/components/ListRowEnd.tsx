@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { Children, type MouseEvent, type ReactNode } from 'react';
 import { Link } from '@/components/link';
+import { Tooltip } from '@/components/tooltip';
 
 const finePointerHover = '[@media(hover:hover)_and_(pointer:fine)]:';
 
@@ -72,49 +73,57 @@ const actionClassName = (danger?: boolean) =>
     );
 
 type ListRowActionButtonProps = {
+    /** Accessible name (may be specific, e.g. include the row title). */
     label: string;
+    /** Short hover tip; defaults to `label`. */
+    tooltip?: string;
     danger?: boolean;
     disabled?: boolean;
     onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
     children: React.ReactNode;
 };
 
-export function ListRowActionButton({ label, danger, disabled, onClick, children }: ListRowActionButtonProps) {
+export function ListRowActionButton({ label, tooltip, danger, disabled, onClick, children }: ListRowActionButtonProps) {
     return (
-        <button
-            type="button"
-            aria-label={label}
-            title={label}
-            disabled={disabled}
-            className={actionClassName(danger)}
-            onClick={(event) => {
-                event.stopPropagation();
-                onClick?.(event);
-            }}
-            onKeyDown={(event) => event.stopPropagation()}
-        >
-            {children}
-        </button>
+        <Tooltip content={tooltip ?? label} placement="top">
+            <button
+                type="button"
+                aria-label={label}
+                disabled={disabled}
+                className={actionClassName(danger)}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    onClick?.(event);
+                }}
+                onKeyDown={(event) => event.stopPropagation()}
+            >
+                {children}
+            </button>
+        </Tooltip>
     );
 }
 
 type ListRowActionLinkProps = {
+    /** Accessible name (may be specific, e.g. include the row title). */
     label: string;
+    /** Short hover tip; defaults to `label`. */
+    tooltip?: string;
     href: string;
     children: React.ReactNode;
 };
 
-export function ListRowActionLink({ label, href, children }: ListRowActionLinkProps) {
+export function ListRowActionLink({ label, tooltip, href, children }: ListRowActionLinkProps) {
     return (
-        <Link
-            href={href}
-            aria-label={label}
-            title={label}
-            className={actionClassName(false)}
-            onClick={(event) => event.stopPropagation()}
-            onKeyDown={(event) => event.stopPropagation()}
-        >
-            {children}
-        </Link>
+        <Tooltip content={tooltip ?? label} placement="top">
+            <Link
+                href={href}
+                aria-label={label}
+                className={actionClassName(false)}
+                onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
+            >
+                {children}
+            </Link>
+        </Tooltip>
     );
 }

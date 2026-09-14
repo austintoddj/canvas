@@ -1,6 +1,7 @@
 <?php
 
 use Canvas\Models\Post;
+use Canvas\Models\PostRevision;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Canvas\Models\View;
@@ -217,6 +218,44 @@ describe('when showing posts', function (): void {
             ->assertJsonPath('post.user.avatar_url', 'https://cdn.example.com/avatars/contrib.jpg')
             ->assertJsonMissingPath('post.user.email')
             ->assertJsonMissingPath('post.user.password');
+    });
+
+    it('includes the tip revision on show when history exists', function (): void {
+        $post = Post::factory()->create([
+            'user_id' => $this->contributor->id,
+        ]);
+
+        $older = PostRevision::factory()->create([
+            'post_id' => $post->id,
+            'user_id' => $this->admin->id,
+            'created_at' => now()->subHour(),
+        ]);
+        $tip = PostRevision::factory()->create([
+            'post_id' => $post->id,
+            'user_id' => $this->editor->id,
+            'created_at' => now()->subMinutes(5),
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson("canvas/api/posts/{$post->id}")
+            ->assertSuccessful()
+            ->assertJsonPath('post.last_revision.id', $tip->id)
+            ->assertJsonPath('post.last_revision.user_id', $this->editor->id)
+            ->assertJsonPath('post.last_revision.user.id', $this->editor->id)
+            ->assertJsonPath('post.last_revision.user.name', $this->editor->name)
+            ->assertJsonMissingPath('post.last_revision.body')
+            ->assertJsonMissing(['post' => ['last_revision' => ['id' => $older->id]]]);
+    });
+
+    it('returns null last_revision on show when the post has no checkpoints', function (): void {
+        $post = Post::factory()->create([
+            'user_id' => $this->admin->id,
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson("canvas/api/posts/{$post->id}")
+            ->assertSuccessful()
+            ->assertJsonPath('post.last_revision', null);
     });
 
     it('keeps author sticky when an editor saves another authors post', function (): void {

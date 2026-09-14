@@ -31,12 +31,6 @@ export type AiProviderOption = {
     developer: IntegrationDeveloper;
 };
 
-export const UNSPLASH_DEVELOPER: IntegrationDeveloper = {
-    name: 'Unsplash',
-    websiteUrl: 'https://unsplash.com',
-    websiteLabel: 'unsplash.com',
-};
-
 function buildPresets(defaultModel: string, expertModel: string): AiModelPreset[] {
     return [
         {
