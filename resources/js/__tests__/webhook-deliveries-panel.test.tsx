@@ -185,14 +185,16 @@ describe('WebhookDeliveriesPanel', () => {
         await user.selectOptions(screen.getByLabelText('Filter by status'), 'failed');
 
         await waitFor(() => {
-            const last = webhookDeliveriesMock.mock.calls.at(-1)?.[0];
+            const calls = webhookDeliveriesMock.mock.calls;
+            const last = calls[calls.length - 1]?.[0];
             expect(last).toMatchObject({ page: 1, status: 'failed' });
         });
 
         await user.selectOptions(screen.getByLabelText('Filter by event'), 'post.published');
 
         await waitFor(() => {
-            const last = webhookDeliveriesMock.mock.calls.at(-1)?.[0];
+            const calls = webhookDeliveriesMock.mock.calls;
+            const last = calls[calls.length - 1]?.[0];
             expect(last).toMatchObject({ page: 1, status: 'failed', event: 'post.published' });
         });
     });
@@ -245,7 +247,8 @@ describe('WebhookDeliveriesPanel', () => {
         await user.click(within(pagination as HTMLElement).getByText('2'));
 
         await waitFor(() => {
-            const last = webhookDeliveriesMock.mock.calls.at(-1)?.[0];
+            const calls = webhookDeliveriesMock.mock.calls;
+            const last = calls[calls.length - 1]?.[0];
             expect(last).toMatchObject({ page: 2 });
             expect(screen.getByText('post.page-2')).toBeInTheDocument();
         });

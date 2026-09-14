@@ -17,6 +17,17 @@ export default defineConfig({
         environment: 'node',
         include: ['resources/js/__tests__/**/*.{test,spec}.{ts,tsx}'],
         setupFiles: ['resources/js/__tests__/setup.ts'],
+        // Editor embed tests insert real Twitter/Vimeo iframe srcs. happy-dom
+        // otherwise fetches those pages (and their scripts) over the network.
+        environmentOptions: {
+            happyDOM: {
+                settings: {
+                    navigation: {
+                        disableChildFrameNavigation: true,
+                    },
+                },
+            },
+        },
         coverage: {
             provider: 'v8',
             reporter: ['text', 'html', 'clover'],
