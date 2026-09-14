@@ -94,6 +94,7 @@ export type WebhookDelivery = {
 
 export type WebhookDeliveriesIndexParams = {
     page?: number;
+    per_page?: number;
     status?: WebhookDeliveryStatus | string;
     event?: string;
 };

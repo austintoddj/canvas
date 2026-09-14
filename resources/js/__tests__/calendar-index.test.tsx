@@ -3,7 +3,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CalendarIndex from '@/pages/Calendar/Index';
 
@@ -13,6 +13,22 @@ const postsMock = vi.fn();
 
 afterEach(() => {
     cleanup();
+});
+
+beforeAll(() => {
+    Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: vi.fn().mockImplementation((query: string) => ({
+            matches: query.includes('prefers-reduced-motion'),
+            media: query,
+            onchange: null,
+            addListener: vi.fn(),
+            removeListener: vi.fn(),
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            dispatchEvent: vi.fn(),
+        })),
+    });
 });
 
 vi.mock('@/lib/api/calendar', () => ({
@@ -42,6 +58,9 @@ const boot = makeBoot({
         'common.untitled': 'Untitled',
         'common.post_count': ':count post',
         'common.posts_count': ':count posts',
+        'dashboard.recent_edit_aria': 'Edit :title',
+        'dashboard.recent_stats_aria': 'View stats for :title',
+        'editor.stats': 'Stats',
     }),
 });
 
@@ -148,5 +167,48 @@ describe('CalendarIndex', () => {
                 'true'
             );
         });
+    });
+
+    it('renders selected-day posts as a listing table with stats for published posts', async () => {
+        postsMock.mockResolvedValue({
+            posts: [
+                {
+                    id: 'post-aug-6',
+                    title: 'Roundup for Next Week',
+                    slug: 'roundup-for-next-week',
+                    published_at: new Date(2026, 7, 6, 12, 0, 0).toISOString(),
+                    featured_image: 'https://example.com/cover.jpg',
+                    status: 'published',
+                    user: { id: 1, name: 'Todd Austin', username: 'todd', avatar_url: null },
+                },
+                {
+                    id: 'post-aug-6-later',
+                    title: 'Later Roundup',
+                    slug: 'later-roundup',
+                    published_at: new Date(2026, 7, 6, 18, 0, 0).toISOString(),
+                    featured_image: null,
+                    status: 'scheduled',
+                    user: null,
+                },
+            ],
+        });
+
+        renderCalendar('/calendar?month=2026-08&day=2026-08-06');
+
+        await waitFor(() => {
+            expect(document.querySelector('[data-calendar-post="post-aug-6"]')).not.toBeNull();
+        });
+
+        const row = document.querySelector('[data-calendar-post="post-aug-6"]');
+        expect(row?.tagName).toBe('TR');
+        expect(row?.className).toMatch(/hover:bg-zinc-950\/5/);
+        expect(row?.className).toMatch(/dark:hover:bg-white\/5/);
+        expect(document.querySelector('[data-calendar-day-panel="true"] table')).not.toBeNull();
+        expect(screen.getByText('Todd Austin')).toBeInTheDocument();
+        expect(screen.getByText('Published')).toBeInTheDocument();
+
+        const stats = screen.getByRole('link', { name: 'View stats for Roundup for Next Week' });
+        expect(stats).toHaveAttribute('href', '/posts/post-aug-6/stats');
+        expect(screen.queryByRole('link', { name: 'View stats for Later Roundup' })).toBeNull();
     });
 });

@@ -560,30 +560,27 @@ it('keeps the previous ai key when a replacement key is rejected', function (): 
         ->and(Ai::configured())->toBeTrue();
 });
 
-it('keeps webhooks off when the test delivery fails', function (): void {
+it('does not persist webhooks when the first test delivery fails', function (): void {
     Http::fake([
         'https://example.com/*' => Http::response('nope', 500),
     ]);
 
-    $response = $this->actingAs($this->admin, 'canvas')
+    $this->actingAs($this->admin, 'canvas')
         ->putJson('canvas/api/integrations', [
             'webhooks' => [
                 'url' => 'https://example.com/hooks/canvas',
                 'events' => ['post.published'],
             ],
         ])
-        ->assertSuccessful()
-        ->assertJsonPath('webhooks.status', 'off')
-        ->assertJsonPath('webhooks.configured', false)
-        ->assertJsonPath('webhooks.pending', true)
-        ->assertJsonPath('webhooks.url', 'https://example.com/hooks/canvas')
-        ->assertJsonStructure(['webhooks' => ['plain_secret', 'verify_error']]);
+        ->assertStatus(502)
+        ->assertJsonPath('code', 'webhooks_test_failed')
+        ->assertJsonMissingPath('webhooks.plain_secret');
 
-    expect($response->json('webhooks.plain_secret'))->toBeString()->toHaveLength(64)
-        ->and(Webhooks::configured())->toBeFalse()
-        ->and(Webhooks::pending())->toBeTrue()
-        ->and(Webhooks::hasCredentials())->toBeTrue()
-        ->and(Webhooks::status()->value)->toBe('off');
+    expect(Webhooks::configured())->toBeFalse()
+        ->and(Webhooks::pending())->toBeFalse()
+        ->and(Webhooks::hasCredentials())->toBeFalse()
+        ->and(Webhooks::url())->toBeNull()
+        ->and(Webhooks::secret())->toBeNull();
 });
 
 it('promotes pending webhooks to enabled after a successful test', function (): void {
@@ -614,7 +611,7 @@ it('allows sending a test while webhooks are pending', function (): void {
         ->assertSuccessful();
 });
 
-it('re-verifies when the webhook url changes and stays off if the new url fails', function (): void {
+it('does not change the webhook url when the new endpoint fails the test', function (): void {
     configureWebhooks();
 
     Http::fake([
@@ -629,16 +626,12 @@ it('re-verifies when the webhook url changes and stays off if the new url fails'
                 'events' => ['post.published'],
             ],
         ])
-        ->assertSuccessful()
-        ->assertJsonPath('webhooks.status', 'off')
-        ->assertJsonPath('webhooks.configured', false)
-        ->assertJsonPath('webhooks.pending', true)
-        ->assertJsonPath('webhooks.url', 'https://example.com/hooks/new');
+        ->assertStatus(502)
+        ->assertJsonPath('code', 'webhooks_test_failed');
 
-    expect(Webhooks::configured())->toBeFalse()
-        ->and(Webhooks::pending())->toBeTrue()
-        ->and(Webhooks::status()->value)->toBe('off')
-        ->and(Webhooks::url())->toBe('https://example.com/hooks/new');
+    expect(Webhooks::configured())->toBeTrue()
+        ->and(Webhooks::pending())->toBeFalse()
+        ->and(Webhooks::url())->toBe('https://example.com/hooks/canvas');
 });
 
 it('does not re-verify when only webhook events change', function (): void {

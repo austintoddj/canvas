@@ -15,6 +15,22 @@ export function webhookDeliveryStatusColor(status: string | null | undefined): W
     }
 }
 
+export function webhookDeliveryStatusDotClasses(status: string | null | undefined): {
+    halo: string;
+    core: string;
+} {
+    switch (status) {
+        case 'success':
+            return { halo: 'bg-emerald-500/25', core: 'bg-emerald-500' };
+        case 'failed':
+            return { halo: 'bg-red-500/25', core: 'bg-red-500' };
+        case 'pending':
+            return { halo: 'bg-amber-400/30', core: 'bg-amber-400' };
+        default:
+            return { halo: 'bg-zinc-400/25', core: 'bg-zinc-400' };
+    }
+}
+
 export function isRetryableWebhookDelivery(status: string | null | undefined): boolean {
     return status === 'failed';
 }

@@ -27,11 +27,11 @@ A scheduled post becomes visible when `published_at` elapses (no extra write is 
 
 ## Configuring outbound webhooks
 
-In the admin, open **Integrations → Webhooks**. Provide an HTTPS URL, choose events, and copy the signing secret (shown once). The integration is **Not enabled** until a signed `webhook.test` returns HTTP 2xx, then **Enabled**. Lifecycle events do not fire while it is Not enabled.
+In the admin, open **Integrations** and configure **Webhooks**. Add an HTTPS URL, choose events, and **Send test**. Canvas POSTs a signed `webhook.test` first. Credentials are stored and the signing secret is shown **only after that test returns HTTP 2xx**. Status is then **Enabled**. A failed test leaves nothing saved.
 
-Canvas sends that test immediately on save. If the endpoint is not ready yet, credentials stay stored so you can copy the signing secret — the card still reads **Not enabled**. **Send test** retries the handshake and flips the integration to Enabled on success. The signing secret is generated when you first save the URL, even if the first test fails, so HMAC-strict receivers can be configured before the handshake succeeds.
+Changing the URL on an existing webhook also probes the new endpoint first. If that test fails, the previous URL stays in place.
 
-A stored URL and secret without an Enabled status is **Not enabled**. Open Integrations and enable the endpoint again after upgrading.
+A leftover URL and secret without an Enabled status is **Pending**. **Send test** retries the handshake.
 
 | Event id           | Domain event      |
 | ------------------ | ----------------- |
@@ -62,7 +62,7 @@ Hosts must run the Laravel scheduler (`php artisan schedule:run` every minute) s
 
 Canvas stores recent outbound attempts in `canvas_webhook_deliveries` (delivery id matches `Canvas-Delivery-Id`). Rows include event, URL, status (`pending` / `success` / `failed`), HTTP status, attempt count, a size-capped payload snapshot, truncated response body, and optional error message. The signing **secret is never stored**.
 
-Admins can open **Integrations → Webhooks** to inspect recent deliveries and **retry** a failed row. Retry queues a **new** delivery id and keeps the original row for audit. Retries use the currently configured URL and secret.
+Admins can open **Integrations → Webhook logs** to inspect recent deliveries and **retry** a failed row. Retry queues a **new** delivery id and keeps the original row for audit. Retries use the currently configured URL and secret.
 
 Default retention is **30 days**. Canvas schedules `canvas:prune-webhook-deliveries` weekly; you may also run it manually:
 

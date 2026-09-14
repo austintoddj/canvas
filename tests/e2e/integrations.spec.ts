@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import { loginAsAdmin } from './helpers/auth';
 
 test.describe('Integrations webhooks', () => {
-    test('admin can enable webhooks and send a test delivery', async ({ page }) => {
+    test('admin can enable webhooks from a drawer on the integrations page', async ({ page }) => {
         test.setTimeout(90_000);
 
         await loginAsAdmin(page);
@@ -11,92 +11,79 @@ test.describe('Integrations webhooks', () => {
 
         await expect(page.getByRole('heading', { name: 'Integrations' })).toBeVisible({ timeout: 20_000 });
 
-        const webhooksCard = page.locator('[data-integration-card="webhooks"], [data-integration-row="webhooks"]');
+        const webhooksCard = page.locator('[data-integration-card="webhooks"]');
         await expect(webhooksCard).toBeVisible({ timeout: 15_000 });
-        await webhooksCard.getByRole('link', { name: /Configure|Manage/i }).click();
+        await webhooksCard.click();
 
-        await expect(page).toHaveURL(/\/canvas\/integrations\/webhooks$/);
-        await expect(page.locator('[data-integration-page="true"]')).toBeVisible({ timeout: 15_000 });
-        await expect(page.locator('[data-integration-hero="webhooks"]')).toBeVisible({ timeout: 15_000 });
-        await expect(page.locator('[data-integration-section="settings"]')).toBeVisible({ timeout: 15_000 });
-        await expect(page.locator('[data-integration-back]')).toBeVisible();
+        await expect(page).toHaveURL(/\/canvas\/integrations$/);
+        await expect(page.locator('[data-side-drawer]')).toHaveCount(1);
 
         const urlInput = page.locator('[data-webhook-url="true"], input[name="webhook_url"]');
-        await expect(urlInput).toBeVisible();
+        await expect(urlInput).toBeVisible({ timeout: 15_000 });
 
-        // Unique URL each run so Save stays enabled even if a prior run configured webhooks.
         const endpoint = `https://example.com/hooks/canvas-e2e-${Date.now()}`;
         await urlInput.click();
         await urlInput.fill('');
         await urlInput.pressSequentially(endpoint, { delay: 5 });
         await expect(urlInput).toHaveValue(endpoint);
 
-        const save = page.getByRole('button', { name: /Enable webhooks|Save settings/i });
-        await expect(save).toBeEnabled({ timeout: 10_000 });
-
-        const saveResponse = page.waitForResponse(
-            (response) =>
-                response.request().method() === 'PUT' &&
-                response.url().includes('/canvas/api/integrations') &&
-                response.ok(),
+        const drawer = page.locator('[data-side-drawer]');
+        const save = drawer.getByRole('button', { name: /^Save$/i });
+        const adding = (await save.count()) === 0;
+        const putPromise = page.waitForResponse(
+            (response) => response.request().method() === 'PUT' && response.url().includes('/canvas/api/integrations'),
             { timeout: 20_000 }
         );
-        await save.click();
-        await saveResponse;
 
-        // First enable opens the one-time signing secret dialog; later saves toast only
-        // (and navigates back to the list when there is no plain secret to reveal).
-        await expect(
-            page
-                .locator('[data-webhook-plain-secret="true"]')
-                .or(page.getByText(/Copy your signing secret|Webhook settings saved|Webhooks connected/i))
-                .first()
-        ).toBeVisible({ timeout: 20_000 });
-
-        // Dismiss the secret dialog if it opened so footer actions stay usable.
-        const secretDone = page.locator('[data-webhook-secret-done="true"]');
-        if (await secretDone.isVisible().catch(() => false)) {
-            await secretDone.click();
+        if (adding) {
+            const sendTest = drawer.getByRole('button', { name: /^Send test$/i });
+            await expect(sendTest).toBeEnabled({ timeout: 10_000 });
+            await sendTest.click();
+        } else {
+            await expect(save).toBeEnabled({ timeout: 10_000 });
+            await save.click();
         }
 
-        // If save-without-plain-secret navigated home, go back to the detail page.
-        if (
-            !(await page
-                .locator('[data-integration-hero="webhooks"]')
-                .isVisible()
-                .catch(() => false))
-        ) {
-            await page.goto('/canvas/integrations/webhooks');
-            await expect(page.locator('[data-integration-hero="webhooks"]')).toBeVisible({ timeout: 15_000 });
-        }
-
-        await expect(page.locator('[data-integration-hero="webhooks"]')).toContainText(/Enabled|Not enabled/i, {
-            timeout: 15_000,
-        });
-
-        const sendTest = page.getByRole('button', { name: /^Send test$/i });
-        await expect(sendTest).toBeVisible({ timeout: 15_000 });
-        await expect(sendTest).toBeEnabled({ timeout: 5_000 });
-
-        // Path is /canvas/api/integrations/webhooks/test (sync delivery, ~10s HTTP timeout).
-        const testResponsePromise = page.waitForResponse(
-            (response) =>
-                response.request().method() === 'POST' && response.url().includes('/integrations/webhooks/test'),
-            { timeout: 45_000 }
-        );
-        await sendTest.click();
-        const testResponse = await testResponsePromise;
-        // 2xx success or 502 delivery failure both prove the path ran.
+        const putResponse = await putPromise;
         expect(
-            [200, 201, 422, 502].includes(testResponse.status()),
-            `unexpected webhook test status ${testResponse.status()}`
+            [200, 201, 422, 502].includes(putResponse.status()),
+            `unexpected webhook save status ${putResponse.status()}`
         ).toBeTruthy();
 
-        // Toast is best-effort UI; the response above is the contract.
-        await expect(
-            page
-                .getByText(/Test webhook sent|could not be delivered|Unable to send a test webhook|Configure webhooks/i)
-                .first()
-        ).toBeVisible({ timeout: 10_000 });
+        if (putResponse.ok()) {
+            await expect(
+                page
+                    .locator('[data-webhook-plain-secret="true"]')
+                    .or(page.getByText(/Webhook settings saved/i))
+                    .first()
+            ).toBeVisible({
+                timeout: 20_000,
+            });
+
+            const secretDone = page.locator('[data-webhook-secret-done="true"]');
+            if (await secretDone.isVisible().catch(() => false)) {
+                await secretDone.click();
+            }
+        } else {
+            await expect(page.getByText(/could not be delivered|Unable to save|please fix|HTTP /i).first()).toBeVisible(
+                { timeout: 10_000 }
+            );
+        }
+
+        await expect(page).toHaveURL(/\/canvas\/integrations$/);
+
+        if ((await drawer.getByRole('link', { name: /View more/i }).count()) === 0) {
+            await webhooksCard.click();
+        }
+
+        await expect(drawer.getByRole('link', { name: /View more/i })).toBeVisible();
+        await drawer.getByRole('link', { name: /View more/i }).click();
+
+        await expect(page).toHaveURL(/\/canvas\/integrations\/webhooks$/);
+        await expect(page.getByRole('heading', { level: 1, name: 'Webhook logs' })).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator('#webhook-logs')).toBeVisible();
+        await expect(page.locator('[data-webhook-deliveries="true"]')).toBeVisible();
+        await expect(page.locator('[data-webhooks-hub="true"]')).toHaveCount(0);
+        await expect(page.locator('[data-integration-back]')).toBeVisible();
     });
 });

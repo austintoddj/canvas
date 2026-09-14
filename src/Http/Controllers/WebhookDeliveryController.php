@@ -37,7 +37,9 @@ class WebhookDeliveryController extends Controller
             $query->where('event', $event);
         }
 
-        $page = $query->paginate()->through(
+        $perPage = max(1, min(50, request()->integer('per_page', 15)));
+
+        $page = $query->paginate($perPage)->through(
             fn (WebhookDelivery $delivery): array => $this->transform($delivery),
         );
 

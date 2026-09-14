@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { WebhookEventsField } from '@/components/integrations/WebhookEventsField';
 import type { WebhookEventOption } from '@/lib/api/integrations';
@@ -16,30 +16,52 @@ const OPTIONS: WebhookEventOption[] = [
     { id: 'post.updated', label: 'Updated' },
 ];
 
-function ControlledField({ initial = ['post.published'] }: { initial?: string[] }) {
+const MIXED: WebhookEventOption[] = [
+    ...OPTIONS,
+    { id: 'media.uploaded', label: 'Uploaded', description: 'When a file is stored.' },
+];
+
+function ControlledField({
+    initial = ['post.published'],
+    options = OPTIONS,
+}: {
+    initial?: string[];
+    options?: WebhookEventOption[];
+}) {
     const [value, setValue] = useState(initial);
 
-    return <WebhookEventsField options={OPTIONS} value={value} onChange={setValue} />;
+    return <WebhookEventsField options={options} value={value} onChange={setValue} />;
 }
 
-function eventControls() {
-    return OPTIONS.map((option) => document.querySelector(`[data-webhook-event="${option.id}"]`));
+function eventControls(options: WebhookEventOption[] = OPTIONS) {
+    return options.map((option) => document.querySelector(`[data-webhook-event="${option.id}"]`));
 }
 
 describe('WebhookEventsField', () => {
-    it('renders event labels, ids, and descriptions in a dense row', () => {
+    afterEach(() => {
+        cleanup();
+    });
+
+    it('renders a Post group expanded with event labels, ids, and descriptions', () => {
         render(withCanvas(<ControlledField />));
+
+        expect(document.querySelector('[data-webhook-event-group="post"]')).not.toBeNull();
+        expect(screen.getByText('Post')).toBeInTheDocument();
+        expect(screen.getByText('(3)')).toBeInTheDocument();
+        expect(document.querySelector('[data-webhook-event-group-toggle="post"]')).toHaveAttribute(
+            'aria-expanded',
+            'true'
+        );
 
         expect(screen.getByText('Published')).toBeInTheDocument();
         expect(screen.getByText('post.published')).toBeInTheDocument();
         expect(screen.getByText('When a draft goes live.')).toBeInTheDocument();
         expect(document.querySelector('[data-webhook-event="post.published"]')).not.toBeNull();
-        // Event id sits inline with the label (compact checklist).
         const label = screen.getByText('Published').closest('[data-slot="label"]');
         expect(label).toHaveTextContent('post.published');
     });
 
-    it('shows the selection count in the list header', () => {
+    it('shows a partial selection count on the group row', () => {
         render(withCanvas(<ControlledField initial={['post.published']} />));
 
         const count = document.querySelector('[data-webhook-events-selected-count="true"]');
@@ -47,34 +69,79 @@ describe('WebhookEventsField', () => {
         expect(count).toHaveTextContent('1 of 3 selected');
     });
 
-    it('selects all via the master checkbox, then clears', async () => {
+    it('selects all via the group checkbox, then clears', async () => {
         const user = userEvent.setup();
         render(withCanvas(<ControlledField initial={['post.published']} />));
 
-        const selectAll = document.querySelector('[data-webhook-events-select-all="true"]');
-        expect(selectAll).not.toBeNull();
-        expect(selectAll).toHaveAttribute('data-indeterminate');
+        const selectGroup = document.querySelector('[data-webhook-events-group-select="post"]');
+        expect(selectGroup).not.toBeNull();
+        expect(selectGroup).toHaveAttribute('data-indeterminate');
 
-        await user.click(selectAll as HTMLElement);
+        await user.click(selectGroup as HTMLElement);
 
         const controls = eventControls();
         expect(controls.every((el) => el !== null)).toBe(true);
         for (const control of controls) {
             expect(control).toHaveAttribute('data-checked');
         }
-        expect(selectAll).toHaveAttribute('data-checked');
-        expect(selectAll).not.toHaveAttribute('data-indeterminate');
-        expect(document.querySelector('[data-webhook-events-selected-count="true"]')).toHaveTextContent(
-            '3 of 3 selected'
-        );
+        expect(selectGroup).toHaveAttribute('data-checked');
+        expect(selectGroup).not.toHaveAttribute('data-indeterminate');
+        expect(document.querySelector('[data-webhook-events-selected-count="true"]')).toHaveTextContent('All selected');
 
-        await user.click(selectAll as HTMLElement);
-        for (const control of controls) {
+        await user.click(selectGroup as HTMLElement);
+        const cleared = eventControls();
+        for (const control of cleared) {
             expect(control).not.toHaveAttribute('data-checked');
         }
-        expect(selectAll).not.toHaveAttribute('data-checked');
-        expect(document.querySelector('[data-webhook-events-selected-count="true"]')).toHaveTextContent(
-            '0 of 3 selected'
-        );
+        expect(selectGroup).not.toHaveAttribute('data-checked');
+        expect(document.querySelector('[data-webhook-events-selected-count="true"]')).toBeNull();
+    });
+
+    it('marks All selected when every event in the group is checked individually', async () => {
+        const user = userEvent.setup();
+        render(withCanvas(<ControlledField initial={['post.published']} />));
+
+        await user.click(document.querySelector('[data-webhook-event="post.scheduled"]') as HTMLElement);
+        await user.click(document.querySelector('[data-webhook-event="post.updated"]') as HTMLElement);
+
+        expect(document.querySelector('[data-webhook-events-group-select="post"]')).toHaveAttribute('data-checked');
+        expect(document.querySelector('[data-webhook-events-selected-count="true"]')).toHaveTextContent('All selected');
+    });
+
+    it('collapses and expands the Post group', async () => {
+        const user = userEvent.setup();
+        render(withCanvas(<ControlledField />));
+
+        expect(document.querySelector('[data-webhook-event="post.published"]')).not.toBeNull();
+
+        const toggle = document.querySelector('[data-webhook-event-group-toggle="post"]') as HTMLElement;
+        await user.click(toggle);
+
+        expect(document.querySelector('[data-webhook-event-group="post"]')).toHaveAttribute('data-expanded', 'false');
+        expect(document.querySelector('#webhook-event-group-post')).not.toBeVisible();
+
+        await user.click(document.querySelector('[data-webhook-event-group-toggle="post"]') as HTMLElement);
+
+        expect(document.querySelector('[data-webhook-event-group="post"]')).toHaveAttribute('data-expanded', 'true');
+        expect(document.querySelector('#webhook-event-group-post')).toBeVisible();
+    });
+
+    it('keeps groups independent when more than one resource exists', async () => {
+        const user = userEvent.setup();
+        render(withCanvas(<ControlledField options={MIXED} initial={['post.published']} />));
+
+        expect(document.querySelector('[data-webhook-event-group="post"]')).not.toBeNull();
+        expect(document.querySelector('[data-webhook-event-group="media"]')).not.toBeNull();
+        expect(screen.getByText('Media')).toBeInTheDocument();
+        expect(document.querySelector('[data-webhook-event="media.uploaded"]')).not.toBeNull();
+
+        await user.click(document.querySelector('[data-webhook-events-group-select="post"]') as HTMLElement);
+
+        expect(document.querySelector('[data-webhook-event="post.published"]')).toHaveAttribute('data-checked');
+        expect(document.querySelector('[data-webhook-event="post.updated"]')).toHaveAttribute('data-checked');
+        expect(document.querySelector('[data-webhook-event="media.uploaded"]')).not.toHaveAttribute('data-checked');
+        expect(
+            document.querySelector('[data-webhook-event-group="post"] [data-webhook-events-selected-count="true"]')
+        ).toHaveTextContent('All selected');
     });
 });

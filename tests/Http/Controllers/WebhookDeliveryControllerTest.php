@@ -23,6 +23,16 @@ it('lists recent webhook deliveries for admins', function (): void {
         ->assertJsonMissing(['whsec_test_secret', 'secret']);
 });
 
+it('limits the deliveries page size when per_page is provided', function (): void {
+    WebhookDelivery::factory()->count(6)->success()->create();
+
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/integrations/webhooks/deliveries?per_page=5')
+        ->assertSuccessful()
+        ->assertJsonCount(5, 'data')
+        ->assertJsonPath('per_page', 5);
+});
+
 it('filters deliveries by event', function (): void {
     WebhookDelivery::factory()->success()->create(['event' => 'post.published']);
     $updated = WebhookDelivery::factory()->failed()->create(['event' => 'post.updated']);

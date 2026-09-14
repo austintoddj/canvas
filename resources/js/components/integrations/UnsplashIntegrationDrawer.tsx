@@ -3,36 +3,33 @@ import { useEffect, useState } from 'react';
 import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
 import { Button } from '@/components/button';
 import { Description, ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/fieldset';
-import { IntegrationDrawerChrome } from '@/components/integrations/IntegrationDrawerChrome';
-import { IntegrationPageLayout, IntegrationSummarySep } from '@/components/integrations/IntegrationPageLayout';
-import { Input } from '@/components/input';
-import { Text } from '@/components/text';
+import { CopyableInput } from '@/components/integrations/CopyableInput';
+import { SideDrawer } from '@/components/SideDrawer';
 import { useCanvas } from '@/hooks/useCanvas';
 import { ValidationError } from '@/lib/api';
 import { integrationsApi, type IntegrationsStatus } from '@/lib/api/integrations';
-import { UNSPLASH_DEVELOPER } from '@/lib/integrations/ai-providers';
 import { toast } from '@/lib/toast';
 
 const externalLinkClass =
     'text-blue-600 underline decoration-blue-600/30 underline-offset-2 hover:decoration-blue-600 dark:text-blue-400';
 
 type UnsplashIntegrationDrawerProps = {
+    open: boolean;
     configured: boolean;
     maskedKey?: string | null;
-    enabledAt?: string | null;
     onClose: () => void;
     onStatusChange: (status: IntegrationsStatus) => void;
 };
 
 export function UnsplashIntegrationDrawer({
+    open,
     configured,
     maskedKey = null,
-    enabledAt = null,
     onClose,
     onStatusChange,
 }: UnsplashIntegrationDrawerProps) {
     const { t } = useCanvas();
-    const [accessKey, setAccessKey] = useState('');
+    const [accessKey, setAccessKey] = useState(() => (configured ? (maskedKey ?? '') : ''));
     const [saving, setSaving] = useState(false);
     const [clearing, setClearing] = useState(false);
     const [confirmDisconnectOpen, setConfirmDisconnectOpen] = useState(false);
@@ -46,7 +43,15 @@ export function UnsplashIntegrationDrawer({
                 return;
             }
 
-            setAccessKey('');
+            if (!open) {
+                setFieldError(null);
+                setSaving(false);
+                setClearing(false);
+                setConfirmDisconnectOpen(false);
+                return;
+            }
+
+            setAccessKey(configured ? (maskedKey ?? '') : '');
             setFieldError(null);
             setSaving(false);
             setClearing(false);
@@ -56,10 +61,18 @@ export function UnsplashIntegrationDrawer({
         return () => {
             cancelled = true;
         };
-    }, []);
+        // Hydrate when the drawer opens. Parent status updates pass a new
+        // maskedKey — resetting on that dep would wipe an in-progress replacement.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
+
+    const busy = saving || clearing;
+    const trimmedKey = accessKey.trim();
+    const initialKey = configured ? (maskedKey ?? '').trim() : '';
+    const canSave = trimmedKey !== '' && trimmedKey !== initialKey;
 
     async function handleSave() {
-        if (saving || accessKey.trim() === '') {
+        if (saving || !canSave) {
             return;
         }
 
@@ -87,22 +100,6 @@ export function UnsplashIntegrationDrawer({
         }
     }
 
-    function openDisconnectConfirm() {
-        if (clearing || saving) {
-            return;
-        }
-
-        setConfirmDisconnectOpen(true);
-    }
-
-    function closeDisconnectConfirm() {
-        if (clearing) {
-            return;
-        }
-
-        setConfirmDisconnectOpen(false);
-    }
-
     async function confirmDisconnect() {
         if (clearing) {
             return;
@@ -127,118 +124,69 @@ export function UnsplashIntegrationDrawer({
         }
     }
 
-    const busy = saving || clearing;
-    const permissions = [
-        t('integrations.unsplash_perm_search', 'Search Unsplash from the post editor and media pickers'),
-        t('integrations.unsplash_perm_scope', 'Photo search only — not account settings or billing'),
-        t('integrations.unsplash_perm_encrypted', 'Stored encrypted; never shown in full after save'),
-    ];
-
     return (
         <>
-            <IntegrationPageLayout
-                kind="unsplash"
-                title={t('integrations.unsplash')}
-                description={t('integrations.unsplash_help')}
-                enabled={configured}
-                enabledAt={enabledAt}
-                developer={UNSPLASH_DEVELOPER}
-                summary={
-                    configured ? (
-                        <>
-                            <span data-unsplash-summary-status="true">
-                                {t('integrations.key_on_file', 'Access key on file')}
-                            </span>
-                            {maskedKey ? (
-                                <>
-                                    <IntegrationSummarySep />
-                                    <code
-                                        className="min-w-0 max-w-[14rem] truncate font-mono text-xs text-zinc-500 dark:text-zinc-400"
-                                        data-masked-key="true"
-                                    >
-                                        {maskedKey}
-                                    </code>
-                                </>
-                            ) : null}
-                        </>
-                    ) : null
+            <SideDrawer
+                open={open}
+                onClose={onClose}
+                title={
+                    configured
+                        ? t('integrations.unsplash_settings', 'Unsplash settings')
+                        : t('integrations.connect_unsplash', 'Connect Unsplash')
                 }
-            >
-                <IntegrationDrawerChrome
-                    permissions={permissions}
-                    aboutDefaultOpen={!configured}
-                    settingsDescription={
-                        configured
-                            ? t(
-                                  'integrations.unsplash_settings_connected_help',
-                                  'Paste a new access key only when rotating credentials.'
-                              )
-                            : t(
-                                  'integrations.unsplash_settings_setup_help',
-                                  'Connect an Unsplash application access key to search photos in the editor.'
-                              )
-                    }
-                    actions={
+                closeLabel={t('common.close')}
+                footer={
+                    open ? (
                         <>
-                            <Button
-                                type="button"
-                                color="dark/zinc"
-                                disabled={busy || accessKey.trim() === ''}
-                                onClick={() => void handleSave()}
-                            >
-                                {saving
-                                    ? t('integrations.connecting_progress', 'Connecting…')
-                                    : configured
-                                      ? t('integrations.save_key', 'Save key')
-                                      : t('integrations.connect_unsplash', 'Connect Unsplash')}
-                            </Button>
-                            <Button type="button" outline disabled={busy} onClick={onClose}>
-                                {t('common.cancel')}
-                            </Button>
-                        </>
-                    }
-                    dangerZone={
-                        configured ? (
-                            <div className="flex flex-wrap items-start justify-between gap-3">
-                                <div className="min-w-0 space-y-1">
-                                    <Text className="text-sm font-medium text-zinc-950 dark:text-white">
-                                        {t('integrations.disconnect')}
-                                    </Text>
-                                    <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                                        {t(
-                                            'integrations.disconnect_help',
-                                            'Removes the key and disables this integration.'
-                                        )}
-                                    </Text>
-                                </div>
+                            {configured ? (
                                 <Button
                                     type="button"
                                     outline
                                     color="red"
                                     disabled={busy}
-                                    onClick={openDisconnectConfirm}
+                                    onClick={() => setConfirmDisconnectOpen(true)}
                                 >
                                     {t('integrations.disconnect')}
                                 </Button>
+                            ) : (
+                                <span />
+                            )}
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button type="button" plain disabled={busy} onClick={onClose}>
+                                    {t('common.cancel')}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    color="dark/zinc"
+                                    disabled={busy || !canSave}
+                                    onClick={() => void handleSave()}
+                                >
+                                    {saving
+                                        ? configured
+                                            ? t('common.saving')
+                                            : t('integrations.connecting_progress', 'Connecting…')
+                                        : configured
+                                          ? t('common.save')
+                                          : t('integrations.connect_unsplash', 'Connect Unsplash')}
+                                </Button>
                             </div>
-                        ) : null
-                    }
+                        </>
+                    ) : undefined
+                }
+            >
+                <form
+                    className="flex flex-1 flex-col"
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        void handleSave();
+                    }}
                 >
-                    <form
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            void handleSave();
-                        }}
-                    >
+                    <div className="space-y-6 px-5 py-5">
                         <Fieldset>
                             <Legend className="sr-only">{t('integrations.unsplash_key')}</Legend>
-                            <FieldGroup className="space-y-4">
+                            <FieldGroup>
                                 <Field>
-                                    <Label>
-                                        {configured
-                                            ? t('integrations.access_key_replace', 'Replace access key')
-                                            : t('integrations.access_key')}
-                                    </Label>
+                                    <Label>{t('integrations.access_key')}</Label>
                                     {!configured ? (
                                         <Description>
                                             Create an app at{' '}
@@ -253,36 +201,30 @@ export function UnsplashIntegrationDrawer({
                                             . Demo apps are limited to 50 requests/hour.
                                         </Description>
                                     ) : null}
-                                    <Input
-                                        type="password"
+                                    <CopyableInput
                                         name="unsplash_access_key"
-                                        autoComplete="off"
                                         value={accessKey}
-                                        placeholder={
-                                            configured
-                                                ? t(
-                                                      'integrations.placeholder_access_key_replace',
-                                                      'Paste a new key to replace the current one'
-                                                  )
-                                                : t(
-                                                      'integrations.placeholder_access_key',
-                                                      'Paste your Unsplash access key'
-                                                  )
-                                        }
-                                        onChange={(event) => {
-                                            setAccessKey(event.target.value);
+                                        placeholder={t(
+                                            'integrations.placeholder_access_key',
+                                            'Paste your Unsplash access key'
+                                        )}
+                                        disabled={busy}
+                                        invalid={Boolean(fieldError)}
+                                        onChange={(next) => {
+                                            setAccessKey(next);
                                             setFieldError(null);
                                         }}
+                                        data-unsplash-access-key="true"
                                     />
                                     {fieldError ? <ErrorMessage>{fieldError}</ErrorMessage> : null}
                                 </Field>
                             </FieldGroup>
                         </Fieldset>
-                    </form>
-                </IntegrationDrawerChrome>
-            </IntegrationPageLayout>
+                    </div>
+                </form>
+            </SideDrawer>
 
-            <Alert open={confirmDisconnectOpen} onClose={closeDisconnectConfirm} size="sm">
+            <Alert open={confirmDisconnectOpen} onClose={() => !clearing && setConfirmDisconnectOpen(false)} size="sm">
                 <AlertTitle>{t('integrations.disconnect_unsplash_title', 'Disconnect Unsplash?')}</AlertTitle>
                 <AlertDescription>
                     {t(
@@ -291,7 +233,7 @@ export function UnsplashIntegrationDrawer({
                     )}
                 </AlertDescription>
                 <AlertActions>
-                    <Button type="button" plain disabled={clearing} onClick={closeDisconnectConfirm}>
+                    <Button type="button" plain disabled={clearing} onClick={() => setConfirmDisconnectOpen(false)}>
                         {t('common.cancel')}
                     </Button>
                     <Button type="button" color="red" disabled={clearing} onClick={() => void confirmDisconnect()}>

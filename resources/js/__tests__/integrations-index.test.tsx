@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -23,9 +24,23 @@ vi.mock('@/lib/api/integrations', async () => {
         integrationsApi: {
             ...actual.integrationsApi,
             show: (...args: unknown[]) => showMock(...args),
+            webhookDeliveries: vi.fn().mockResolvedValue({
+                data: [],
+                current_page: 1,
+                last_page: 1,
+                per_page: 5,
+                total: 0,
+            }),
         },
     };
 });
+
+vi.mock('@/lib/toast', () => ({
+    toast: {
+        success: vi.fn(),
+        error: vi.fn(),
+    },
+}));
 
 const boot = makeBoot({
     translations: JSON.stringify({
@@ -34,14 +49,30 @@ const boot = makeBoot({
         'integrations.configure': 'Configure',
         'integrations.enabled': 'Enabled',
         'integrations.not_enabled': 'Not enabled',
+        'integrations.webhooks_status_pending': 'Pending',
         'integrations.load_error': 'Unable to load integrations.',
         'integrations.unsplash': 'Unsplash',
         'integrations.unsplash_help': 'Search free photos for featured images.',
+        'integrations.unsplash_settings': 'Unsplash settings',
+        'integrations.connect_unsplash': 'Connect Unsplash',
         'integrations.ai': 'AI writing',
         'integrations.ai_help': 'Rewrite and SEO tools with Grok, ChatGPT, or Claude.',
+        'integrations.ai_settings': 'AI provider settings',
+        'integrations.connect_ai': 'Connect AI',
         'integrations.webhooks': 'Webhooks',
         'integrations.webhooks_help':
             'Notify external services when posts are published, scheduled, updated, or deleted.',
+        'integrations.webhooks_settings': 'Webhook settings',
+        'integrations.webhooks_add': 'Add a webhook',
+        'integrations.webhooks_logs': 'Webhook logs',
+        'integrations.webhooks_view_more': 'View more',
+        'integrations.webhooks_logs_event': 'Event',
+        'integrations.webhooks_logs_sent_at': 'Sent at',
+        'integrations.webhooks_status': 'Status',
+        'integrations.webhooks_deliveries_empty': 'No deliveries yet.',
+        'common.close': 'Close',
+        'common.cancel': 'Cancel',
+        'common.save': 'Save',
     }),
 });
 
@@ -77,9 +108,18 @@ function renderIndex() {
 describe('IntegrationsIndex card layout', () => {
     beforeEach(() => {
         showMock.mockReset();
+        Object.defineProperty(window, 'matchMedia', {
+            writable: true,
+            value: vi.fn().mockImplementation((query: string) => ({
+                matches: query.includes('hover') && query.includes('pointer: fine'),
+                media: query,
+                addEventListener: vi.fn(),
+                removeEventListener: vi.fn(),
+            })),
+        });
     });
 
-    it('renders a multi-card grid with configure links for each integration', async () => {
+    it('renders a multi-card grid with clickable cards for each integration', async () => {
         showMock.mockResolvedValue(statusFixture());
 
         renderIndex();
@@ -90,33 +130,79 @@ describe('IntegrationsIndex card layout', () => {
 
         const grid = document.querySelector('[data-integrations-cards="true"]');
         expect(grid?.className).toMatch(/grid/);
+        expect(grid?.className).toMatch(/xl:grid-cols-4/);
         expect(grid?.className).not.toMatch(/divide-y/);
 
         for (const kind of ['unsplash', 'ai', 'webhooks'] as const) {
-            expect(document.querySelector(`[data-integration-card="${kind}"]`)).not.toBeNull();
+            const card = document.querySelector(`[data-integration-card="${kind}"]`);
+            expect(card).not.toBeNull();
+            expect(card?.tagName).toBe('BUTTON');
+            expect(card?.className).toMatch(/cursor-pointer/);
         }
 
         expect(screen.getByText('Unsplash')).toBeInTheDocument();
         expect(screen.getByText('AI writing')).toBeInTheDocument();
         expect(screen.getByText('Webhooks')).toBeInTheDocument();
 
-        // Status labels from API fixture
         expect(screen.getByText('Enabled')).toBeInTheDocument();
         expect(screen.getAllByText('Not enabled')).toHaveLength(2);
 
-        const links = screen.getAllByRole('link', { name: 'Configure' });
-        expect(links).toHaveLength(3);
-        expect(links.map((link) => link.getAttribute('href'))).toEqual([
-            '/integrations/unsplash',
-            '/integrations/ai',
-            '/integrations/webhooks',
-        ]);
+        expect(screen.queryByRole('link', { name: 'Configure' })).toBeNull();
+        expect(screen.getByRole('button', { name: 'Configure Unsplash' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Configure AI writing' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Configure Webhooks' })).toBeInTheDocument();
 
-        // Real page path called integrationsApi.show
         expect(showMock).toHaveBeenCalled();
     });
 
-    it('shows not enabled when webhooks have credentials but are not verified', async () => {
+    it('opens settings drawers from the integration cards without leaving the page', async () => {
+        const user = userEvent.setup();
+        showMock.mockResolvedValue(statusFixture());
+
+        renderIndex();
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Configure Unsplash' })).toBeInTheDocument();
+        });
+
+        expect(screen.queryByRole('dialog')).toBeNull();
+
+        await user.click(screen.getByRole('button', { name: 'Configure Unsplash' }));
+
+        await waitFor(() => {
+            expect(screen.getByRole('dialog', { name: /Unsplash settings/i })).toBeInTheDocument();
+        });
+        expect(document.querySelector('[data-integration-card="unsplash"]')?.getAttribute('data-selected')).toBe(
+            'true'
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+        await waitFor(() => {
+            expect(screen.queryByRole('dialog', { name: /Unsplash settings/i })).toBeNull();
+        });
+
+        await user.click(screen.getByRole('button', { name: 'Configure AI writing' }));
+
+        await waitFor(() => {
+            expect(screen.getByRole('dialog', { name: /Connect AI/i })).toBeInTheDocument();
+        });
+
+        await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+        await waitFor(() => {
+            expect(screen.queryByRole('dialog', { name: /Connect AI/i })).toBeNull();
+        });
+
+        await user.click(screen.getByRole('button', { name: 'Configure Webhooks' }));
+
+        await waitFor(() => {
+            expect(screen.getByRole('dialog', { name: /Add a webhook/i })).toBeInTheDocument();
+        });
+        expect(screen.getByRole('link', { name: 'View more' })).toHaveAttribute('href', '/integrations/webhooks');
+    });
+
+    it('shows pending when webhooks have credentials but are not verified', async () => {
         showMock.mockResolvedValue(
             statusFixture({
                 webhooks: {
@@ -140,7 +226,8 @@ describe('IntegrationsIndex card layout', () => {
 
         const card = document.querySelector('[data-integration-card="webhooks"]');
         expect(card?.getAttribute('data-integration-status')).toBe('off');
-        expect(screen.getAllByText('Not enabled')).toHaveLength(2);
+        expect(within(card as HTMLElement).getByText('Pending')).toBeInTheDocument();
+        expect(screen.getByText('Not enabled')).toBeInTheDocument();
         expect(screen.queryByText('Connecting')).toBeNull();
     });
 
@@ -165,7 +252,6 @@ describe('IntegrationsIndex card layout', () => {
             expect(screen.getByText('Unable to load integrations.')).toBeInTheDocument();
         });
 
-        // After error, loading ends and cards still render (unconfigured defaults)
         await waitFor(() => {
             expect(document.querySelector('[data-integrations-list-skeleton="true"]')).toBeNull();
         });

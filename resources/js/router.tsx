@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 import Page, {
     CalendarIndex,
@@ -10,9 +10,7 @@ import Page, {
     PostsEditor,
     PostsIndex,
     PostsStats,
-    IntegrationsAi,
     IntegrationsIndex,
-    IntegrationsUnsplash,
     IntegrationsWebhooks,
     UsersIndex,
 } from '@/components/Page';
@@ -63,7 +61,7 @@ export const router = createBrowserRouter(
                     path: 'integrations/unsplash',
                     element: (
                         <RequirePermission permission="canManageIntegrations">
-                            <Page component={IntegrationsUnsplash} />
+                            <Navigate to="/integrations" replace />
                         </RequirePermission>
                     ),
                 },
@@ -71,7 +69,7 @@ export const router = createBrowserRouter(
                     path: 'integrations/ai',
                     element: (
                         <RequirePermission permission="canManageIntegrations">
-                            <Page component={IntegrationsAi} />
+                            <Navigate to="/integrations" replace />
                         </RequirePermission>
                     ),
                 },

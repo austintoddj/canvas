@@ -61,6 +61,14 @@ class IntegrationsController extends Controller
             [$plainSecret, $verifyError] = $this->updateWebhookSettings($request);
         }
 
+        if ($verifyError !== null) {
+            return response()->json([
+                'message' => 'The test webhook could not be delivered.',
+                'code' => 'webhooks_test_failed',
+                'detail' => $verifyError,
+            ], 502);
+        }
+
         return response()->json($this->statusPayload($plainSecret, $verifyError));
     }
 
@@ -213,6 +221,7 @@ class IntegrationsController extends Controller
 
     /**
      * Persist webhook settings. Returns [plain secret if created/rotated, verify error if test failed].
+     * A failed probe does not persist a first-time connect or a URL change.
      *
      * @return array{0: string|null, 1: string|null}
      */
@@ -223,62 +232,110 @@ class IntegrationsController extends Controller
         $hasEvents = array_key_exists('events', $webhooks);
         $rotate = (bool) ($webhooks['rotate_secret'] ?? false);
         $previousUrl = Webhooks::url();
-        $wasConfigured = Webhooks::configured();
+        $hadCredentials = Webhooks::hasCredentials();
 
         $url = $hasUrl ? $request->input('webhooks.url') : $previousUrl;
 
-        if ($hasUrl) {
-            if (! is_string($url) || $url === '') {
-                $this->forgetWebhookSettings();
+        if ($hasUrl && (! is_string($url) || $url === '')) {
+            $this->forgetWebhookSettings();
 
+            return [null, null];
+        }
+
+        $url = is_string($url) ? $url : null;
+        $events = $hasEvents ? $request->input('webhooks.events') : null;
+
+        if (! $hadCredentials) {
+            if ($url === null || ! is_array($events) || $events === []) {
                 return [null, null];
             }
 
+            return $this->connectWebhooks($url, $events);
+        }
+
+        $urlChanged = $hasUrl && $url !== null && $url !== $previousUrl;
+
+        if ($urlChanged) {
+            $secret = Webhooks::secret();
+            $plainSecret = null;
+
+            if ($secret === null) {
+                $plainSecret = $this->generateWebhookSecret();
+                $secret = $plainSecret;
+            }
+
+            $verifyError = $this->deliverVerificationTest($url, $secret);
+
+            if ($verifyError !== null) {
+                return [null, $verifyError];
+            }
+
             $this->settings->set(SettingKey::WebhookUrl, $url);
+
+            if ($plainSecret !== null) {
+                $this->settings->set(SettingKey::WebhookSecret, $plainSecret);
+            }
+
+            if (is_array($events) && $events !== []) {
+                $this->persistWebhookEvents($events);
+            }
+
+            $this->markWebhooksEnabled();
+
+            return [$plainSecret, null];
         }
 
         if ($hasEvents) {
-            $events = $request->input('webhooks.events');
-
             if (! is_array($events) || $events === []) {
                 $this->settings->forget(SettingKey::WebhookEvents);
-                $this->settings->forget(SettingKey::WebhookStatus);
-                $this->settings->forget(SettingKey::WebhookVerifiedAt);
+                $this->clearWebhookVerification();
             } else {
-                $encoded = json_encode(array_values(array_filter(
-                    $events,
-                    static fn (mixed $event): bool => is_string($event) && $event !== '',
-                )), JSON_THROW_ON_ERROR);
-
-                $this->settings->set(SettingKey::WebhookEvents, $encoded);
+                $this->persistWebhookEvents($events);
             }
         }
 
         $plainSecret = null;
-        $needsSecret = $rotate || (filled(Webhooks::url()) && ! filled(Webhooks::secret()));
 
-        if ($needsSecret && filled(Webhooks::url())) {
+        if ($rotate && filled(Webhooks::url())) {
             $plainSecret = $this->generateWebhookSecret();
             $this->settings->set(SettingKey::WebhookSecret, $plainSecret);
         }
 
-        $urlChanged = $hasUrl && $url !== $previousUrl;
-        $shouldVerify = Webhooks::hasCredentials() && ($urlChanged || ! $wasConfigured);
+        return [$plainSecret, null];
+    }
 
-        if (! $shouldVerify) {
-            return [$plainSecret, null];
+    /**
+     * @param  list<mixed>  $events
+     * @return array{0: string|null, 1: string|null}
+     */
+    private function connectWebhooks(string $url, array $events): array
+    {
+        $plainSecret = $this->generateWebhookSecret();
+        $verifyError = $this->deliverVerificationTest($url, $plainSecret);
+
+        if ($verifyError !== null) {
+            return [null, $verifyError];
         }
 
-        // Drop Enabled for the duration of the probe so lifecycle events cannot
-        // fire at an unverified URL. Stay Off if the test fails.
-        $this->clearWebhookVerification();
-        $verifyError = $this->deliverVerificationTest();
+        $this->settings->set(SettingKey::WebhookUrl, $url);
+        $this->persistWebhookEvents($events);
+        $this->settings->set(SettingKey::WebhookSecret, $plainSecret);
+        $this->markWebhooksEnabled();
 
-        if ($verifyError === null) {
-            $this->markWebhooksEnabled();
-        }
+        return [$plainSecret, null];
+    }
 
-        return [$plainSecret, $verifyError];
+    /**
+     * @param  list<mixed>  $events
+     */
+    private function persistWebhookEvents(array $events): void
+    {
+        $encoded = json_encode(array_values(array_filter(
+            $events,
+            static fn (mixed $event): bool => is_string($event) && $event !== '',
+        )), JSON_THROW_ON_ERROR);
+
+        $this->settings->set(SettingKey::WebhookEvents, $encoded);
     }
 
     private function clearWebhookVerification(): void
@@ -300,10 +357,10 @@ class IntegrationsController extends Controller
     /**
      * Send the same signed webhook.test used by "Send test". Null on 2xx.
      */
-    private function deliverVerificationTest(): ?string
+    private function deliverVerificationTest(?string $url = null, ?string $secret = null): ?string
     {
-        $url = Webhooks::url();
-        $secret = Webhooks::secret();
+        $url ??= Webhooks::url();
+        $secret ??= Webhooks::secret();
 
         if ($url === null || $secret === null || ! WebhookUrlValidator::isAllowed($url)) {
             return 'The webhook URL must be a public HTTPS address.';

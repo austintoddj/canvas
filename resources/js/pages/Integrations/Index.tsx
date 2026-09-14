@@ -1,20 +1,41 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
+import { AiIntegrationDrawer } from '@/components/integrations/AiIntegrationDrawer';
 import { IntegrationCard } from '@/components/integrations/IntegrationCard';
 import { IntegrationsListSkeleton } from '@/components/integrations/IntegrationsListSkeleton';
+import { UnsplashIntegrationDrawer } from '@/components/integrations/UnsplashIntegrationDrawer';
+import { WebhookIntegrationDrawer } from '@/components/integrations/WebhookIntegrationDrawer';
 import { PageHeader } from '@/components/PageHeader';
 import { PageDescription, ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { integrationsApi, type IntegrationsStatus } from '@/lib/api/integrations';
 
+type IntegrationDrawer = 'unsplash' | 'ai' | 'webhooks';
+
 export default function IntegrationsIndex() {
-    const { t } = useCanvas();
+    const { t, setIntegrationFlags } = useCanvas();
     const [status, setStatus] = useState<IntegrationsStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
+    const [openDrawer, setOpenDrawer] = useState<IntegrationDrawer | null>(null);
 
     useDocumentTitle(t('integrations.title'));
+
+    const handleStatusChange = useCallback(
+        (next: IntegrationsStatus) => {
+            setStatus(next);
+            setIntegrationFlags({
+                ai: next.ai.configured === true,
+                unsplash: next.unsplash.configured === true,
+            });
+        },
+        [setIntegrationFlags]
+    );
+
+    const closeDrawer = useCallback(() => {
+        setOpenDrawer(null);
+    }, []);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -61,7 +82,7 @@ export default function IntegrationsIndex() {
                 </div>
             ) : (
                 <div
-                    className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                    className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                     data-integrations-list="true"
                     data-integrations-cards="true"
                 >
@@ -73,7 +94,8 @@ export default function IntegrationsIndex() {
                         configuredLabel={enabledLabel}
                         notConfiguredLabel={notEnabledLabel}
                         actionLabel={configureLabel}
-                        configureHref="/integrations/unsplash"
+                        selected={openDrawer === 'unsplash'}
+                        onClick={() => setOpenDrawer('unsplash')}
                     />
                     <IntegrationCard
                         kind="ai"
@@ -83,7 +105,8 @@ export default function IntegrationsIndex() {
                         configuredLabel={enabledLabel}
                         notConfiguredLabel={notEnabledLabel}
                         actionLabel={configureLabel}
-                        configureHref="/integrations/ai"
+                        selected={openDrawer === 'ai'}
+                        onClick={() => setOpenDrawer('ai')}
                     />
                     <IntegrationCard
                         kind="webhooks"
@@ -94,12 +117,47 @@ export default function IntegrationsIndex() {
                         )}
                         status={webhooksStatus}
                         configuredLabel={enabledLabel}
-                        notConfiguredLabel={notEnabledLabel}
+                        notConfiguredLabel={
+                            status?.webhooks.pending === true
+                                ? t('integrations.webhooks_status_pending', 'Pending')
+                                : notEnabledLabel
+                        }
                         actionLabel={configureLabel}
-                        configureHref="/integrations/webhooks"
+                        selected={openDrawer === 'webhooks'}
+                        onClick={() => setOpenDrawer('webhooks')}
                     />
                 </div>
             )}
+
+            <UnsplashIntegrationDrawer
+                open={openDrawer === 'unsplash'}
+                configured={status?.unsplash.configured === true}
+                maskedKey={status?.unsplash.masked_key ?? null}
+                onClose={closeDrawer}
+                onStatusChange={handleStatusChange}
+            />
+
+            <AiIntegrationDrawer
+                open={openDrawer === 'ai'}
+                configured={status?.ai.configured === true}
+                provider={status?.ai.provider ?? null}
+                model={status?.ai.model ?? null}
+                maskedKey={status?.ai.masked_key ?? null}
+                onClose={closeDrawer}
+                onStatusChange={handleStatusChange}
+            />
+
+            <WebhookIntegrationDrawer
+                open={openDrawer === 'webhooks'}
+                configured={status?.webhooks.configured === true}
+                pending={status?.webhooks.pending === true}
+                url={status?.webhooks.url ?? null}
+                maskedSecret={status?.webhooks.masked_secret ?? null}
+                events={status?.webhooks.events ?? []}
+                availableEvents={status?.webhooks.available_events ?? []}
+                onClose={closeDrawer}
+                onStatusChange={handleStatusChange}
+            />
         </div>
     );
 }

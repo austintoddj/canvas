@@ -5,10 +5,9 @@ import { Button } from '@/components/button';
 import { Description, ErrorMessage, Field, FieldGroup, Fieldset, Label, Legend } from '@/components/fieldset';
 import { AiModelDropdown } from '@/components/integrations/AiModelDropdown';
 import { AiProviderDropdown } from '@/components/integrations/AiProviderDropdown';
-import { IntegrationDrawerChrome } from '@/components/integrations/IntegrationDrawerChrome';
-import { IntegrationPageLayout, IntegrationSummarySep } from '@/components/integrations/IntegrationPageLayout';
-import { AiProviderIcon } from '@/components/integrations/provider-icons';
+import { CopyableInput } from '@/components/integrations/CopyableInput';
 import { Input } from '@/components/input';
+import { SideDrawer } from '@/components/SideDrawer';
 import { Text } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { ValidationError } from '@/lib/api';
@@ -20,27 +19,27 @@ const externalLinkClass =
     'text-blue-600 underline decoration-blue-600/30 underline-offset-2 hover:decoration-blue-600 dark:text-blue-400';
 
 type AiIntegrationDrawerProps = {
+    open: boolean;
     configured: boolean;
     provider: AiProviderValue | null;
     model: string | null;
     maskedKey?: string | null;
-    enabledAt?: string | null;
     onClose: () => void;
     onStatusChange: (status: IntegrationsStatus) => void;
 };
 
 export function AiIntegrationDrawer({
+    open,
     configured,
     provider: initialProvider,
     model: initialModel,
     maskedKey = null,
-    enabledAt = null,
     onClose,
     onStatusChange,
 }: AiIntegrationDrawerProps) {
     const { t } = useCanvas();
     const [provider, setProvider] = useState<AiProviderValue | null>(initialProvider);
-    const [apiKey, setApiKey] = useState('');
+    const [apiKey, setApiKey] = useState(() => (configured ? (maskedKey ?? '') : ''));
     const [modelTier, setModelTier] = useState<AiModelTier>(() => resolveModelTier(initialProvider, initialModel));
     const [customModel, setCustomModel] = useState(() =>
         resolveModelTier(initialProvider, initialModel) === 'custom' ? (initialModel ?? '') : ''
@@ -62,10 +61,18 @@ export function AiIntegrationDrawer({
                 return;
             }
 
+            if (!open) {
+                setFieldErrors({});
+                setSaving(false);
+                setClearing(false);
+                setConfirmDisconnectOpen(false);
+                return;
+            }
+
             const tier = resolveModelTier(initialProvider, initialModel);
 
             setProvider(initialProvider);
-            setApiKey('');
+            setApiKey(configured ? (maskedKey ?? '') : '');
             setModelTier(tier);
             setCustomModel(tier === 'custom' ? (initialModel ?? '') : '');
             setFieldErrors({});
@@ -77,9 +84,10 @@ export function AiIntegrationDrawer({
         return () => {
             cancelled = true;
         };
-        // Mount-only hydrate from initial status props (page loads status before render).
+        // Hydrate when the drawer opens. Parent status updates pass new
+        // provider/model references — resetting on those deps would wipe in-progress edits.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [open]);
 
     /** Connected provider is fixed until disconnect; draft connect uses the picker. */
     const activeProvider = configured ? initialProvider : provider;
@@ -96,6 +104,8 @@ export function AiIntegrationDrawer({
         }
 
         const key = apiKey.trim();
+        const masked = (maskedKey ?? '').trim();
+        const keyReplaced = key !== '' && key !== masked;
         const nextModel = nextModelId;
         const nextProvider = configured ? initialProvider : provider;
 
@@ -132,10 +142,8 @@ export function AiIntegrationDrawer({
                 },
             };
 
-            if (key !== '') {
-                payload.ai = { ...payload.ai, api_key: key };
-            } else if (!configured) {
-                payload.ai = { ...payload.ai, api_key: null };
+            if (!configured || keyReplaced) {
+                payload.ai = { ...payload.ai, api_key: key !== '' ? key : null };
             }
 
             const next = await integrationsApi.update(payload);
@@ -163,22 +171,6 @@ export function AiIntegrationDrawer({
         }
     }
 
-    function openDisconnectConfirm() {
-        if (clearing || saving) {
-            return;
-        }
-
-        setConfirmDisconnectOpen(true);
-    }
-
-    function closeDisconnectConfirm() {
-        if (clearing) {
-            return;
-        }
-
-        setConfirmDisconnectOpen(false);
-    }
-
     async function confirmDisconnect() {
         if (clearing) {
             return;
@@ -203,141 +195,107 @@ export function AiIntegrationDrawer({
         }
     }
 
+    const trimmedKey = apiKey.trim();
+    const masked = (maskedKey ?? '').trim();
+    const keyReplaced = trimmedKey !== '' && trimmedKey !== masked;
     const saveDisabled =
         busy ||
-        (apiKey.trim() === '' && !configured) ||
+        (!configured && trimmedKey === '') ||
         (!configured && provider === null) ||
-        (apiKey.trim() === '' && configured && modelUnchanged);
-
-    const permissions = [
-        t(
-            'integrations.ai_perm_rewrite',
-            'Send selected text for rewrites (improve, grammar, shorten, expand, custom)'
-        ),
-        t('integrations.ai_perm_seo', 'Send title and summary for SEO suggestions — never the full post'),
-        t('integrations.ai_perm_billing', 'Billed to your provider account — Canvas only stores the key'),
-        t('integrations.ai_perm_encrypted', 'Stored encrypted; never shown in full after save'),
-    ];
-
-    const modelTierLabel =
-        modelTier === 'custom'
-            ? t('integrations.model_tier_custom', 'Custom')
-            : modelTier === 'fast'
-              ? t('integrations.model_tier_fast', 'Fast')
-              : modelTier === 'expert'
-                ? t('integrations.model_tier_expert', 'Expert')
-                : t('integrations.model_tier_auto', 'Default');
+        (configured && !keyReplaced && modelUnchanged);
 
     return (
         <>
-            <IntegrationPageLayout
-                kind="ai"
-                title={t('integrations.ai')}
-                description={t('integrations.ai_help', 'Rewrite and SEO tools with Grok, ChatGPT, or Claude.')}
-                enabled={configured}
-                enabledAt={enabledAt}
-                developer={configured ? (activeOption?.developer ?? null) : null}
-                summary={
-                    configured && activeOption ? (
+            <SideDrawer
+                open={open}
+                onClose={onClose}
+                title={configured ? t('integrations.ai_settings') : t('integrations.connect_ai', 'Connect AI')}
+                closeLabel={t('common.close')}
+                footer={
+                    open ? (
                         <>
-                            <span
-                                className="inline-flex min-w-0 items-center gap-2"
-                                data-ai-provider-summary={activeOption.value}
-                            >
-                                <AiProviderIcon
-                                    provider={activeOption.value}
-                                    className="size-4 shrink-0 text-zinc-700 dark:text-zinc-200"
-                                />
-                                <span className="font-medium text-zinc-800 dark:text-zinc-100">
-                                    {activeOption.label}
-                                </span>
-                            </span>
-                            <IntegrationSummarySep />
-                            <span data-ai-summary-model="true">{modelTierLabel}</span>
-                            {maskedKey ? (
-                                <>
-                                    <IntegrationSummarySep />
-                                    <code
-                                        className="min-w-0 max-w-[12rem] truncate font-mono text-xs text-zinc-500 dark:text-zinc-400"
-                                        data-masked-key="true"
-                                    >
-                                        {maskedKey}
-                                    </code>
-                                </>
-                            ) : null}
-                        </>
-                    ) : null
-                }
-            >
-                <IntegrationDrawerChrome
-                    permissions={permissions}
-                    aboutDefaultOpen={!configured}
-                    settingsDescription={
-                        configured
-                            ? t(
-                                  'integrations.ai_settings_connected_help',
-                                  'Replace the API key or change the model tier. Leave the key blank to keep the current one.'
-                              )
-                            : t(
-                                  'integrations.ai_settings_setup_help',
-                                  'Choose a provider, paste an API key, and pick a model tier.'
-                              )
-                    }
-                    actions={
-                        <>
-                            <Button
-                                type="button"
-                                color="dark/zinc"
-                                disabled={saveDisabled}
-                                onClick={() => void handleSave()}
-                            >
-                                {saving
-                                    ? t('integrations.connecting_progress', 'Connecting…')
-                                    : configured
-                                      ? t('integrations.save_settings', 'Save settings')
-                                      : t('integrations.connect_ai', 'Connect AI')}
-                            </Button>
-                            <Button type="button" outline disabled={busy} onClick={onClose}>
-                                {t('common.cancel')}
-                            </Button>
-                        </>
-                    }
-                    dangerZone={
-                        configured ? (
-                            <div className="flex flex-wrap items-start justify-between gap-3">
-                                <div className="min-w-0 space-y-1">
-                                    <Text className="text-sm font-medium text-zinc-950 dark:text-white">
-                                        {t('integrations.disconnect')}
-                                    </Text>
-                                    <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                                        {t(
-                                            'integrations.disconnect_ai_help',
-                                            'Removes the key and provider. Disconnect first if you want to switch providers.'
-                                        )}
-                                    </Text>
-                                </div>
+                            {configured ? (
                                 <Button
                                     type="button"
                                     outline
                                     color="red"
                                     disabled={busy}
-                                    onClick={openDisconnectConfirm}
+                                    onClick={() => setConfirmDisconnectOpen(true)}
                                 >
                                     {t('integrations.disconnect')}
                                 </Button>
+                            ) : (
+                                <span />
+                            )}
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button type="button" plain disabled={busy} onClick={onClose}>
+                                    {t('common.cancel')}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    color="dark/zinc"
+                                    disabled={saveDisabled}
+                                    onClick={() => void handleSave()}
+                                >
+                                    {saving
+                                        ? configured
+                                            ? t('common.saving')
+                                            : t('integrations.connecting_progress', 'Connecting…')
+                                        : configured
+                                          ? t('common.save')
+                                          : t('integrations.connect_ai', 'Connect AI')}
+                                </Button>
                             </div>
-                        ) : null
-                    }
+                        </>
+                    ) : undefined
+                }
+            >
+                <form
+                    className="flex flex-1 flex-col"
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        void handleSave();
+                    }}
                 >
-                    <form
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            void handleSave();
-                        }}
-                    >
+                    <div className="space-y-6 px-5 py-5">
                         <Fieldset>
                             <Legend className="sr-only">{t('integrations.ai_settings')}</Legend>
-                            <FieldGroup className="space-y-4">
+                            <FieldGroup>
+                                <Field>
+                                    <Label>{t('integrations.api_key')}</Label>
+                                    {!configured ? (
+                                        <Description>
+                                            Create a key at{' '}
+                                            {activeOption ? (
+                                                <a
+                                                    href={activeOption.consoleUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className={externalLinkClass}
+                                                >
+                                                    {activeOption.consoleLabel}
+                                                </a>
+                                            ) : (
+                                                'your provider console'
+                                            )}
+                                            .
+                                        </Description>
+                                    ) : null}
+                                    <CopyableInput
+                                        name="ai_api_key"
+                                        value={apiKey}
+                                        placeholder={t('integrations.placeholder_api_key', 'Paste your API key')}
+                                        disabled={busy}
+                                        invalid={Boolean(fieldErrors.api_key)}
+                                        onChange={(next) => {
+                                            setApiKey(next);
+                                            setFieldErrors((current) => ({ ...current, api_key: undefined }));
+                                        }}
+                                        data-ai-api-key="true"
+                                    />
+                                    {fieldErrors.api_key ? <ErrorMessage>{fieldErrors.api_key}</ErrorMessage> : null}
+                                </Field>
+
                                 {!configured ? (
                                     <Field>
                                         <Label>{t('integrations.ai_provider')}</Label>
@@ -364,58 +322,6 @@ export function AiIntegrationDrawer({
                                         ) : null}
                                     </Field>
                                 ) : null}
-
-                                <Field>
-                                    <Label>
-                                        {configured
-                                            ? t('integrations.api_key_replace', 'Replace API key')
-                                            : t('integrations.api_key')}
-                                    </Label>
-                                    <Description>
-                                        {configured ? (
-                                            t(
-                                                'integrations.api_key_replace_help',
-                                                'Optional. Paste a new key only when rotating credentials.'
-                                            )
-                                        ) : (
-                                            <>
-                                                Create a key at{' '}
-                                                {activeOption ? (
-                                                    <a
-                                                        href={activeOption.consoleUrl}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className={externalLinkClass}
-                                                    >
-                                                        {activeOption.consoleLabel}
-                                                    </a>
-                                                ) : (
-                                                    'your provider console'
-                                                )}
-                                                .
-                                            </>
-                                        )}
-                                    </Description>
-                                    <Input
-                                        type="password"
-                                        name="ai_api_key"
-                                        autoComplete="off"
-                                        value={apiKey}
-                                        placeholder={
-                                            configured
-                                                ? t(
-                                                      'integrations.placeholder_api_key_replace',
-                                                      'Paste a new key to replace the current one'
-                                                  )
-                                                : t('integrations.placeholder_api_key', 'Paste your API key')
-                                        }
-                                        onChange={(event) => {
-                                            setApiKey(event.target.value);
-                                            setFieldErrors((current) => ({ ...current, api_key: undefined }));
-                                        }}
-                                    />
-                                    {fieldErrors.api_key ? <ErrorMessage>{fieldErrors.api_key}</ErrorMessage> : null}
-                                </Field>
 
                                 <Field>
                                     <Label>{t('integrations.model')}</Label>
@@ -463,27 +369,27 @@ export function AiIntegrationDrawer({
                                     ) : null}
                                     {fieldErrors.model ? <ErrorMessage>{fieldErrors.model}</ErrorMessage> : null}
                                 </Field>
+
+                                {activeOption ? (
+                                    <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                                        {t('integrations.ai_usage_help', 'Usage and billing:')}{' '}
+                                        <a
+                                            href={activeOption.usageUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className={externalLinkClass}
+                                        >
+                                            {activeOption.usageLabel}
+                                        </a>
+                                    </Text>
+                                ) : null}
                             </FieldGroup>
                         </Fieldset>
-                    </form>
+                    </div>
+                </form>
+            </SideDrawer>
 
-                    {activeOption ? (
-                        <Text className="mt-3 text-sm text-canvas-muted dark:text-canvas-muted-dark">
-                            {t('integrations.ai_usage_help', 'Usage and billing:')}{' '}
-                            <a
-                                href={activeOption.usageUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={externalLinkClass}
-                            >
-                                {activeOption.usageLabel}
-                            </a>
-                        </Text>
-                    ) : null}
-                </IntegrationDrawerChrome>
-            </IntegrationPageLayout>
-
-            <Alert open={confirmDisconnectOpen} onClose={closeDisconnectConfirm} size="sm">
+            <Alert open={confirmDisconnectOpen} onClose={() => !clearing && setConfirmDisconnectOpen(false)} size="sm">
                 <AlertTitle>{t('integrations.disconnect_ai_title', 'Disconnect AI writing?')}</AlertTitle>
                 <AlertDescription>
                     {t(
@@ -492,7 +398,7 @@ export function AiIntegrationDrawer({
                     )}
                 </AlertDescription>
                 <AlertActions>
-                    <Button type="button" plain disabled={clearing} onClick={closeDisconnectConfirm}>
+                    <Button type="button" plain disabled={clearing} onClick={() => setConfirmDisconnectOpen(false)}>
                         {t('common.cancel')}
                     </Button>
                     <Button type="button" color="red" disabled={clearing} onClick={() => void confirmDisconnect()}>

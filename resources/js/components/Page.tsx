@@ -12,8 +12,6 @@ export const MediaShow = lazy(() => import('@/pages/Media/Show'));
 export const OrganizeIndex = lazy(() => import('@/pages/Organize/Index'));
 export const UsersIndex = lazy(() => import('@/pages/Users/Index'));
 export const IntegrationsIndex = lazy(() => import('@/pages/Integrations/Index'));
-export const IntegrationsUnsplash = lazy(() => import('@/pages/Integrations/Unsplash'));
-export const IntegrationsAi = lazy(() => import('@/pages/Integrations/Ai'));
 export const IntegrationsWebhooks = lazy(() => import('@/pages/Integrations/Webhooks'));
 export const NotFound = lazy(() => import('@/pages/NotFound'));
 

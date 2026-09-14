@@ -4,9 +4,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
 import { ContentReveal } from '@/components/ContentReveal';
+import { FadeInImage } from '@/components/FadeInImage';
+import { ListRowActionLink, ListRowEnd } from '@/components/ListRowEnd';
 import { PageHeader } from '@/components/PageHeader';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Skeleton } from '@/components/Skeleton';
+import { Table, TableBody, TableCell, TableRow } from '@/components/table';
 import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
@@ -32,7 +35,7 @@ import {
 import { formatListDate } from '@/lib/format-list-date';
 import { cn } from '@/lib/utils';
 import type { CalendarPost } from '@/types/api';
-import { IconChevronLeft, IconChevronRight, IconPlus } from '@tabler/icons-react';
+import { IconChartBar, IconChevronLeft, IconChevronRight, IconPlus } from '@tabler/icons-react';
 
 /** Title chips on sm+; mobile uses compact status dots instead. */
 const CELL_PREVIEW_LIMIT = 3;
@@ -464,7 +467,7 @@ export default function CalendarIndex() {
                         {selectedDay ? (
                             <section
                                 ref={dayPanelRef}
-                                className="space-y-3 rounded-2xl border border-canvas-border p-4 sm:p-5 dark:border-canvas-border-dark"
+                                className="space-y-3"
                                 data-calendar-day-panel="true"
                                 aria-label={selectedDay}
                             >
@@ -487,49 +490,85 @@ export default function CalendarIndex() {
                                 {selectedPosts.length === 0 ? (
                                     <Text className="text-sm">{t('calendar.no_posts_day')}</Text>
                                 ) : (
-                                    <ul className="divide-y divide-canvas-border dark:divide-canvas-border-dark">
-                                        {selectedPosts.map((post) => {
-                                            const title = (post.title ?? '').trim() || t('common.untitled');
-                                            const badgeColor = post.status === 'scheduled' ? 'blue' : 'green';
-                                            const badgeLabel =
-                                                post.status === 'scheduled'
-                                                    ? t('calendar.scheduled')
-                                                    : t('calendar.published');
+                                    <Table striped>
+                                        <TableBody>
+                                            {selectedPosts.map((post) => {
+                                                const title = (post.title ?? '').trim() || t('common.untitled');
+                                                const badgeColor = post.status === 'scheduled' ? 'blue' : 'green';
+                                                const badgeLabel =
+                                                    post.status === 'scheduled'
+                                                        ? t('calendar.scheduled')
+                                                        : t('calendar.published');
+                                                const thumb = (post.featured_image ?? '').trim();
+                                                const author = (post.user?.name ?? '').trim();
 
-                                            return (
-                                                <li key={post.id}>
-                                                    <button
-                                                        type="button"
+                                                return (
+                                                    <TableRow
+                                                        key={post.id}
                                                         data-calendar-post={post.id}
+                                                        className="group/list-row cursor-pointer hover:bg-zinc-950/5 dark:hover:bg-white/5"
+                                                        tabIndex={0}
+                                                        aria-label={t('dashboard.recent_edit_aria', { title })}
                                                         onClick={() => navigate(`/posts/${post.id}`)}
-                                                        className="flex w-full items-center gap-3 py-3 text-left transition-colors hover:bg-zinc-50 focus:outline-hidden focus-visible:bg-zinc-50 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
+                                                        onKeyDown={(event) => {
+                                                            if (event.key === 'Enter' || event.key === ' ') {
+                                                                event.preventDefault();
+                                                                navigate(`/posts/${post.id}`);
+                                                            }
+                                                        }}
                                                     >
-                                                        {post.featured_image ? (
-                                                            <img
-                                                                src={post.featured_image}
-                                                                alt=""
-                                                                className="size-10 shrink-0 rounded-lg object-cover"
-                                                            />
-                                                        ) : (
-                                                            <span className="size-10 shrink-0 rounded-lg bg-zinc-100 dark:bg-zinc-800" />
-                                                        )}
-                                                        <span className="min-w-0 flex-1">
-                                                            <span className="block truncate text-sm font-medium text-canvas-fg dark:text-canvas-fg-dark">
-                                                                {title}
-                                                            </span>
-                                                            <span className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-canvas-muted dark:text-canvas-muted-dark">
-                                                                <span>{formatListDate(post.published_at)}</span>
-                                                                {post.user?.name ? (
-                                                                    <span className="truncate">{post.user.name}</span>
+                                                        <TableCell className="w-full max-w-0">
+                                                            <div className="flex min-w-0 items-center gap-3">
+                                                                {thumb !== '' ? (
+                                                                    <FadeInImage
+                                                                        src={thumb}
+                                                                        alt=""
+                                                                        className="size-9 shrink-0 rounded-lg object-cover"
+                                                                    />
                                                                 ) : null}
-                                                            </span>
-                                                        </span>
-                                                        <Badge color={badgeColor}>{badgeLabel}</Badge>
-                                                    </button>
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
+                                                                <div className="min-w-0">
+                                                                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                                                        <span className="truncate font-medium text-zinc-950 dark:text-white">
+                                                                            {title}
+                                                                        </span>
+                                                                        <Badge
+                                                                            color={badgeColor}
+                                                                            data-publish-status={post.status}
+                                                                        >
+                                                                            {badgeLabel}
+                                                                        </Badge>
+                                                                    </div>
+                                                                    {author !== '' ? (
+                                                                        <Text className="mt-1 line-clamp-1 text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                                                                            {author}
+                                                                        </Text>
+                                                                    ) : null}
+                                                                </div>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="w-px whitespace-nowrap">
+                                                            <ListRowEnd date={formatListDate(post.published_at)}>
+                                                                {post.status === 'published' ? (
+                                                                    <ListRowActionLink
+                                                                        href={`/posts/${post.id}/stats`}
+                                                                        label={t('dashboard.recent_stats_aria', {
+                                                                            title,
+                                                                        })}
+                                                                        tooltip={t('editor.stats')}
+                                                                    >
+                                                                        <IconChartBar
+                                                                            className="size-5"
+                                                                            aria-hidden="true"
+                                                                        />
+                                                                    </ListRowActionLink>
+                                                                ) : null}
+                                                            </ListRowEnd>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
                                 )}
                             </section>
                         ) : null}

@@ -17,9 +17,6 @@ step() {
     echo "==> $*"
 }
 
-step "npm update"
-npm update
-
 step "npm run lint"
 npm run lint
 
@@ -28,9 +25,6 @@ npm run format
 
 step "npm run build"
 npm run build
-
-step "composer update"
-composer update
 
 step "composer pint"
 composer pint

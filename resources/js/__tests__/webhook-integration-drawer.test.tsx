@@ -7,7 +7,14 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WebhookIntegrationDrawer } from '@/components/integrations/WebhookIntegrationDrawer';
-import type { IntegrationsStatus, WebhookEventOption } from '@/lib/api/integrations';
+import {
+    integrationsApi,
+    type IntegrationsStatus,
+    type WebhookDelivery,
+    type WebhookEventOption,
+} from '@/lib/api/integrations';
+import type { Paginated } from '@/types/api';
+import { toast } from '@/lib/toast';
 
 import { makeBoot, withCanvas } from './helpers/boot';
 
@@ -68,17 +75,18 @@ function baseStatus(overrides: Partial<IntegrationsStatus['webhooks']> = {}): In
  * Mirrors Integrations detail page: status updates replace events/available_events
  * with new array references from the API response.
  */
-function ControlledDrawer() {
+function ControlledDrawer({ open = true }: { open?: boolean }) {
     const [status, setStatus] = useState(() => baseStatus());
 
     return (
         <WebhookIntegrationDrawer
+            open={open}
             configured={status.webhooks.configured}
+            pending={status.webhooks.pending}
             url={status.webhooks.url}
             maskedSecret={status.webhooks.masked_secret}
             events={[...status.webhooks.events]}
             availableEvents={status.webhooks.available_events.map((option) => ({ ...option }))}
-            enabledAt={status.webhooks.enabled_at}
             onClose={() => undefined}
             onStatusChange={setStatus}
         />
@@ -90,29 +98,35 @@ const boot = makeBoot({
         'integrations.title': 'Integrations',
         'integrations.webhooks': 'Webhooks',
         'integrations.webhooks_help': 'Notify external services.',
+        'integrations.webhooks_add': 'Add a webhook',
         'integrations.enabled': 'Enabled',
-        'integrations.not_enabled': 'Not enabled',
-        'integrations.connecting_progress': 'Connecting…',
-        'integrations.webhooks_pending_help':
-            'Copy the signing secret into your receiver, then send a test. Events wait until the endpoint returns 2xx.',
-        'integrations.webhooks_verify_failed':
-            'The endpoint did not accept the test webhook. Webhooks stay off until a test succeeds.',
+        'integrations.webhooks_status_pending': 'Pending',
         'integrations.webhooks_rotate_secret': 'Rotate secret',
         'integrations.webhooks_rotate_title': 'Rotate signing secret?',
-        'integrations.webhooks_rotate_body': 'A new secret is generated and shown once.',
+        'integrations.webhooks_rotate_body': 'The new secret is shown once.',
         'integrations.webhooks_secret_rotated': 'Signing secret rotated.',
-        'integrations.webhooks_secret_once_help':
-            'This is shown once. Store it with your receiver to verify Canvas-Signature headers.',
+        'integrations.webhooks_secret_once_help': "Copy this and save it somewhere. You won't see it again.",
         'integrations.webhooks_copy_secret': 'Copy secret',
+        'integrations.copy': 'Copy',
+        'integrations.copied': 'Copied.',
+        'integrations.copy_error': 'Unable to copy.',
+        'integrations.webhooks_test_failed': 'The test webhook could not be delivered.',
         'common.close': 'Close',
         'common.cancel': 'Cancel',
+        'common.save': 'Save',
         'common.saving': 'Saving…',
-        'integrations.save_settings': 'Save settings',
         'integrations.webhooks_send_test': 'Send test',
         'integrations.disconnect': 'Disconnect',
-        'integrations.danger_zone': 'Danger zone',
-        'integrations.settings': 'Settings',
+        'integrations.disconnect_webhooks_title': 'Disconnect webhooks?',
+        'integrations.webhooks_settings': 'Webhook settings',
+        'integrations.webhooks_logs': 'Webhook logs',
+        'integrations.webhooks_view_more': 'View more',
+        'integrations.webhooks_logs_event': 'Event',
+        'integrations.webhooks_logs_sent_at': 'Sent at',
+        'integrations.webhooks_deliveries_empty': 'No deliveries yet.',
         'integrations.webhooks_secret': 'Signing secret',
+        'integrations.webhooks_url': 'Endpoint URL',
+        'integrations.webhooks_events': 'Events',
     }),
 });
 
@@ -120,13 +134,206 @@ function renderPage(ui: React.ReactElement) {
     return render(withCanvas(<MemoryRouter initialEntries={['/integrations/webhooks']}>{ui}</MemoryRouter>, boot));
 }
 
-describe('WebhookIntegrationDrawer secret dialog', () => {
+function renderDrawer(props: Partial<React.ComponentProps<typeof WebhookIntegrationDrawer>> = {}) {
+    const onClose = props.onClose ?? (() => undefined);
+    const onStatusChange = props.onStatusChange ?? (() => undefined);
+
+    return renderPage(
+        <WebhookIntegrationDrawer
+            open
+            configured
+            url="https://example.com/hooks/canvas"
+            maskedSecret="••••abcd"
+            events={['post.published']}
+            availableEvents={AVAILABLE}
+            onClose={onClose}
+            onStatusChange={onStatusChange}
+            {...props}
+        />
+    );
+}
+
+describe('WebhookIntegrationDrawer', () => {
     afterEach(() => {
         cleanup();
     });
 
     beforeEach(() => {
         updateMock.mockReset();
+        vi.mocked(toast.success).mockReset();
+        vi.mocked(toast.error).mockReset();
+    });
+
+    it('is a SideDrawer and not a full-page settings layout', () => {
+        renderDrawer();
+
+        expect(document.querySelector('[data-side-drawer]')).not.toBeNull();
+        expect(screen.getByRole('dialog', { name: /Webhook settings/i })).toBeInTheDocument();
+        expect(document.querySelector('[data-integration-page="true"]')).toBeNull();
+        expect(document.querySelector('[data-integration-hero="webhooks"]')).toBeNull();
+        expect(document.querySelector('[data-integration-section="settings"]')).toBeNull();
+        expect(screen.getByRole('link', { name: 'View more' })).toHaveAttribute('href', '/integrations/webhooks');
+        expect(document.querySelector('[data-webhook-logs-preview="true"]')).not.toBeNull();
+        expect(screen.queryByRole('link', { name: 'Webhook logs' })).toBeNull();
+        const secret = document.querySelector('[data-masked-secret="true"]') as HTMLInputElement;
+        expect(secret).not.toBeNull();
+        expect(secret.tagName).toBe('INPUT');
+        expect(secret.value).toBe('••••abcd');
+        expect(secret.readOnly).toBe(true);
+    });
+
+    it('previews recent deliveries in a headerless table', async () => {
+        vi.mocked(integrationsApi.webhookDeliveries).mockResolvedValueOnce({
+            data: [
+                {
+                    id: 'del-preview-1',
+                    event: 'post.published',
+                    url: 'https://example.com/hooks/canvas',
+                    status: 'success',
+                    http_status: 200,
+                    attempts: 1,
+                    payload: null,
+                    response_body: null,
+                    error_message: null,
+                    post_id: null,
+                    finished_at: '2026-08-01T12:00:01Z',
+                    created_at: '2026-08-01T12:00:00Z',
+                    updated_at: '2026-08-01T12:00:01Z',
+                },
+            ],
+            current_page: 1,
+            last_page: 1,
+            per_page: 5,
+            total: 1,
+            from: 1,
+            to: 1,
+            first_page_url: '/integrations/webhooks/deliveries?page=1',
+            last_page_url: '/integrations/webhooks/deliveries?page=1',
+            next_page_url: null,
+            prev_page_url: null,
+            path: '/integrations/webhooks/deliveries',
+            links: [],
+        } as Paginated<WebhookDelivery>);
+
+        renderDrawer();
+
+        await waitFor(() => {
+            expect(document.querySelector('[data-webhook-logs-preview-row="del-preview-1"]')).not.toBeNull();
+        });
+
+        expect(document.querySelector('[data-webhook-logs-preview="true"] thead')).toBeNull();
+        expect(document.querySelector('[data-webhook-logs-preview-row="del-preview-1"]')).toHaveTextContent(
+            'post.published'
+        );
+        expect(vi.mocked(integrationsApi.webhookDeliveries)).toHaveBeenCalledWith(
+            expect.objectContaining({ per_page: 5 }),
+            expect.anything()
+        );
+    });
+
+    it('opens and closes from the open prop and Cancel', async () => {
+        const user = userEvent.setup();
+        const onClose = vi.fn();
+
+        const { rerender } = renderDrawer({ onClose });
+
+        expect(screen.getByRole('dialog', { name: /Webhook settings/i })).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: /^Cancel$/i }));
+        expect(onClose).toHaveBeenCalledTimes(1);
+
+        rerender(
+            withCanvas(
+                <MemoryRouter initialEntries={['/integrations/webhooks']}>
+                    <WebhookIntegrationDrawer
+                        open={false}
+                        configured
+                        url="https://example.com/hooks/canvas"
+                        maskedSecret="••••abcd"
+                        events={['post.published']}
+                        availableEvents={AVAILABLE}
+                        onClose={onClose}
+                        onStatusChange={() => undefined}
+                    />
+                </MemoryRouter>,
+                boot
+            )
+        );
+
+        await waitFor(() => {
+            expect(screen.queryByRole('dialog', { name: /Webhook settings/i })).toBeNull();
+        });
+    });
+
+    it('enables webhooks and keeps the drawer open to show the one-time secret', async () => {
+        const user = userEvent.setup();
+        const onClose = vi.fn();
+        const plain = 'b'.repeat(64);
+
+        updateMock.mockResolvedValue(
+            baseStatus({
+                configured: true,
+                pending: false,
+                status: 'enabled',
+                plain_secret: plain,
+                masked_secret: '••••bbbb',
+            })
+        );
+
+        renderDrawer({
+            configured: false,
+            pending: false,
+            url: null,
+            maskedSecret: null,
+            events: [],
+            onClose,
+        });
+
+        expect(screen.getByRole('dialog', { name: /Add a webhook/i })).toBeInTheDocument();
+
+        const urlInput = document.querySelector('[data-webhook-url="true"]') as HTMLInputElement;
+        await user.clear(urlInput);
+        await user.type(urlInput, 'https://hooks.example.com/canvas');
+
+        expect(screen.queryByRole('button', { name: /^Save$/i })).toBeNull();
+        await user.click(screen.getByRole('button', { name: /^Send test$/i }));
+
+        await waitFor(() => {
+            expect(updateMock).toHaveBeenCalledWith({
+                webhooks: {
+                    url: 'https://hooks.example.com/canvas',
+                    events: ['post.published', 'post.scheduled'],
+                },
+            });
+        });
+
+        await waitFor(() => {
+            expect(document.querySelector('[data-webhook-plain-secret="true"]')).toHaveTextContent(plain);
+        });
+        expect(onClose).not.toHaveBeenCalled();
+        expect(document.querySelector('[data-side-drawer]')).not.toBeNull();
+        expect(screen.getByText('Add a webhook')).toBeInTheDocument();
+        expect(screen.getByText(/Copy this and save it somewhere. You won't see it again./i)).toBeInTheDocument();
+        expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it('closes the drawer after a save that does not reveal a new secret', async () => {
+        const user = userEvent.setup();
+        const onClose = vi.fn();
+
+        updateMock.mockResolvedValue(baseStatus({ url: 'https://example.com/hooks/updated' }));
+
+        renderDrawer({ onClose });
+
+        const urlInput = document.querySelector('[data-webhook-url="true"]') as HTMLInputElement;
+        await user.clear(urlInput);
+        await user.type(urlInput, 'https://example.com/hooks/updated');
+
+        await user.click(screen.getByRole('button', { name: /^Save$/i }));
+
+        await waitFor(() => {
+            expect(onClose).toHaveBeenCalledTimes(1);
+        });
     });
 
     it('morphs the rotate dialog into a copy step and keeps the secret after status updates', async () => {
@@ -157,67 +364,59 @@ describe('WebhookIntegrationDrawer secret dialog', () => {
         expect(screen.getByRole('button', { name: /Copy secret/i })).toBeInTheDocument();
         expect(document.querySelector('[data-webhook-secret-done="true"]')).not.toBeNull();
 
-        // Secret lives only in the dialog — not inline in page sections.
-        expect(
-            document.querySelector('[data-integration-sections="webhooks"] [data-webhook-plain-secret="true"]')
-        ).toBeNull();
+        expect(document.querySelector('[data-side-drawer-scroll] [data-webhook-plain-secret="true"]')).toBeNull();
 
-        // Parent re-render with new array refs must not dismiss the dialog.
         await waitFor(() => {
             expect(document.querySelector('[data-webhook-plain-secret="true"]')).toHaveTextContent(plain);
         });
     });
 
-    it('renders page IA: hero, sectioned cards, back control — not a SideDrawer', () => {
-        renderPage(
-            <WebhookIntegrationDrawer
-                configured
-                url="https://example.com/hooks/canvas"
-                maskedSecret="••••abcd"
-                events={['post.published']}
-                availableEvents={AVAILABLE}
-                enabledAt="2026-01-01T00:00:00Z"
-                onClose={() => undefined}
-                onStatusChange={() => undefined}
-            />
-        );
+    it('keeps send-test when credentials are stored but unverified', () => {
+        renderDrawer({
+            configured: false,
+            pending: true,
+            url: 'https://example.com/hooks/canvas',
+            maskedSecret: '••••abcd',
+            events: ['post.published'],
+        });
 
-        expect(document.querySelector('[data-integration-page="true"]')).not.toBeNull();
-        expect(document.querySelector('[data-integration-hero="webhooks"]')).not.toBeNull();
-        // Hero summary chips and “How it works” are omitted — settings already show the endpoint/events.
-        expect(document.querySelector('[data-integration-summary="webhooks"]')).toBeNull();
-        expect(document.querySelector('[data-integration-section="about"]')).toBeNull();
-        expect(document.querySelector('[data-integration-section="settings"]')).not.toBeNull();
-        expect(document.querySelector('[data-integration-section="caution"]')).not.toBeNull();
-        expect(document.querySelector('[data-integration-section="danger"]')).not.toBeNull();
-        expect(document.querySelector('[data-side-drawer]')).toBeNull();
-
-        const back = document.querySelector('[data-integration-back]') as HTMLAnchorElement | null;
-        expect(back).not.toBeNull();
-        expect(back?.getAttribute('href')).toBe('/integrations');
-        expect(back).toHaveTextContent(/Integrations/i);
+        expect(screen.getByRole('dialog', { name: /Webhook settings/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Send test/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /^Save$/i })).toBeDisabled();
+        expect(screen.queryByRole('button', { name: /Enable webhooks/i })).toBeNull();
     });
 
-    it('keeps not-enabled and send-test when credentials are stored but unverified', () => {
-        renderPage(
-            <WebhookIntegrationDrawer
-                configured={false}
-                pending
-                url="https://example.com/hooks/canvas"
-                maskedSecret="••••abcd"
-                events={['post.published']}
-                availableEvents={AVAILABLE}
-                onClose={() => undefined}
-                onStatusChange={() => undefined}
-            />
+    it('asks to confirm disconnect and closes the drawer on success', async () => {
+        const user = userEvent.setup();
+        const onClose = vi.fn();
+
+        updateMock.mockResolvedValue(
+            baseStatus({
+                status: 'off',
+                configured: false,
+                pending: false,
+                url: null,
+                masked_secret: null,
+                events: [],
+            })
         );
 
-        expect(document.querySelector('[data-integration-status="off"]')).not.toBeNull();
-        expect(screen.getByText('Not enabled')).toBeInTheDocument();
-        expect(screen.queryByText('Connecting')).toBeNull();
-        expect(screen.getByText(/Copy the signing secret into your receiver/i)).toBeInTheDocument();
-        expect(screen.getAllByRole('button', { name: /Send test/i }).length).toBeGreaterThan(0);
-        expect(document.querySelector('[data-integration-section="caution"]')).not.toBeNull();
-        expect(document.querySelector('[data-integration-section="danger"]')).not.toBeNull();
+        renderDrawer({ onClose });
+
+        await user.click(screen.getByRole('button', { name: /^Disconnect$/i }));
+        expect(screen.getByText(/Disconnect webhooks\?/i)).toBeInTheDocument();
+
+        const confirmButtons = screen.getAllByRole('button', { name: /^Disconnect$/i });
+        await user.click(confirmButtons[confirmButtons.length - 1] as HTMLElement);
+
+        await waitFor(() => {
+            expect(updateMock).toHaveBeenCalledWith({
+                webhooks: { url: null },
+            });
+        });
+
+        await waitFor(() => {
+            expect(onClose).toHaveBeenCalledTimes(1);
+        });
     });
 });
