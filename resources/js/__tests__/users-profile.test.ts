@@ -91,9 +91,15 @@ describe('settings profile helpers', () => {
         expect(normalizeSocialHandle('medium', 'https://medium.com/@writer')).toBe('writer');
         expect(normalizeSocialHandle('medium', '@writer')).toBe('writer');
         expect(normalizeSocialHandle('bluesky', 'https://bsky.app/profile/ada.bsky.social')).toBe('ada.bsky.social');
+        expect(normalizeSocialHandle('linkedin', 'https://www.linkedin.com/in/ada-lovelace/')).toBe('ada-lovelace');
+        expect(normalizeSocialHandle('youtube', 'https://www.youtube.com/@canvas/videos')).toBe('canvas');
+        expect(normalizeSocialHandle('tiktok', 'https://www.tiktok.com/@ada/video/123')).toBe('ada');
         expect(normalizeSocialHandle('instagram', '  handle  ')).toBe('handle');
         expect(socialProfileUrl('x', '@ada')).toBe('https://x.com/ada');
         expect(socialProfileUrl('medium', 'writer')).toBe('https://medium.com/@writer');
+        expect(socialProfileUrl('linkedin', 'ada-lovelace')).toBe('https://www.linkedin.com/in/ada-lovelace');
+        expect(socialProfileUrl('youtube', '@canvas')).toBe('https://www.youtube.com/@canvas');
+        expect(socialProfileUrl('tiktok', 'ada')).toBe('https://www.tiktok.com/@ada');
         expect(socialProfileUrl('github', '')).toBeNull();
     });
 
@@ -102,11 +108,13 @@ describe('settings profile helpers', () => {
         form.social.x = 'https://x.com/ada';
         form.social.github = 'github.com/canvas';
         form.social.medium = 'https://medium.com/@ada';
+        form.social.linkedin = 'linkedin.com/in/ada';
 
         expect(toProfileStorePayload(form).social).toEqual({
             x: 'ada',
             github: 'canvas',
             medium: 'ada',
+            linkedin: 'ada',
         });
     });
 

@@ -16,6 +16,9 @@ final class SocialProfiles
         'x',
         'github',
         'medium',
+        'linkedin',
+        'youtube',
+        'tiktok',
     ];
 
     /**
@@ -30,6 +33,9 @@ final class SocialProfiles
         'x' => 'https://x.com/',
         'github' => 'https://github.com/',
         'medium' => 'https://medium.com/@',
+        'linkedin' => 'https://www.linkedin.com/in/',
+        'youtube' => 'https://www.youtube.com/@',
+        'tiktok' => 'https://www.tiktok.com/@',
     ];
 
     /**
@@ -42,6 +48,9 @@ final class SocialProfiles
         'x' => ['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com', 'mobile.twitter.com'],
         'github' => ['github.com', 'www.github.com'],
         'medium' => ['medium.com', 'www.medium.com'],
+        'linkedin' => ['linkedin.com', 'www.linkedin.com'],
+        'youtube' => ['youtube.com', 'www.youtube.com', 'm.youtube.com'],
+        'tiktok' => ['tiktok.com', 'www.tiktok.com', 'm.tiktok.com'],
     ];
 
     public static function normalizeHandle(string $platform, string $raw): string
@@ -68,6 +77,10 @@ final class SocialProfiles
                 ));
 
                 if ($platform === 'bluesky' && ($segments[0] ?? null) !== null && strtolower($segments[0]) === 'profile') {
+                    array_shift($segments);
+                }
+
+                if ($platform === 'linkedin' && ($segments[0] ?? null) !== null && strtolower($segments[0]) === 'in') {
                     array_shift($segments);
                 }
 
