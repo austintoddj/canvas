@@ -17,9 +17,11 @@ type MediaGridProps = {
     className?: string;
     showCaptions?: boolean;
     compact?: boolean;
+    showTagChips?: boolean;
     hrefForItem?: (item: Media) => string;
     onOpen?: (item: Media) => void;
     onSelect?: (item: Media) => void;
+    onTagChipClick?: (tag: { id: string; name: string }) => void;
     selectedIds?: ReadonlySet<string>;
     onToggleSelect?: (item: Media) => void;
     selectionDisabled?: boolean;
@@ -78,9 +80,11 @@ export function MediaGrid({
     className,
     showCaptions = false,
     compact = false,
+    showTagChips = false,
     hrefForItem,
     onOpen,
     onSelect,
+    onTagChipClick,
     selectedIds,
     onToggleSelect,
     selectionDisabled = false,
@@ -234,6 +238,10 @@ export function MediaGrid({
                     );
                 }
 
+                const tags = item.tags ?? [];
+                const visibleTags = showTagChips ? tags.slice(0, 2) : [];
+                const extraTagCount = showTagChips ? Math.max(0, tags.length - 2) : 0;
+
                 return (
                     <div className={shellClassName} data-selected={isSelected ? 'true' : undefined}>
                         {body}
@@ -245,6 +253,29 @@ export function MediaGrid({
                                 forceVisible={selectionActive || isSelected}
                                 onToggle={() => onToggleSelect(item)}
                             />
+                        ) : null}
+                        {visibleTags.length > 0 ? (
+                            <div className="pointer-events-none absolute inset-x-2 bottom-2 z-10 flex flex-wrap gap-1">
+                                {visibleTags.map((tag) => (
+                                    <button
+                                        key={tag.id}
+                                        type="button"
+                                        className="pointer-events-auto max-w-[7rem] truncate rounded-full bg-zinc-950/75 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm"
+                                        onClick={(event) => {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                            onTagChipClick?.(tag);
+                                        }}
+                                    >
+                                        {tag.name}
+                                    </button>
+                                ))}
+                                {extraTagCount > 0 ? (
+                                    <span className="rounded-full bg-zinc-950/75 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
+                                        +{extraTagCount}
+                                    </span>
+                                ) : null}
+                            </div>
                         ) : null}
                     </div>
                 );

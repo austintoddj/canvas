@@ -7,15 +7,17 @@ import { Button } from '@/components/button';
 import { ContentReveal } from '@/components/ContentReveal';
 import { EmptyState } from '@/components/EmptyState';
 import { EmptyStateReveal } from '@/components/EmptyStateReveal';
-import { Field, Label } from '@/components/fieldset';
+import { ErrorMessage, Field, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import { MediaDetailDrawer } from '@/components/media/MediaDetailDrawer';
 import { MediaEmptyVisual } from '@/components/media/MediaEmptyVisual';
 import { MediaGrid } from '@/components/media/MediaGrid';
 import { MediaGridSkeleton } from '@/components/media/MediaGridSkeleton';
+import { MediaTagPicker } from '@/components/media/MediaTagPicker';
+import { MediaTagRail } from '@/components/media/MediaTagRail';
+import { MediaViewMenu } from '@/components/media/MediaViewMenu';
 import { PageHeader } from '@/components/PageHeader';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
-import { Select } from '@/components/select';
 import { Text, PageDescription, ErrorText } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
@@ -25,13 +27,22 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { isInitialLoading, isRefreshing, shouldShowEmpty } from '@/lib/async-ui';
 import { ALLOWED_MEDIA_MIME_TYPES, mediaApi, uploadMedia } from '@/lib/api/media';
 import {
+    createMediaTag,
+    createOrReuseMediaTag,
+    isMediaTagNameConflict,
+    mediaTagNameTaken,
+    mediaTagsApi,
+} from '@/lib/api/media-tags';
+import {
     appendMediaItems,
+    chunkMediaIds,
     destroyMediaItems,
     filtersAfterUpload,
     prependMediaItems,
     removeMediaItems,
     shouldRefillMediaListAfterDelete,
     summarizeMediaDestroys,
+    summarizeMediaTagAttaches,
     summarizeMediaUploads,
     toggleSelectedId,
     uploadMediaFiles,
@@ -39,64 +50,23 @@ import {
 import { isFileDragTypes, reducePageDrag } from '@/lib/media/drag';
 import {
     MEDIA_EMPTY_STATE_KEYS,
-    MEDIA_MIME_FILTERS,
     MEDIA_SEARCH_DEBOUNCE_MS,
-    MEDIA_SORT_OPTIONS,
     mediaFilesFromList,
     mediaIndexQueryParams,
     mediaListHasActiveFilters,
     nextCommittedMediaSearch,
     parseMediaListFilters,
-    type MediaListFilters,
-    type MediaListSort,
-    type MediaMimeFilter,
+    updateMediaListSearchParams,
+    type MediaUrlFilterPatch,
 } from '@/lib/media/list';
 import { toast, toastFromTone } from '@/lib/toast';
-import type { Media } from '@/types/api';
-import { IconTrash, IconUpload } from '@tabler/icons-react';
+import type { Media, MediaTag } from '@/types/api';
+import { IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
 
 const ACCEPT = ALLOWED_MEDIA_MIME_TYPES.join(',');
 
-/** Library filters in the URL (page is client state for load-more). */
-type MediaUrlFilters = Pick<MediaListFilters, 'scope' | 'search' | 'mime' | 'sort'>;
-
-function updateFilters(current: URLSearchParams, patch: Partial<MediaUrlFilters>): URLSearchParams {
-    const next = new URLSearchParams(current);
-    const currentFilters = parseMediaListFilters(current);
-
-    const scope = patch.scope ?? currentFilters.scope;
-    const search = patch.search !== undefined ? patch.search : currentFilters.search;
-    const mime = patch.mime !== undefined ? patch.mime : currentFilters.mime;
-    const sort = patch.sort ?? currentFilters.sort;
-
-    if (scope === 'all') {
-        next.set('scope', 'all');
-    } else {
-        next.delete('scope');
-    }
-
-    if (search.trim() !== '') {
-        next.set('search', search.trim());
-    } else {
-        next.delete('search');
-    }
-
-    if (mime !== '') {
-        next.set('mime', mime);
-    } else {
-        next.delete('mime');
-    }
-
-    if (sort === 'oldest') {
-        next.set('sort', 'oldest');
-    } else {
-        next.delete('sort');
-    }
-
-    // Load-more owns pagination in component state — drop legacy ?page=.
-    next.delete('page');
-
-    return next;
+function updateFilters(current: URLSearchParams, patch: MediaUrlFilterPatch): URLSearchParams {
+    return updateMediaListSearchParams(current, patch);
 }
 
 function setDetailParam(current: URLSearchParams, mediaId: string | null): URLSearchParams {
@@ -136,6 +106,15 @@ export default function MediaIndex() {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
     const [bulkDeleting, setBulkDeleting] = useState(false);
     const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+    const [libraryTags, setLibraryTags] = useState<MediaTag[]>([]);
+    const [tagMeta, setTagMeta] = useState({ all_count: 0, untagged_count: 0, truncated: false });
+    const [bulkTagOpen, setBulkTagOpen] = useState(false);
+    const [creatingTag, setCreatingTag] = useState(false);
+    const [renamingTag, setRenamingTag] = useState<MediaTag | null>(null);
+    const [deletingTag, setDeletingTag] = useState<MediaTag | null>(null);
+    const [tagNameDraft, setTagNameDraft] = useState('');
+    const [tagFormError, setTagFormError] = useState<string | null>(null);
+    const [tagBusy, setTagBusy] = useState(false);
     const libraryBodyRef = useRef<HTMLDivElement>(null);
     const [libraryBodyMinHeight, setLibraryBodyMinHeight] = useState<number | undefined>(undefined);
 
@@ -183,6 +162,8 @@ export default function MediaIndex() {
                     mime: filters.mime,
                     sort: filters.sort,
                     page: 1,
+                    tag: filters.tag,
+                    untagged: filters.untagged,
                 }),
                 controller.signal
             )
@@ -211,7 +192,31 @@ export default function MediaIndex() {
             cancelled = true;
             controller.abort();
         };
-    }, [filters.scope, filters.search, filters.mime, filters.sort, t]);
+    }, [filters.scope, filters.search, filters.mime, filters.sort, filters.tag, filters.untagged, t]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const controller = new AbortController();
+
+        mediaTagsApi
+            .index({ scope: filters.scope }, controller.signal)
+            .then((response) => {
+                if (!cancelled) {
+                    setLibraryTags(response.data);
+                    setTagMeta(response.meta);
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setLibraryTags([]);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+            controller.abort();
+        };
+    }, [filters.scope]);
 
     useEffect(() => {
         function clearPageDrag() {
@@ -240,7 +245,7 @@ export default function MediaIndex() {
         };
     }, []);
 
-    function setFilters(patch: Partial<MediaUrlFilters>) {
+    function setFilters(patch: MediaUrlFilterPatch) {
         setSearchParams(updateFilters(searchParams, patch));
     }
 
@@ -277,6 +282,8 @@ export default function MediaIndex() {
                     mime: filters.mime,
                     sort: filters.sort,
                     page: nextPage,
+                    tag: filters.tag,
+                    untagged: filters.untagged,
                 })
             );
 
@@ -305,6 +312,8 @@ export default function MediaIndex() {
                     mime: filters.mime,
                     sort: filters.sort,
                     page: 1,
+                    tag: filters.tag,
+                    untagged: filters.untagged,
                 })
             );
 
@@ -347,12 +356,42 @@ export default function MediaIndex() {
         setError(null);
         setUploadProgress({ current: 1, total: files.length });
 
+        const activeTag =
+            filters.tag !== null && filters.tag !== undefined
+                ? (libraryTags.find((tag) => tag.id === filters.tag) ?? { id: filters.tag, name: '' })
+                : null;
+        let attachWarning = false;
         let completed = 0;
         const results = await uploadMediaFiles(files, async (file) => {
             completed += 1;
             setUploadProgress({ current: completed, total: files.length });
             const media = await uploadMedia(file);
-            return media;
+
+            if (activeTag === null) {
+                return media;
+            }
+
+            try {
+                const attached = await mediaTagsApi.attach(activeTag.id, { media_ids: [media.id] });
+
+                if (!attached.attached.includes(media.id)) {
+                    attachWarning = true;
+
+                    return media;
+                }
+
+                const tags = [...(media.tags ?? [])];
+
+                if (!tags.some((tag) => tag.id === activeTag.id)) {
+                    tags.push({ id: activeTag.id, name: activeTag.name || activeTag.id });
+                }
+
+                return { ...media, tags };
+            } catch {
+                attachWarning = true;
+
+                return media;
+            }
         });
 
         const summary = summarizeMediaUploads(results);
@@ -365,11 +404,16 @@ export default function MediaIndex() {
 
         toastFromTone(summary.message, summary.tone);
 
+        if (attachWarning) {
+            toast.warning(t('media.tags_attach_failed'));
+        }
+
         if (summary.succeeded.length === 0) {
             return;
         }
 
         setItems((current) => prependMediaItems(current, summary.succeeded));
+        void refreshTags();
 
         const nextFilters = filtersAfterUpload(filters);
 
@@ -379,6 +423,172 @@ export default function MediaIndex() {
             nextFilters.mime !== filters.mime
         ) {
             setSearchParams(updateFilters(searchParams, nextFilters));
+        }
+    }
+
+    async function refreshTags() {
+        try {
+            const response = await mediaTagsApi.index({ scope: filters.scope });
+            setLibraryTags(response.data);
+            setTagMeta(response.meta);
+        } catch {
+            setLibraryTags([]);
+        }
+    }
+
+    async function attachTagToIds(tag: { id: string; name: string }, ids: string[]) {
+        const attached: string[] = [];
+        const skipped: string[] = [];
+
+        for (const chunk of chunkMediaIds(ids)) {
+            const result = await mediaTagsApi.attach(tag.id, { media_ids: chunk }, { scope: filters.scope });
+            attached.push(...result.attached);
+            skipped.push(...result.skipped);
+        }
+
+        const summary = summarizeMediaTagAttaches(attached, skipped, tag.name);
+
+        if (summary !== null) {
+            toastFromTone(summary.message, summary.tone);
+        }
+
+        if (attached.length > 0) {
+            setItems((current) =>
+                current.map((item) => {
+                    if (!attached.includes(item.id)) {
+                        return item;
+                    }
+
+                    const tags = item.tags ?? [];
+
+                    if (tags.some((entry) => entry.id === tag.id)) {
+                        return item;
+                    }
+
+                    return { ...item, tags: [...tags, { id: tag.id, name: tag.name }] };
+                })
+            );
+            void refreshTags();
+        }
+
+        return attached;
+    }
+
+    async function handlePickBulkTag(tag: MediaTag) {
+        const ids = Array.from(selectedIds);
+        setBulkTagOpen(false);
+        await attachTagToIds(tag, ids);
+    }
+
+    async function handleCreateBulkTag(name: string) {
+        const tag = await createOrReuseMediaTag(name);
+        setLibraryTags((current) => (current.some((item) => item.id === tag.id) ? current : [...current, tag]));
+        await handlePickBulkTag(tag);
+    }
+
+    async function handleCreateLibraryTag() {
+        const name = tagNameDraft.trim();
+
+        if (name === '' || tagBusy) {
+            return;
+        }
+
+        if (mediaTagNameTaken(name, libraryTags)) {
+            setTagFormError(t('media.tags_exists'));
+            return;
+        }
+
+        setTagBusy(true);
+        setTagFormError(null);
+
+        try {
+            const tag = await createMediaTag(name);
+            setCreatingTag(false);
+            setTagNameDraft('');
+            toast.success(t('media.tags_created'));
+            await refreshTags();
+            setFilters({ tag: tag.id });
+        } catch (error) {
+            if (isMediaTagNameConflict(error)) {
+                setTagFormError(t('media.tags_exists'));
+            } else {
+                toast.error(t('media.tags_create_error'));
+            }
+        } finally {
+            setTagBusy(false);
+        }
+    }
+
+    async function handleRenameLibraryTag() {
+        if (renamingTag === null || tagBusy) {
+            return;
+        }
+
+        const name = tagNameDraft.trim();
+
+        if (name === '') {
+            return;
+        }
+
+        if (mediaTagNameTaken(name, libraryTags, renamingTag.id)) {
+            setTagFormError(t('media.tags_exists'));
+            return;
+        }
+
+        setTagBusy(true);
+        setTagFormError(null);
+
+        try {
+            await mediaTagsApi.store(renamingTag.id, { name });
+            setRenamingTag(null);
+            setTagNameDraft('');
+            toast.success(t('media.tags_renamed'));
+            await refreshTags();
+            setItems((current) =>
+                current.map((item) => ({
+                    ...item,
+                    tags: (item.tags ?? []).map((tag) => (tag.id === renamingTag.id ? { ...tag, name } : tag)),
+                }))
+            );
+        } catch (error) {
+            if (isMediaTagNameConflict(error)) {
+                setTagFormError(t('media.tags_exists'));
+            } else {
+                toast.error(t('media.tags_save_error'));
+            }
+        } finally {
+            setTagBusy(false);
+        }
+    }
+
+    async function handleDeleteLibraryTag() {
+        if (deletingTag === null || tagBusy) {
+            return;
+        }
+
+        setTagBusy(true);
+
+        try {
+            await mediaTagsApi.destroy(deletingTag.id);
+            const removedId = deletingTag.id;
+            setDeletingTag(null);
+            toast.success(t('media.tags_deleted'));
+
+            if (filters.tag === removedId) {
+                setFilters({ tag: null, untagged: false });
+            }
+
+            setItems((current) =>
+                current.map((item) => ({
+                    ...item,
+                    tags: (item.tags ?? []).filter((tag) => tag.id !== removedId),
+                }))
+            );
+            await refreshTags();
+        } catch {
+            toast.error(t('media.tags_save_error'));
+        } finally {
+            setTagBusy(false);
         }
     }
 
@@ -638,133 +848,141 @@ export default function MediaIndex() {
                     <PageDescription>{t('media.description')}</PageDescription>
                 </PageHeader>
 
-                <div className="space-y-3" data-media-list-filters="true">
-                    <Field className="w-full">
-                        <Label className="sr-only">{t('media.search_label')}</Label>
-                        <Input
-                            name="media-search"
-                            value={searchDraft}
-                            placeholder={t('media.search_placeholder')}
-                            onChange={(event) => setSearchDraft(event.target.value)}
-                        />
-                    </Field>
-
-                    {/* Stack type/sort on mobile; scope on its own full-width row to avoid toolbar crush. */}
-                    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-                        <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:max-w-md sm:flex-1 sm:items-center">
-                            <Select
-                                name="media-mime"
-                                className="min-w-0"
-                                aria-label={t('media.file_type')}
-                                value={filters.mime}
-                                onChange={(event) => setFilters({ mime: event.target.value as MediaMimeFilter })}
-                            >
-                                {MEDIA_MIME_FILTERS.map((option) => (
-                                    <option key={option.value || 'all'} value={option.value}>
-                                        {option.labelKey !== undefined ? t(option.labelKey) : (option.label ?? '')}
-                                    </option>
-                                ))}
-                            </Select>
-
-                            <Select
-                                name="media-sort"
-                                className="min-w-0"
-                                aria-label={t('media.sort_label')}
-                                value={filters.sort}
-                                onChange={(event) => setFilters({ sort: event.target.value as MediaListSort })}
-                            >
-                                {MEDIA_SORT_OPTIONS.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {t(option.labelKey)}
-                                    </option>
-                                ))}
-                            </Select>
-                        </div>
-
-                        {canViewAllMedia ? (
-                            <PillNav
-                                value={filters.scope}
-                                onChange={(scope) => setFilters({ scope })}
-                                aria-label={t('media.scope_label')}
-                                className="w-full shrink-0 sm:w-auto"
-                                indicator="slide"
-                            >
-                                <PillNavItem value="user" className="flex-1 justify-center sm:flex-none">
-                                    {t('media.scope_mine')}
-                                </PillNavItem>
-                                <PillNavItem value="all" className="flex-1 justify-center sm:flex-none">
-                                    {t('media.scope_all')}
-                                </PillNavItem>
-                            </PillNav>
-                        ) : null}
-                    </div>
-                </div>
-
-                {error ? (
-                    <div
-                        className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 dark:border-red-500/30 dark:bg-red-500/10"
-                        role="alert"
-                    >
-                        <ErrorText>{error}</ErrorText>
-                    </div>
-                ) : null}
-
-                {showInitialSkeleton ? <MediaGridSkeleton /> : null}
-
-                {showEmptyLibrary ? (
-                    <EmptyStateReveal animate={animateEmpty}>
-                        <EmptyState
-                            headline={t(MEDIA_EMPTY_STATE_KEYS.headline)}
-                            description={t(MEDIA_EMPTY_STATE_KEYS.blurb)}
-                            visual={<MediaEmptyVisual />}
-                            action={
-                                <Button type="button" color="dark/zinc" disabled={uploading} onClick={openBrowse}>
-                                    <IconUpload data-slot="icon" />
-                                    {uploading ? t('common.loading') : t(MEDIA_EMPTY_STATE_KEYS.cta)}
-                                </Button>
-                            }
-                        />
-                    </EmptyStateReveal>
-                ) : null}
-
-                {showFilteredEmpty ? (
-                    <EmptyStateReveal animate={animateEmpty}>
-                        <MediaGrid items={[]} emptyMessage={t('media.filtered_empty')} />
-                    </EmptyStateReveal>
-                ) : null}
-
-                {showFilledLibrary ? (
-                    <ContentReveal busy={refreshing} animate={animateContent}>
-                        <div
-                            ref={libraryBodyRef}
-                            data-media-library-body="true"
-                            style={libraryBodyMinHeight !== undefined ? { minHeight: libraryBodyMinHeight } : undefined}
-                        >
-                            <MediaGrid
-                                items={items}
-                                selectedIds={selectedIds}
-                                selectionDisabled={bulkDeleting || refreshing}
-                                onOpen={(item) => openDetail(item.id)}
-                                onToggleSelect={(item) =>
-                                    setSelectedIds((current) => toggleSelectedId(current, item.id))
-                                }
+                <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2" data-media-list-filters="true">
+                        <div className="min-w-0 flex-1">
+                            <MediaTagRail
+                                tags={libraryTags}
+                                allCount={tagMeta.all_count}
+                                untaggedCount={tagMeta.untagged_count}
+                                selectedTagId={filters.tag ?? null}
+                                untagged={Boolean(filters.untagged)}
+                                canManage={canViewAllMedia}
+                                onSelectAll={() => setFilters({ tag: null, untagged: false })}
+                                onSelectUntagged={() => setFilters({ untagged: true })}
+                                onSelectTag={(tag) => setFilters({ tag: tag.id })}
+                                onCreate={() => {
+                                    setTagNameDraft('');
+                                    setTagFormError(null);
+                                    setCreatingTag(true);
+                                }}
+                                onRename={(tag) => {
+                                    setTagNameDraft(tag.name);
+                                    setTagFormError(null);
+                                    setRenamingTag(tag);
+                                }}
+                                onDelete={(tag) => setDeletingTag(tag)}
                             />
-
-                            {canLoadMore ? (
-                                <div className="mt-8 flex justify-center">
-                                    <Button
-                                        type="button"
-                                        outline
-                                        disabled={loadingMore || uploading}
-                                        onClick={() => void loadMore()}
-                                    >
-                                        {loadingMore ? t('common.loading') : t('common.load_more')}
-                                    </Button>
-                                </div>
+                        </div>
+                        <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1.5">
+                            <label className="sr-only" htmlFor="media-search">
+                                {t('media.search_label')}
+                            </label>
+                            <div className="flex h-8 w-36 items-center gap-1.5 rounded-full bg-zinc-950/[0.04] px-2.5 ring-1 ring-zinc-950/8 sm:w-52 dark:bg-white/5 dark:ring-white/10">
+                                <IconSearch className="size-3.5 shrink-0 text-zinc-400" aria-hidden="true" />
+                                <input
+                                    id="media-search"
+                                    name="media-search"
+                                    value={searchDraft}
+                                    placeholder={t('media.search_label')}
+                                    className="min-w-0 flex-1 bg-transparent text-[13px] text-zinc-950 outline-none placeholder:text-zinc-400 dark:text-white dark:placeholder:text-zinc-500"
+                                    onChange={(event) => setSearchDraft(event.target.value)}
+                                />
+                            </div>
+                            <MediaViewMenu
+                                mime={filters.mime}
+                                sort={filters.sort}
+                                onMimeChange={(mime) => setFilters({ mime })}
+                                onSortChange={(sort) => setFilters({ sort })}
+                            />
+                            {canViewAllMedia ? (
+                                <PillNav
+                                    value={filters.scope}
+                                    onChange={(scope) => setFilters({ scope })}
+                                    aria-label={t('media.scope_label')}
+                                    className="shrink-0"
+                                    indicator="slide"
+                                >
+                                    <PillNavItem value="user">{t('media.scope_mine')}</PillNavItem>
+                                    <PillNavItem value="all">{t('media.scope_all')}</PillNavItem>
+                                </PillNav>
                             ) : null}
                         </div>
-                    </ContentReveal>
-                ) : null}
+                    </div>
+
+                    {error ? (
+                        <div
+                            className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 dark:border-red-500/30 dark:bg-red-500/10"
+                            role="alert"
+                        >
+                            <ErrorText>{error}</ErrorText>
+                        </div>
+                    ) : null}
+
+                    {showInitialSkeleton ? <MediaGridSkeleton /> : null}
+
+                    {showEmptyLibrary ? (
+                        <EmptyStateReveal animate={animateEmpty}>
+                            <EmptyState
+                                headline={t(MEDIA_EMPTY_STATE_KEYS.headline)}
+                                description={t(MEDIA_EMPTY_STATE_KEYS.blurb)}
+                                visual={<MediaEmptyVisual />}
+                                action={
+                                    <Button type="button" color="dark/zinc" disabled={uploading} onClick={openBrowse}>
+                                        <IconUpload data-slot="icon" />
+                                        {uploading ? t('common.loading') : t(MEDIA_EMPTY_STATE_KEYS.cta)}
+                                    </Button>
+                                }
+                            />
+                        </EmptyStateReveal>
+                    ) : null}
+
+                    {showFilteredEmpty ? (
+                        <EmptyStateReveal animate={animateEmpty}>
+                            <MediaGrid
+                                items={[]}
+                                emptyMessage={filters.tag ? t('media.tags_empty_filter') : t('media.filtered_empty')}
+                            />
+                        </EmptyStateReveal>
+                    ) : null}
+
+                    {showFilledLibrary ? (
+                        <ContentReveal busy={refreshing} animate={animateContent}>
+                            <div
+                                ref={libraryBodyRef}
+                                data-media-library-body="true"
+                                style={
+                                    libraryBodyMinHeight !== undefined ? { minHeight: libraryBodyMinHeight } : undefined
+                                }
+                            >
+                                <MediaGrid
+                                    items={items}
+                                    selectedIds={selectedIds}
+                                    selectionDisabled={bulkDeleting || refreshing}
+                                    showTagChips
+                                    onTagChipClick={(tag) => setFilters({ tag: tag.id })}
+                                    onOpen={(item) => openDetail(item.id)}
+                                    onToggleSelect={(item) =>
+                                        setSelectedIds((current) => toggleSelectedId(current, item.id))
+                                    }
+                                />
+
+                                {canLoadMore ? (
+                                    <div className="mt-8 flex justify-center">
+                                        <Button
+                                            type="button"
+                                            outline
+                                            disabled={loadingMore || uploading}
+                                            onClick={() => void loadMore()}
+                                        >
+                                            {loadingMore ? t('common.loading') : t('common.load_more')}
+                                        </Button>
+                                    </div>
+                                ) : null}
+                            </div>
+                        </ContentReveal>
+                    ) : null}
+                </div>
             </div>
 
             <MediaDetailDrawer
@@ -773,6 +991,7 @@ export default function MediaIndex() {
                 onClose={closeDetail}
                 onUpdated={(updated) => {
                     setItems((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+                    void refreshTags();
                 }}
                 onDeleted={(mediaId) => {
                     applyRemovedMedia([mediaId]);
@@ -787,6 +1006,125 @@ export default function MediaIndex() {
                     });
                 }}
             />
+
+            <Alert open={bulkTagOpen} onClose={() => setBulkTagOpen(false)} size="sm">
+                <AlertTitle>{t('media.tags_add')}</AlertTitle>
+                <div className="mt-3">
+                    <MediaTagPicker
+                        tags={libraryTags}
+                        onPick={(tag) => void handlePickBulkTag(tag)}
+                        onCreate={(name) => handleCreateBulkTag(name)}
+                    />
+                </div>
+                <AlertActions>
+                    <Button type="button" plain onClick={() => setBulkTagOpen(false)}>
+                        {t('common.cancel')}
+                    </Button>
+                </AlertActions>
+            </Alert>
+
+            <Alert
+                open={creatingTag}
+                onClose={() => {
+                    if (!tagBusy) {
+                        setCreatingTag(false);
+                        setTagFormError(null);
+                    }
+                }}
+                size="sm"
+            >
+                <AlertTitle>{t('media.tags_new')}</AlertTitle>
+                <Field className="mt-3">
+                    <Label>{t('media.tags_name')}</Label>
+                    <Input
+                        name="new-media-tag"
+                        value={tagNameDraft}
+                        invalid={Boolean(tagFormError)}
+                        onChange={(event) => {
+                            setTagNameDraft(event.target.value);
+                            if (tagFormError !== null) {
+                                setTagFormError(null);
+                            }
+                        }}
+                    />
+                    {tagFormError ? <ErrorMessage>{tagFormError}</ErrorMessage> : null}
+                </Field>
+                <AlertActions>
+                    <Button type="button" plain disabled={tagBusy} onClick={() => setCreatingTag(false)}>
+                        {t('common.cancel')}
+                    </Button>
+                    <Button
+                        type="button"
+                        color="dark/zinc"
+                        disabled={tagBusy}
+                        onClick={() => void handleCreateLibraryTag()}
+                    >
+                        {t('media.tags_new')}
+                    </Button>
+                </AlertActions>
+            </Alert>
+
+            <Alert
+                open={renamingTag !== null}
+                onClose={() => {
+                    if (!tagBusy) {
+                        setRenamingTag(null);
+                        setTagFormError(null);
+                    }
+                }}
+                size="sm"
+            >
+                <AlertTitle>{t('media.tags_rename')}</AlertTitle>
+                <Field className="mt-3">
+                    <Label>{t('media.tags_name')}</Label>
+                    <Input
+                        name="rename-media-tag"
+                        value={tagNameDraft}
+                        invalid={Boolean(tagFormError)}
+                        onChange={(event) => {
+                            setTagNameDraft(event.target.value);
+                            if (tagFormError !== null) {
+                                setTagFormError(null);
+                            }
+                        }}
+                    />
+                    {tagFormError ? <ErrorMessage>{tagFormError}</ErrorMessage> : null}
+                </Field>
+                <AlertActions>
+                    <Button type="button" plain disabled={tagBusy} onClick={() => setRenamingTag(null)}>
+                        {t('common.cancel')}
+                    </Button>
+                    <Button
+                        type="button"
+                        color="dark/zinc"
+                        disabled={tagBusy}
+                        onClick={() => void handleRenameLibraryTag()}
+                    >
+                        {t('common.save')}
+                    </Button>
+                </AlertActions>
+            </Alert>
+
+            <Alert
+                open={deletingTag !== null}
+                onClose={() => {
+                    if (!tagBusy) {
+                        setDeletingTag(null);
+                    }
+                }}
+                size="sm"
+            >
+                <AlertTitle>{t('media.tags_delete_title', { name: deletingTag?.name ?? '' })}</AlertTitle>
+                <AlertDescription>{t('media.tags_delete_body')}</AlertDescription>
+                <AlertActions>
+                    <Button type="button" plain disabled={tagBusy} onClick={() => setDeletingTag(null)}>
+                        {t('common.cancel')}
+                    </Button>
+                    <Button type="button" color="red" disabled={tagBusy} onClick={() => void handleDeleteLibraryTag()}>
+                        {t('media.tags_delete')}
+                    </Button>
+                </AlertActions>
+            </Alert>
 
             <Alert open={confirmBulkDeleteOpen} onClose={closeBulkDeleteConfirm} size="sm">
                 <AlertTitle>
@@ -828,6 +1166,14 @@ export default function MediaIndex() {
                                     onClick={() => setSelectedIds(new Set())}
                                 >
                                     {t('media.clear_selection')}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    outline
+                                    disabled={bulkDeleting || uploading}
+                                    onClick={() => setBulkTagOpen(true)}
+                                >
+                                    {t('media.tags_add')}
                                 </Button>
                                 <Button
                                     type="button"

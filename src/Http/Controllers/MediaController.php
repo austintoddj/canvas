@@ -8,6 +8,7 @@ use Canvas\Http\Requests\DestroyMediaRequest;
 use Canvas\Http\Requests\StoreMediaRequest;
 use Canvas\Http\Requests\UpdateMediaRequest;
 use Canvas\Models\Media;
+use Canvas\Models\MediaTag;
 use Canvas\Support\MediaService;
 use Canvas\Support\MediaUploader;
 use Illuminate\Database\Eloquent\Builder;
@@ -40,12 +41,27 @@ class MediaController extends Controller
                 request()->filled('mime'),
                 fn (Builder $query) => $query->ofMimeType((string) request()->query('mime')),
             )
+            ->when(request()->filled('tag'), fn (Builder $query) => $query->whereHas(
+                'mediaTags',
+                fn (Builder $tagQuery) => $tagQuery->where('canvas_media_tags.id', (string) request()->query('tag')),
+            ))
+            ->when(
+                ! request()->filled('tag') && request()->boolean('untagged'),
+                fn (Builder $query) => $query->whereDoesntHave('mediaTags'),
+            )
             ->when(
                 $sortOldest,
                 fn (Builder $query) => $query->oldest(),
                 fn (Builder $query) => $query->latest(),
             )
+            ->with('mediaTags')
             ->paginate();
+
+        $media->getCollection()->each(function (Media $item): void {
+            $item->setAttribute('tags', $this->mediaTagsPayload($item));
+            $item->unsetRelation('mediaTags');
+            $item->makeHidden(['media_tags']);
+        });
 
         return response()->json($media, 200);
     }
@@ -115,8 +131,26 @@ class MediaController extends Controller
     private function mediaPayload(Media $media): array
     {
         $payload = $media->toArray();
+        $payload['tags'] = $this->mediaTagsPayload($media);
+        unset($payload['media_tags']);
         $payload['user'] = MediaUploader::for($media);
 
         return $payload;
+    }
+
+    /**
+     * @return list<array{id: string, name: string}>
+     */
+    private function mediaTagsPayload(Media $media): array
+    {
+        $media->loadMissing('mediaTags');
+
+        return $media->mediaTags
+            ->map(fn (MediaTag $tag): array => [
+                'id' => (string) $tag->id,
+                'name' => (string) $tag->name,
+            ])
+            ->values()
+            ->all();
     }
 }

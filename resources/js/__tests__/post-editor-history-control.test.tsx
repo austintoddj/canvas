@@ -111,4 +111,15 @@ describe('PostEditorLayout history control', () => {
         const back = document.querySelector('[data-post-back-to-posts="true"]');
         expect(back?.querySelector('span.hidden.sm\\:inline') ?? back?.querySelector('span.hidden')).not.toBeNull();
     });
+
+    it('fills the viewport so the writing pane can scroll under a pinned toolbar', () => {
+        renderLayout(() => undefined);
+
+        const root = document.querySelector('[data-post-editor-focus="false"]');
+        expect(root).not.toBeNull();
+        expect(root?.className).toMatch(/flex/);
+        expect(root?.className).toMatch(/overflow-hidden/);
+        expect(root?.className).toMatch(/h-\[calc\(100svh-7\.5rem\)\]/);
+        expect(root?.className).toMatch(/lg:h-\[calc\(100svh-6rem\)\]/);
+    });
 });

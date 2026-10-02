@@ -31,6 +31,8 @@ class CanvasInstallSmokeTest extends TestCase
         $this->assertTrue(Schema::hasTable('canvas_tags'));
         $this->assertTrue(Schema::hasTable('canvas_topics'));
         $this->assertTrue(Schema::hasTable('canvas_media'));
+        $this->assertTrue(Schema::hasTable('canvas_media_tags'));
+        $this->assertTrue(Schema::hasTable('canvas_media_tag'));
         $this->assertTrue(Schema::hasTable('canvas_settings'));
         $this->assertTrue(Schema::hasTable('canvas_post_revisions'));
         $this->assertTrue(Schema::hasTable('canvas_webhook_deliveries'));

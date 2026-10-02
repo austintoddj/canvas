@@ -14,7 +14,15 @@ export type MediaListFilters = {
     mime: MediaMimeFilter;
     sort: MediaListSort;
     page: number;
+    tag?: string | null;
+    untagged?: boolean;
 };
+
+export type MediaUrlFilterPatch = Partial<
+    Pick<MediaListFilters, 'scope' | 'search' | 'mime' | 'sort' | 'tag' | 'untagged'>
+>;
+
+const MEDIA_TAG_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const MEDIA_MIME_FILTERS: { value: MediaMimeFilter; labelKey?: string; label?: string }[] = [
     { value: '', labelKey: 'media.all_types' },
@@ -51,8 +59,11 @@ export function parseMediaListFilters(searchParams: URLSearchParams): MediaListF
     const sortParam = searchParams.get('sort') ?? '';
     const sort = SORT_VALUES.has(sortParam) ? (sortParam as MediaListSort) : 'newest';
     const page = Math.max(1, Number.parseInt(searchParams.get('page') ?? '1', 10) || 1);
+    const tagParam = searchParams.get('tag') ?? '';
+    const tag = MEDIA_TAG_UUID.test(tagParam) ? tagParam : null;
+    const untagged = tag === null && searchParams.get('untagged') === '1';
 
-    return { scope, search, mime, sort, page };
+    return { scope, search, mime, sort, page, tag, untagged };
 }
 
 export function mediaIndexPath(filters: Partial<MediaListFilters> = {}): string {
@@ -68,17 +79,102 @@ export function mediaIndexPath(filters: Partial<MediaListFilters> = {}): string 
 }
 
 export function mediaIndexQueryParams(filters: MediaListFilters): MediaIndexParams {
-    return {
-        scope: filters.scope === 'all' ? 'all' : undefined,
-        search: filters.search.trim() === '' ? undefined : filters.search.trim(),
-        mime: filters.mime === '' ? undefined : filters.mime,
-        sort: filters.sort === 'oldest' ? 'oldest' : undefined,
-        page: filters.page > 1 ? filters.page : undefined,
-    };
+    const tag = filters.tag ?? null;
+    const untagged = Boolean(filters.untagged) && tag === null;
+    const params: MediaIndexParams = {};
+
+    if (filters.scope === 'all') {
+        params.scope = 'all';
+    }
+
+    if (filters.search.trim() !== '') {
+        params.search = filters.search.trim();
+    }
+
+    if (filters.mime !== '') {
+        params.mime = filters.mime;
+    }
+
+    if (filters.sort === 'oldest') {
+        params.sort = 'oldest';
+    }
+
+    if (filters.page > 1) {
+        params.page = filters.page;
+    }
+
+    if (tag) {
+        params.tag = tag;
+    } else if (untagged) {
+        params.untagged = 1;
+    }
+
+    return params;
 }
 
-export function mediaListHasActiveFilters(filters: Pick<MediaListFilters, 'search' | 'mime'>): boolean {
-    return filters.search.trim() !== '' || filters.mime !== '';
+export function mediaListHasActiveFilters(
+    filters: Pick<MediaListFilters, 'search' | 'mime'> & { tag?: string | null; untagged?: boolean }
+): boolean {
+    return filters.search.trim() !== '' || filters.mime !== '' || Boolean(filters.tag) || Boolean(filters.untagged);
+}
+
+export function updateMediaListSearchParams(current: URLSearchParams, patch: MediaUrlFilterPatch): URLSearchParams {
+    const next = new URLSearchParams(current);
+    const currentFilters = parseMediaListFilters(current);
+
+    const scope = patch.scope ?? currentFilters.scope;
+    const search = patch.search !== undefined ? patch.search : currentFilters.search;
+    const mime = patch.mime !== undefined ? patch.mime : currentFilters.mime;
+    const sort = patch.sort ?? currentFilters.sort;
+
+    if (scope === 'all') {
+        next.set('scope', 'all');
+    } else {
+        next.delete('scope');
+    }
+
+    if (search.trim() !== '') {
+        next.set('search', search.trim());
+    } else {
+        next.delete('search');
+    }
+
+    if (mime !== '') {
+        next.set('mime', mime);
+    } else {
+        next.delete('mime');
+    }
+
+    if (sort === 'oldest') {
+        next.set('sort', 'oldest');
+    } else {
+        next.delete('sort');
+    }
+
+    if (patch.tag !== undefined) {
+        if (patch.tag) {
+            next.set('tag', patch.tag);
+            next.delete('untagged');
+        } else {
+            next.delete('tag');
+            if (patch.untagged !== true) {
+                next.delete('untagged');
+            }
+        }
+    }
+
+    if (patch.untagged !== undefined) {
+        if (patch.untagged) {
+            next.set('untagged', '1');
+            next.delete('tag');
+        } else {
+            next.delete('untagged');
+        }
+    }
+
+    next.delete('page');
+
+    return next;
 }
 
 export function nextCommittedMediaSearch(draft: string, committed: string): string | null {

@@ -8,6 +8,7 @@ import {
     removeMediaItems,
     shouldRefillMediaListAfterDelete,
     summarizeMediaDestroys,
+    summarizeMediaTagAttaches,
     summarizeMediaUploads,
     toggleSelectedId,
     uploadMediaFiles,
@@ -52,6 +53,11 @@ describe('media batch helpers', () => {
                 'media.upload_failed': 'Upload failed.',
                 'media.upload_failed_detail': 'Upload failed. :detail',
                 'media.delete_error': 'Unable to delete this media item.',
+                'media.tags_attached': 'Added to “:name”.',
+                'media.tags_attached_other': 'Added :count items to “:name”.',
+                'media.tags_partial': ':attached tagged, :skipped skipped.',
+                'media.tags_attach_failed': 'Unable to tag this image.',
+                'media.tags_attach_failed_other': 'Unable to tag :count images.',
             })
         );
 
@@ -116,13 +122,37 @@ describe('media batch helpers', () => {
         ]);
         expect(Array.from(toggleSelectedId(new Set(['a']), 'b'))).toEqual(['a', 'b']);
         expect(Array.from(toggleSelectedId(new Set(['a']), 'a'))).toEqual([]);
+        expect(
+            filtersAfterUpload({
+                scope: 'all',
+                search: 'hero',
+                mime: 'image/png',
+                sort: 'oldest',
+                tag: '3f2c8a10-1111-4111-8111-aaaaaaaaaaaa',
+                untagged: false,
+            })
+        ).toEqual({
+            scope: 'user',
+            search: 'hero',
+            mime: 'image/png',
+            sort: 'oldest',
+            tag: '3f2c8a10-1111-4111-8111-aaaaaaaaaaaa',
+            untagged: false,
+        });
         expect(filtersAfterUpload({ scope: 'all', search: 'hero', mime: 'image/png' })).toEqual({
             scope: 'user',
             search: 'hero',
             mime: 'image/png',
+            sort: undefined,
+            tag: null,
+            untagged: false,
         });
         expect(shouldRefillMediaListAfterDelete(0, 2)).toBe(true);
         expect(shouldRefillMediaListAfterDelete(1, 2)).toBe(false);
         expect(shouldRefillMediaListAfterDelete(0, 1)).toBe(false);
+        expect(summarizeMediaTagAttaches(['a'], [], 'Hero')?.message).toBe('Added to “Hero”.');
+        expect(summarizeMediaTagAttaches(['a', 'b'], [], 'Hero')?.message).toBe('Added 2 items to “Hero”.');
+        expect(summarizeMediaTagAttaches(['a', 'b'], ['c'])?.message).toBe('2 tagged, 1 skipped.');
+        expect(summarizeMediaTagAttaches([], ['a', 'b'])?.tone).toBe('error');
     });
 });

@@ -127,15 +127,74 @@ export function appendMediaItems(existing: Media[], incoming: Media[]): Media[] 
  * to "Mine" so the new files sit in the expected personal library view. Search
  * and mime filters are left alone so the user's context is not wiped.
  */
-export function filtersAfterUpload<TScope extends 'user' | 'all', TMime extends string>(filters: {
-    scope: TScope;
+export function filtersAfterUpload<TMime extends string, TSort extends string = 'newest' | 'oldest'>(filters: {
+    scope: 'user' | 'all';
     search: string;
     mime: TMime;
-}): { scope: 'user'; search: string; mime: TMime } {
+    sort?: TSort;
+    tag?: string | null;
+    untagged?: boolean;
+}): {
+    scope: 'user';
+    search: string;
+    mime: TMime;
+    sort?: TSort;
+    tag: string | null;
+    untagged: boolean;
+} {
     return {
         scope: 'user',
         search: filters.search,
         mime: filters.mime,
+        sort: filters.sort,
+        tag: filters.tag ?? null,
+        untagged: Boolean(filters.untagged),
+    };
+}
+
+export const MEDIA_TAG_ATTACH_CHUNK = 50;
+
+export function chunkMediaIds(ids: string[], size: number = MEDIA_TAG_ATTACH_CHUNK): string[][] {
+    const chunks: string[][] = [];
+
+    for (let index = 0; index < ids.length; index += size) {
+        chunks.push(ids.slice(index, index + size));
+    }
+
+    return chunks;
+}
+
+export function summarizeMediaTagAttaches(
+    attached: string[],
+    skipped: string[],
+    tagName = ''
+): { message: string; tone: 'success' | 'warning' | 'error' } | null {
+    if (attached.length === 0 && skipped.length === 0) {
+        return null;
+    }
+
+    if (attached.length > 0 && skipped.length === 0) {
+        const count = attached.length;
+        const name = tagName.trim();
+
+        return {
+            message: count === 1 ? t('media.tags_attached', { name }) : t('media.tags_attached_other', { count, name }),
+            tone: 'success',
+        };
+    }
+
+    if (attached.length === 0 && skipped.length > 0) {
+        const count = skipped.length;
+
+        return {
+            message: count === 1 ? t('media.tags_attach_failed') : t('media.tags_attach_failed_other', { count }),
+            tone: 'error',
+        };
+    }
+
+    return {
+        message: t('media.tags_partial', { attached: attached.length, skipped: skipped.length }),
+        tone: 'warning',
     };
 }
 

@@ -78,6 +78,8 @@ The host scheduler runs the prune weekly.
 
 ## Tags, topics, and authors
 
+Admin media library labels (`canvas_media_tags` / `Canvas\Models\MediaTag`) organize files in the Canvas UI. They are not `Canvas\Models\Tag`, do not appear on `canvas-ui.tags` routes, and should not be queried on the public reader.
+
 ```php
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;

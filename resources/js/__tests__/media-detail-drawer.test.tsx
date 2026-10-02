@@ -4,18 +4,35 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MediaDetailDrawer } from '@/components/media/MediaDetailDrawer';
-import { CanvasContext, type CanvasContextValue } from '@/contexts/CanvasContext';
-import { createTranslator } from '@/lib/i18n';
+import { makeBoot, withCanvas } from '@/__tests__/helpers/boot';
+import { toast } from '@/lib/toast';
 import type { Media } from '@/types/api';
+import userEvent from '@testing-library/user-event';
 
 const showMock = vi.fn();
+const updateMock = vi.fn();
+const attachMock = vi.fn();
+const detachMock = vi.fn();
+const tagsIndexMock = vi.fn();
 
 vi.mock('@/lib/api/media', () => ({
     mediaApi: {
         show: (...args: unknown[]) => showMock(...args),
-        update: vi.fn(),
+        update: (...args: unknown[]) => updateMock(...args),
         destroy: vi.fn(),
     },
+}));
+
+vi.mock('@/lib/api/media-tags', () => ({
+    mediaTagsApi: {
+        index: (...args: unknown[]) => tagsIndexMock(...args),
+        attach: (...args: unknown[]) => attachMock(...args),
+        detach: (...args: unknown[]) => detachMock(...args),
+        create: vi.fn(),
+        store: vi.fn(),
+        destroy: vi.fn(),
+    },
+    createOrReuseMediaTag: vi.fn(),
 }));
 
 vi.mock('@/lib/toast', () => ({
@@ -26,6 +43,11 @@ vi.mock('@/lib/toast', () => ({
 }));
 
 const dictionary = {
+    'media.tags': 'Tags',
+    'media.tags_none': 'No tags',
+    'media.tags_add': 'Add tag',
+    'media.tags_attached': 'Added to “:name”.',
+    'media.tags_detached': 'Tag removed.',
     'media.details_title': 'Media details',
     'media.close_details': 'Close details',
     'media.loading': 'Loading media…',
@@ -73,29 +95,28 @@ function sampleMedia(overrides: Partial<Media> = {}): Media {
 }
 
 function renderDrawer(props: Partial<React.ComponentProps<typeof MediaDetailDrawer>> = {}) {
-    const translator = createTranslator(dictionary);
-    const value = {
-        t: translator.t,
-        user: {
-            id: 1,
-            name: 'Admin',
-            email: 'a@example.com',
-            avatar_url: null,
-            dark_mode: false,
-            locale: 'en',
-            canvas: null,
-        },
-    } as unknown as CanvasContextValue;
-
     return render(
-        <CanvasContext.Provider value={value}>
-            <MediaDetailDrawer open mediaId="media-1" onClose={() => undefined} {...props} />
-        </CanvasContext.Provider>
+        withCanvas(
+            <MediaDetailDrawer open mediaId="media-1" onClose={() => undefined} {...props} />,
+            makeBoot({ translations: dictionary })
+        )
     );
 }
 
 beforeEach(() => {
     showMock.mockReset();
+    updateMock.mockReset();
+    attachMock.mockReset();
+    detachMock.mockReset();
+    tagsIndexMock.mockReset();
+    vi.mocked(toast.success).mockReset();
+    vi.mocked(toast.error).mockReset();
+    tagsIndexMock.mockResolvedValue({
+        data: [{ id: 'tag-1', name: 'Hero', media_count: 1 }],
+        meta: { all_count: 1, untagged_count: 0, truncated: false },
+    });
+    attachMock.mockResolvedValue({ attached: ['media-1'], skipped: [], media_count: 1 });
+    detachMock.mockResolvedValue({ detached: ['media-1'], skipped: [], media_count: 0 });
 });
 
 describe('MediaDetailDrawer loading', () => {
@@ -118,5 +139,24 @@ describe('MediaDetailDrawer loading', () => {
             expect(document.querySelector('[data-media-detail-skeleton="true"]')).toBeNull();
         });
         expect(screen.getByText('Details')).toBeInTheDocument();
+    });
+
+    it('attaches a tag immediately without saving alt or caption', async () => {
+        showMock.mockResolvedValue(sampleMedia({ tags: [] }));
+
+        renderDrawer();
+
+        await waitFor(() => {
+            expect(screen.getByText('Tags')).toBeInTheDocument();
+        });
+
+        await userEvent.click(screen.getByRole('combobox', { name: 'Add tag' }));
+        await userEvent.click(await screen.findByText('Hero'));
+
+        await waitFor(() => {
+            expect(attachMock).toHaveBeenCalledWith('tag-1', { media_ids: ['media-1'] });
+        });
+        expect(toast.success).toHaveBeenCalledWith('Added to “Hero”.');
+        expect(updateMock).not.toHaveBeenCalled();
     });
 });

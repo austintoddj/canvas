@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -63,6 +64,26 @@ class Media extends Model
         $userModel = config('canvas.user_model');
 
         return $this->belongsTo($userModel);
+    }
+
+    /**
+     * @return BelongsToMany<MediaTag, $this>
+     */
+    public function mediaTags(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            MediaTag::class,
+            'canvas_media_tag',
+            'media_id',
+            'media_tag_id',
+        );
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (self $media): void {
+            $media->mediaTags()->detach();
+        });
     }
 
     /**

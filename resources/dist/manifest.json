@@ -1,6 +1,6 @@
 {
-  "_EmptyStateReveal-BufHHYlN.js": {
-    "file": "assets/EmptyStateReveal-BufHHYlN.js",
+  "_EmptyStateReveal-D0c9Mfdw.js": {
+    "file": "assets/EmptyStateReveal-D0c9Mfdw.js",
     "name": "EmptyStateReveal",
     "imports": [
       "_jsx-runtime-DOef64A_.js",
@@ -68,8 +68,8 @@
       "_dialog-X92vbSS_.js"
     ]
   },
-  "_ListRowEnd-qI6wIZLk.js": {
-    "file": "assets/ListRowEnd-qI6wIZLk.js",
+  "_ListRowEnd-BcCjtiL_.js": {
+    "file": "assets/ListRowEnd-BcCjtiL_.js",
     "name": "ListRowEnd",
     "imports": [
       "_jsx-runtime-DOef64A_.js",
@@ -77,8 +77,8 @@
       "resources/js/app.tsx"
     ]
   },
-  "_StatCard-Dwy3NPUe.js": {
-    "file": "assets/StatCard-Dwy3NPUe.js",
+  "_StatCard-evLTFQho.js": {
+    "file": "assets/StatCard-evLTFQho.js",
     "name": "StatCard",
     "imports": [
       "_jsx-runtime-DOef64A_.js",
@@ -122,12 +122,24 @@
       "_text-CrZH25i9.js"
     ]
   },
-  "_divider-B-c5eXdr.js": {
-    "file": "assets/divider-B-c5eXdr.js",
+  "_divider-Bgm_62lU.js": {
+    "file": "assets/divider-Bgm_62lU.js",
     "name": "divider",
     "imports": [
       "_jsx-runtime-DOef64A_.js",
+      "_createReactComponent-B9LuCgvU.js",
       "_text-CrZH25i9.js"
+    ]
+  },
+  "_dropdown-DgYLtuXh.js": {
+    "file": "assets/dropdown-DgYLtuXh.js",
+    "name": "dropdown",
+    "imports": [
+      "_jsx-runtime-DOef64A_.js",
+      "_createReactComponent-B9LuCgvU.js",
+      "_text-CrZH25i9.js",
+      "_dialog-X92vbSS_.js",
+      "_IconX-DMo9eRmY.js"
     ]
   },
   "_form-DU5zNxNn.js": {
@@ -179,8 +191,8 @@
       "_jsx-runtime-DOef64A_.js"
     ]
   },
-  "_useAsyncReveal-DWksNm9Y.js": {
-    "file": "assets/useAsyncReveal-DWksNm9Y.js",
+  "_useAsyncReveal-BKtGY_KL.js": {
+    "file": "assets/useAsyncReveal-BKtGY_KL.js",
     "name": "useAsyncReveal",
     "imports": [
       "_jsx-runtime-DOef64A_.js",
@@ -194,8 +206,8 @@
       "_jsx-runtime-DOef64A_.js"
     ]
   },
-  "_useMobilePageAction-CXaCkgKX.js": {
-    "file": "assets/useMobilePageAction-CXaCkgKX.js",
+  "_useMobilePageAction-CQO9hLRP.js": {
+    "file": "assets/useMobilePageAction-CQO9hLRP.js",
     "name": "useMobilePageAction",
     "imports": [
       "_jsx-runtime-DOef64A_.js",
@@ -211,7 +223,7 @@
     ]
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-oIVWOXxs.js",
+    "file": "assets/app-CSvVqQr7.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -221,7 +233,8 @@
       "_text-CrZH25i9.js",
       "_FadeInImage-DpmE_P9h.js",
       "_dialog-X92vbSS_.js",
-      "_IconX-DMo9eRmY.js"
+      "_IconX-DMo9eRmY.js",
+      "_dropdown-DgYLtuXh.js"
     ],
     "dynamicImports": [
       "resources/js/pages/Dashboard.tsx",
@@ -238,11 +251,11 @@
       "resources/js/pages/NotFound.tsx"
     ],
     "css": [
-      "assets/app-CMS-8LCP.css"
+      "assets/app-DPY9ptvt.css"
     ]
   },
   "resources/js/pages/Calendar/Index.tsx": {
-    "file": "assets/Index-BCy50wAz.js",
+    "file": "assets/Index-CwsymTIM.js",
     "name": "Index",
     "src": "resources/js/pages/Calendar/Index.tsx",
     "isDynamicEntry": true,
@@ -254,15 +267,15 @@
       "_IconChartBar-JEqKmwEt.js",
       "_IconChevronRight-CcmZIwLp.js",
       "resources/js/app.tsx",
-      "_useAsyncReveal-DWksNm9Y.js",
-      "_ListRowEnd-qI6wIZLk.js",
+      "_useAsyncReveal-BKtGY_KL.js",
+      "_ListRowEnd-BcCjtiL_.js",
       "_format-list-date-xaJk5Si0.js",
       "_useDocumentTitle-DmsDq3Xd.js",
       "_month-ZfdrgZDN.js"
     ]
   },
   "resources/js/pages/Dashboard.tsx": {
-    "file": "assets/Dashboard-ktw9399K.js",
+    "file": "assets/Dashboard-DBBgusXe.js",
     "name": "Dashboard",
     "src": "resources/js/pages/Dashboard.tsx",
     "isDynamicEntry": true,
@@ -271,22 +284,23 @@
       "_createReactComponent-B9LuCgvU.js",
       "_text-CrZH25i9.js",
       "_FadeInImage-DpmE_P9h.js",
-      "_StatCard-Dwy3NPUe.js",
+      "_dropdown-DgYLtuXh.js",
+      "_StatCard-evLTFQho.js",
       "_IconLink-jRIKiM6P.js",
       "_IconChartBar-JEqKmwEt.js",
       "resources/js/app.tsx",
-      "_useAsyncReveal-DWksNm9Y.js",
-      "_ListRowEnd-qI6wIZLk.js",
+      "_useAsyncReveal-BKtGY_KL.js",
+      "_ListRowEnd-BcCjtiL_.js",
       "_format-list-date-xaJk5Si0.js",
       "_useDocumentTitle-DmsDq3Xd.js",
       "_month-ZfdrgZDN.js",
       "_list-94l_-7TX.js",
-      "_EmptyStateReveal-BufHHYlN.js",
-      "_useMobilePageAction-CXaCkgKX.js"
+      "_EmptyStateReveal-D0c9Mfdw.js",
+      "_useMobilePageAction-CQO9hLRP.js"
     ]
   },
   "resources/js/pages/Integrations/Index.tsx": {
-    "file": "assets/Index-B6iI9L-R.js",
+    "file": "assets/Index-KPgFyM8M.js",
     "name": "Index",
     "src": "resources/js/pages/Integrations/Index.tsx",
     "isDynamicEntry": true,
@@ -296,6 +310,7 @@
       "_text-CrZH25i9.js",
       "_dialog-X92vbSS_.js",
       "_IconX-DMo9eRmY.js",
+      "_dropdown-DgYLtuXh.js",
       "_IconSparkles-DvCZ5fji.js",
       "resources/js/app.tsx",
       "_useDocumentTitle-DmsDq3Xd.js",
@@ -304,7 +319,7 @@
     ]
   },
   "resources/js/pages/Integrations/Webhooks.tsx": {
-    "file": "assets/Webhooks-GtvZOGF-.js",
+    "file": "assets/Webhooks-BxWYHKo9.js",
     "name": "Webhooks",
     "src": "resources/js/pages/Integrations/Webhooks.tsx",
     "isDynamicEntry": true,
@@ -324,7 +339,7 @@
     ]
   },
   "resources/js/pages/Media/Index.tsx": {
-    "file": "assets/Index-CF3iaslI.js",
+    "file": "assets/Index-BRAEYtZ1.js",
     "name": "Index",
     "src": "resources/js/pages/Media/Index.tsx",
     "isDynamicEntry": true,
@@ -333,15 +348,15 @@
       "_createReactComponent-B9LuCgvU.js",
       "_text-CrZH25i9.js",
       "_FadeInImage-DpmE_P9h.js",
-      "_select-erszBumT.js",
+      "_dropdown-DgYLtuXh.js",
+      "_divider-Bgm_62lU.js",
       "_IconTrash-BuDsjqi-.js",
       "resources/js/app.tsx",
-      "_useAsyncReveal-DWksNm9Y.js",
+      "_useAsyncReveal-BKtGY_KL.js",
       "_useDocumentTitle-DmsDq3Xd.js",
-      "_EmptyStateReveal-BufHHYlN.js",
-      "_useMobilePageAction-CXaCkgKX.js",
-      "_description-list-qnKJCwDa.js",
-      "_divider-B-c5eXdr.js"
+      "_EmptyStateReveal-D0c9Mfdw.js",
+      "_useMobilePageAction-CQO9hLRP.js",
+      "_description-list-qnKJCwDa.js"
     ]
   },
   "resources/js/pages/Media/Show.tsx": {
@@ -354,7 +369,7 @@
     ]
   },
   "resources/js/pages/NotFound.tsx": {
-    "file": "assets/NotFound-7gD1hFHe.js",
+    "file": "assets/NotFound-BMqVGjHw.js",
     "name": "NotFound",
     "src": "resources/js/pages/NotFound.tsx",
     "isDynamicEntry": true,
@@ -366,7 +381,7 @@
     ]
   },
   "resources/js/pages/Organize/Index.tsx": {
-    "file": "assets/Index-D5J1l_Lr.js",
+    "file": "assets/Index-BmofQgO-.js",
     "name": "Index",
     "src": "resources/js/pages/Organize/Index.tsx",
     "isDynamicEntry": true,
@@ -377,17 +392,17 @@
       "_select-erszBumT.js",
       "_IconTrash-BuDsjqi-.js",
       "resources/js/app.tsx",
-      "_useAsyncReveal-DWksNm9Y.js",
-      "_ListRowEnd-qI6wIZLk.js",
+      "_useAsyncReveal-BKtGY_KL.js",
+      "_ListRowEnd-BcCjtiL_.js",
       "_format-list-date-xaJk5Si0.js",
       "_useDocumentTitle-DmsDq3Xd.js",
-      "_EmptyStateReveal-BufHHYlN.js",
-      "_useMobilePageAction-CXaCkgKX.js",
+      "_EmptyStateReveal-D0c9Mfdw.js",
+      "_useMobilePageAction-CQO9hLRP.js",
       "_TableListSkeleton-NlIRo2m-.js"
     ]
   },
   "resources/js/pages/Posts/Editor.tsx": {
-    "file": "assets/Editor-BxP5JPuV.js",
+    "file": "assets/Editor-CoICKA7z.js",
     "name": "Editor",
     "src": "resources/js/pages/Posts/Editor.tsx",
     "isDynamicEntry": true,
@@ -395,21 +410,22 @@
       "_jsx-runtime-DOef64A_.js",
       "_createReactComponent-B9LuCgvU.js",
       "_text-CrZH25i9.js",
+      "_dropdown-DgYLtuXh.js",
       "_IconArrowLeft-Bx-H3Lii.js",
       "_IconLink-jRIKiM6P.js",
       "_IconChartBar-JEqKmwEt.js",
       "_IconChevronRight-CcmZIwLp.js",
+      "_divider-Bgm_62lU.js",
       "_IconSparkles-DvCZ5fji.js",
       "_IconTrash-BuDsjqi-.js",
       "resources/js/app.tsx",
       "_useDocumentTitle-DmsDq3Xd.js",
       "_form-DU5zNxNn.js",
-      "_format-relative-time-DdqTmuSi.js",
-      "_divider-B-c5eXdr.js"
+      "_format-relative-time-DdqTmuSi.js"
     ]
   },
   "resources/js/pages/Posts/Index.tsx": {
-    "file": "assets/Index-CmhkAGVy.js",
+    "file": "assets/Index-CdXJb-F1.js",
     "name": "Index",
     "src": "resources/js/pages/Posts/Index.tsx",
     "isDynamicEntry": true,
@@ -420,19 +436,19 @@
       "_IconChartBar-JEqKmwEt.js",
       "_IconTrash-BuDsjqi-.js",
       "resources/js/app.tsx",
-      "_useAsyncReveal-DWksNm9Y.js",
-      "_ListRowEnd-qI6wIZLk.js",
+      "_useAsyncReveal-BKtGY_KL.js",
+      "_ListRowEnd-BcCjtiL_.js",
       "_format-list-date-xaJk5Si0.js",
       "_useDocumentTitle-DmsDq3Xd.js",
       "_month-ZfdrgZDN.js",
       "_list-94l_-7TX.js",
-      "_EmptyStateReveal-BufHHYlN.js",
-      "_useMobilePageAction-CXaCkgKX.js",
+      "_EmptyStateReveal-D0c9Mfdw.js",
+      "_useMobilePageAction-CQO9hLRP.js",
       "_TableListSkeleton-NlIRo2m-.js"
     ]
   },
   "resources/js/pages/Posts/Stats.tsx": {
-    "file": "assets/Stats-BDWC_2ww.js",
+    "file": "assets/Stats-D_R4gple.js",
     "name": "Stats",
     "src": "resources/js/pages/Posts/Stats.tsx",
     "isDynamicEntry": true,
@@ -440,15 +456,15 @@
       "_jsx-runtime-DOef64A_.js",
       "_createReactComponent-B9LuCgvU.js",
       "_text-CrZH25i9.js",
-      "_StatCard-Dwy3NPUe.js",
+      "_StatCard-evLTFQho.js",
       "_IconArrowLeft-Bx-H3Lii.js",
       "resources/js/app.tsx",
-      "_useAsyncReveal-DWksNm9Y.js",
+      "_useAsyncReveal-BKtGY_KL.js",
       "_useDocumentTitle-DmsDq3Xd.js"
     ]
   },
   "resources/js/pages/Users/Index.tsx": {
-    "file": "assets/Index-Slp9J7R3.js",
+    "file": "assets/Index-CdqPvvAC.js",
     "name": "Index",
     "src": "resources/js/pages/Users/Index.tsx",
     "isDynamicEntry": true,
@@ -457,11 +473,11 @@
       "_text-CrZH25i9.js",
       "_IconTrash-BuDsjqi-.js",
       "resources/js/app.tsx",
-      "_useAsyncReveal-DWksNm9Y.js",
-      "_ListRowEnd-qI6wIZLk.js",
+      "_useAsyncReveal-BKtGY_KL.js",
+      "_ListRowEnd-BcCjtiL_.js",
       "_format-list-date-xaJk5Si0.js",
       "_useDocumentTitle-DmsDq3Xd.js",
-      "_useMobilePageAction-CXaCkgKX.js",
+      "_useMobilePageAction-CQO9hLRP.js",
       "_TableListSkeleton-NlIRo2m-.js"
     ]
   }
