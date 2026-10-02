@@ -29,6 +29,8 @@ A scheduled post becomes visible when `published_at` elapses (no extra write is 
 
 In the admin, open **Integrations** and configure **Webhooks**. Add an HTTPS URL, choose events, and **Send test**. Canvas POSTs a signed `webhook.test` first. Credentials are stored and the signing secret is shown **only after that test returns HTTP 2xx**. Status is then **Enabled**. A failed test leaves nothing saved.
 
+The URL's hostname must resolve only to public addresses (IPv4 and IPv6), Canvas connects to the validated address, and webhook delivery requires the PHP curl extension.
+
 Changing the URL on an existing webhook also probes the new endpoint first. If that test fails, the previous URL stays in place.
 
 A leftover URL and secret without an Enabled status is **Pending**. **Send test** retries the handshake.

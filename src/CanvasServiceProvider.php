@@ -17,6 +17,7 @@ use Canvas\Console\RemoveAccessCommand;
 use Canvas\Console\RolesCommand;
 use Canvas\Console\UiCommand;
 use Canvas\Console\UsersCommand;
+use Canvas\Contracts\HostResolver;
 use Canvas\Contracts\WebhookEndpointRepository;
 use Canvas\Events\PostDeleted;
 use Canvas\Events\PostPublished;
@@ -36,6 +37,7 @@ use Canvas\Policies\MediaPolicy;
 use Canvas\Policies\MediaTagPolicy;
 use Canvas\Policies\PostPolicy;
 use Canvas\Policies\UserPolicy;
+use Canvas\Support\DnsHostResolver;
 use Canvas\Support\MediaService;
 use Canvas\Support\MediaStorage;
 use Canvas\Support\SettingsRepository;
@@ -65,6 +67,7 @@ class CanvasServiceProvider extends ServiceProvider
         $this->app->singleton(MediaService::class);
         $this->app->singleton(SettingsRepository::class);
         $this->app->singleton(WebhookEndpointRepository::class, SettingsWebhookEndpointRepository::class);
+        $this->app->singleton(HostResolver::class, DnsHostResolver::class);
     }
 
     /**

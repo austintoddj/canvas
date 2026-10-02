@@ -1,6 +1,8 @@
 <?php
 
+use Canvas\Contracts\HostResolver;
 use Canvas\Support\WebhookUrlValidator;
+use Canvas\Tests\Support\FakeHostResolver;
 
 it('allows https urls with public hosts', function (): void {
     expect(WebhookUrlValidator::isAllowed('https://example.com/hooks/canvas'))->toBeTrue()
@@ -67,4 +69,36 @@ it('rejects urls longer than the max length', function (): void {
     $url = 'https://example.com/'.str_repeat('a', 2100);
 
     expect(WebhookUrlValidator::isAllowed($url))->toBeFalse();
+});
+
+// Regression: GHSA-2v46-cgmc-v9xr — every A and AAAA answer must be public.
+it('rejects a hostname when any resolved address is not public', function (array $ips): void {
+    app()->instance(HostResolver::class, new FakeHostResolver([$ips]));
+
+    expect(WebhookUrlValidator::isAllowed('https://example.com/hooks'))->toBeFalse()
+        ->and(WebhookUrlValidator::validatedTarget('https://example.com/hooks'))->toBeNull();
+})->with([
+    'public A and private AAAA' => [['8.8.8.8', 'fd00::1']],
+    'private AAAA only' => [['fd00::1']],
+    'loopback AAAA' => [['::1']],
+    'empty resolution' => [[]],
+]);
+
+// Regression: GHSA-2v46-cgmc-v9xr — public A and AAAA answers stay allowed.
+it('allows a hostname when every resolved address is public', function (): void {
+    app()->instance(HostResolver::class, new FakeHostResolver([
+        ['8.8.8.8', '2001:4860:4860::8888'],
+    ]));
+
+    expect(WebhookUrlValidator::isAllowed('https://example.com/hooks'))->toBeTrue()
+        ->and(WebhookUrlValidator::validatedTarget('https://example.com/hooks'))->toBe([
+            'host' => 'example.com',
+            'port' => 443,
+            'ips' => ['8.8.8.8', '2001:4860:4860::8888'],
+        ])
+        ->and(WebhookUrlValidator::validatedTarget('https://example.com:8443/hooks'))->toBe([
+            'host' => 'example.com',
+            'port' => 8443,
+            'ips' => ['8.8.8.8', '2001:4860:4860::8888'],
+        ]);
 });

@@ -1,6 +1,8 @@
 <?php
 
 use Canvas\CanvasServiceProvider;
+use Canvas\Contracts\HostResolver;
+use Canvas\Support\DnsHostResolver;
 use Canvas\Support\UploadLimits;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -149,6 +151,12 @@ it('does not register the digest schedule when mail is disabled', function (): v
     });
 
     expect($digest)->toBeNull();
+});
+
+it('binds the dns host resolver', function (): void {
+    (new CanvasServiceProvider($this->app))->register();
+
+    expect($this->app->make(HostResolver::class))->toBeInstanceOf(DnsHostResolver::class);
 });
 
 it('returns early from command registration when not running in console', function (): void {
