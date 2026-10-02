@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Canvas\Support;
 
+use Canvas\Contracts\HostResolver;
+
 final class WebhookUrlValidator
 {
     private const MAX_LENGTH = 2048;
@@ -30,34 +32,78 @@ final class WebhookUrlValidator
 
     public static function isAllowed(string $url): bool
     {
+        return self::validatedTarget($url) !== null;
+    }
+
+    /**
+     * Host, port, and public addresses for a webhook URL.
+     *
+     * Null when the URL is not an acceptable target. Hostname lookups must
+     * return at least one address, and every A or AAAA answer must be public.
+     *
+     * @return array{host: string, port: int, ips: list<string>}|null
+     */
+    public static function validatedTarget(string $url): ?array
+    {
         $url = trim($url);
 
         if ($url === '' || strlen($url) > self::MAX_LENGTH) {
-            return false;
+            return null;
         }
 
         if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-            return false;
+            return null;
         }
 
         $parts = parse_url($url);
 
         if ($parts === false) {
-            return false;
+            return null;
         }
 
         $scheme = strtolower((string) ($parts['scheme'] ?? ''));
         $host = $parts['host'] ?? null;
 
         if ($scheme !== 'https' || ! is_string($host) || $host === '') {
-            return false;
+            return null;
         }
 
         if (isset($parts['user']) || isset($parts['pass'])) {
-            return false;
+            return null;
         }
 
-        return self::hostResolvesToPublicAddress(self::normalizeHost($host));
+        $host = self::normalizeHost($host);
+        $port = self::portFromParts($parts);
+
+        if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            if (! self::ipIsPublic($host)) {
+                return null;
+            }
+
+            return [
+                'host' => $host,
+                'port' => $port,
+                'ips' => [$host],
+            ];
+        }
+
+        $ips = app(HostResolver::class)->resolve($host);
+
+        if ($ips === []) {
+            return null;
+        }
+
+        foreach ($ips as $ip) {
+            if (! self::ipIsPublic($ip)) {
+                return null;
+            }
+        }
+
+        return [
+            'host' => $host,
+            'port' => $port,
+            'ips' => $ips,
+        ];
     }
 
     /**
@@ -72,25 +118,18 @@ final class WebhookUrlValidator
         return $host;
     }
 
-    private static function hostResolvesToPublicAddress(string $host): bool
+    /**
+     * @param  array<string, mixed>  $parts
+     */
+    private static function portFromParts(array $parts): int
     {
-        if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
-            return self::ipIsPublic($host);
+        $port = $parts['port'] ?? null;
+
+        if (is_int($port) && $port >= 1 && $port <= 65535) {
+            return $port;
         }
 
-        $ips = gethostbynamel($host);
-
-        if ($ips === false || $ips === []) {
-            return false;
-        }
-
-        foreach ($ips as $ip) {
-            if (! self::ipIsPublic($ip)) {
-                return false;
-            }
-        }
-
-        return true;
+        return 443;
     }
 
     private static function ipIsPublic(string $ip): bool

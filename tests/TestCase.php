@@ -3,7 +3,10 @@
 namespace Canvas\Tests;
 
 use Canvas\CanvasServiceProvider;
+use Canvas\Contracts\HostResolver;
+use Canvas\Jobs\DeliverWebhookJob;
 use Canvas\Tests\Models\User;
+use Canvas\Tests\Support\FakeHostResolver;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -117,11 +120,16 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function setUp(): void
     {
+        DeliverWebhookJob::fakeCurlAvailability(null);
+
         $this->ensurePublishedConfigExists();
 
         parent::setUp();
 
         $this->publishPackageAssets();
+
+        // Webhook host checks must not depend on live DNS.
+        $this->app->instance(HostResolver::class, new FakeHostResolver);
     }
 
     protected function getPackageProviders($app): array

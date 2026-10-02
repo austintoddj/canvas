@@ -30,6 +30,11 @@ final class DeliverWebhookJob implements ShouldQueue
     public int $tries = 3;
 
     /**
+     * @internal Tests simulate a missing curl extension without unloading it.
+     */
+    private static ?bool $curlAvailableOverride = null;
+
+    /**
      * @param  array<string, mixed>  $payload
      */
     public function __construct(
@@ -59,7 +64,9 @@ final class DeliverWebhookJob implements ShouldQueue
             $delivery->incrementAttempts();
         }
 
-        if (! WebhookUrlValidator::isAllowed($this->url)) {
+        $target = WebhookUrlValidator::validatedTarget($this->url);
+
+        if ($target === null) {
             $delivery?->markFailed(
                 httpStatus: null,
                 responseBody: null,
@@ -69,11 +76,23 @@ final class DeliverWebhookJob implements ShouldQueue
             return;
         }
 
+        $curlOptions = self::curlOptions($target);
+
+        if ($curlOptions === null) {
+            $delivery?->markFailed(
+                httpStatus: null,
+                responseBody: null,
+                errorMessage: 'Webhook delivery requires the PHP curl extension.',
+            );
+
+            return;
+        }
+
         $body = json_encode($this->payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $timestamp = time();
         $signature = WebhookSigner::sign($this->secret, $body, $timestamp);
 
-        $response = Http::timeout(10)
+        $pending = Http::timeout(10)
             ->withoutRedirecting()
             ->withHeaders([
                 'User-Agent' => 'Canvas-Webhooks/1.0',
@@ -81,8 +100,15 @@ final class DeliverWebhookJob implements ShouldQueue
                 'Canvas-Delivery-Id' => $this->deliveryId,
                 'Canvas-Signature' => $signature,
             ])
-            ->withBody($body, 'application/json')
-            ->post($this->url);
+            ->withBody($body, 'application/json');
+
+        if ($curlOptions !== []) {
+            $pending = $pending->withOptions([
+                'curl' => $curlOptions,
+            ]);
+        }
+
+        $response = $pending->post($this->url);
 
         $responseBody = $response->body();
 
@@ -103,6 +129,59 @@ final class DeliverWebhookJob implements ShouldQueue
         );
     }
 
+    /**
+     * Curl options for a validated target.
+     *
+     * Hostname targets are pinned with CURLOPT_RESOLVE so the connection uses
+     * an address from validation. The request URL stays the original hostname
+     * for the Host header and TLS. IP literals are not pinned. Null when a
+     * hostname pin is required and the curl extension is unavailable.
+     *
+     * @param  array{host: string, port: int, ips: list<string>}  $target
+     * @return array<int, mixed>|null
+     */
+    public static function curlOptions(array $target): ?array
+    {
+        $curlAvailable = self::$curlAvailableOverride ?? self::curlExtensionSupportsPinning();
+        $needsPin = filter_var($target['host'], FILTER_VALIDATE_IP) === false;
+
+        if (! $curlAvailable) {
+            return $needsPin ? null : [];
+        }
+
+        $options = [
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
+        ];
+
+        if (defined('CURLOPT_PROTOCOLS_STR')) {
+            $options[CURLOPT_PROTOCOLS_STR] = 'https';
+        }
+
+        if (! $needsPin) {
+            return $options;
+        }
+
+        $ip = $target['ips'][0] ?? '';
+
+        if ($ip === '') {
+            return null;
+        }
+
+        $options[CURLOPT_RESOLVE] = [
+            sprintf('%s:%d:%s', $target['host'], $target['port'], self::resolveEntryAddress($ip)),
+        ];
+
+        return $options;
+    }
+
+    /**
+     * @internal Tests simulate a missing curl extension without unloading it.
+     */
+    public static function fakeCurlAvailability(?bool $available): void
+    {
+        self::$curlAvailableOverride = $available;
+    }
+
     public function failed(?Throwable $exception): void
     {
         $delivery = $this->delivery();
@@ -121,5 +200,22 @@ final class DeliverWebhookJob implements ShouldQueue
     private function delivery(): ?WebhookDelivery
     {
         return WebhookDelivery::query()->find($this->deliveryId);
+    }
+
+    private static function curlExtensionSupportsPinning(): bool
+    {
+        return extension_loaded('curl')
+            && defined('CURLOPT_RESOLVE')
+            && defined('CURLOPT_PROTOCOLS')
+            && defined('CURLPROTO_HTTPS');
+    }
+
+    private static function resolveEntryAddress(string $ip): string
+    {
+        if (str_contains($ip, ':')) {
+            return '['.$ip.']';
+        }
+
+        return $ip;
     }
 }
