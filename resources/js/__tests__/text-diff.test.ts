@@ -7,6 +7,17 @@ describe('stripHtml', () => {
         expect(stripHtml('<p>Hello <strong>world</strong></p>')).toBe('Hello world');
         expect(stripHtml('A &amp; B')).toBe('A & B');
     });
+
+    it('decodes ampersands after other entities', () => {
+        expect(stripHtml('&amp;lt;b&amp;gt;')).toBe('&lt;b&gt;');
+    });
+
+    it('drops script and style contents', () => {
+        expect(stripHtml('<script>alert(1)</script >Visible')).toBe('Visible');
+        expect(stripHtml('<style>body{color:red}</style ><p>Visible</p>')).toBe('Visible');
+        expect(stripHtml('<script>alert(1)')).toBe('');
+        expect(stripHtml('<style>body{color:red}')).toBe('');
+    });
 });
 
 describe('computeTextDiff', () => {
