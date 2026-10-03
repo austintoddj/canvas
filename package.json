@@ -66,7 +66,7 @@
         "tailwindcss": "^4.3.1",
         "typescript": "npm:@typescript/typescript6@^6.0.0",
         "typescript-7": "npm:typescript@^7",
-        "typescript-eslint": "^8.62.0",
+        "typescript-eslint": "^8.71.0",
         "vitest": "^4.1.10"
     }
 }
