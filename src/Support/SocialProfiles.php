@@ -39,6 +39,25 @@ final class SocialProfiles
     ];
 
     /**
+     * Path prefixes for non-personal pages; the prefix is kept in the stored handle
+     * so the link can be rebuilt against the platform root.
+     *
+     * @var array<string, list<string>>
+     */
+    private const TYPED_PREFIXES = [
+        'linkedin' => ['company', 'school', 'showcase'],
+        'youtube' => ['channel', 'c', 'user'],
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    private const TYPED_BASES = [
+        'linkedin' => 'https://www.linkedin.com/',
+        'youtube' => 'https://www.youtube.com/',
+    ];
+
+    /**
      * @var array<string, list<string>>
      */
     private const HOST_ALIASES = [
@@ -88,7 +107,11 @@ final class SocialProfiles
                     $segments[0] = substr($segments[0], 1);
                 }
 
-                if (($segments[0] ?? null) !== null && $segments[0] !== '') {
+                $prefix = strtolower($segments[0] ?? '');
+
+                if (in_array($prefix, self::TYPED_PREFIXES[$platform] ?? [], true) && ($segments[1] ?? null) !== null) {
+                    $value = $prefix.'/'.$segments[1];
+                } elseif (($segments[0] ?? null) !== null && $segments[0] !== '') {
                     $value = $segments[0];
                 }
             }
@@ -112,7 +135,18 @@ final class SocialProfiles
             return null;
         }
 
+        if (self::isTypedHandle($platform, $normalized)) {
+            return self::TYPED_BASES[$platform].$normalized;
+        }
+
         return self::BASES[$platform].$normalized;
+    }
+
+    private static function isTypedHandle(string $platform, string $handle): bool
+    {
+        $parts = explode('/', $handle, 2);
+
+        return count($parts) === 2 && in_array(strtolower($parts[0]), self::TYPED_PREFIXES[$platform] ?? [], true);
     }
 
     /**

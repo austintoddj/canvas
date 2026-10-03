@@ -103,6 +103,32 @@ describe('settings profile helpers', () => {
         expect(socialProfileUrl('github', '')).toBeNull();
     });
 
+    it('keeps type prefixes for linkedin and youtube pages', () => {
+        expect(normalizeSocialHandle('linkedin', 'https://www.linkedin.com/company/acme/')).toBe('company/acme');
+        expect(normalizeSocialHandle('linkedin', 'linkedin.com/school/mit/about')).toBe('school/mit');
+        expect(normalizeSocialHandle('linkedin', 'https://www.linkedin.com/showcase/acme-labs')).toBe(
+            'showcase/acme-labs'
+        );
+        expect(normalizeSocialHandle('linkedin', 'company/acme')).toBe('company/acme');
+        expect(normalizeSocialHandle('youtube', 'https://www.youtube.com/channel/UC123abc/videos')).toBe(
+            'channel/UC123abc'
+        );
+        expect(normalizeSocialHandle('youtube', 'https://www.youtube.com/c/canvas')).toBe('c/canvas');
+        expect(normalizeSocialHandle('youtube', 'https://m.youtube.com/user/canvas')).toBe('user/canvas');
+
+        expect(socialProfileUrl('linkedin', 'https://www.linkedin.com/company/acme')).toBe(
+            'https://www.linkedin.com/company/acme'
+        );
+        expect(socialProfileUrl('linkedin', 'school/mit')).toBe('https://www.linkedin.com/school/mit');
+        expect(socialProfileUrl('linkedin', 'company')).toBe('https://www.linkedin.com/in/company');
+        expect(socialProfileUrl('youtube', 'channel/UC123abc')).toBe('https://www.youtube.com/channel/UC123abc');
+        expect(socialProfileUrl('youtube', 'https://www.youtube.com/c/canvas')).toBe(
+            'https://www.youtube.com/c/canvas'
+        );
+        expect(socialProfileUrl('youtube', 'user/canvas')).toBe('https://www.youtube.com/user/canvas');
+        expect(socialProfileUrl('github', 'company/acme')).toBe('https://github.com/company/acme');
+    });
+
     it('strips full URLs when serializing social payload', () => {
         const form = emptyProfileForm();
         form.social.x = 'https://x.com/ada';

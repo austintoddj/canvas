@@ -54,6 +54,17 @@ export const SOCIAL_PLACEHOLDERS: Record<SocialFieldKey, string> = {
     tiktok: 'username',
 };
 
+/** Path prefixes for non-personal pages; kept in the stored handle so links resolve against the platform root. */
+const SOCIAL_TYPED_PREFIXES: Partial<Record<SocialFieldKey, string[]>> = {
+    linkedin: ['company', 'school', 'showcase'],
+    youtube: ['channel', 'c', 'user'],
+};
+
+const SOCIAL_TYPED_BASES: Partial<Record<SocialFieldKey, string>> = {
+    linkedin: 'https://www.linkedin.com/',
+    youtube: 'https://www.youtube.com/',
+};
+
 const SOCIAL_HOST_ALIASES: Record<SocialFieldKey, string[]> = {
     facebook: ['facebook.com', 'www.facebook.com', 'fb.com', 'www.fb.com', 'm.facebook.com'],
     instagram: ['instagram.com', 'www.instagram.com'],
@@ -142,7 +153,11 @@ export function normalizeSocialHandle(platform: SocialFieldKey, raw: string): st
                     segments[0] = segments[0].slice(1);
                 }
 
-                if (segments[0] !== undefined && segments[0] !== '') {
+                const prefix = segments[0]?.toLowerCase() ?? '';
+
+                if (SOCIAL_TYPED_PREFIXES[platform]?.includes(prefix) && segments[1] !== undefined) {
+                    value = `${prefix}/${segments[1]}`;
+                } else if (segments[0] !== undefined && segments[0] !== '') {
                     value = segments[0];
                 }
             }
@@ -168,6 +183,17 @@ export function socialProfileUrl(platform: SocialFieldKey, handle: string): stri
 
     if (normalized === '') {
         return null;
+    }
+
+    const [prefix, rest] = normalized.split('/', 2);
+    const typedBase = SOCIAL_TYPED_BASES[platform];
+
+    if (
+        typedBase !== undefined &&
+        rest !== undefined &&
+        SOCIAL_TYPED_PREFIXES[platform]?.includes(prefix.toLowerCase())
+    ) {
+        return `${typedBase}${normalized}`;
     }
 
     return `${SOCIAL_PROFILE_BASES[platform]}${normalized}`;
