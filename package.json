@@ -38,7 +38,7 @@
         "@tiptap/starter-kit": "^3.27.3",
         "clsx": "^2.1.1",
         "lowlight": "^3.3.0",
-        "motion": "^12.42.0",
+        "motion": "^13.4.6",
         "react": "^19.2.7",
         "react-dom": "^19.2.7",
         "react-router-dom": "^7.18.0",
