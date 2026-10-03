@@ -62,7 +62,7 @@
         "eslint-plugin-react-refresh": "^0.5.3",
         "happy-dom": "^20.8.3",
         "laravel-vite-plugin": "^3.1.0",
-        "prettier": "^3.9.1",
+        "prettier": "^3.9.9",
         "tailwindcss": "^4.3.1",
         "typescript": "npm:@typescript/typescript6@^6.0.0",
         "typescript-7": "npm:typescript@^7",
