@@ -123,16 +123,29 @@ export function updatePostMeta(meta: PostMeta | null, patch: Partial<PostMeta>):
     const next: PostMeta = { ...(meta ?? {}) };
 
     for (const [key, value] of Object.entries(patch) as [keyof PostMeta, string | undefined][]) {
-        const trimmed = value?.trim() ?? '';
-
-        if (trimmed === '') {
+        // Runs on each keystroke. Trimming here deletes the space between words.
+        // Blank overrides are still removed; persistence trims once in storedPostMeta().
+        if (value == null || value.trim() === '') {
             delete next[key];
         } else {
-            next[key] = trimmed;
+            next[key] = value;
         }
     }
 
     return hasMetaOverrides(next) ? next : null;
+}
+
+/** Trim overrides for the store payload. Keystroke state stays raw. */
+export function storedPostMeta(meta: PostMeta | null): PostMeta | null {
+    if (meta == null) {
+        return null;
+    }
+
+    return updatePostMeta(null, {
+        title: meta.title?.trim(),
+        description: meta.description?.trim(),
+        canonical_link: meta.canonical_link?.trim(),
+    });
 }
 
 /** Must stay under AiRewriteRequest SEO text max (3000). */

@@ -8,6 +8,7 @@ import {
     hasMetaOverrides,
     resolvePostSeo,
     seoSourceText,
+    storedPostMeta,
     stripHtml,
     truncate,
     updatePostMeta,
@@ -133,6 +134,43 @@ describe('seo helpers', () => {
             description: 'Desc',
         });
         expect(updatePostMeta({ title: 'Custom title' }, { title: '' })).toBeNull();
+    });
+
+    it('preserves spaces in nonblank meta values', () => {
+        // Regression: GH-1508
+        expect(updatePostMeta(null, { title: 'Pirates stole my hamsters! ' })).toEqual({
+            title: 'Pirates stole my hamsters! ',
+        });
+        expect(updatePostMeta(null, { description: ' A description with spaces ' })).toEqual({
+            description: ' A description with spaces ',
+        });
+        expect(updatePostMeta(null, { title: 'My title ' })).toEqual({ title: 'My title ' });
+        expect(updatePostMeta({ title: 'Custom title', description: 'Desc' }, { title: '   ' })).toEqual({
+            description: 'Desc',
+        });
+        expect(updatePostMeta({ description: 'Desc' }, { description: ' \n\t ' })).toBeNull();
+        expect(
+            storedPostMeta({
+                title: ' My title ',
+                description: '   ',
+                canonical_link: ' https://example.com/a ',
+            })
+        ).toEqual({
+            title: 'My title',
+            canonical_link: 'https://example.com/a',
+        });
+        expect(
+            resolvePostSeo(
+                {
+                    ...baseInput,
+                    meta: { title: ' My title ', description: '  A description with spaces  ' },
+                },
+                'https://example.com'
+            )
+        ).toMatchObject({
+            title: 'My title',
+            description: 'A description with spaces',
+        });
     });
 
     it('packs post content for SEO AI generation', () => {
