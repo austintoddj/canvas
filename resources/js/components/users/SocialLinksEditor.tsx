@@ -28,8 +28,11 @@ import {
     IconBrandFacebook,
     IconBrandGithub,
     IconBrandInstagram,
+    IconBrandLinkedin,
     IconBrandMedium,
+    IconBrandTiktok,
     IconBrandX,
+    IconBrandYoutube,
     IconCheck,
     IconChevronDown,
     IconPlus,
@@ -45,6 +48,9 @@ const SOCIAL_ICONS: Record<SocialFieldKey, SocialIcon> = {
     x: IconBrandX,
     github: IconBrandGithub,
     medium: IconBrandMedium,
+    linkedin: IconBrandLinkedin,
+    youtube: IconBrandYoutube,
+    tiktok: IconBrandTiktok,
 };
 
 type SocialLinkRow = {
