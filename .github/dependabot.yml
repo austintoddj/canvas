@@ -22,6 +22,17 @@ updates:
       directory: '/'
       schedule:
           interval: 'weekly'
+      target-branch: 'develop'
+      cooldown:
+          default-days: 5
+      groups:
+          tiptap:
+              patterns:
+                  - '@tiptap/*'
+          react-router:
+              patterns:
+                  - 'react-router'
+                  - 'react-router-dom'
       reviewers:
           - 'austintoddj'
       labels:
@@ -34,6 +45,9 @@ updates:
       directory: '/'
       schedule:
           interval: 'weekly'
+      target-branch: 'develop'
+      cooldown:
+          default-days: 5
       reviewers:
           - 'austintoddj'
       labels:
