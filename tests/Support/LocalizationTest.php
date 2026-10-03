@@ -144,6 +144,56 @@ it('ships complete translation dictionaries for every base language', function (
     }
 });
 
+it('matches english placeholder tokens in every locale', function (): void {
+    // Invariant: locale placeholders match en
+    $english = trans('canvas::app', [], 'en');
+    expect($english)->toBeArray();
+
+    $tokens = static function (string $value): array {
+        preg_match_all('/:[A-Za-z_]+/', $value, $matches);
+        $found = array_values(array_unique($matches[0]));
+        sort($found);
+
+        return $found;
+    };
+
+    $failures = [];
+
+    foreach (Localization::translationBases() as $base) {
+        $locale = trans('canvas::app', [], $base);
+        expect($locale)->toBeArray();
+
+        foreach ($english as $key => $value) {
+            if (! is_string($value)) {
+                continue;
+            }
+
+            $translated = $locale[$key] ?? null;
+
+            if (! is_string($translated)) {
+                $failures[] = "{$base} [{$key}] is not a string";
+
+                continue;
+            }
+
+            $expected = $tokens($value);
+            $actual = $tokens($translated);
+
+            if ($expected !== $actual) {
+                $failures[] = sprintf(
+                    '%s [%s] expected (%s) got (%s)',
+                    $base,
+                    $key,
+                    implode(', ', $expected),
+                    implode(', ', $actual),
+                );
+            }
+        }
+    }
+
+    expect($failures)->toBe([]);
+});
+
 it('returns labels for catalog codes', function (): void {
     expect(Localization::labelFor('pt-BR'))->toBe('Portuguese (Brazil)')
         ->and(Localization::labelFor('unknown'))->toBeNull()
