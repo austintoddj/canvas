@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+    - name: Report a security vulnerability
+      url: https://github.com/austintoddj/canvas/security/advisories/new
+      about: Please don't disclose security issues publicly. Report them privately here. See SECURITY.md.
     - name: Questions & Discussions
       url: https://github.com/austintoddj/canvas/discussions
       about: Use GitHub discussions for message-board style questions and discussions.
