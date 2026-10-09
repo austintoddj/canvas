@@ -40,7 +40,8 @@ describe('when listing post revisions', function (): void {
             ->and(array_key_exists('slug', $first))->toBeFalse()
             ->and($first['reason'] ?? null)->toBe(RevisionReason::Published->value)
             ->and($first['user']['id'] ?? null)->toBe($this->admin->id)
-            ->and($first['user']['name'] ?? null)->not->toBeNull();
+            ->and($first['user']['name'] ?? null)->not->toBeNull()
+            ->and($first['user']['username'] ?? null)->toBe($this->admin->canvasUser->username);
     });
 
     it('returns full body on show for diff', function (): void {
