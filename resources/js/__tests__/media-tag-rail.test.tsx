@@ -51,8 +51,12 @@ describe('MediaTagRail', () => {
         expect(screen.getByRole('button', { name: 'Untagged' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Hero' })).toBeInTheDocument();
         expect(screen.queryByText('12')).toBeNull();
-        expect(container.querySelector('[data-media-tag-rail="true"]')?.className).toContain('flex');
-        expect(container.querySelector('[data-media-tag-rail="true"]')?.className).not.toContain('lg:flex');
+        const rail = container.querySelector('[data-media-tag-rail="true"]');
+
+        expect(rail?.className).toContain('flex');
+        expect(rail?.className).toContain('overflow-x-clip');
+        expect(rail?.className).not.toContain('overflow-x-auto');
+        expect(rail?.className).not.toContain('lg:flex');
     });
 
     it('does not highlight all when an unknown tag is selected', () => {

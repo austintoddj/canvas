@@ -32,7 +32,7 @@ export function MediaViewMenu({ mime, sort, onMimeChange, onSortChange }: MediaV
                 type="button"
                 aria-label={`${t('media.file_type')}, ${t('media.sort_label')}`}
                 data-media-view-menu="true"
-                className="relative inline-flex size-8 shrink-0 items-center justify-center rounded-full text-zinc-500 transition hover:bg-zinc-950/5 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100"
+                className="relative inline-flex size-9 shrink-0 items-center justify-center rounded-full text-zinc-500 transition hover:bg-zinc-950/5 hover:text-zinc-800 focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:size-8 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-100"
             >
                 <IconAdjustmentsHorizontal className="size-4" aria-hidden="true" />
                 {active ? (

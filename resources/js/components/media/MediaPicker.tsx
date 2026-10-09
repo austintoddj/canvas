@@ -146,8 +146,8 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
 
     return (
         <div>
-            <div className="flex flex-wrap items-end justify-between gap-3">
-                <Field className="min-w-[12rem] flex-1">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <Field className="min-w-0 flex-1">
                     <Label className="sr-only">{t('media.search_label')}</Label>
                     <Input
                         name="media-search"
@@ -163,7 +163,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                         onChange={(next) => setScope(next)}
                         indicator="slide"
                         aria-label={t('media.scope_label')}
-                        className="shrink-0"
+                        className="w-full sm:w-auto"
                     >
                         <PillNavItem value="user">{t('media.scope_mine')}</PillNavItem>
                         <PillNavItem value="all">{t('common.all')}</PillNavItem>

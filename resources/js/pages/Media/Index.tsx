@@ -13,7 +13,7 @@ import { MediaDetailDrawer } from '@/components/media/MediaDetailDrawer';
 import { MediaEmptyVisual } from '@/components/media/MediaEmptyVisual';
 import { MediaGrid } from '@/components/media/MediaGrid';
 import { MediaGridSkeleton } from '@/components/media/MediaGridSkeleton';
-import { MediaTagPicker } from '@/components/media/MediaTagPicker';
+import { MediaBulkTagMenu } from '@/components/media/MediaBulkTagMenu';
 import { MediaTagRail } from '@/components/media/MediaTagRail';
 import { MediaViewMenu } from '@/components/media/MediaViewMenu';
 import { PageHeader } from '@/components/PageHeader';
@@ -38,14 +38,18 @@ import {
     chunkMediaIds,
     destroyMediaItems,
     filtersAfterUpload,
+    mediaMatchesTagFilter,
     prependMediaItems,
     removeMediaItems,
+    resolveActiveMediaTag,
     shouldRefillMediaListAfterDelete,
     summarizeMediaDestroys,
     summarizeMediaTagAttaches,
+    summarizeMediaTagDetaches,
     summarizeMediaUploads,
     toggleSelectedId,
     uploadMediaFiles,
+    withMediaTagMembership,
 } from '@/lib/media/batch';
 import { isFileDragTypes, reducePageDrag } from '@/lib/media/drag';
 import {
@@ -67,6 +71,16 @@ const ACCEPT = ALLOWED_MEDIA_MIME_TYPES.join(',');
 
 function updateFilters(current: URLSearchParams, patch: MediaUrlFilterPatch): URLSearchParams {
     return updateMediaListSearchParams(current, patch);
+}
+
+function withoutIds(selected: ReadonlySet<string>, ids: readonly string[]): Set<string> {
+    const next = new Set(selected);
+
+    for (const id of ids) {
+        next.delete(id);
+    }
+
+    return next;
 }
 
 function setDetailParam(current: URLSearchParams, mediaId: string | null): URLSearchParams {
@@ -108,7 +122,7 @@ export default function MediaIndex() {
     const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
     const [libraryTags, setLibraryTags] = useState<MediaTag[]>([]);
     const [tagMeta, setTagMeta] = useState({ all_count: 0, untagged_count: 0, truncated: false });
-    const [bulkTagOpen, setBulkTagOpen] = useState(false);
+    const [bulkTagging, setBulkTagging] = useState(false);
     const [creatingTag, setCreatingTag] = useState(false);
     const [renamingTag, setRenamingTag] = useState<MediaTag | null>(null);
     const [deletingTag, setDeletingTag] = useState<MediaTag | null>(null);
@@ -116,6 +130,7 @@ export default function MediaIndex() {
     const [tagFormError, setTagFormError] = useState<string | null>(null);
     const [tagBusy, setTagBusy] = useState(false);
     const libraryBodyRef = useRef<HTMLDivElement>(null);
+    const bulkTaggingRef = useRef(false);
     const [libraryBodyMinHeight, setLibraryBodyMinHeight] = useState<number | undefined>(undefined);
 
     if (filters.search !== syncedSearch) {
@@ -412,7 +427,12 @@ export default function MediaIndex() {
             return;
         }
 
-        setItems((current) => prependMediaItems(current, summary.succeeded));
+        const visibleUploads = summary.succeeded.filter((item) => mediaMatchesTagFilter(item.tags, filters));
+
+        if (visibleUploads.length > 0) {
+            setItems((current) => prependMediaItems(current, visibleUploads));
+        }
+
         void refreshTags();
 
         const nextFilters = filtersAfterUpload(filters);
@@ -453,30 +473,61 @@ export default function MediaIndex() {
         }
 
         if (attached.length > 0) {
-            setItems((current) =>
-                current.map((item) => {
-                    if (!attached.includes(item.id)) {
-                        return item;
-                    }
+            setItems((current) => withMediaTagMembership(current, attached, tag, 'attach', filters));
 
-                    const tags = item.tags ?? [];
+            if (filters.untagged) {
+                setSelectedIds((current) => withoutIds(current, attached));
+            }
 
-                    if (tags.some((entry) => entry.id === tag.id)) {
-                        return item;
-                    }
-
-                    return { ...item, tags: [...tags, { id: tag.id, name: tag.name }] };
-                })
-            );
             void refreshTags();
         }
 
         return attached;
     }
 
+    async function detachActiveTag(tag: { id: string; name: string }) {
+        const ids = Array.from(selectedIds);
+
+        if (ids.length === 0 || bulkTaggingRef.current || bulkDeleting) {
+            return;
+        }
+
+        bulkTaggingRef.current = true;
+        setBulkTagging(true);
+
+        const detached: string[] = [];
+        const skipped: string[] = [];
+
+        try {
+            for (const chunk of chunkMediaIds(ids)) {
+                try {
+                    const result = await mediaTagsApi.detach(tag.id, { media_ids: chunk }, { scope: filters.scope });
+                    detached.push(...result.detached);
+                    skipped.push(...result.skipped);
+                } catch {
+                    skipped.push(...chunk);
+                }
+            }
+
+            const summary = summarizeMediaTagDetaches(detached, skipped, tag.name);
+
+            if (summary !== null) {
+                toastFromTone(summary.message, summary.tone);
+            }
+
+            if (detached.length > 0) {
+                setItems((current) => withMediaTagMembership(current, detached, tag, 'detach', filters));
+                setSelectedIds((current) => withoutIds(current, detached));
+                void refreshTags();
+            }
+        } finally {
+            bulkTaggingRef.current = false;
+            setBulkTagging(false);
+        }
+    }
+
     async function handlePickBulkTag(tag: MediaTag) {
         const ids = Array.from(selectedIds);
-        setBulkTagOpen(false);
         await attachTagToIds(tag, ids);
     }
 
@@ -731,6 +782,8 @@ export default function MediaIndex() {
     const showFilledLibrary = itemCount > 0;
     const canLoadMore = showFilledLibrary && !loading && page < lastPage;
     const selectionCount = selectedIds.size;
+    const filteredTag = resolveActiveMediaTag(filters.tag, libraryTags, items);
+    const tagActionBusy = bulkDeleting || bulkTagging || uploading;
 
     useLayoutEffect(() => {
         const node = libraryBodyRef.current;
@@ -832,7 +885,11 @@ export default function MediaIndex() {
             </AnimatePresence>
 
             <div
-                className={selectionCount > 0 ? 'space-y-8 pb-[calc(5.5rem+env(safe-area-inset-bottom))]' : 'space-y-8'}
+                className={
+                    selectionCount > 0
+                        ? 'space-y-8 pb-[calc(8.5rem+env(safe-area-inset-bottom))] sm:pb-[calc(5.5rem+env(safe-area-inset-bottom))]'
+                        : 'space-y-8'
+                }
             >
                 <PageHeader
                     title={t('media.title')}
@@ -849,8 +906,11 @@ export default function MediaIndex() {
                 </PageHeader>
 
                 <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2" data-media-list-filters="true">
-                        <div className="min-w-0 flex-1">
+                    <div
+                        className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:gap-3"
+                        data-media-list-filters="true"
+                    >
+                        <div className="min-w-0 lg:flex-1">
                             <MediaTagRail
                                 tags={libraryTags}
                                 allCount={tagMeta.all_count}
@@ -874,33 +934,35 @@ export default function MediaIndex() {
                                 onDelete={(tag) => setDeletingTag(tag)}
                             />
                         </div>
-                        <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1.5">
-                            <label className="sr-only" htmlFor="media-search">
-                                {t('media.search_label')}
-                            </label>
-                            <div className="flex h-8 w-36 items-center gap-1.5 rounded-full bg-zinc-950/[0.04] px-2.5 ring-1 ring-zinc-950/8 sm:w-52 dark:bg-white/5 dark:ring-white/10">
-                                <IconSearch className="size-3.5 shrink-0 text-zinc-400" aria-hidden="true" />
-                                <input
-                                    id="media-search"
-                                    name="media-search"
-                                    value={searchDraft}
-                                    placeholder={t('media.search_label')}
-                                    className="min-w-0 flex-1 bg-transparent text-[13px] text-zinc-950 outline-none placeholder:text-zinc-400 dark:text-white dark:placeholder:text-zinc-500"
-                                    onChange={(event) => setSearchDraft(event.target.value)}
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end lg:shrink-0">
+                            <div className="flex min-w-0 items-center gap-1.5">
+                                <label className="sr-only" htmlFor="media-search">
+                                    {t('media.search_label')}
+                                </label>
+                                <div className="flex h-9 min-w-0 flex-1 items-center gap-1.5 rounded-full bg-zinc-950/[0.04] px-3 ring-1 ring-zinc-950/8 sm:h-8 sm:w-52 sm:flex-none sm:px-2.5 dark:bg-white/5 dark:ring-white/10">
+                                    <IconSearch className="size-3.5 shrink-0 text-zinc-400" aria-hidden="true" />
+                                    <input
+                                        id="media-search"
+                                        name="media-search"
+                                        value={searchDraft}
+                                        placeholder={t('media.search_label')}
+                                        className="min-w-0 flex-1 bg-transparent text-sm text-zinc-950 outline-none placeholder:text-zinc-400 sm:text-[13px] dark:text-white dark:placeholder:text-zinc-500"
+                                        onChange={(event) => setSearchDraft(event.target.value)}
+                                    />
+                                </div>
+                                <MediaViewMenu
+                                    mime={filters.mime}
+                                    sort={filters.sort}
+                                    onMimeChange={(mime) => setFilters({ mime })}
+                                    onSortChange={(sort) => setFilters({ sort })}
                                 />
                             </div>
-                            <MediaViewMenu
-                                mime={filters.mime}
-                                sort={filters.sort}
-                                onMimeChange={(mime) => setFilters({ mime })}
-                                onSortChange={(sort) => setFilters({ sort })}
-                            />
                             {canViewAllMedia ? (
                                 <PillNav
                                     value={filters.scope}
                                     onChange={(scope) => setFilters({ scope })}
                                     aria-label={t('media.scope_label')}
-                                    className="shrink-0"
+                                    className="w-full sm:w-auto"
                                     indicator="slide"
                                 >
                                     <PillNavItem value="user">{t('media.scope_mine')}</PillNavItem>
@@ -990,7 +1052,22 @@ export default function MediaIndex() {
                 mediaId={detailId}
                 onClose={closeDetail}
                 onUpdated={(updated) => {
-                    setItems((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+                    const stillVisible = mediaMatchesTagFilter(updated.tags, filters);
+
+                    setItems((current) =>
+                        current.flatMap((item) => {
+                            if (item.id !== updated.id) {
+                                return [item];
+                            }
+
+                            return stillVisible ? [updated] : [];
+                        })
+                    );
+
+                    if (!stillVisible) {
+                        setSelectedIds((current) => withoutIds(current, [updated.id]));
+                    }
+
                     void refreshTags();
                 }}
                 onDeleted={(mediaId) => {
@@ -1006,22 +1083,6 @@ export default function MediaIndex() {
                     });
                 }}
             />
-
-            <Alert open={bulkTagOpen} onClose={() => setBulkTagOpen(false)} size="sm">
-                <AlertTitle>{t('media.tags_add')}</AlertTitle>
-                <div className="mt-3">
-                    <MediaTagPicker
-                        tags={libraryTags}
-                        onPick={(tag) => void handlePickBulkTag(tag)}
-                        onCreate={(name) => handleCreateBulkTag(name)}
-                    />
-                </div>
-                <AlertActions>
-                    <Button type="button" plain onClick={() => setBulkTagOpen(false)}>
-                        {t('common.cancel')}
-                    </Button>
-                </AlertActions>
-            </Alert>
 
             <Alert
                 open={creatingTag}
@@ -1154,36 +1215,56 @@ export default function MediaIndex() {
                         exit={{ opacity: 0, y: 12 }}
                         transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.75 }}
                     >
-                        <div className="pointer-events-auto flex w-full max-w-lg flex-wrap items-center justify-between gap-3 rounded-2xl border border-canvas-border bg-canvas-panel px-4 py-3 shadow-lg ring-1 ring-zinc-950/5 dark:border-canvas-border-dark dark:bg-canvas-panel-dark dark:shadow-black/40 dark:ring-white/10">
-                            <Text className="text-sm font-medium text-zinc-950 dark:text-white" aria-live="polite">
-                                {t('media.selected_count', { count: selectionCount })}
-                            </Text>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <Button
-                                    type="button"
-                                    plain
-                                    disabled={bulkDeleting}
-                                    onClick={() => setSelectedIds(new Set())}
-                                >
-                                    {t('media.clear_selection')}
-                                </Button>
-                                <Button
-                                    type="button"
-                                    outline
-                                    disabled={bulkDeleting || uploading}
-                                    onClick={() => setBulkTagOpen(true)}
-                                >
-                                    {t('media.tags_add')}
-                                </Button>
-                                <Button
-                                    type="button"
-                                    color="red"
-                                    disabled={bulkDeleting || uploading}
-                                    onClick={openBulkDeleteConfirm}
-                                >
-                                    <IconTrash data-slot="icon" />
-                                    {bulkDeleting ? t('common.deleting') : t('common.delete')}
-                                </Button>
+                        <div className="pointer-events-auto w-full max-w-lg rounded-2xl border border-canvas-border bg-canvas-panel px-3 py-3 shadow-lg ring-1 ring-zinc-950/5 sm:px-4 dark:border-canvas-border-dark dark:bg-canvas-panel-dark dark:shadow-black/40 dark:ring-white/10">
+                            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                                <div className="flex items-center justify-between gap-3 sm:justify-start">
+                                    <Text
+                                        className="text-sm font-medium text-zinc-950 dark:text-white"
+                                        aria-live="polite"
+                                    >
+                                        {t('media.selected_count', { count: selectionCount })}
+                                    </Text>
+                                    <Button
+                                        type="button"
+                                        plain
+                                        disabled={tagActionBusy}
+                                        onClick={() => setSelectedIds(new Set())}
+                                    >
+                                        {t('media.clear_selection')}
+                                    </Button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+                                    {filteredTag !== null ? (
+                                        <Button
+                                            type="button"
+                                            outline
+                                            className="w-full sm:w-auto"
+                                            disabled={tagActionBusy}
+                                            onClick={() => {
+                                                void detachActiveTag(filteredTag);
+                                            }}
+                                        >
+                                            {t('media.tags_remove')}
+                                        </Button>
+                                    ) : (
+                                        <MediaBulkTagMenu
+                                            tags={libraryTags}
+                                            disabled={tagActionBusy}
+                                            onPick={(tag) => void handlePickBulkTag(tag)}
+                                            onCreate={(name) => handleCreateBulkTag(name)}
+                                        />
+                                    )}
+                                    <Button
+                                        type="button"
+                                        color="red"
+                                        className="w-full sm:w-auto"
+                                        disabled={tagActionBusy}
+                                        onClick={openBulkDeleteConfirm}
+                                    >
+                                        <IconTrash data-slot="icon" />
+                                        {bulkDeleting ? t('common.deleting') : t('common.delete')}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </motion.div>
