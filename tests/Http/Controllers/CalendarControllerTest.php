@@ -42,6 +42,8 @@ it('returns posts with published_at in the requested range', function (): void {
         ->assertJsonPath('posts.0.id', (string) $inRange->id)
         ->assertJsonPath('posts.0.title', 'Mid-month post')
         ->assertJsonPath('posts.0.status', 'published')
+        ->assertJsonPath('posts.0.user.username', $this->admin->canvasUser->username)
+        ->assertJsonPath('posts.0.user.name', $this->admin->name)
         ->assertJsonStructure([
             'posts' => [
                 [

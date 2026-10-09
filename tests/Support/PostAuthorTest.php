@@ -5,6 +5,39 @@ use Canvas\Models\Post;
 use Canvas\Support\PostAuthor;
 use Canvas\Tests\Models\User;
 
+// Regression: GH-1532 — canvas_users is keyed by user_id, not id
+it('maps canvas profiles by user_id so authors keep username and avatar', function (): void {
+    $ada = User::factory()->create(['name' => 'Ada Lovelace']);
+    $grace = User::factory()->create(['name' => 'Grace Hopper']);
+
+    CanvasUser::factory()->create([
+        'user_id' => $ada->id,
+        'username' => 'ada',
+        'avatar' => 'https://cdn.example.com/ada.jpg',
+    ]);
+    CanvasUser::factory()->create([
+        'user_id' => $grace->id,
+        'username' => 'grace',
+        'avatar' => null,
+    ]);
+
+    $mapped = PostAuthor::mapByUserIds([$ada->id, $grace->id, $ada->id, null, 0]);
+
+    expect($mapped)->toHaveCount(2)
+        ->and($mapped[$ada->id])->toMatchArray([
+            'id' => $ada->id,
+            'name' => 'Ada Lovelace',
+            'username' => 'ada',
+            'avatar_url' => 'https://cdn.example.com/ada.jpg',
+        ])
+        ->and($mapped[$grace->id])->toMatchArray([
+            'id' => $grace->id,
+            'name' => 'Grace Hopper',
+            'username' => 'grace',
+            'avatar_url' => null,
+        ]);
+});
+
 it('returns null when a post has no user_id', function (): void {
     $post = Post::factory()->make(['user_id' => null]);
 

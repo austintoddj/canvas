@@ -71,10 +71,12 @@ final class PostAuthor
 
         /** @var class-string<Model> $userModel */
         $userModel = config('canvas.user_model');
-        $users = $userModel::query()->whereIn('id', $ids)->get()->keyBy(
+        $users = $userModel::query()->whereKey($ids)->get()->keyBy(
             static fn (Model $user): int => (int) $user->getKey()
         );
-        $canvasUsers = CanvasUser::query()->whereIn('id', $ids)->get()->keyBy('id');
+        $canvasUsers = CanvasUser::query()->whereKey($ids)->get()->keyBy(
+            static fn (CanvasUser $canvasUser): int => (int) $canvasUser->getKey()
+        );
 
         $mapped = [];
 
