@@ -213,7 +213,7 @@ function EditorToolbar({
 
     return (
         <div
-            className="flex flex-nowrap items-center border-b border-zinc-950/10 py-1.5 dark:border-white/10"
+            className="flex shrink-0 flex-nowrap items-center border-b border-zinc-950/10 bg-white py-1.5 dark:border-white/10 dark:bg-zinc-900"
             data-post-body-toolbar="true"
             role="toolbar"
             aria-label={t('editor.formatting')}
@@ -821,7 +821,7 @@ export default function PostBodyEditor({
         shouldRerenderOnTransaction: true,
         editorProps: {
             attributes: {
-                class: 'canvas-post-body min-h-[28rem] px-4 py-4 focus:outline-none',
+                class: 'canvas-post-body min-h-[max(28rem,100%)] px-4 py-4 focus:outline-none',
                 'data-post-body-editor': 'true',
             },
         },
@@ -1086,7 +1086,7 @@ export default function PostBodyEditor({
 
     return (
         <div
-            className="overflow-hidden rounded-lg border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-zinc-900"
+            className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-zinc-950/10 bg-white dark:border-white/10 dark:bg-zinc-900"
             data-post-body-surface="true"
         >
             {editor ? (
@@ -1109,10 +1109,12 @@ export default function PostBodyEditor({
                     onToggleFocusMode={onToggleFocusMode}
                 />
             ) : null}
-            <EditorContent editor={editor} />
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" data-post-body-scroll="true">
+                <EditorContent editor={editor} />
+            </div>
             {editor ? (
                 <div
-                    className="flex items-center justify-end gap-3 border-t border-zinc-950/10 px-3 py-1.5 text-xs text-canvas-muted dark:border-white/10 dark:text-canvas-muted-dark"
+                    className="flex shrink-0 items-center justify-end gap-3 border-t border-zinc-950/10 px-3 py-1.5 text-xs text-canvas-muted dark:border-white/10 dark:text-canvas-muted-dark"
                     data-post-body-stats="true"
                     aria-live="polite"
                 >

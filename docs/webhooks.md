@@ -45,14 +45,14 @@ A leftover URL and secret without an Enabled status is **Pending**. **Send test*
 
 ## Delivery
 
-|                      |                                 |
-| -------------------- | ------------------------------- |
-| Method               | `POST`                          |
-| Content-Type         | `application/json`              |
-| `Canvas-Event`       | Event id                        |
-| `Canvas-Delivery-Id` | Delivery UUID                   |
-| `Canvas-Signature`   | `t={unix},v1={hex}`             |
-| Success              | HTTP 2xx (retries with backoff) |
+|                      |                                     |
+| -------------------- | ----------------------------------- |
+| Method               | `POST`                              |
+| Content-Type         | `application/json`                  |
+| `Canvas-Event`       | Event id                            |
+| `Canvas-Delivery-Id` | Delivery UUID                       |
+| `Canvas-Signature`   | `t={unix},v1={hex}`                 |
+| Success              | HTTP 2xx (retries with backoff)     |
 | Redirects            | Not followed; HTTP 3xx is a failure |
 
 The signature is HMAC-SHA256 of `{timestamp}.{rawBody}` using your secret. Verify with `Canvas\Support\WebhookSigner::verify($secret, $rawBody, $header)`, and reject stale timestamps.

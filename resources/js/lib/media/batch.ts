@@ -127,15 +127,197 @@ export function appendMediaItems(existing: Media[], incoming: Media[]): Media[] 
  * to "Mine" so the new files sit in the expected personal library view. Search
  * and mime filters are left alone so the user's context is not wiped.
  */
-export function filtersAfterUpload<TScope extends 'user' | 'all', TMime extends string>(filters: {
-    scope: TScope;
+export function filtersAfterUpload<TMime extends string, TSort extends string = 'newest' | 'oldest'>(filters: {
+    scope: 'user' | 'all';
     search: string;
     mime: TMime;
-}): { scope: 'user'; search: string; mime: TMime } {
+    sort?: TSort;
+    tag?: string | null;
+    untagged?: boolean;
+}): {
+    scope: 'user';
+    search: string;
+    mime: TMime;
+    sort?: TSort;
+    tag: string | null;
+    untagged: boolean;
+} {
     return {
         scope: 'user',
         search: filters.search,
         mime: filters.mime,
+        sort: filters.sort,
+        tag: filters.tag ?? null,
+        untagged: Boolean(filters.untagged),
+    };
+}
+
+export const MEDIA_TAG_ATTACH_CHUNK = 50;
+
+export function chunkMediaIds(ids: string[], size: number = MEDIA_TAG_ATTACH_CHUNK): string[][] {
+    const chunks: string[][] = [];
+
+    for (let index = 0; index < ids.length; index += size) {
+        chunks.push(ids.slice(index, index + size));
+    }
+
+    return chunks;
+}
+
+export type MediaTagRef = { id: string; name: string };
+
+export type MediaTagListFilter = {
+    tag?: string | null;
+    untagged?: boolean;
+};
+
+/** Whether a media row still belongs in the active tag or untagged view. */
+export function mediaMatchesTagFilter(
+    tags: readonly { id: string }[] | null | undefined,
+    filter: MediaTagListFilter
+): boolean {
+    const activeTag = filter.tag ?? null;
+
+    if (activeTag) {
+        return (tags ?? []).some((tag) => tag.id === activeTag);
+    }
+
+    if (filter.untagged) {
+        return (tags ?? []).length === 0;
+    }
+
+    return true;
+}
+
+/**
+ * The library filter already names the tag, so bulk selection removes from it.
+ * All images and Untagged still add a tag.
+ */
+export function resolveActiveMediaTag(
+    tagId: string | null | undefined,
+    libraryTags: readonly MediaTagRef[],
+    items: readonly { tags?: readonly MediaTagRef[] | null }[]
+): MediaTagRef | null {
+    if (tagId === null || tagId === undefined || tagId === '') {
+        return null;
+    }
+
+    const fromLibrary = libraryTags.find((tag) => tag.id === tagId);
+
+    if (fromLibrary !== undefined) {
+        return { id: fromLibrary.id, name: fromLibrary.name };
+    }
+
+    for (const item of items) {
+        const match = item.tags?.find((tag) => tag.id === tagId);
+
+        if (match !== undefined) {
+            return { id: match.id, name: match.name };
+        }
+    }
+
+    return { id: tagId, name: '' };
+}
+
+export function withMediaTagMembership<T extends { id: string; tags?: MediaTagRef[] | null }>(
+    items: readonly T[],
+    ids: readonly string[],
+    tag: MediaTagRef,
+    mode: 'attach' | 'detach',
+    filter: MediaTagListFilter
+): T[] {
+    const selected = new Set(ids);
+
+    return items.flatMap((item) => {
+        if (!selected.has(item.id)) {
+            return [item];
+        }
+
+        const tags = item.tags ?? [];
+        const nextTags =
+            mode === 'attach'
+                ? tags.some((entry) => entry.id === tag.id)
+                    ? tags
+                    : [...tags, { id: tag.id, name: tag.name }]
+                : tags.filter((entry) => entry.id !== tag.id);
+        const next = { ...item, tags: nextTags };
+
+        return mediaMatchesTagFilter(next.tags, filter) ? [next] : [];
+    });
+}
+
+export function summarizeMediaTagAttaches(
+    attached: string[],
+    skipped: string[],
+    tagName = ''
+): { message: string; tone: 'success' | 'warning' | 'error' } | null {
+    if (attached.length === 0 && skipped.length === 0) {
+        return null;
+    }
+
+    if (attached.length > 0 && skipped.length === 0) {
+        const count = attached.length;
+        const name = tagName.trim();
+
+        return {
+            message: count === 1 ? t('media.tags_attached', { name }) : t('media.tags_attached_other', { count, name }),
+            tone: 'success',
+        };
+    }
+
+    if (attached.length === 0 && skipped.length > 0) {
+        const count = skipped.length;
+
+        return {
+            message: count === 1 ? t('media.tags_attach_failed') : t('media.tags_attach_failed_other', { count }),
+            tone: 'error',
+        };
+    }
+
+    return {
+        message: t('media.tags_partial', { attached: attached.length, skipped: skipped.length }),
+        tone: 'warning',
+    };
+}
+
+export function summarizeMediaTagDetaches(
+    detached: string[],
+    skipped: string[],
+    tagName = ''
+): { message: string; tone: 'success' | 'warning' | 'error' } | null {
+    if (detached.length === 0 && skipped.length === 0) {
+        return null;
+    }
+
+    if (detached.length > 0 && skipped.length === 0) {
+        const count = detached.length;
+        const name = tagName.trim();
+
+        if (name === '') {
+            return {
+                message: t('media.tags_detached'),
+                tone: 'success',
+            };
+        }
+
+        return {
+            message: count === 1 ? t('media.tags_removed', { name }) : t('media.tags_removed_other', { count, name }),
+            tone: 'success',
+        };
+    }
+
+    if (detached.length === 0 && skipped.length > 0) {
+        const count = skipped.length;
+
+        return {
+            message: count === 1 ? t('media.tags_detach_failed') : t('media.tags_detach_failed_other', { count }),
+            tone: 'error',
+        };
+    }
+
+    return {
+        message: t('media.tags_detach_partial', { removed: detached.length, skipped: skipped.length }),
+        tone: 'warning',
     };
 }
 

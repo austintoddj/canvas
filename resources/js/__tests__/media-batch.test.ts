@@ -4,13 +4,18 @@ import {
     appendMediaItems,
     destroyMediaItems,
     filtersAfterUpload,
+    mediaMatchesTagFilter,
     prependMediaItems,
     removeMediaItems,
+    resolveActiveMediaTag,
     shouldRefillMediaListAfterDelete,
     summarizeMediaDestroys,
+    summarizeMediaTagAttaches,
+    summarizeMediaTagDetaches,
     summarizeMediaUploads,
     toggleSelectedId,
     uploadMediaFiles,
+    withMediaTagMembership,
     type MediaDestroyResult,
     type MediaUploadResult,
 } from '@/lib/media/batch';
@@ -52,6 +57,17 @@ describe('media batch helpers', () => {
                 'media.upload_failed': 'Upload failed.',
                 'media.upload_failed_detail': 'Upload failed. :detail',
                 'media.delete_error': 'Unable to delete this media item.',
+                'media.tags_attached': 'Added to “:name”.',
+                'media.tags_attached_other': 'Added :count items to “:name”.',
+                'media.tags_partial': ':attached tagged, :skipped skipped.',
+                'media.tags_attach_failed': 'Unable to tag this image.',
+                'media.tags_attach_failed_other': 'Unable to tag :count images.',
+                'media.tags_removed': 'Removed from “:name”.',
+                'media.tags_removed_other': 'Removed :count items from “:name”.',
+                'media.tags_detach_partial': ':removed removed, :skipped skipped.',
+                'media.tags_detach_failed': 'Unable to remove the tag from this image.',
+                'media.tags_detach_failed_other': 'Unable to remove the tag from :count images.',
+                'media.tags_detached': 'Tag removed.',
             })
         );
 
@@ -116,13 +132,70 @@ describe('media batch helpers', () => {
         ]);
         expect(Array.from(toggleSelectedId(new Set(['a']), 'b'))).toEqual(['a', 'b']);
         expect(Array.from(toggleSelectedId(new Set(['a']), 'a'))).toEqual([]);
+        expect(
+            filtersAfterUpload({
+                scope: 'all',
+                search: 'hero',
+                mime: 'image/png',
+                sort: 'oldest',
+                tag: '3f2c8a10-1111-4111-8111-aaaaaaaaaaaa',
+                untagged: false,
+            })
+        ).toEqual({
+            scope: 'user',
+            search: 'hero',
+            mime: 'image/png',
+            sort: 'oldest',
+            tag: '3f2c8a10-1111-4111-8111-aaaaaaaaaaaa',
+            untagged: false,
+        });
         expect(filtersAfterUpload({ scope: 'all', search: 'hero', mime: 'image/png' })).toEqual({
             scope: 'user',
             search: 'hero',
             mime: 'image/png',
+            sort: undefined,
+            tag: null,
+            untagged: false,
         });
         expect(shouldRefillMediaListAfterDelete(0, 2)).toBe(true);
         expect(shouldRefillMediaListAfterDelete(1, 2)).toBe(false);
         expect(shouldRefillMediaListAfterDelete(0, 1)).toBe(false);
+        expect(summarizeMediaTagAttaches(['a'], [], 'Hero')?.message).toBe('Added to “Hero”.');
+        expect(summarizeMediaTagAttaches(['a', 'b'], [], 'Hero')?.message).toBe('Added 2 items to “Hero”.');
+        expect(summarizeMediaTagAttaches(['a', 'b'], ['c'])?.message).toBe('2 tagged, 1 skipped.');
+        expect(summarizeMediaTagAttaches([], ['a', 'b'])?.tone).toBe('error');
+        expect(summarizeMediaTagDetaches(['a'], [], 'Hero')?.message).toBe('Removed from “Hero”.');
+        expect(summarizeMediaTagDetaches(['a', 'b'], [], 'Hero')?.message).toBe('Removed 2 items from “Hero”.');
+        expect(summarizeMediaTagDetaches(['a'], ['b'])?.message).toBe('1 removed, 1 skipped.');
+        expect(summarizeMediaTagDetaches([], ['a', 'b'])?.tone).toBe('error');
+        expect(summarizeMediaTagDetaches(['a'], [], '  ')?.message).toBe('Tag removed.');
+        expect(summarizeMediaTagDetaches([], [])).toBeNull();
+    });
+
+    it('keeps library rows aligned with the active tag filter', () => {
+        const hero = { id: 'tag-1', name: 'Hero' };
+        const tagged = { ...media('a'), tags: [hero] };
+        const alsoTagged = { ...media('b'), tags: [hero] };
+        const bare = { ...media('c'), tags: [] as { id: string; name: string }[] };
+
+        expect(mediaMatchesTagFilter(tagged.tags, { tag: 'tag-1' })).toBe(true);
+        expect(mediaMatchesTagFilter(bare.tags, { tag: 'tag-1' })).toBe(false);
+        expect(mediaMatchesTagFilter(bare.tags, { untagged: true })).toBe(true);
+        expect(mediaMatchesTagFilter(tagged.tags, { untagged: true })).toBe(false);
+        expect(mediaMatchesTagFilter(tagged.tags, {})).toBe(true);
+
+        expect(resolveActiveMediaTag('tag-1', [hero], [])).toEqual(hero);
+        expect(resolveActiveMediaTag(null, [hero], [])).toBeNull();
+        expect(resolveActiveMediaTag('tag-9', [], [{ tags: [{ id: 'tag-9', name: 'From item' }] }])).toEqual({
+            id: 'tag-9',
+            name: 'From item',
+        });
+
+        expect(
+            withMediaTagMembership([tagged, alsoTagged], ['a'], hero, 'detach', { tag: 'tag-1' }).map((item) => item.id)
+        ).toEqual(['b']);
+        expect(withMediaTagMembership([bare], ['c'], hero, 'attach', { untagged: true })).toEqual([]);
+        expect(withMediaTagMembership([bare], ['c'], hero, 'attach', {})[0]?.tags).toEqual([hero]);
+        expect(withMediaTagMembership([tagged], ['a'], hero, 'attach', { tag: 'tag-1' })[0]?.tags).toEqual([hero]);
     });
 });

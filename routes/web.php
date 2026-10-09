@@ -4,6 +4,7 @@ use Canvas\Http\Controllers\AiRewriteController;
 use Canvas\Http\Controllers\CalendarController;
 use Canvas\Http\Controllers\IntegrationsController;
 use Canvas\Http\Controllers\MediaController;
+use Canvas\Http\Controllers\MediaTagController;
 use Canvas\Http\Controllers\PostController;
 use Canvas\Http\Controllers\PostRevisionController;
 use Canvas\Http\Controllers\SearchController;
@@ -52,6 +53,15 @@ Route::middleware([
             Route::post('{id}', 'store');
             Route::put('{media}', 'update');
             Route::delete('{media}', 'destroy');
+        });
+
+        Route::prefix('media-tags')->controller(MediaTagController::class)->group(function (): void {
+            Route::get('/', 'index');
+            Route::get('create', 'create');
+            Route::post('{id}', 'store');
+            Route::post('{mediaTag}/attach', 'attach');
+            Route::post('{mediaTag}/detach', 'detach');
+            Route::delete('{mediaTag}', 'destroy');
         });
 
         Route::prefix('posts')->controller(PostController::class)->group(function (): void {

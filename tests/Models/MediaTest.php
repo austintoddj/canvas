@@ -1,10 +1,12 @@
 <?php
 
 use Canvas\Models\Media;
+use Canvas\Models\MediaTag;
 use Canvas\Support\MediaUrl;
 use Canvas\Support\Paths;
 use Canvas\Tests\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function (): void {
@@ -68,6 +70,31 @@ it('scopes media by search term', function (): void {
 
     expect($results)->toHaveCount(1)
         ->and($results->first()->original_name)->toBe('sunset-beach.jpg');
+});
+
+it('defines the media tags relationship', function (): void {
+    $media = Media::factory()->create();
+    $tag = MediaTag::factory()->create();
+
+    $media->mediaTags()->sync([$tag->id]);
+
+    expect($media->mediaTags())->toBeInstanceOf(BelongsToMany::class)
+        ->and($media->mediaTags)->toHaveCount(1)
+        ->and($media->mediaTags->first())->toBeInstanceOf(MediaTag::class);
+});
+
+it('detaches media tags on delete', function (): void {
+    $media = Media::factory()->create();
+    $tag = MediaTag::factory()->create();
+
+    $media->mediaTags()->sync([$tag->id]);
+
+    $media->delete();
+
+    $this->assertDatabaseMissing('canvas_media_tag', [
+        'media_id' => $media->id,
+        'media_tag_id' => $tag->id,
+    ]);
 });
 
 it('scopes media by mime type prefix', function (): void {

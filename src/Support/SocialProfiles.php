@@ -16,6 +16,9 @@ final class SocialProfiles
         'x',
         'github',
         'medium',
+        'linkedin',
+        'youtube',
+        'tiktok',
     ];
 
     /**
@@ -30,6 +33,28 @@ final class SocialProfiles
         'x' => 'https://x.com/',
         'github' => 'https://github.com/',
         'medium' => 'https://medium.com/@',
+        'linkedin' => 'https://www.linkedin.com/in/',
+        'youtube' => 'https://www.youtube.com/@',
+        'tiktok' => 'https://www.tiktok.com/@',
+    ];
+
+    /**
+     * Path prefixes for non-personal pages; the prefix is kept in the stored handle
+     * so the link can be rebuilt against the platform root.
+     *
+     * @var array<string, list<string>>
+     */
+    private const TYPED_PREFIXES = [
+        'linkedin' => ['company', 'school', 'showcase'],
+        'youtube' => ['channel', 'c', 'user'],
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    private const TYPED_BASES = [
+        'linkedin' => 'https://www.linkedin.com/',
+        'youtube' => 'https://www.youtube.com/',
     ];
 
     /**
@@ -42,6 +67,9 @@ final class SocialProfiles
         'x' => ['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com', 'mobile.twitter.com'],
         'github' => ['github.com', 'www.github.com'],
         'medium' => ['medium.com', 'www.medium.com'],
+        'linkedin' => ['linkedin.com', 'www.linkedin.com'],
+        'youtube' => ['youtube.com', 'www.youtube.com', 'm.youtube.com'],
+        'tiktok' => ['tiktok.com', 'www.tiktok.com', 'm.tiktok.com'],
     ];
 
     public static function normalizeHandle(string $platform, string $raw): string
@@ -71,11 +99,19 @@ final class SocialProfiles
                     array_shift($segments);
                 }
 
+                if ($platform === 'linkedin' && ($segments[0] ?? null) !== null && strtolower($segments[0]) === 'in') {
+                    array_shift($segments);
+                }
+
                 if ($platform === 'medium' && ($segments[0] ?? null) !== null && str_starts_with($segments[0], '@')) {
                     $segments[0] = substr($segments[0], 1);
                 }
 
-                if (($segments[0] ?? null) !== null && $segments[0] !== '') {
+                $prefix = strtolower($segments[0] ?? '');
+
+                if (in_array($prefix, self::TYPED_PREFIXES[$platform] ?? [], true) && ($segments[1] ?? null) !== null) {
+                    $value = $prefix.'/'.$segments[1];
+                } elseif (($segments[0] ?? null) !== null && $segments[0] !== '') {
                     $value = $segments[0];
                 }
             }
@@ -99,7 +135,18 @@ final class SocialProfiles
             return null;
         }
 
+        if (self::isTypedHandle($platform, $normalized)) {
+            return self::TYPED_BASES[$platform].$normalized;
+        }
+
         return self::BASES[$platform].$normalized;
+    }
+
+    private static function isTypedHandle(string $platform, string $handle): bool
+    {
+        $parts = explode('/', $handle, 2);
+
+        return count($parts) === 2 && in_array(strtolower($parts[0]), self::TYPED_PREFIXES[$platform] ?? [], true);
     }
 
     /**

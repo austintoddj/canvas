@@ -2,9 +2,20 @@ import { Role, type RoleValue } from '@/lib/permissions';
 import type { UserStorePayload } from '@/types/api';
 import type { CanvasProfile, UserResource } from '@/types/boot';
 
-export type SocialFieldKey = 'facebook' | 'instagram' | 'bluesky' | 'x' | 'github' | 'medium';
+export type SocialFieldKey =
+    'facebook' | 'instagram' | 'bluesky' | 'x' | 'github' | 'medium' | 'linkedin' | 'youtube' | 'tiktok';
 
-export const SOCIAL_FIELD_KEYS: SocialFieldKey[] = ['facebook', 'instagram', 'bluesky', 'x', 'github', 'medium'];
+export const SOCIAL_FIELD_KEYS: SocialFieldKey[] = [
+    'facebook',
+    'instagram',
+    'bluesky',
+    'x',
+    'github',
+    'medium',
+    'linkedin',
+    'youtube',
+    'tiktok',
+];
 
 export const SOCIAL_LABELS: Record<SocialFieldKey, string> = {
     facebook: 'Facebook',
@@ -13,6 +24,9 @@ export const SOCIAL_LABELS: Record<SocialFieldKey, string> = {
     x: 'X',
     github: 'GitHub',
     medium: 'Medium',
+    linkedin: 'LinkedIn',
+    youtube: 'YouTube',
+    tiktok: 'TikTok',
 };
 
 /** Public profile URL prefix per platform (handle is appended). */
@@ -23,6 +37,9 @@ export const SOCIAL_PROFILE_BASES: Record<SocialFieldKey, string> = {
     x: 'https://x.com/',
     github: 'https://github.com/',
     medium: 'https://medium.com/@',
+    linkedin: 'https://www.linkedin.com/in/',
+    youtube: 'https://www.youtube.com/@',
+    tiktok: 'https://www.tiktok.com/@',
 };
 
 export const SOCIAL_PLACEHOLDERS: Record<SocialFieldKey, string> = {
@@ -32,6 +49,20 @@ export const SOCIAL_PLACEHOLDERS: Record<SocialFieldKey, string> = {
     x: 'username',
     github: 'username',
     medium: 'username',
+    linkedin: 'username',
+    youtube: 'handle',
+    tiktok: 'username',
+};
+
+/** Path prefixes for non-personal pages; kept in the stored handle so links resolve against the platform root. */
+const SOCIAL_TYPED_PREFIXES: Partial<Record<SocialFieldKey, string[]>> = {
+    linkedin: ['company', 'school', 'showcase'],
+    youtube: ['channel', 'c', 'user'],
+};
+
+const SOCIAL_TYPED_BASES: Partial<Record<SocialFieldKey, string>> = {
+    linkedin: 'https://www.linkedin.com/',
+    youtube: 'https://www.youtube.com/',
 };
 
 const SOCIAL_HOST_ALIASES: Record<SocialFieldKey, string[]> = {
@@ -41,6 +72,9 @@ const SOCIAL_HOST_ALIASES: Record<SocialFieldKey, string[]> = {
     x: ['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com', 'mobile.twitter.com'],
     github: ['github.com', 'www.github.com'],
     medium: ['medium.com', 'www.medium.com'],
+    linkedin: ['linkedin.com', 'www.linkedin.com'],
+    youtube: ['youtube.com', 'www.youtube.com', 'm.youtube.com'],
+    tiktok: ['tiktok.com', 'www.tiktok.com', 'm.tiktok.com'],
 };
 
 export type ProfileFormState = {
@@ -62,6 +96,9 @@ export function emptySocial(): Record<SocialFieldKey, string> {
         x: '',
         github: '',
         medium: '',
+        linkedin: '',
+        youtube: '',
+        tiktok: '',
     };
 }
 
@@ -108,11 +145,19 @@ export function normalizeSocialHandle(platform: SocialFieldKey, raw: string): st
                     segments.shift();
                 }
 
+                if (platform === 'linkedin' && segments[0]?.toLowerCase() === 'in') {
+                    segments.shift();
+                }
+
                 if (platform === 'medium' && segments[0]?.startsWith('@')) {
                     segments[0] = segments[0].slice(1);
                 }
 
-                if (segments[0] !== undefined && segments[0] !== '') {
+                const prefix = segments[0]?.toLowerCase() ?? '';
+
+                if (SOCIAL_TYPED_PREFIXES[platform]?.includes(prefix) && segments[1] !== undefined) {
+                    value = `${prefix}/${segments[1]}`;
+                } else if (segments[0] !== undefined && segments[0] !== '') {
                     value = segments[0];
                 }
             }
@@ -138,6 +183,17 @@ export function socialProfileUrl(platform: SocialFieldKey, handle: string): stri
 
     if (normalized === '') {
         return null;
+    }
+
+    const [prefix, rest] = normalized.split('/', 2);
+    const typedBase = SOCIAL_TYPED_BASES[platform];
+
+    if (
+        typedBase !== undefined &&
+        rest !== undefined &&
+        SOCIAL_TYPED_PREFIXES[platform]?.includes(prefix.toLowerCase())
+    ) {
+        return `${typedBase}${normalized}`;
     }
 
     return `${SOCIAL_PROFILE_BASES[platform]}${normalized}`;

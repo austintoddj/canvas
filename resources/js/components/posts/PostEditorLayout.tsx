@@ -150,7 +150,9 @@ export default function PostEditorLayout({
             className={clsx(
                 // Stack status + actions on narrow viewports so Preview / icons never crush the badge.
                 'flex flex-col gap-2 border-b border-zinc-950/10 sm:flex-row sm:items-center sm:justify-between sm:gap-4 dark:border-white/10',
-                focusMode ? 'shrink-0 bg-white px-4 py-3 sm:px-6 sm:py-4 lg:px-10 dark:bg-zinc-900' : 'pb-3 sm:pb-4'
+                focusMode
+                    ? 'shrink-0 bg-white px-4 py-3 sm:px-6 sm:py-4 lg:px-10 dark:bg-zinc-900'
+                    : 'shrink-0 pb-3 sm:pb-4'
             )}
             data-post-editor-chrome="true"
         >
@@ -291,8 +293,13 @@ export default function PostEditorLayout({
     );
 
     const writing = (
-        <div className={clsx('mx-auto min-w-0 max-w-3xl space-y-4 sm:space-y-6', focusMode && 'pt-2')}>
-            <div>
+        <div
+            className={clsx(
+                'mx-auto flex min-h-0 w-full min-w-0 max-w-3xl flex-1 flex-col gap-4 sm:gap-6',
+                focusMode && 'pt-2'
+            )}
+        >
+            <div className="shrink-0">
                 <label htmlFor="post-title" className="sr-only">
                     {t('editor.title_label')}
                 </label>
@@ -309,7 +316,7 @@ export default function PostEditorLayout({
                 {titleError ? <ErrorText className="mt-2">{titleError}</ErrorText> : null}
             </div>
 
-            {bodyNode}
+            <div className="flex min-h-0 flex-1 flex-col">{bodyNode}</div>
         </div>
     );
 
@@ -317,13 +324,17 @@ export default function PostEditorLayout({
         return (
             <div className="fixed inset-0 z-40 flex flex-col bg-white dark:bg-zinc-900" data-post-editor-focus="true">
                 {chrome}
-                <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-10">{writing}</div>
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-6 sm:px-6 lg:px-10">{writing}</div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-4 sm:space-y-8" data-post-editor-focus="false">
+        <div
+            // Viewport minus sidebar-layout padding so the body pane scrolls, not the document.
+            className="flex h-[calc(100svh-7.5rem)] flex-col gap-4 overflow-hidden sm:gap-8 lg:h-[calc(100svh-6rem)]"
+            data-post-editor-focus="false"
+        >
             {chrome}
             {writing}
         </div>

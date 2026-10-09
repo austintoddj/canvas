@@ -31,8 +31,10 @@ use Canvas\Listeners\CaptureVisit;
 use Canvas\Listeners\DispatchOutboundWebhooks;
 use Canvas\Models\CanvasUser;
 use Canvas\Models\Media;
+use Canvas\Models\MediaTag;
 use Canvas\Models\Post;
 use Canvas\Policies\MediaPolicy;
+use Canvas\Policies\MediaTagPolicy;
 use Canvas\Policies\PostPolicy;
 use Canvas\Policies\UserPolicy;
 use Canvas\Support\DnsHostResolver;
@@ -227,6 +229,7 @@ class CanvasServiceProvider extends ServiceProvider
     private function registerGates(): void
     {
         Gate::policy(Media::class, MediaPolicy::class);
+        Gate::policy(MediaTag::class, MediaTagPolicy::class);
         Gate::policy(Post::class, PostPolicy::class);
 
         $userModel = config('canvas.user_model');

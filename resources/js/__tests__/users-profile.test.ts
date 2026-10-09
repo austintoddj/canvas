@@ -91,10 +91,42 @@ describe('settings profile helpers', () => {
         expect(normalizeSocialHandle('medium', 'https://medium.com/@writer')).toBe('writer');
         expect(normalizeSocialHandle('medium', '@writer')).toBe('writer');
         expect(normalizeSocialHandle('bluesky', 'https://bsky.app/profile/ada.bsky.social')).toBe('ada.bsky.social');
+        expect(normalizeSocialHandle('linkedin', 'https://www.linkedin.com/in/ada-lovelace/')).toBe('ada-lovelace');
+        expect(normalizeSocialHandle('youtube', 'https://www.youtube.com/@canvas/videos')).toBe('canvas');
+        expect(normalizeSocialHandle('tiktok', 'https://www.tiktok.com/@ada/video/123')).toBe('ada');
         expect(normalizeSocialHandle('instagram', '  handle  ')).toBe('handle');
         expect(socialProfileUrl('x', '@ada')).toBe('https://x.com/ada');
         expect(socialProfileUrl('medium', 'writer')).toBe('https://medium.com/@writer');
+        expect(socialProfileUrl('linkedin', 'ada-lovelace')).toBe('https://www.linkedin.com/in/ada-lovelace');
+        expect(socialProfileUrl('youtube', '@canvas')).toBe('https://www.youtube.com/@canvas');
+        expect(socialProfileUrl('tiktok', 'ada')).toBe('https://www.tiktok.com/@ada');
         expect(socialProfileUrl('github', '')).toBeNull();
+    });
+
+    it('keeps type prefixes for linkedin and youtube pages', () => {
+        expect(normalizeSocialHandle('linkedin', 'https://www.linkedin.com/company/acme/')).toBe('company/acme');
+        expect(normalizeSocialHandle('linkedin', 'linkedin.com/school/mit/about')).toBe('school/mit');
+        expect(normalizeSocialHandle('linkedin', 'https://www.linkedin.com/showcase/acme-labs')).toBe(
+            'showcase/acme-labs'
+        );
+        expect(normalizeSocialHandle('linkedin', 'company/acme')).toBe('company/acme');
+        expect(normalizeSocialHandle('youtube', 'https://www.youtube.com/channel/UC123abc/videos')).toBe(
+            'channel/UC123abc'
+        );
+        expect(normalizeSocialHandle('youtube', 'https://www.youtube.com/c/canvas')).toBe('c/canvas');
+        expect(normalizeSocialHandle('youtube', 'https://m.youtube.com/user/canvas')).toBe('user/canvas');
+
+        expect(socialProfileUrl('linkedin', 'https://www.linkedin.com/company/acme')).toBe(
+            'https://www.linkedin.com/company/acme'
+        );
+        expect(socialProfileUrl('linkedin', 'school/mit')).toBe('https://www.linkedin.com/school/mit');
+        expect(socialProfileUrl('linkedin', 'company')).toBe('https://www.linkedin.com/in/company');
+        expect(socialProfileUrl('youtube', 'channel/UC123abc')).toBe('https://www.youtube.com/channel/UC123abc');
+        expect(socialProfileUrl('youtube', 'https://www.youtube.com/c/canvas')).toBe(
+            'https://www.youtube.com/c/canvas'
+        );
+        expect(socialProfileUrl('youtube', 'user/canvas')).toBe('https://www.youtube.com/user/canvas');
+        expect(socialProfileUrl('github', 'company/acme')).toBe('https://github.com/company/acme');
     });
 
     it('strips full URLs when serializing social payload', () => {
@@ -102,11 +134,13 @@ describe('settings profile helpers', () => {
         form.social.x = 'https://x.com/ada';
         form.social.github = 'github.com/canvas';
         form.social.medium = 'https://medium.com/@ada';
+        form.social.linkedin = 'linkedin.com/in/ada';
 
         expect(toProfileStorePayload(form).social).toEqual({
             x: 'ada',
             github: 'canvas',
             medium: 'ada',
+            linkedin: 'ada',
         });
     });
 

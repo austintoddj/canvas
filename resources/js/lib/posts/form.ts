@@ -1,6 +1,7 @@
 import type { Post, PostAuthor, PostMeta, PostStorePayload, TaxonomyOption } from '@/types/api';
 
 import { normalizeBodyHtml } from '@/lib/posts/body';
+import { storedPostMeta } from '@/lib/seo';
 
 export type PostFormState = {
     title: string;
@@ -337,7 +338,7 @@ export function toStorePayload(form: PostFormState, options?: StorePayloadOption
         published_at: publishNow ? null : form.publishedAt,
         featured_image: form.featuredImage,
         featured_image_caption: form.featuredImageCaption,
-        meta: form.meta,
+        meta: storedPostMeta(form.meta),
         tags: form.tags,
         topic: form.topic ? [form.topic] : [],
         ...(options?.promote === true ? { promote: true } : {}),

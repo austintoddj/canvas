@@ -74,6 +74,14 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
         });
     }
 
+    function commitMetaField(field: 'title' | 'description' | 'canonical_link', value: string) {
+        const trimmed = value.trim();
+
+        if (trimmed !== value) {
+            updateMetaField(field, trimmed);
+        }
+    }
+
     function resetOverrides() {
         onChange({ ...form, meta: null });
     }
@@ -198,6 +206,7 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
                     invalid={fieldError(fieldErrors, 'meta.title') !== undefined}
                     className={fieldClassName('title')}
                     onChange={(event) => updateMetaField('title', event.target.value)}
+                    onBlur={(event) => commitMetaField('title', event.target.value)}
                 />
                 <Description>
                     {seoTitle.length > 60
@@ -222,6 +231,7 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
                     invalid={fieldError(fieldErrors, 'meta.description') !== undefined}
                     className={fieldClassName('description')}
                     onChange={(event) => updateMetaField('description', event.target.value)}
+                    onBlur={(event) => commitMetaField('description', event.target.value)}
                 />
                 <Description>
                     {metaDescription.length > 160
@@ -243,6 +253,7 @@ export default function PostSeoPanel({ form, onChange, fieldErrors, disabled = f
                     placeholder="https://example.com/posts/your-slug"
                     invalid={canonicalInvalid || fieldError(fieldErrors, 'meta.canonical_link') !== undefined}
                     onChange={(event) => updateMetaField('canonical_link', event.target.value)}
+                    onBlur={(event) => commitMetaField('canonical_link', event.target.value)}
                 />
                 {canonicalInvalid ? <ErrorMessage>{t('editor.link_invalid')}</ErrorMessage> : null}
                 {fieldError(fieldErrors, 'meta.canonical_link') ? (

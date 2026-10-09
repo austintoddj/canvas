@@ -9,11 +9,14 @@ import { Subheading } from '@/components/heading';
 import { Input } from '@/components/input';
 import { SideDrawer } from '@/components/SideDrawer';
 import { Skeleton } from '@/components/Skeleton';
-import { ErrorText } from '@/components/text';
+import { ErrorText, Text } from '@/components/text';
 import { Textarea } from '@/components/textarea';
+import { MediaTagPicker } from '@/components/media/MediaTagPicker';
 import { useCanvas } from '@/hooks/useCanvas';
+import { usePermissions } from '@/hooks/usePermissions';
 import { ValidationError } from '@/lib/api';
 import { mediaApi } from '@/lib/api/media';
+import { createOrReuseMediaTag, mediaTagsApi } from '@/lib/api/media-tags';
 import {
     formatMediaBytes,
     formatMediaDate,
@@ -22,7 +25,7 @@ import {
     mediaMimeLabel,
 } from '@/lib/media/list';
 import { toast } from '@/lib/toast';
-import type { Media, MediaUpdatePayload } from '@/types/api';
+import type { Media, MediaTag, MediaUpdatePayload } from '@/types/api';
 
 type MediaFormState = {
     original_name: string;
@@ -66,6 +69,8 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const [libraryTags, setLibraryTags] = useState<MediaTag[]>([]);
+    const { canViewAllMedia } = usePermissions();
 
     const serialized = JSON.stringify(formToPayload(form));
     const isDirty = media !== null && serialized !== baseline;
@@ -119,6 +124,33 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
         };
     }, [open, mediaId, t]);
 
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        let cancelled = false;
+        const controller = new AbortController();
+
+        mediaTagsApi
+            .index({ scope: canViewAllMedia ? 'all' : 'user' }, controller.signal)
+            .then((response) => {
+                if (!cancelled) {
+                    setLibraryTags(response.data);
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setLibraryTags([]);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+            controller.abort();
+        };
+    }, [open, canViewAllMedia]);
+
     async function handleSave() {
         if (mediaId === null || media === null) {
             return;
@@ -163,6 +195,73 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
         }
 
         setConfirmDeleteOpen(false);
+    }
+
+    function applyMediaTags(nextTags: { id: string; name: string }[]) {
+        setMedia((current) => {
+            if (current === null) {
+                return current;
+            }
+
+            const next = { ...current, tags: nextTags };
+            onUpdated?.(next);
+
+            return next;
+        });
+    }
+
+    async function attachTag(tag: { id: string; name: string }) {
+        if (media === null) {
+            return;
+        }
+
+        const current = media.tags ?? [];
+
+        if (current.some((item) => item.id === tag.id)) {
+            return;
+        }
+
+        try {
+            const result = await mediaTagsApi.attach(tag.id, { media_ids: [media.id] });
+
+            if (result.attached.includes(media.id)) {
+                applyMediaTags([...current, { id: tag.id, name: tag.name }]);
+                toast.success(t('media.tags_attached', { name: tag.name }));
+            } else {
+                toast.error(t('media.tags_attach_failed'));
+            }
+        } catch {
+            toast.error(t('media.tags_save_error'));
+        }
+    }
+
+    async function detachTag(tagId: string) {
+        if (media === null) {
+            return;
+        }
+
+        try {
+            const result = await mediaTagsApi.detach(tagId, { media_ids: [media.id] });
+
+            if (result.detached.includes(media.id)) {
+                applyMediaTags((media.tags ?? []).filter((item) => item.id !== tagId));
+                toast.success(t('media.tags_detached'));
+            } else {
+                toast.error(t('media.tags_save_error'));
+            }
+        } catch {
+            toast.error(t('media.tags_save_error'));
+        }
+    }
+
+    async function createAndAttach(name: string) {
+        try {
+            const tag = await createOrReuseMediaTag(name);
+            setLibraryTags((current) => (current.some((item) => item.id === tag.id) ? current : [...current, tag]));
+            await attachTag(tag);
+        } catch {
+            toast.error(t('media.tags_create_error'));
+        }
     }
 
     async function confirmDelete() {
@@ -278,6 +377,39 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
                                     <DescriptionTerm>{t('media.filename')}</DescriptionTerm>
                                     <DescriptionDetails className="break-all">{media.filename}</DescriptionDetails>
                                 </DescriptionList>
+                            </div>
+
+                            <Divider />
+
+                            <div>
+                                <Subheading>{t('media.tags')}</Subheading>
+                                <div className="mt-3 space-y-3">
+                                    {(media.tags ?? []).length === 0 ? (
+                                        <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                                            {t('media.tags_none')}
+                                        </Text>
+                                    ) : (
+                                        <div className="flex flex-wrap gap-2">
+                                            {(media.tags ?? []).map((tag) => (
+                                                <button
+                                                    key={tag.id}
+                                                    type="button"
+                                                    className="rounded-full bg-zinc-950/5 px-3 py-1 text-sm text-zinc-800 ring-1 ring-zinc-950/10 dark:bg-white/10 dark:text-zinc-100 dark:ring-white/10"
+                                                    onClick={() => void detachTag(tag.id)}
+                                                >
+                                                    {tag.name}
+                                                    <span className="ml-1 text-zinc-400">×</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <MediaTagPicker
+                                        tags={libraryTags}
+                                        excludeIds={new Set((media.tags ?? []).map((tag) => tag.id))}
+                                        onPick={(tag) => void attachTag(tag)}
+                                        onCreate={(name) => createAndAttach(name)}
+                                    />
+                                </div>
                             </div>
 
                             <Divider />

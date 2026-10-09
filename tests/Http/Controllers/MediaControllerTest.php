@@ -1,6 +1,7 @@
 <?php
 
 use Canvas\Models\Media;
+use Canvas\Models\MediaTag;
 use Canvas\Support\Paths;
 use Canvas\Support\UploadLimits;
 use Canvas\Tests\Models\User;
@@ -97,6 +98,98 @@ it('sorts media newest first by default and oldest when requested', function ():
     expect($oldest->pluck('id')->all())->toBe([$older->id, $newer->id]);
 });
 
+it('filters media by tag id', function (): void {
+    $tag = MediaTag::factory()->create();
+    $tagged = Media::factory()->create(['user_id' => $this->admin->id]);
+    Media::factory()->create(['user_id' => $this->admin->id]);
+    $tag->media()->sync([$tagged->id]);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson("canvas/api/media?tag={$tag->id}")
+        ->assertSuccessful();
+
+    expect($response->getOriginalContent())->toHaveCount(1)
+        ->and($response->getOriginalContent()->first()->is($tagged))->toBeTrue();
+
+    $response->assertJsonPath('data.0.tags.0.id', $tag->id)
+        ->assertJsonPath('data.0.tags.0.name', $tag->name)
+        ->assertJsonMissingPath('data.0.media_tags');
+});
+
+it('filters media to untagged files', function (): void {
+    $tag = MediaTag::factory()->create();
+    $tagged = Media::factory()->create(['user_id' => $this->admin->id]);
+    $untagged = Media::factory()->create(['user_id' => $this->admin->id]);
+    $tag->media()->sync([$tagged->id]);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/media?untagged=1')
+        ->assertSuccessful();
+
+    expect($response->getOriginalContent())->toHaveCount(1)
+        ->and($response->getOriginalContent()->first()->is($untagged))->toBeTrue();
+});
+
+it('prefers tag over untagged when both query params are present', function (): void {
+    $tag = MediaTag::factory()->create();
+    $tagged = Media::factory()->create(['user_id' => $this->admin->id]);
+    Media::factory()->create(['user_id' => $this->admin->id]);
+    $tag->media()->sync([$tagged->id]);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson("canvas/api/media?tag={$tag->id}&untagged=1")
+        ->assertSuccessful();
+
+    expect($response->getOriginalContent())->toHaveCount(1)
+        ->and($response->getOriginalContent()->first()->is($tagged))->toBeTrue();
+});
+
+it('returns an empty page for an unknown tag filter', function (): void {
+    Media::factory()->create(['user_id' => $this->admin->id]);
+
+    $response = $this->actingAs($this->admin, 'canvas')
+        ->getJson('canvas/api/media?tag='.(string) Str::uuid())
+        ->assertSuccessful();
+
+    expect($response->getOriginalContent())->toHaveCount(0);
+});
+
+it('exposes compact tags on show and keeps them after an alt-only update', function (): void {
+    $tag = MediaTag::factory()->create(['name' => 'Hero']);
+    $media = Media::factory()->create([
+        'user_id' => $this->admin->id,
+        'alt' => null,
+    ]);
+    $media->mediaTags()->sync([$tag->id]);
+
+    $this->actingAs($this->admin, 'canvas')
+        ->getJson("canvas/api/media/{$media->id}")
+        ->assertSuccessful()
+        ->assertJsonPath('tags.0.id', $tag->id)
+        ->assertJsonPath('tags.0.name', 'Hero')
+        ->assertJsonMissingPath('media_tags');
+
+    $this->actingAs($this->admin, 'canvas')
+        ->putJson("canvas/api/media/{$media->id}", ['alt' => 'Updated alt'])
+        ->assertSuccessful()
+        ->assertJsonPath('alt', 'Updated alt')
+        ->assertJsonPath('tags.0.id', $tag->id)
+        ->assertJsonPath('tags.0.name', 'Hero')
+        ->assertJsonMissingPath('media_tags');
+});
+
+it('does not leak other authors media through a tag filter for contributors', function (): void {
+    $tag = MediaTag::factory()->create();
+    $other = Media::factory()->create(['user_id' => $this->editor->id]);
+    $tag->media()->sync([$other->id]);
+
+    $response = $this->actingAs($this->contributor, 'canvas')
+        ->getJson("canvas/api/media?tag={$tag->id}")
+        ->assertSuccessful();
+
+    expect($response->getOriginalContent())->toHaveCount(0);
+});
+
 it('returns data for creating media', function (): void {
     $response = $this->actingAs($this->admin, 'canvas')
         ->getJson('canvas/api/media/create')
@@ -145,6 +238,7 @@ it('stores uploaded media and persists the file', function (): void {
         ->assertJsonPath('path', $path)
         ->assertJsonPath('alt', 'A photo')
         ->assertJsonPath('caption', 'Caption text')
+        ->assertJsonPath('tags', [])
         ->assertJsonPath('user.id', $this->admin->id);
 
     expect($response->json('url'))->toStartWith('/storage/')

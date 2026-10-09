@@ -108,6 +108,15 @@ describe('post form helpers', () => {
         expect(serializeFormState(form)).toBe(serializeFormState(postToFormState(samplePost)));
         expect(serializeFormState(form)).not.toContain('author');
         expect(toStorePayload(form, { promote: true }).promote).toBe(true);
+        expect(
+            toStorePayload({
+                ...form,
+                meta: { title: ' My title ', description: '   ', canonical_link: ' https://example.com/a ' },
+            }).meta
+        ).toEqual({
+            title: 'My title',
+            canonical_link: 'https://example.com/a',
+        });
         expect(serializeFormState(form)).not.toContain('promote');
     });
 

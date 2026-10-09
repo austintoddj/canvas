@@ -242,6 +242,46 @@ export type MediaUploader = {
     avatar_url: string | null;
 };
 
+export type MediaTag = {
+    id: string;
+    name: string;
+    media_count?: number;
+    created_at?: string | null;
+};
+
+export type MediaTagIndexResponse = {
+    data: MediaTag[];
+    meta: {
+        all_count: number;
+        untagged_count: number;
+        truncated: boolean;
+    };
+};
+
+export type MediaTagCreateResponse = {
+    id: string;
+};
+
+export type MediaTagStorePayload = {
+    name: string;
+};
+
+export type MediaTagAttachPayload = {
+    media_ids: string[];
+};
+
+export type MediaTagAttachResult = {
+    attached: string[];
+    skipped: string[];
+    media_count: number;
+};
+
+export type MediaTagDetachResult = {
+    detached: string[];
+    skipped: string[];
+    media_count: number;
+};
+
 export type Media = {
     id: string;
     user_id: number;
@@ -258,6 +298,7 @@ export type Media = {
     type: string | null;
     created_at: string;
     updated_at: string;
+    tags?: { id: string; name: string }[];
     /** Present on show/store/update; omit from list rows. */
     user?: MediaUploader | null;
 };
@@ -284,7 +325,13 @@ export type MediaIndexParams = {
     mime?: string;
     /** Default is newest (created_at desc). Only send when oldest. */
     sort?: 'newest' | 'oldest';
+    tag?: string;
+    untagged?: 1;
     page?: number;
+};
+
+export type MediaTagIndexParams = {
+    scope?: 'user' | 'all';
 };
 
 export type UserCreateResponse = {

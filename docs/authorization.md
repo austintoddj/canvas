@@ -34,6 +34,8 @@ You may also manage users from the admin UI as an Admin. Removing access deletes
 
 Roles are stored as integers: `1` Contributor, `2` Editor, `3` Admin.
 
+Library tags follow media `view` / `update` (Contributor own files, Editor all files). Any author may create a tag; rename and delete are Editor+. This is not the Admin-only `manage-taxonomy` gate used for public post tags.
+
 ## Route protection
 
 Canvas routes use your configured middleware (default `web`), then `auth:{guard}`, then a Canvas access check. There are no Canvas login or password-reset routes.
