@@ -125,7 +125,7 @@ class PostRequest extends FormRequest
             'summary' => 'nullable|string',
             'body' => 'nullable|string',
             'published_at' => $publishedAtRules,
-            'featured_image' => 'nullable|string',
+            'featured_image' => 'nullable|string|max:'.Post::FEATURED_IMAGE_MAX_LENGTH,
             'featured_image_caption' => 'nullable|string',
             'meta' => 'nullable|array',
             'promote' => 'sometimes|boolean',

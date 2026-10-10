@@ -157,6 +157,43 @@ it('accepts nullable post fields', function (): void {
     );
 });
 
+it('accepts unsplash featured image urls that exceed a legacy string column', function (): void {
+    // Regression: GH-1537 — Unsplash ixid links are longer than varchar(191) and varchar(255).
+    $post = Post::factory()->create(['user_id' => $this->admin->id]);
+    $url = longUnsplashFeaturedImageUrl();
+
+    expect(strlen($url))->toBeGreaterThan(255);
+
+    assertFormRequestValid(
+        PostRequest::class,
+        [
+            'slug' => 'valid-slug',
+            'title' => 'A new post',
+            'featured_image' => $url,
+        ],
+        $this->admin,
+        ['id' => $post->id],
+        "canvas/api/posts/{$post->id}",
+    );
+});
+
+it('rejects featured image urls beyond the column limit', function (): void {
+    $post = Post::factory()->create(['user_id' => $this->admin->id]);
+
+    assertFormRequestInvalid(
+        PostRequest::class,
+        [
+            'slug' => 'valid-slug',
+            'title' => 'A new post',
+            'featured_image' => str_repeat('a', Post::FEATURED_IMAGE_MAX_LENGTH + 1),
+        ],
+        $this->admin,
+        ['featured_image'],
+        ['id' => $post->id],
+        "canvas/api/posts/{$post->id}",
+    );
+});
+
 it('accepts root-relative public storage featured images', function (): void {
     $post = Post::factory()->create(['user_id' => $this->admin->id]);
 

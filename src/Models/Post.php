@@ -24,6 +24,12 @@ class Post extends Model
 
     use SoftDeletes;
 
+    /**
+     * Featured-image URL or `/storage/...` path.
+     * Unsplash links exceed a default string column (GH-1537).
+     */
+    public const int FEATURED_IMAGE_MAX_LENGTH = 4096;
+
     protected $table = 'canvas_posts';
 
     /** @var list<string> */

@@ -55,6 +55,20 @@ function createDraftPost(array $attributes = []): Post
 }
 
 /**
+ * Unsplash `urls.regular` link longer than varchar(255).
+ *
+ * The URL reported in GH-1537 is 215 characters, which already overflows hosts
+ * that migrate under Schema::defaultStringLength(191). Extra ixid padding
+ * covers a plain varchar(255) column as well.
+ */
+function longUnsplashFeaturedImageUrl(): string
+{
+    $reported = 'https://images.unsplash.com/photo-1789828441837-b008cd10f331?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxNTgwNzN8MHwxfHNlYXJjaHwxMnx8bGlzdGVuaW5nJTIwY2FyZHxlbnwwfHx8fDE3OTE1NzA5MzB8MA&ixlib=rb-4.1.0&q=80&w=1080';
+
+    return $reported.'&pad='.str_repeat('A', 80);
+}
+
+/**
  * @return array{published: Post, draft: Post}
  */
 function createPublishedAndDraftPosts(int|string $userId): array
