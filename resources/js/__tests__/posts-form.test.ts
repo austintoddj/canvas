@@ -19,6 +19,9 @@ import {
     saveStatusLabel,
     scheduleFormState,
     serializeFormState,
+    isGeneratedPostSlug,
+    slugFollowsTitle,
+    slugForTitle,
     slugify,
     taxonomyFromName,
     toDatetimeLocalValue,
@@ -51,6 +54,22 @@ describe('post form helpers', () => {
     it('maps API posts into form state and store payloads', () => {
         expect(slugify('Hello, Canvas!')).toBe('hello-canvas');
         expect(slugify('   ')).toBe('post');
+
+        // Regression: GH-1538 — create() placeholder was treated as a manual slug, so titles never slugified.
+        const placeholder = 'post-1e5b87d6-1dda-4c95-9449-94970542076d';
+        expect(isGeneratedPostSlug(placeholder)).toBe(true);
+        expect(isGeneratedPostSlug('and-this-is-my-boomstick')).toBe(false);
+        expect(slugFollowsTitle('', placeholder)).toBe(true);
+        expect(slugFollowsTitle('And this is my BOOMstick!', placeholder)).toBe(true);
+        expect(slugFollowsTitle('Hello, Canvas!', 'hello-canvas')).toBe(true);
+        expect(slugFollowsTitle('Hello', 'custom-slug')).toBe(false);
+        expect(slugForTitle('And this is my BOOMstick!', placeholder)).toBe('and-this-is-my-boomstick');
+        expect(slugForTitle('Three Pocket AI recorders, three wildly different prices', placeholder)).toBe(
+            'three-pocket-ai-recorders-three-wildly-different-prices'
+        );
+        expect(slugForTitle('A comparison of this\\that', placeholder)).toBe('a-comparison-of-this-that');
+        expect(slugForTitle('🔫', placeholder)).toBe(placeholder);
+        expect(slugForTitle('   ', placeholder)).toBe(placeholder);
         expect(taxonomyFromName('  Product Updates ')).toEqual({
             name: 'Product Updates',
             slug: 'product-updates',

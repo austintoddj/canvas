@@ -138,6 +138,38 @@ export function slugify(value: string): string {
     return slug === '' ? 'post' : slug;
 }
 
+/** Slug minted by `GET /posts/create` before a title exists. Not a hand-edited slug. */
+const GENERATED_POST_SLUG = /^post-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isGeneratedPostSlug(slug: string): boolean {
+    return GENERATED_POST_SLUG.test(slug);
+}
+
+function titleHasSlugCharacters(title: string): boolean {
+    return /[a-z0-9]/i.test(title);
+}
+
+/**
+ * Slug that should follow the title.
+ * A title with no letters or digits keeps the create() placeholder.
+ */
+export function slugForTitle(title: string, currentSlug: string): string {
+    if (!titleHasSlugCharacters(title) && isGeneratedPostSlug(currentSlug)) {
+        return currentSlug;
+    }
+
+    return slugify(title);
+}
+
+/** True when title edits should keep rewriting this slug. */
+export function slugFollowsTitle(title: string, slug: string): boolean {
+    if (slug === '' || isGeneratedPostSlug(slug)) {
+        return true;
+    }
+
+    return slug === slugify(title);
+}
+
 /**
  * Absolute instant for API `published_at` (ISO-8601 with Z).
  * Picker wall-clock values are never sent on the wire.
