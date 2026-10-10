@@ -18,6 +18,12 @@ describe('stripHtml', () => {
         expect(stripHtml('<script>alert(1)')).toBe('');
         expect(stripHtml('<style>body{color:red}')).toBe('');
     });
+
+    // Regression: code-scanning #37. A single replace reassembles the outer tag.
+    it('drops script and style elements that were nested inside the tag name', () => {
+        expect(stripHtml('<scrip<script>alert(1)</script>t>alert(2)</script>Visible')).toBe('Visible');
+        expect(stripHtml('<sty<style>body{}</style>le>hidden</style>Visible')).toBe('Visible');
+    });
 });
 
 describe('computeTextDiff', () => {

@@ -118,9 +118,21 @@ export function stripHtml(value: string | null | undefined): string {
         return '';
     }
 
-    return value
-        .replace(/<script\b[\s\S]*?(?:<\/script\s*>|$)/gi, '')
-        .replace(/<style\b[\s\S]*?(?:<\/style\s*>|$)/gi, '')
+    // One pass can reassemble `<script` or `<style` from a nested tag.
+    let plain = value;
+    let previous: string;
+
+    do {
+        previous = plain;
+        plain = plain.replace(/<script\b[\s\S]*?(?:<\/script\s*>|$)/gi, '');
+    } while (plain !== previous);
+
+    do {
+        previous = plain;
+        plain = plain.replace(/<style\b[\s\S]*?(?:<\/style\s*>|$)/gi, '');
+    } while (plain !== previous);
+
+    return plain
         .replace(/<br\s*\/?>/gi, '\n')
         .replace(/<\/p>/gi, '\n')
         .replace(/<[^>]+>/g, '')
