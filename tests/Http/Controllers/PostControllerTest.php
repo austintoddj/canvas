@@ -457,6 +457,27 @@ describe('when storing and updating posts', function (): void {
             ]);
     });
 
+    it('stores a post and revision when the featured image is a long unsplash url', function (): void {
+        // Regression: GH-1537 — revision insert failed with "Data too long for column 'featured_image'".
+        $id = (string) Str::uuid();
+        $url = longUnsplashFeaturedImageUrl();
+
+        expect(strlen($url))->toBeGreaterThan(255);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$id}", [
+                'slug' => 'unsplash-hero',
+                'title' => 'Listening',
+                'featured_image' => $url,
+                'featured_image_caption' => 'Photo by someone on Unsplash',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('featured_image', $url);
+
+        expect(Post::query()->findOrFail($id)->featured_image)->toBe($url)
+            ->and(PostRevision::query()->where('post_id', $id)->value('featured_image'))->toBe($url);
+    });
+
     it('stores a new draft without a title', function (): void {
         $id = (string) Str::uuid();
 
