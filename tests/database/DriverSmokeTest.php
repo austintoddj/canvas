@@ -168,9 +168,13 @@ it('persists featured image urls longer than a legacy string column', function (
     }
 
     foreach (['canvas_posts', 'canvas_post_revisions'] as $table) {
-        $column = Schema::getColumn($table, 'featured_image');
+        // getColumns() is on Laravel 12 and 13. getColumn() is Laravel 13 only,
+        // and the database jobs install illuminate/contracts ^12.
+        $column = collect(Schema::getColumns($table))
+            ->first(fn (array $candidate): bool => strcasecmp($candidate['name'], 'featured_image') === 0);
 
-        expect($column['nullable'] ?? null)->toBeTrue()
+        expect($column)->not->toBeNull()
+            ->and($column['nullable'] ?? null)->toBeTrue()
             ->and((string) ($column['type'] ?? ''))->toMatch('/\b'.Post::FEATURED_IMAGE_MAX_LENGTH.'\b/');
     }
 });
