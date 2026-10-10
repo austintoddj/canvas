@@ -26,7 +26,8 @@ import {
     postToFormState,
     scheduleFormState,
     serializeFormState,
-    slugify,
+    slugFollowsTitle,
+    slugForTitle,
     unpublishFormState,
     type PostFormState,
 } from '@/lib/posts/form';
@@ -160,7 +161,13 @@ export default function PostsEditor() {
         try {
             // Server stamps published_at via publish_now so browser/app TZ skew cannot schedule.
             // onSaved echoes the stored ISO instant onto the form.
-            const ok = await saveNow(form, { promote: true, publish_now: true });
+            const next = slugSyncedForm(form);
+
+            if (next !== form) {
+                setForm(next);
+            }
+
+            const ok = await saveNow(next, { promote: true, publish_now: true });
 
             if (ok) {
                 setHasPendingChanges(false);
@@ -204,7 +211,7 @@ export default function PostsEditor() {
             const next = postToFormState(post);
             setForm(next);
             setHasPendingChanges(false);
-            setSlugManuallyEdited(next.slug !== '' && next.slug !== slugify(next.title));
+            setSlugManuallyEdited(!slugFollowsTitle(next.title, next.slug));
             resetBaseline(serializeFormState(next));
             toast.success(t('editor.discarded', 'Changes discarded.'));
         } catch {
@@ -219,7 +226,7 @@ export default function PostsEditor() {
         if (post.last_revision !== undefined) {
             setLastRevision(post.last_revision);
         }
-        setSlugManuallyEdited(next.slug !== '' && next.slug !== slugify(next.title));
+        setSlugManuallyEdited(!slugFollowsTitle(next.title, next.slug));
         resetBaseline(serializeFormState(next));
         invalidateRecentPosts();
     }
@@ -233,7 +240,13 @@ export default function PostsEditor() {
         setPublishBusy(true);
 
         try {
-            const next = scheduleFormState(form, datetimeLocal);
+            const base = slugSyncedForm(form);
+
+            if (base !== form) {
+                setForm(base);
+            }
+
+            const next = scheduleFormState(base, datetimeLocal);
 
             if (next.publishedAt === null) {
                 toast.error(t('editor.schedule_error'));
@@ -309,7 +322,7 @@ export default function PostsEditor() {
             setAvailableTopics(topics);
             setPostId(nextPostId);
             setHasPendingChanges(pending);
-            setSlugManuallyEdited(nextForm.slug !== '' && nextForm.slug !== slugify(nextForm.title));
+            setSlugManuallyEdited(!slugFollowsTitle(nextForm.title, nextForm.slug));
             resetBaseline(serializeFormState(nextForm));
             setLoading(false);
             setLoadError(null);
@@ -391,12 +404,30 @@ export default function PostsEditor() {
         return () => controller.abort();
     }, [hydrateEditor, id, isNewRoute, navigate, t, user]);
 
+    function slugSyncedForm(current: PostFormState): PostFormState {
+        if (slugManuallyEditedRef.current) {
+            return current;
+        }
+
+        const slug = slugForTitle(current.title, current.slug);
+
+        if (slug === current.slug) {
+            return current;
+        }
+
+        return { ...current, slug };
+    }
+
     function handleTitleChange(title: string) {
-        setForm((current) => ({
-            ...current,
-            title,
-            slug: slugManuallyEditedRef.current ? current.slug : slugify(title),
-        }));
+        setForm((current) => {
+            const next = { ...current, title };
+
+            if (slugManuallyEditedRef.current) {
+                return next;
+            }
+
+            return { ...next, slug: slugForTitle(title, current.slug) };
+        });
     }
 
     function handleFormChange(nextForm: PostFormState) {
