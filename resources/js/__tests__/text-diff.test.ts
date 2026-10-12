@@ -24,6 +24,19 @@ describe('stripHtml', () => {
         expect(stripHtml('<scrip<script>alert(1)</script>t>alert(2)</script>Visible')).toBe('Visible');
         expect(stripHtml('<sty<style>body{}</style>le>hidden</style>Visible')).toBe('Visible');
     });
+
+    // Regression: code-scanning #38. Decoded brackets stay; only real tags are removed.
+    it('keeps literal angle brackets and breaks lines on br and paragraphs', () => {
+        expect(stripHtml('a < b')).toBe('a < b');
+        expect(stripHtml('a<>b')).toBe('a<>b');
+        expect(stripHtml('&lt;b&gt;')).toBe('<b>');
+        expect(stripHtml('<p>Hello<br>there</p><p>Next</p>')).toBe('Hello\nthere\nNext');
+        expect(stripHtml('<p>Hello<br />there</p>')).toBe('Hello\nthere');
+        expect(stripHtml('<SCRIPT>alert(1)</SCRIPT>Visible')).toBe('Visible');
+        expect(stripHtml('Before<script>nope</scriptfoo></script>After')).toBe('BeforeAfter');
+        expect(stripHtml('Hi<script>x</script')).toBe('Hi');
+        expect(stripHtml('Hi<script')).toBe('Hi');
+    });
 });
 
 describe('computeTextDiff', () => {
