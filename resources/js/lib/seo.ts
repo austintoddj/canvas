@@ -1,4 +1,5 @@
 import type { PostMeta } from '@/types/api';
+import { replaceTags, stripEmbeddedElements } from '@/lib/strip-markup';
 import { hostOrigin } from '@/lib/urls';
 
 export type ResolvedSeo = {
@@ -26,22 +27,7 @@ export function stripHtml(html: string | null | undefined): string {
         return '';
     }
 
-    // One pass can reassemble `<script` or `<style` from a nested tag.
-    let plain = html;
-    let previous: string;
-
-    do {
-        previous = plain;
-        plain = plain.replace(/<script\b[\s\S]*?(?:<\/script\s*>|$)/gi, '');
-    } while (plain !== previous);
-
-    do {
-        previous = plain;
-        plain = plain.replace(/<style\b[\s\S]*?(?:<\/style\s*>|$)/gi, '');
-    } while (plain !== previous);
-
-    return plain
-        .replace(/<[^>]+>/g, ' ')
+    return replaceTags(stripEmbeddedElements(html), ' ')
         .replace(/&nbsp;/gi, ' ')
         .replace(/&lt;/gi, '<')
         .replace(/&gt;/gi, '>')

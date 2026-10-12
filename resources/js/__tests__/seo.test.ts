@@ -71,6 +71,10 @@ describe('seo helpers', () => {
         expect(stripHtml('<style>body{color:red}')).toBe('');
         expect(stripHtml('<scrip<script>alert(1)</script>t>alert(2)</script>Visible')).toBe('Visible');
         expect(stripHtml('<sty<style>body{}</style>le>hidden</style>Visible')).toBe('Visible');
+        expect(stripHtml('<p>Hello<br>there</p>')).toBe('Hello there');
+        expect(stripHtml('a < b')).toBe('a < b');
+        expect(stripHtml('&lt;b&gt;')).toBe('<b>');
+        expect(stripHtml('<SCRIPT>alert(1)</SCRIPT>Visible')).toBe('Visible');
         expect(stripHtml(null)).toBe('');
         expect(truncate('one two three four five six seven eight nine ten', 20)).toBe('one two three four…');
         expect(truncate('short', 20)).toBe('short');
