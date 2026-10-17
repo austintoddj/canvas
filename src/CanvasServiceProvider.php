@@ -25,6 +25,7 @@ use Canvas\Events\PostScheduled;
 use Canvas\Events\PostUnpublished;
 use Canvas\Events\PostUpdated;
 use Canvas\Events\PostViewed;
+use Canvas\Http\Controllers\UserController;
 use Canvas\Http\Requests\FormRequest;
 use Canvas\Listeners\CaptureView;
 use Canvas\Listeners\CaptureVisit;
@@ -52,6 +53,7 @@ use Illuminate\Events\Dispatcher;
 use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
+use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -184,7 +186,11 @@ class CanvasServiceProvider extends ServiceProvider
 
     private function configureRoutes(): void
     {
-        Route::bind('user', function (mixed $value): mixed {
+        Route::bind('user', function (mixed $value, RoutingRoute $route): mixed {
+            if ($route->getControllerClass() !== UserController::class) {
+                return $value;
+            }
+
             $userModel = config('canvas.user_model');
 
             return $userModel::query()->findOrFail($value);
