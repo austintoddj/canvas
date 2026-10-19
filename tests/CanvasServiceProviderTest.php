@@ -4,10 +4,22 @@ use Canvas\CanvasServiceProvider;
 use Canvas\Contracts\HostResolver;
 use Canvas\Support\DnsHostResolver;
 use Canvas\Support\UploadLimits;
+use Canvas\Tests\Models\User;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Support\Facades\Route;
+
+class HostRouteUser extends User
+{
+    public function resolveRouteBinding($value, $field = null): ?Model
+    {
+        return $this->newQuery()->where('email', $value)->firstOrFail();
+    }
+}
 
 it('registers the weekly digest schedule when mail is enabled', function (): void {
     config([
@@ -210,4 +222,37 @@ it('does not claim post too large responses for non-canvas routes', function ():
     }
 
     expect($response->getStatusCode())->toBe(413);
+});
+
+// Regression: GH-1542 — the global "user" route binding overrode the host's own binding behavior
+it('leaves the user route binding of host routes untouched', function (): void {
+    Route::get('host/users/{user}', fn (HostRouteUser $user): string => $user->email)
+        ->middleware(SubstituteBindings::class);
+
+    User::factory()->create(['email' => 'host@example.com']);
+
+    $this->get('host/users/host@example.com')
+        ->assertSuccessful()
+        ->assertSee('host@example.com');
+});
+
+it('passes the raw user parameter through on host routes without a bound model', function (): void {
+    Route::get('host/raw/{user}', fn (string $user): string => $user)
+        ->middleware(SubstituteBindings::class);
+
+    $this->get('host/raw/abc-123')
+        ->assertSuccessful()
+        ->assertSee('abc-123');
+});
+
+// Invariant: canvas routes keep resolving {user} through the configured canvas.user_model
+it('still resolves the user parameter on canvas routes', function (): void {
+    $this->actingAsAdmin()
+        ->getJson("canvas/api/users/{$this->editor->id}")
+        ->assertSuccessful()
+        ->assertJsonPath('id', $this->editor->id);
+
+    $this->actingAsAdmin()
+        ->getJson('canvas/api/users/999999')
+        ->assertNotFound();
 });
