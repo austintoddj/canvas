@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 it('casts dates to Carbon objects', function (): void {
     $this->assertInstanceOf(Carbon::class, Post::factory()->create()->published_at);
@@ -448,11 +449,12 @@ it('normalizes nested empty meta strings when comparing pending to live', functi
     ]))->toBeTrue();
 });
 
-// Regression: public /{slug} URLs cannot tell authors apart, so new slugs are unique across users.
+// Regression: public /{slug} URLs cannot tell authors apart, so a hand-typed slug is unique across users.
+// A slug that still follows the title is suffixed instead; see the title-derived tests below.
 it('rejects a slug another author already uses', function (): void {
     $data = [
         'slug' => 'a-new-post',
-        'title' => 'A new post',
+        'title' => 'Editor notes',
     ];
 
     Post::factory()->create([
@@ -497,6 +499,239 @@ it('lets an author save a post that already shares its slug', function (): void 
         ->assertSuccessful()
         ->assertJsonPath('slug', 'shared-slug')
         ->assertJsonPath('title', 'Editor draft updated');
+})->group('database');
+
+// Regression: a legacy shared slug that still matches the title must not be renumbered on autosave.
+it('keeps a shared slug when the title still derives that slug', function (): void {
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'hello-world',
+        'title' => 'Hello World',
+    ]);
+
+    $post = Post::factory()->draft()->create([
+        'user_id' => $this->editor->id,
+        'slug' => 'hello-world',
+        'title' => 'Hello World',
+    ]);
+
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("/canvas/api/posts/{$post->id}", [
+            'slug' => 'hello-world',
+            'title' => 'Hello World',
+            'body' => '<p>Still shared</p>',
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('slug', 'hello-world')
+        ->assertJsonPath('body', '<p>Still shared</p>');
+})->group('database');
+
+it('leaves the create placeholder slug alone', function (): void {
+    $id = (string) Str::uuid();
+
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("/canvas/api/posts/{$id}", [
+            'slug' => 'post-'.$id,
+            'title' => 'Hello World',
+            'body' => '<p>Placeholder</p>',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('slug', 'post-'.$id)
+        ->assertJsonPath('title', 'Hello World')
+        ->assertJsonPath('body', '<p>Placeholder</p>');
+})->group('database');
+
+// Regression: a title-derived slug collision used to 422 the whole autosave, so a new post was never stored.
+it('suffixes a title-derived slug and stores the rest of the post', function (): void {
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'hello-world',
+        'title' => 'Hello World',
+    ]);
+
+    $id = (string) Str::uuid();
+
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("/canvas/api/posts/{$id}", [
+            'slug' => 'hello-world',
+            'title' => 'Hello World',
+            'body' => '<p>Kept</p>',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('slug', 'hello-world-2')
+        ->assertJsonPath('title', 'Hello World')
+        ->assertJsonPath('body', '<p>Kept</p>');
+
+    $this->assertDatabaseHas('canvas_posts', [
+        'id' => $id,
+        'slug' => 'hello-world-2',
+        'title' => 'Hello World',
+        'body' => '<p>Kept</p>',
+        'user_id' => $this->editor->id,
+    ]);
+})->group('database');
+
+it('uses the next free title-derived suffix when hello-world-2 is taken', function (): void {
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'hello-world',
+    ]);
+    Post::factory()->create([
+        'user_id' => $this->contributor->id,
+        'slug' => 'hello-world-2',
+    ]);
+
+    $id = (string) Str::uuid();
+
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("/canvas/api/posts/{$id}", [
+            'slug' => 'hello-world',
+            'title' => 'Hello World',
+            'body' => '<p>Kept</p>',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('slug', 'hello-world-3');
+})->group('database');
+
+it('keeps the suffix a post already has when the editor resubmits the title slug', function (): void {
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'hello-world',
+    ]);
+
+    $post = Post::factory()->draft()->create([
+        'user_id' => $this->editor->id,
+        'slug' => 'hello-world-2',
+        'title' => 'Hello World',
+    ]);
+
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("/canvas/api/posts/{$post->id}", [
+            'slug' => 'hello-world',
+            'title' => 'Hello World',
+            'body' => '<p>Still here</p>',
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('slug', 'hello-world-2')
+        ->assertJsonPath('body', '<p>Still here</p>');
+})->group('database');
+
+it('rejects a hand-typed slug another author already uses and stores nothing', function (): void {
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'custom-slug',
+    ]);
+
+    $id = (string) Str::uuid();
+
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("/canvas/api/posts/{$id}", [
+            'slug' => 'custom-slug',
+            'title' => 'Hello World',
+            'body' => '<p>Not stored</p>',
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('slug');
+
+    $this->assertDatabaseMissing('canvas_posts', [
+        'id' => $id,
+    ]);
+})->group('database');
+
+it('stores a colliding title-derived slug on a published post as pending', function (): void {
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'hello-world',
+    ]);
+
+    $post = Post::factory()->create([
+        'user_id' => $this->editor->id,
+        'title' => 'Live Title',
+        'slug' => 'live-slug',
+        'body' => 'Live body',
+        'published_at' => now()->subDay(),
+    ]);
+
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("/canvas/api/posts/{$post->id}", [
+            'slug' => 'hello-world',
+            'title' => 'Hello World',
+            'body' => '<p>Pending body</p>',
+            'published_at' => publishedAtIso($post->published_at),
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('slug', 'live-slug')
+        ->assertJsonPath('pending.slug', 'hello-world-2')
+        ->assertJsonPath('pending.title', 'Hello World')
+        ->assertJsonPath('pending.body', '<p>Pending body</p>');
+
+    expect($post->fresh()->slug)->toBe('live-slug');
+})->group('database');
+
+it('reuses a title-derived slug that only the same authors trashed post still holds', function (): void {
+    $trashed = Post::factory()->create([
+        'user_id' => $this->editor->id,
+        'slug' => 'hello-world',
+        'title' => 'Hello World',
+    ]);
+    $trashed->delete();
+
+    $id = (string) Str::uuid();
+
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("/canvas/api/posts/{$id}", [
+            'slug' => 'hello-world',
+            'title' => 'Hello World',
+            'body' => '<p>Saved</p>',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('slug', 'hello-world')
+        ->assertJsonPath('title', 'Hello World')
+        ->assertJsonPath('body', '<p>Saved</p>');
+
+    expect(Post::onlyTrashed()->find($trashed->id)?->slug)->toBe('trashed-'.$trashed->id);
+})->group('database');
+
+it('reuses a slug that only the same authors trashed post still holds', function (): void {
+    $trashed = Post::factory()->create([
+        'user_id' => $this->editor->id,
+        'slug' => 'recycled-slug',
+    ]);
+    $trashed->delete();
+
+    $id = (string) Str::uuid();
+
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("/canvas/api/posts/{$id}", [
+            'slug' => 'recycled-slug',
+            'title' => 'Recycled',
+            'body' => '<p>Saved</p>',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('slug', 'recycled-slug')
+        ->assertJsonPath('body', '<p>Saved</p>');
+
+    expect(Post::onlyTrashed()->find($trashed->id)?->slug)->toBe('trashed-'.$trashed->id);
+})->group('database');
+
+it('does not rename another authors trashed post when the slug is reused', function (): void {
+    $trashed = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'recycled-slug',
+    ]);
+    $trashed->delete();
+
+    $id = (string) Str::uuid();
+
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("/canvas/api/posts/{$id}", [
+            'slug' => 'recycled-slug',
+            'title' => 'Recycled',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('slug', 'recycled-slug');
+
+    expect(Post::onlyTrashed()->find($trashed->id)?->slug)->toBe('recycled-slug');
 })->group('database');
 
 // Regression: shared public slug resolves to the earliest published post, not insertion order.

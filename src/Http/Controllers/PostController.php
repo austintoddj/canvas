@@ -12,6 +12,7 @@ use Canvas\Models\Topic;
 use Canvas\Support\PostAuthor;
 use Canvas\Support\PostLastRevision;
 use Canvas\Support\PostLifecycleEvents;
+use Canvas\Support\PostSlug;
 use Canvas\Support\PostSnapshot;
 use Canvas\Support\PublishedAt;
 use Canvas\Support\RecordPostRevision;
@@ -119,6 +120,12 @@ class PostController extends Controller
 
         $before = $post->exists ? PostSnapshot::from($post) : null;
         $hadRevisions = $post->exists && $post->revisions()->exists();
+
+        $nextSlug = $data['slug'] ?? null;
+
+        if (is_string($nextSlug) && $nextSlug !== '' && (! $post->exists || $post->slug !== $nextSlug)) {
+            PostSlug::releaseTrashedForUser($nextSlug, $post->exists ? $post->user_id : data_get($user, 'id'));
+        }
 
         $post->fill($data);
         $post->user_id ??= data_get($user, 'id');

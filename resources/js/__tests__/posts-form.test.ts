@@ -62,6 +62,9 @@ describe('post form helpers', () => {
         expect(slugFollowsTitle('', placeholder)).toBe(true);
         expect(slugFollowsTitle('And this is my BOOMstick!', placeholder)).toBe(true);
         expect(slugFollowsTitle('Hello, Canvas!', 'hello-canvas')).toBe(true);
+        expect(slugFollowsTitle('Hello World', 'hello-world-2')).toBe(true);
+        expect(slugFollowsTitle('Hello World', 'hello-world-10')).toBe(true);
+        expect(slugFollowsTitle('Hello World', 'hello-world-1')).toBe(false);
         expect(slugFollowsTitle('Hello', 'custom-slug')).toBe(false);
         expect(slugForTitle('And this is my BOOMstick!', placeholder)).toBe('and-this-is-my-boomstick');
         expect(slugForTitle('Three Pocket AI recorders, three wildly different prices', placeholder)).toBe(

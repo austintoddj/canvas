@@ -27,9 +27,17 @@ type UsePostAutosaveOptions = {
     enabled: boolean;
     debounceMs?: number;
     onSaved?: (post: Post) => void;
+    onValidationError?: (errors: LaravelValidationErrors) => void;
 };
 
-export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSaved }: UsePostAutosaveOptions) {
+export function usePostAutosave({
+    postId,
+    form,
+    enabled,
+    debounceMs = 2500,
+    onSaved,
+    onValidationError,
+}: UsePostAutosaveOptions) {
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
     const [fieldErrors, setFieldErrors] = useState<LaravelValidationErrors>({});
     const [isDirty, setIsDirty] = useState(false);
@@ -37,6 +45,7 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
     const lastSavedSnapshot = useRef<string | null>(null);
     const formRef = useRef(form);
     const onSavedRef = useRef(onSaved);
+    const onValidationErrorRef = useRef(onValidationError);
     const enabledRef = useRef(enabled);
     const postIdRef = useRef(postId);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,6 +64,10 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
     useEffect(() => {
         onSavedRef.current = onSaved;
     }, [onSaved]);
+
+    useEffect(() => {
+        onValidationErrorRef.current = onValidationError;
+    }, [onValidationError]);
 
     useEffect(() => {
         enabledRef.current = enabled;
@@ -213,6 +226,7 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
                 if (mountedRef.current) {
                     if (error instanceof ValidationError) {
                         setFieldErrors(error.errors);
+                        onValidationErrorRef.current?.(error.errors);
                     }
 
                     setSaveStatus('error');

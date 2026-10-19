@@ -161,13 +161,25 @@ export function slugForTitle(title: string, currentSlug: string): string {
     return slugify(title);
 }
 
-/** True when title edits should keep rewriting this slug. */
+/**
+ * True when title edits should keep rewriting this slug.
+ * `{slugify(title)}-2` and above stay in that set so a server suffix is not treated as hand-edited.
+ * The same pattern lives in `Canvas\Support\PostSlug`.
+ */
 export function slugFollowsTitle(title: string, slug: string): boolean {
     if (slug === '' || isGeneratedPostSlug(slug)) {
         return true;
     }
 
-    return slug === slugify(title);
+    const base = slugify(title);
+
+    if (slug === base) {
+        return true;
+    }
+
+    const suffix = /-([2-9]|[1-9]\d+)$/.exec(slug);
+
+    return suffix !== null && slug.slice(0, suffix.index) === base;
 }
 
 /**

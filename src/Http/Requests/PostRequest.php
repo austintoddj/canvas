@@ -7,12 +7,17 @@ namespace Canvas\Http\Requests;
 use Canvas\Models\Post;
 use Canvas\Support\Localization;
 use Canvas\Support\MediaUrl;
+use Canvas\Support\PostSlug;
 use Canvas\Support\PublishedAt;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class PostRequest extends FormRequest
 {
+    private bool $postResolved = false;
+
+    private ?Post $resolvedPost = null;
+
     public function authorize(): bool
     {
         return true;
@@ -31,6 +36,22 @@ class PostRequest extends FormRequest
         if ($this->boolean('publish_now')) {
             $this->merge(['published_at' => null]);
         }
+
+        $slug = $this->input('slug');
+
+        if (is_string($slug)) {
+            $title = $this->input('title');
+            $postId = $this->route('id');
+
+            $this->merge([
+                'slug' => PostSlug::disambiguate(
+                    $this->postBeingSaved(),
+                    is_string($postId) ? $postId : null,
+                    $slug,
+                    is_string($title) ? $title : '',
+                ),
+            ]);
+        }
     }
 
     /**
@@ -39,7 +60,7 @@ class PostRequest extends FormRequest
     public function rules(): array
     {
         $postId = $this->route('id');
-        $post = is_string($postId) ? Post::query()->find($postId) : null;
+        $post = $this->postBeingSaved();
 
         // Drafts may be created or updated without a title; lists show “Untitled post”.
         // Publishing still requires a title (promote + published_at / publish_now / schedule).
@@ -176,5 +197,18 @@ class PostRequest extends FormRequest
             ->whereNull('deleted_at');
 
         return $rules;
+    }
+
+    private function postBeingSaved(): ?Post
+    {
+        if ($this->postResolved) {
+            return $this->resolvedPost;
+        }
+
+        $this->postResolved = true;
+        $postId = $this->route('id');
+        $this->resolvedPost = is_string($postId) ? Post::query()->find($postId) : null;
+
+        return $this->resolvedPost;
     }
 }

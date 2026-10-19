@@ -22,7 +22,7 @@ $post = Post::query()
     ->first();
 ```
 
-`forPublicSlug()` returns the published row for that slug. Drafts and scheduled posts are skipped. Slugs created or renamed from the admin must be unique across authors, because a public URL addresses a post by slug alone. A post may keep a slug it already has, including one shared with another author. When older rows still share a slug, the earliest `published_at` wins, then `id`, so the same URL always opens the same post.
+`forPublicSlug()` returns the published row for that slug. Drafts and scheduled posts are skipped. Slugs created or renamed from the admin must be unique across authors, because a public URL addresses a post by slug alone. While the editor is still deriving the slug from the title, a taken slug is stored with the next free suffix (`hello-world-2`). A slug typed in the slug field is rejected instead. A post may keep a slug it already has, including one shared with another author. When older rows still share a slug, the earliest `published_at` wins, then `id`, so the same URL always opens the same post.
 
 A Composer update applies the uniqueness rule in the admin. It does not replace a Canvas UI controller you already published. If `show()` still calls `firstWhere('slug', $slug)`, switch it to `forPublicSlug()`, or run `php artisan canvas:ui --force` when you have not customized those files. `--force` overwrites the published controller, routes, and views.
 

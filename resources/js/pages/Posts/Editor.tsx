@@ -16,7 +16,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLeaveRevisionCheckpoint } from '@/hooks/useLeaveRevisionCheckpoint';
 import { usePostAutosave } from '@/hooks/usePostAutosave';
 import { invalidateRecentPosts } from '@/hooks/useRecentPosts';
-import { ApiError } from '@/lib/api';
+import { ApiError, type LaravelValidationErrors } from '@/lib/api';
 import { postsApi } from '@/lib/api/posts';
 import {
     canPublishForm,
@@ -104,6 +104,11 @@ export default function PostsEditor() {
 
         setForm((current) => {
             const nextPublishedAt = post.published_at ?? null;
+            const savedSlug = postToFormState(post).slug;
+            const nextSlug =
+                !slugManuallyEditedRef.current && savedSlug !== '' && slugFollowsTitle(current.title, savedSlug)
+                    ? savedSlug
+                    : current.slug;
 
             if (nextPublishedAt !== null) {
                 const nextTags = current.tags;
@@ -117,23 +122,31 @@ export default function PostsEditor() {
                 });
             }
 
-            // Normalize API datetime onto the form so publish/schedule always
-            // reflect the stored go-live time (not only when the string differs).
-            if (current.publishedAt === nextPublishedAt) {
+            // Echo a server suffix (hello-world-2) and the stored publish instant.
+            // Rebase before the form effect runs so that echo does not stay dirty.
+            if (current.publishedAt === nextPublishedAt && current.slug === nextSlug) {
                 return current;
             }
 
             const next = {
                 ...current,
                 publishedAt: nextPublishedAt,
+                slug: nextSlug,
             };
 
-            // Rebase before the form effect runs so API datetime echo does not
-            // clobber “Saved” with a false dirty/pending state.
             syncBaselineRef.current(serializeFormState(next));
 
             return next;
         });
+    }, []);
+
+    const revealSlugError = useCallback((errors: LaravelValidationErrors) => {
+        if (!errors.slug?.[0]) {
+            return;
+        }
+
+        setInspectorSection('post');
+        setInspectorOpen(true);
     }, []);
 
     const { saveStatus, fieldErrors, isDirty, resetBaseline, saveNow, syncBaseline } = usePostAutosave({
@@ -141,6 +154,7 @@ export default function PostsEditor() {
         form,
         enabled: autosaveEnabled,
         onSaved: handleSaved,
+        onValidationError: revealSlugError,
     });
 
     // Session-boundary checkpoint when leaving this post (SPA nav / tab close).
