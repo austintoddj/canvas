@@ -168,6 +168,7 @@ return [
     'editor.seo_title_help' => 'Mặc định cho tiêu đề bài viết. Giữ nó dưới ~ 60 ký tự.',
     'editor.author' => 'Tác giả',
     'editor.slug' => 'sên',
+    'editor.slug_taken' => 'Một bài viết khác đã dùng slug này. Hãy chọn slug khác để người đọc mở được từng bài.',
     'editor.stats' => 'Thống kê',
     'editor.history' => 'Lịch sử',
     'editor.history_last_edit' => 'Chỉnh sửa lần cuối :time bởi :name',

@@ -168,6 +168,7 @@ return [
     'editor.seo_title_help' => 'デフォルトは投稿のタイトルです。 60 文字以内にしてください。',
     'editor.author' => '著者',
     'editor.slug' => 'ナメクジ',
+    'editor.slug_taken' => 'このスラッグは別の投稿ですでに使われています。読者が各投稿を開けるよう、別のスラッグを選んでください。',
     'editor.stats' => '統計',
     'editor.history' => '履歴',
     'editor.history_last_edit' => '最終編集は:time、:name',

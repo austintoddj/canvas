@@ -169,6 +169,7 @@ return [
     'editor.seo_title_help' => 'Il valore predefinito è il titolo del post. Mantienilo sotto i ~60 caratteri.',
     'editor.author' => 'Autore',
     'editor.slug' => 'Lumaca',
+    'editor.slug_taken' => 'Un altro articolo usa già questo slug. Scegline uno diverso così i lettori possono aprire ogni articolo.',
     'editor.stats' => 'Statistiche',
     'editor.history' => 'Cronologia',
     'editor.history_last_edit' => 'Ultima modifica :time di :name',

@@ -168,6 +168,7 @@ return [
     'editor.seo_title_help' => 'पोस्ट शीर्षक के लिए डिफ़ॉल्ट. इसे ~60 अक्षरों से कम रखें.',
     'editor.author' => 'लेखक',
     'editor.slug' => 'काउंटर',
+    'editor.slug_taken' => 'कोई दूसरी पोस्ट पहले से इस स्लग का उपयोग कर रही है। एक अलग स्लग चुनें ताकि पाठक हर पोस्ट खोल सकें।',
     'editor.stats' => 'आँकड़े',
     'editor.history' => 'इतिहास',
     'editor.history_last_edit' => 'अंतिम संपादन :time :name द्वारा',

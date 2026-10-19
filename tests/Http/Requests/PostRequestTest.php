@@ -3,6 +3,7 @@
 use Canvas\Http\Requests\PostRequest;
 use Canvas\Models\Post;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 it('requires a slug', function (): void {
     $post = Post::factory()->create(['user_id' => $this->admin->id]);
@@ -99,17 +100,144 @@ it('allows the same slug when updating the existing post', function (): void {
     );
 });
 
-it('allows the same slug for different users', function (): void {
+// Regression: public URLs address posts by slug alone, so a second author cannot take one.
+it('rejects a slug another author already uses', function (): void {
     Post::factory()->create([
         'user_id' => $this->admin->id,
         'slug' => 'shared-slug',
     ]);
     $post = Post::factory()->create(['user_id' => $this->editor->id]);
 
+    $request = makeFormRequest(
+        PostRequest::class,
+        [
+            'slug' => 'shared-slug',
+            'title' => 'Editor post',
+        ],
+        $this->editor,
+        ['id' => $post->id],
+        "canvas/api/posts/{$post->id}",
+    );
+
+    try {
+        $request->validateResolved();
+
+        expect(false)->toBeTrue('Expected validation to fail.');
+    } catch (ValidationException $exception) {
+        expect($exception->errors()['slug'][0])
+            ->toBe((string) trans('canvas::app.editor.slug_taken', [], 'en'));
+    }
+})->group('database');
+
+it('translates the shared slug validation message for the author locale', function (): void {
+    $this->editor->canvasUser->update(['locale' => 'de']);
+    $this->editor->unsetRelation('canvasUser');
+
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'shared-slug',
+    ]);
+    $post = Post::factory()->create(['user_id' => $this->editor->id]);
+
+    $request = makeFormRequest(
+        PostRequest::class,
+        [
+            'slug' => 'shared-slug',
+            'title' => 'Editor post',
+        ],
+        $this->editor,
+        ['id' => $post->id],
+        "canvas/api/posts/{$post->id}",
+    );
+
+    try {
+        $request->validateResolved();
+
+        expect(false)->toBeTrue('Expected validation to fail.');
+    } catch (ValidationException $exception) {
+        expect($exception->errors()['slug'][0])
+            ->toBe((string) trans('canvas::app.editor.slug_taken', [], 'de'));
+    }
+});
+
+it('rejects a new post slug another author already uses', function (): void {
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'shared-slug',
+    ]);
+    $id = (string) Str::uuid();
+
+    assertFormRequestInvalid(
+        PostRequest::class,
+        [
+            'slug' => 'shared-slug',
+            'title' => 'Editor post',
+        ],
+        $this->editor,
+        ['slug'],
+        ['id' => $id],
+        "canvas/api/posts/{$id}",
+    );
+})->group('database');
+
+it('allows a post to keep a slug another author already uses', function (): void {
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'shared-slug',
+    ]);
+    $post = Post::factory()->create([
+        'user_id' => $this->editor->id,
+        'slug' => 'shared-slug',
+    ]);
+
     assertFormRequestValid(
         PostRequest::class,
         [
             'slug' => 'shared-slug',
+            'title' => 'Updated title',
+        ],
+        $this->editor,
+        ['id' => $post->id],
+        "canvas/api/posts/{$post->id}",
+    );
+})->group('database');
+
+it('rejects renaming a post onto another author slug', function (): void {
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'taken-slug',
+    ]);
+    $post = Post::factory()->create([
+        'user_id' => $this->editor->id,
+        'slug' => 'editor-slug',
+    ]);
+
+    assertFormRequestInvalid(
+        PostRequest::class,
+        [
+            'slug' => 'taken-slug',
+            'title' => 'Editor post',
+        ],
+        $this->editor,
+        ['slug'],
+        ['id' => $post->id],
+        "canvas/api/posts/{$post->id}",
+    );
+});
+
+it('allows a slug that only a soft-deleted post still holds', function (): void {
+    $existing = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'recycled-slug',
+    ]);
+    $existing->delete();
+
+    $post = Post::factory()->create(['user_id' => $this->editor->id]);
+
+    assertFormRequestValid(
+        PostRequest::class,
+        [
+            'slug' => 'recycled-slug',
             'title' => 'Editor post',
         ],
         $this->editor,

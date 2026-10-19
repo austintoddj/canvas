@@ -200,6 +200,64 @@ it('returns 404 for a non-existent post slug', function (): void {
     $this->get('canvas-ui/does-not-exist')->assertNotFound();
 });
 
+// Regression: public /{slug} lookup is not scoped to an author, so two published
+// posts with the same slug served whichever row the database returned first.
+it('serves the earliest published post when two authors share a slug', function (): void {
+    Post::factory()->create([
+        'id' => '00000000-0000-4000-8000-000000000001',
+        'user_id' => $this->admin->id,
+        'slug' => 'shared-launch',
+        'title' => 'Later launch',
+        'published_at' => now()->subHour(),
+    ]);
+
+    $earlier = Post::factory()->create([
+        'id' => 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+        'user_id' => $this->editor->id,
+        'slug' => 'shared-launch',
+        'title' => 'Earlier launch',
+        'published_at' => now()->subDays(3),
+    ]);
+
+    $this->get('canvas-ui')
+        ->assertSuccessful()
+        ->assertSee('Earlier launch')
+        ->assertSee('Later launch');
+
+    $this->get('canvas-ui/shared-launch')
+        ->assertSuccessful()
+        ->assertViewIs('canvas::ui.show')
+        ->assertViewHas('post', fn ($post) => $post->is($earlier))
+        ->assertSee('Earlier launch', false)
+        ->assertDontSee('Later launch', false);
+})->group('database');
+
+it('breaks a shared public slug tie by post id', function (): void {
+    $publishedAt = now()->subDay()->startOfSecond();
+
+    Post::factory()->create([
+        'id' => 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+        'user_id' => $this->admin->id,
+        'slug' => 'tied-launch',
+        'title' => 'Higher id launch',
+        'published_at' => $publishedAt,
+    ]);
+
+    $lower = Post::factory()->create([
+        'id' => '00000000-0000-4000-8000-000000000001',
+        'user_id' => $this->editor->id,
+        'slug' => 'tied-launch',
+        'title' => 'Lower id launch',
+        'published_at' => $publishedAt,
+    ]);
+
+    $this->get('canvas-ui/tied-launch')
+        ->assertSuccessful()
+        ->assertViewHas('post', fn ($post) => $post->is($lower))
+        ->assertSee('Lower id launch', false)
+        ->assertDontSee('Higher id launch', false);
+})->group('database');
+
 it('fires the PostViewed event when a published post is viewed', function (): void {
     Event::fake(PostViewed::class);
 

@@ -168,6 +168,7 @@ return [
     'editor.seo_title_help' => 'Defaults to the post title. Keep it under ~60 characters.',
     'editor.author' => 'Author',
     'editor.slug' => 'Slug',
+    'editor.slug_taken' => 'Another post already uses this slug. Choose a different one so readers can open each post.',
     'editor.stats' => 'Stats',
     'editor.history' => 'History',
     'editor.history_last_edit' => 'Last edit was :time by :name',

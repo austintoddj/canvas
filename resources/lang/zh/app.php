@@ -168,6 +168,7 @@ return [
     'editor.seo_title_help' => '默认为帖子标题。将其控制在约 60 个字符以内。',
     'editor.author' => '作者',
     'editor.slug' => '蛞蝓',
+    'editor.slug_taken' => '已有其他帖子使用此别名。请换一个，以便读者能打开每一篇帖子。',
     'editor.stats' => '统计数据',
     'editor.history' => '历史',
     'editor.history_last_edit' => '上次编辑：:time，由 :name',

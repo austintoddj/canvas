@@ -169,6 +169,7 @@ return [
     'editor.seo_title_help' => 'Standardmäßig wird der Beitragstitel verwendet. Halten Sie ihn unter ca. 60 Zeichen.',
     'editor.author' => 'Autor',
     'editor.slug' => 'Slug',
+    'editor.slug_taken' => 'Ein anderer Beitrag verwendet diesen Slug bereits. Wählen Sie einen anderen, damit Leser jeden Beitrag öffnen können.',
     'editor.stats' => 'Statistiken',
     'editor.history' => 'Verlauf',
     'editor.history_last_edit' => 'Zuletzt bearbeitet :time von :name',

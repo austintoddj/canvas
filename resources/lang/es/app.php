@@ -169,6 +169,7 @@ return [
     'editor.seo_title_help' => 'El valor predeterminado es el título de la publicación. Mantenlo por debajo de ~60 caracteres.',
     'editor.author' => 'Autor',
     'editor.slug' => 'Babosa',
+    'editor.slug_taken' => 'Otra publicación ya usa este slug. Elige uno distinto para que los lectores puedan abrir cada publicación.',
     'editor.stats' => 'Estadísticas',
     'editor.history' => 'Historial',
     'editor.history_last_edit' => 'Última edición: :time por :name',

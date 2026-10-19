@@ -16,15 +16,21 @@ $posts = Post::published()
     ->latest()
     ->paginate();
 
-$post = Post::published()
+$post = Post::query()
     ->with(['user', 'tags', 'topic'])
-    ->firstWhere('slug', $slug);
+    ->forPublicSlug($slug)
+    ->first();
 ```
 
-| Scope         | Description                                   |
-| ------------- | --------------------------------------------- |
-| `published()` | `published_at` is set and not in the future   |
-| `draft()`     | No `published_at`, or a future `published_at` |
+`forPublicSlug()` returns the published row for that slug. Drafts and scheduled posts are skipped. Slugs created or renamed from the admin must be unique across authors, because a public URL addresses a post by slug alone. A post may keep a slug it already has, including one shared with another author. When older rows still share a slug, the earliest `published_at` wins, then `id`, so the same URL always opens the same post.
+
+A Composer update applies the uniqueness rule in the admin. It does not replace a Canvas UI controller you already published. If `show()` still calls `firstWhere('slug', $slug)`, switch it to `forPublicSlug()`, or run `php artisan canvas:ui --force` when you have not customized those files. `--force` overwrites the published controller, routes, and views.
+
+| Scope                  | Description                                                   |
+| ---------------------- | ------------------------------------------------------------- |
+| `published()`          | `published_at` is set and not in the future                   |
+| `draft()`              | No `published_at`, or a future `published_at`                 |
+| `forPublicSlug($slug)` | Published row for a slug; earliest `published_at`, then `id` |
 
 ### Published vs pending
 
@@ -35,7 +41,7 @@ While a post is live, the editor autosaves into a `pending` JSON column so the p
 | Attribute          | Notes                                                    |
 | ------------------ | -------------------------------------------------------- |
 | `id`               | UUID                                                     |
-| `slug`             | Unique per author                                        |
+| `slug`             | Unique across authors for new and renamed posts          |
 | `title`, `summary` | Plain text                                               |
 | `body`             | HTML from the editor                                     |
 | `published_at`     | `null` draft · future scheduled · past/now live          |
@@ -163,9 +169,10 @@ Route::get('/blog/posts', function () {
 });
 
 Route::get('/blog/posts/{slug}', function (string $slug) {
-    $post = Post::published()
+    $post = Post::query()
         ->with(['tags:name,slug', 'topic:id,name,slug', 'user:id,name'])
-        ->firstWhere('slug', $slug) ?? abort(404);
+        ->forPublicSlug($slug)
+        ->first() ?? abort(404);
 
     return [
         'post' => $post,

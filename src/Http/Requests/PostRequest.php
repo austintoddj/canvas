@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Canvas\Http\Requests;
 
 use Canvas\Models\Post;
+use Canvas\Support\Localization;
 use Canvas\Support\MediaUrl;
 use Canvas\Support\PublishedAt;
 use Illuminate\Validation\Rule;
@@ -37,10 +38,8 @@ class PostRequest extends FormRequest
      */
     public function rules(): array
     {
-        $user = $this->user(config('canvas.guard'));
         $postId = $this->route('id');
         $post = is_string($postId) ? Post::query()->find($postId) : null;
-        $ownerId = $post instanceof Post ? $post->user_id : data_get($user, 'id');
 
         // Drafts may be created or updated without a title; lists show “Untitled post”.
         // Publishing still requires a title (promote + published_at / publish_now / schedule).
@@ -114,13 +113,7 @@ class PostRequest extends FormRequest
         }
 
         return [
-            'slug' => [
-                'required',
-                'alpha_dash',
-                Rule::unique('canvas_posts')->where(function ($query) use ($ownerId) {
-                    return $query->where('slug', $this->input('slug'))->where('user_id', $ownerId);
-                })->ignore(is_string($postId) ? $postId : null)->whereNull('deleted_at'),
-            ],
+            'slug' => $this->slugRules($post, is_string($postId) ? $postId : null),
             'title' => $titleRules,
             'summary' => 'nullable|string',
             'body' => 'nullable|string',
@@ -134,6 +127,22 @@ class PostRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        $locale = data_get($this->user(config('canvas.guard')), 'locale');
+
+        return [
+            'slug.unique' => (string) trans(
+                'canvas::app.editor.slug_taken',
+                [],
+                Localization::resolveTranslationLocale(is_string($locale) && $locale !== '' ? $locale : null),
+            ),
+        ];
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
@@ -141,5 +150,31 @@ class PostRequest extends FormRequest
                 $validator->errors()->add('schedule', 'The schedule and publish_now options cannot both be true.');
             }
         });
+    }
+
+    /**
+     * A post may keep a slug it already shares. Any new slug must be unused
+     * by every other post, because public URLs address posts by slug alone.
+     *
+     * @return list<mixed>
+     */
+    private function slugRules(?Post $post, ?string $postId): array
+    {
+        $rules = [
+            'required',
+            'alpha_dash',
+        ];
+
+        $submittedSlug = $this->input('slug');
+
+        if ($post instanceof Post && is_string($submittedSlug) && $post->slug === $submittedSlug) {
+            return $rules;
+        }
+
+        $rules[] = Rule::unique('canvas_posts', 'slug')
+            ->ignore($postId)
+            ->whereNull('deleted_at');
+
+        return $rules;
     }
 }

@@ -169,6 +169,7 @@ return [
     'editor.seo_title_help' => 'Defaultnya adalah judul postingan. Simpan di bawah ~60 karakter.',
     'editor.author' => 'Penulis',
     'editor.slug' => 'Siput',
+    'editor.slug_taken' => 'Artikel lain sudah memakai slug ini. Pilih slug lain agar pembaca dapat membuka setiap artikel.',
     'editor.stats' => 'Statistik',
     'editor.history' => 'Riwayat',
     'editor.history_last_edit' => 'Suntingan terakhir :time oleh :name',

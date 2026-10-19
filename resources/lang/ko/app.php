@@ -168,6 +168,7 @@ return [
     'editor.seo_title_help' => '게시물 제목이 기본값입니다. 60자 미만으로 유지하세요.',
     'editor.author' => '작성자',
     'editor.slug' => '강타',
+    'editor.slug_taken' => '다른 게시물이 이미 이 슬러그를 사용하고 있습니다. 독자가 각 게시물을 열 수 있도록 다른 슬러그를 선택하세요.',
     'editor.stats' => '통계',
     'editor.history' => '기록',
     'editor.history_last_edit' => '마지막 수정: :time · :name',

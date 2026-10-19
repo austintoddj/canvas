@@ -35,4 +35,6 @@ These are ordinary application routes. The show route records views via the `Pos
 
 Edit the published controller and views under `resources/views/vendor/canvas/ui`. Prefer `Post::published()` for listings, use `PostSeo` for meta tags, and avoid reading the `pending` column on public pages.
 
+Resolve a single post with `forPublicSlug()` rather than `firstWhere('slug', $slug)`. That scope skips drafts and, when older rows still share a slug, opens the one with the earliest `published_at` (then `id`). Installing a newer Canvas release does not replace this controller. Update `show` yourself, or run `php artisan canvas:ui --force` if you have not customized the published files. `--force` overwrites the controller, routes, and views.
+
 For a fully custom frontend, see [content](./content.md).

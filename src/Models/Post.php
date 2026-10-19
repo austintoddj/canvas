@@ -377,6 +377,25 @@ class Post extends Model
     }
 
     /**
+     * Published post for a public slug URL.
+     *
+     * New and renamed slugs are unique across authors. Rows saved before that
+     * rule can still share a slug; the earliest published_at wins, then id, so
+     * the URL does not follow database row order.
+     *
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    public function scopeForPublicSlug(Builder $query, string $slug): Builder
+    {
+        return $query
+            ->published()
+            ->where('slug', $slug)
+            ->orderBy('published_at')
+            ->orderBy('id');
+    }
+
+    /**
      * @param  Builder<Post>  $query
      * @return Builder<Post>
      */

@@ -53,9 +53,11 @@ class CanvasUiController extends Controller
 
     public function show(string $slug): View
     {
-        $post = Post::published()
+        // Earliest published_at, then id, when older rows still share a slug.
+        $post = Post::query()
             ->with(['user', 'tags', 'topic'])
-            ->firstWhere('slug', $slug);
+            ->forPublicSlug($slug)
+            ->first();
 
         if (! $post) {
             abort(404);

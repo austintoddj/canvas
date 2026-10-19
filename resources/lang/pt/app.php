@@ -169,6 +169,7 @@ return [
     'editor.seo_title_help' => 'O padrão é o título da postagem. Mantenha-o com menos de 60 caracteres.',
     'editor.author' => 'Autor',
     'editor.slug' => 'Lesma',
+    'editor.slug_taken' => 'Outra postagem já usa este slug. Escolha outro para que os leitores possam abrir cada postagem.',
     'editor.stats' => 'Estatísticas',
     'editor.history' => 'Histórico',
     'editor.history_last_edit' => 'Última edição: :time por :name',

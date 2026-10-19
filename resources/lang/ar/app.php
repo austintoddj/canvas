@@ -168,6 +168,7 @@ return [
     'editor.seo_title_help' => 'الإعدادات الافتراضية لعنوان المشاركة. احتفظ بها تحت 60 حرفًا تقريبًا.',
     'editor.author' => 'المؤلف',
     'editor.slug' => 'سبيكة',
+    'editor.slug_taken' => 'منشور آخر يستخدم هذا الرابط المختصر. اختر رابطًا مختلفًا ليتمكن القرّاء من فتح كل منشور.',
     'editor.stats' => 'احصائيات',
     'editor.history' => 'السجل',
     'editor.history_last_edit' => 'آخر تعديل كان :time بواسطة :name',

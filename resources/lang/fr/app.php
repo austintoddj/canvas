@@ -168,6 +168,7 @@ return [
     'editor.seo_title_help' => 'La valeur par défaut est le titre du message. Gardez-le sous environ 60 caractères.',
     'editor.author' => 'Auteur',
     'editor.slug' => 'Limace',
+    'editor.slug_taken' => 'Un autre article utilise déjà ce slug. Choisissez-en un autre pour que les lecteurs puissent ouvrir chaque article.',
     'editor.stats' => 'Statistiques',
     'editor.history' => 'Historique',
     'editor.history_last_edit' => 'Dernière modification :time par :name',

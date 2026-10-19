@@ -168,6 +168,7 @@ return [
     'editor.seo_title_help' => 'Gönderi başlığına varsayılandır. ~60 karakterin altında tutun.',
     'editor.author' => 'Yazar',
     'editor.slug' => 'Sümüklüböcek',
+    'editor.slug_taken' => 'Bu slug başka bir yazıda kullanılıyor. Okuyucuların her yazıyı açabilmesi için farklı bir slug seçin.',
     'editor.stats' => 'İstatistikler',
     'editor.history' => 'Geçmiş',
     'editor.history_last_edit' => 'Son düzenleme :time · :name',

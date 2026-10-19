@@ -448,8 +448,8 @@ it('normalizes nested empty meta strings when comparing pending to live', functi
     ]))->toBeTrue();
 });
 
-// Regression: GH-647 — slug uniqueness is scoped per user, not globally
-it('allows posts to share the same slug across different users', function (): void {
+// Regression: public /{slug} URLs cannot tell authors apart, so new slugs are unique across users.
+it('rejects a slug another author already uses', function (): void {
     $data = [
         'slug' => 'a-new-post',
         'title' => 'A new post',
@@ -465,16 +465,101 @@ it('allows posts to share the same slug across different users', function (): vo
         'user_id' => $this->editor->id,
     ]);
 
-    $response = $this->actingAs($this->editor, 'canvas')
+    $this->actingAs($this->editor, 'canvas')
         ->postJson("/canvas/api/posts/{$secondaryPost->id}", $data)
-        ->assertSuccessful();
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('slug');
 
     $this->assertDatabaseHas('canvas_posts', [
-        'id' => $response->original['id'],
-        'slug' => $response->original['slug'],
-        'user_id' => $response->original['user_id'],
+        'id' => $secondaryPost->id,
+        'slug' => $secondaryPost->slug,
+        'user_id' => $this->editor->id,
     ]);
-});
+})->group('database');
+
+// Regression: rows that already share a slug stay editable; only a new slug is rejected.
+it('lets an author save a post that already shares its slug', function (): void {
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'shared-slug',
+    ]);
+
+    $secondaryPost = Post::factory()->draft()->create([
+        'user_id' => $this->editor->id,
+        'slug' => 'shared-slug',
+    ]);
+
+    $this->actingAs($this->editor, 'canvas')
+        ->postJson("/canvas/api/posts/{$secondaryPost->id}", [
+            'slug' => 'shared-slug',
+            'title' => 'Editor draft updated',
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('slug', 'shared-slug')
+        ->assertJsonPath('title', 'Editor draft updated');
+})->group('database');
+
+// Regression: shared public slug resolves to the earliest published post, not insertion order.
+it('resolves a shared public slug to the earliest published post', function (): void {
+    Post::factory()->create([
+        'id' => '00000000-0000-4000-8000-000000000001',
+        'user_id' => $this->admin->id,
+        'slug' => 'shared-launch',
+        'published_at' => now()->subHour(),
+    ]);
+
+    $earlier = Post::factory()->create([
+        'id' => 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+        'user_id' => $this->editor->id,
+        'slug' => 'shared-launch',
+        'published_at' => now()->subDays(3),
+    ]);
+
+    expect(Post::query()->forPublicSlug('shared-launch')->first()?->id)->toBe($earlier->id);
+})->group('database');
+
+it('breaks a shared public slug tie on post id', function (): void {
+    $publishedAt = now()->subDay()->startOfSecond();
+
+    Post::factory()->create([
+        'id' => 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+        'user_id' => $this->admin->id,
+        'slug' => 'tied-launch',
+        'published_at' => $publishedAt,
+    ]);
+
+    $lower = Post::factory()->create([
+        'id' => '00000000-0000-4000-8000-000000000001',
+        'user_id' => $this->editor->id,
+        'slug' => 'tied-launch',
+        'published_at' => $publishedAt,
+    ]);
+
+    expect(Post::query()->forPublicSlug('tied-launch')->first()?->id)->toBe($lower->id);
+})->group('database');
+
+it('skips drafts and scheduled posts when resolving a public slug', function (): void {
+    Post::factory()->draft()->create([
+        'id' => '00000000-0000-4000-8000-000000000001',
+        'user_id' => $this->admin->id,
+        'slug' => 'shared-launch',
+    ]);
+
+    Post::factory()->scheduled()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'upcoming-only',
+    ]);
+
+    $published = Post::factory()->create([
+        'id' => 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+        'user_id' => $this->editor->id,
+        'slug' => 'shared-launch',
+        'published_at' => now()->subHour(),
+    ]);
+
+    expect(Post::query()->forPublicSlug('shared-launch')->first()?->id)->toBe($published->id)
+        ->and(Post::query()->forPublicSlug('upcoming-only')->first())->toBeNull();
+})->group('database');
 it('defines the tags relationship', function (): void {
     $post = Post::factory()->create();
     $tag = Tag::factory()->create();
