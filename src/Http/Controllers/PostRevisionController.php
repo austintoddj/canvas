@@ -11,6 +11,7 @@ use Canvas\Models\Post;
 use Canvas\Models\PostRevision;
 use Canvas\Support\PostAuthor;
 use Canvas\Support\PostLastRevision;
+use Canvas\Support\PostSlug;
 use Canvas\Support\RecordPostRevision;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -123,7 +124,7 @@ class PostRevisionController extends Controller
 
         $data = [
             'title' => $revision->title,
-            'slug' => $revision->slug ?? $post->slug,
+            'slug' => PostSlug::forSave($revision->slug ?? $post->slug, $post),
             'summary' => $revision->summary,
             'body' => $revision->body,
             'featured_image' => $revision->featured_image,

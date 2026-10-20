@@ -93,7 +93,7 @@ export default function PostsEditor() {
 
     const autosaveEnabled = postId !== null && !loading && loadError === null;
 
-    const handleSaved = useCallback((post: Post) => {
+    const handleSaved = useCallback((post: Post, resolvedSlug?: string) => {
         setDraftPersisted(true);
         setHasPendingChanges(postHasPendingChanges(post));
         if (post.last_revision !== undefined) {
@@ -104,6 +104,7 @@ export default function PostsEditor() {
 
         setForm((current) => {
             const nextPublishedAt = post.published_at ?? null;
+            const slugAdjusted = resolvedSlug !== undefined && resolvedSlug !== '' && current.slug !== resolvedSlug;
 
             if (nextPublishedAt !== null) {
                 const nextTags = current.tags;
@@ -119,16 +120,18 @@ export default function PostsEditor() {
 
             // Normalize API datetime onto the form so publish/schedule always
             // reflect the stored go-live time (not only when the string differs).
-            if (current.publishedAt === nextPublishedAt) {
+            // A suffixed slug is echoed the same way so the field matches the URL.
+            if (current.publishedAt === nextPublishedAt && !slugAdjusted) {
                 return current;
             }
 
             const next = {
                 ...current,
                 publishedAt: nextPublishedAt,
+                ...(slugAdjusted ? { slug: resolvedSlug } : {}),
             };
 
-            // Rebase before the form effect runs so API datetime echo does not
+            // Rebase before the form effect runs so API datetime/slug echo does not
             // clobber “Saved” with a false dirty/pending state.
             syncBaselineRef.current(serializeFormState(next));
 

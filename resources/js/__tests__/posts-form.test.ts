@@ -20,6 +20,7 @@ import {
     scheduleFormState,
     serializeFormState,
     isGeneratedPostSlug,
+    resolvedSlugAfterSave,
     slugFollowsTitle,
     slugForTitle,
     slugify,
@@ -62,7 +63,13 @@ describe('post form helpers', () => {
         expect(slugFollowsTitle('', placeholder)).toBe(true);
         expect(slugFollowsTitle('And this is my BOOMstick!', placeholder)).toBe(true);
         expect(slugFollowsTitle('Hello, Canvas!', 'hello-canvas')).toBe(true);
+        expect(slugFollowsTitle('Hello', 'hello-2')).toBe(true);
+        expect(slugFollowsTitle('Hello World', 'hello-world-3')).toBe(true);
+        expect(slugFollowsTitle('Hello', 'hello-2-2')).toBe(false);
         expect(slugFollowsTitle('Hello', 'custom-slug')).toBe(false);
+        expect(resolvedSlugAfterSave('hello', 'hello', 'hello-2')).toBe('hello-2');
+        expect(resolvedSlugAfterSave('hello', 'hello', 'hello')).toBeNull();
+        expect(resolvedSlugAfterSave('hello', 'hello-world', 'hello-2')).toBeNull();
         expect(slugForTitle('And this is my BOOMstick!', placeholder)).toBe('and-this-is-my-boomstick');
         expect(slugForTitle('Three Pocket AI recorders, three wildly different prices', placeholder)).toBe(
             'three-pocket-ai-recorders-three-wildly-different-prices'

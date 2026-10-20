@@ -2,7 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ValidationError, type LaravelValidationErrors } from '@/lib/api';
 import { postsApi } from '@/lib/api/posts';
-import { type PostFormState, serializeFormState, toStorePayload } from '@/lib/posts/form';
+import {
+    type PostFormState,
+    postToFormState,
+    resolvedSlugAfterSave,
+    serializeFormState,
+    toStorePayload,
+} from '@/lib/posts/form';
 import type { Post } from '@/types/api';
 
 export type SaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
@@ -26,7 +32,7 @@ type UsePostAutosaveOptions = {
     form: PostFormState;
     enabled: boolean;
     debounceMs?: number;
-    onSaved?: (post: Post) => void;
+    onSaved?: (post: Post, resolvedSlug?: string) => void;
 };
 
 export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSaved }: UsePostAutosaveOptions) {
@@ -187,18 +193,29 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
                     return true;
                 }
 
-                const currentSnapshot = serializeFormState(formRef.current);
+                const storedSlug = postToFormState(post).slug;
+                const adoptedSlug = resolvedSlugAfterSave(formSnapshot.slug, formRef.current.slug, storedSlug);
+                const formUntouched = serializeFormState(formRef.current) === snapshot;
 
-                if (currentSnapshot === snapshot) {
-                    markSaved(snapshot);
+                // Keep the in-flight snapshot aligned when the server suffixes a slug
+                // and the author has not typed since this save started.
+                if (adoptedSlug !== null && formUntouched) {
+                    formRef.current = { ...formRef.current, slug: adoptedSlug };
+                }
+
+                const currentSnapshot = serializeFormState(formRef.current);
+                const savedSnapshot = adoptedSlug !== null && formUntouched ? currentSnapshot : snapshot;
+
+                if (currentSnapshot === savedSnapshot) {
+                    markSaved(savedSnapshot);
                 } else {
-                    lastSavedSnapshot.current = snapshot;
+                    lastSavedSnapshot.current = savedSnapshot;
                     setIsDirty(true);
                     setSaveStatus('pending');
                     setFieldErrors({});
                 }
 
-                onSavedRef.current?.(post);
+                onSavedRef.current?.(post, adoptedSlug !== null && formUntouched ? adoptedSlug : undefined);
                 resolveInFlight(true);
                 inFlightPromise.current = null;
 

@@ -897,14 +897,14 @@ describe('when storing and updating posts', function (): void {
             ->assertNotFound();
     });
 
-    // Invariant: slug uniqueness is scoped to the post owner, not the editing editor
-    it('scopes slug uniqueness to the post owner when an editor updates another authors post', function (): void {
+    // Invariant: an editor saving another author's post suffixes a colliding slug and leaves the other row unchanged.
+    it('suffixes a colliding slug when an editor updates another authors post', function (): void {
         $authorPost = Post::factory()->create([
             'user_id' => $this->contributor->id,
             'slug' => 'authors-existing-slug',
         ]);
 
-        $otherAuthorPost = Post::factory()->create([
+        $otherAuthorPost = Post::factory()->draft()->create([
             'user_id' => $this->contributor->id,
             'slug' => 'other-slug',
         ]);
@@ -914,8 +914,11 @@ describe('when storing and updating posts', function (): void {
                 'title' => $otherAuthorPost->title,
                 'slug' => 'authors-existing-slug',
             ])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['slug']);
+            ->assertOk()
+            ->assertJsonPath('slug', 'authors-existing-slug-2')
+            ->assertJsonPath('user_id', $this->contributor->id);
+
+        expect($authorPost->fresh()->slug)->toBe('authors-existing-slug');
 
         $this->actingAs($this->editor, 'canvas')
             ->postJson("canvas/api/posts/{$otherAuthorPost->id}", [

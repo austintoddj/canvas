@@ -31,6 +31,8 @@ Visit `/canvas-ui`. Pass `--force` to overwrite previously published files.
 
 These are ordinary application routes. The show route records views via the `PostViewed` event and Canvas session middleware.
 
+`show` loads the post with `Post::forPublicSlug($slug)`. When more than one published post has that slug, the page opens the one with the earliest `published_at`, then the lowest `id`. A controller you have already published keeps its current lookup until you change `show()` or run `php artisan canvas:ui --force`. `--force` overwrites the published controller, routes, and views.
+
 ## Customizing
 
 Edit the published controller and views under `resources/views/vendor/canvas/ui`. Prefer `Post::published()` for listings, use `PostSeo` for meta tags, and avoid reading the `pending` column on public pages.

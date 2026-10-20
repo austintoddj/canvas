@@ -167,7 +167,30 @@ export function slugFollowsTitle(title: string, slug: string): boolean {
         return true;
     }
 
-    return slug === slugify(title);
+    const base = slugify(title);
+
+    if (slug === base) {
+        return true;
+    }
+
+    // A server uniqueness suffix (hello-world-2) still follows the title.
+    if (!slug.startsWith(`${base}-`)) {
+        return false;
+    }
+
+    return /^[1-9]\d*$/.test(slug.slice(base.length + 1));
+}
+
+/**
+ * Slug to copy back onto the editor after a save.
+ * Null when the server kept the submitted slug, or the author has typed a newer one.
+ */
+export function resolvedSlugAfterSave(submittedSlug: string, currentSlug: string, storedSlug: string): string | null {
+    if (storedSlug === '' || storedSlug === submittedSlug || currentSlug !== submittedSlug) {
+        return null;
+    }
+
+    return storedSlug;
 }
 
 /**
