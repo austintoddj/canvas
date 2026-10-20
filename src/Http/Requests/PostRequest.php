@@ -6,12 +6,17 @@ namespace Canvas\Http\Requests;
 
 use Canvas\Models\Post;
 use Canvas\Support\MediaUrl;
+use Canvas\Support\PostSlug;
 use Canvas\Support\PublishedAt;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class PostRequest extends FormRequest
 {
+    private bool $postResolved = false;
+
+    private ?Post $post = null;
+
     public function authorize(): bool
     {
         return true;
@@ -30,6 +35,23 @@ class PostRequest extends FormRequest
         if ($this->boolean('publish_now')) {
             $this->merge(['published_at' => null]);
         }
+
+        $slug = $this->input('slug');
+
+        if (is_string($slug) && $slug !== '') {
+            $post = $this->existingPost();
+            $ownerId = $post instanceof Post
+                ? $post->user_id
+                : data_get($this->user(config('canvas.guard')), 'id');
+
+            $this->merge([
+                'slug' => PostSlug::forSave(
+                    $slug,
+                    $post,
+                    is_int($ownerId) || is_string($ownerId) ? $ownerId : null,
+                ),
+            ]);
+        }
     }
 
     /**
@@ -39,7 +61,7 @@ class PostRequest extends FormRequest
     {
         $user = $this->user(config('canvas.guard'));
         $postId = $this->route('id');
-        $post = is_string($postId) ? Post::query()->find($postId) : null;
+        $post = $this->existingPost();
         $ownerId = $post instanceof Post ? $post->user_id : data_get($user, 'id');
 
         // Drafts may be created or updated without a title; lists show “Untitled post”.
@@ -141,5 +163,19 @@ class PostRequest extends FormRequest
                 $validator->errors()->add('schedule', 'The schedule and publish_now options cannot both be true.');
             }
         });
+    }
+
+    private function existingPost(): ?Post
+    {
+        if ($this->postResolved) {
+            return $this->post;
+        }
+
+        $this->postResolved = true;
+        $postId = $this->route('id');
+        $post = is_string($postId) ? Post::query()->find($postId) : null;
+        $this->post = $post instanceof Post ? $post : null;
+
+        return $this->post;
     }
 }

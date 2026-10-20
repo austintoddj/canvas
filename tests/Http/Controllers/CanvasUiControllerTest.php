@@ -96,6 +96,33 @@ it('shows a single published post', function (): void {
         ->assertViewHas('post', fn ($p) => $p->id === $post->id);
 });
 
+it('opens the earliest published post when slugs are duplicated', function (): void {
+    // Insert the newer row first so an unordered lookup would return it.
+    $newer = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'shared-slug',
+        'title' => 'Newer duplicated title',
+        'published_at' => now()->subHour(),
+    ]);
+
+    $older = Post::factory()->create([
+        'user_id' => $this->editor->id,
+        'slug' => 'shared-slug',
+        'title' => 'Older duplicated title',
+        'published_at' => now()->subDays(3),
+    ]);
+
+    $this->get('canvas-ui/shared-slug')
+        ->assertSuccessful()
+        ->assertViewIs('canvas::ui.show')
+        ->assertViewHas('post', fn ($post) => $post->id === $older->id)
+        ->assertSee('Older duplicated title', false)
+        ->assertDontSee('Newer duplicated title', false);
+
+    expect($newer->fresh()->slug)->toBe('shared-slug')
+        ->and($older->fresh()->slug)->toBe('shared-slug');
+});
+
 it('emits seo meta tags with fallbacks on the post page', function (): void {
     $post = Post::factory()->create([
         'user_id' => $this->admin->id,

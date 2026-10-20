@@ -377,6 +377,25 @@ class Post extends Model
     }
 
     /**
+     * Published post readers should open for this slug.
+     *
+     * Rows that already share a slug stay in place. This picks one of them:
+     * the earliest `published_at`, then the lowest id.
+     *
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    public function scopeForPublicSlug(Builder $query, string $slug): Builder
+    {
+        return $query
+            ->where('slug', $slug)
+            ->published()
+            ->reorder()
+            ->orderBy('published_at')
+            ->orderBy('id');
+    }
+
+    /**
      * @param  Builder<Post>  $query
      * @return Builder<Post>
      */
