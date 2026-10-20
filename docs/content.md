@@ -16,15 +16,26 @@ $posts = Post::published()
     ->latest()
     ->paginate();
 
-$post = Post::published()
+$post = Post::forPublicSlug($slug)
     ->with(['user', 'tags', 'topic'])
-    ->firstWhere('slug', $slug);
+    ->first();
 ```
 
-| Scope         | Description                                   |
-| ------------- | --------------------------------------------- |
-| `published()` | `published_at` is set and not in the future   |
-| `draft()`     | No `published_at`, or a future `published_at` |
+| Scope                  | Description                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| `published()`          | `published_at` is set and not in the future                                                             |
+| `draft()`              | No `published_at`, or a future `published_at`                                                           |
+| `forPublicSlug($slug)` | Published post for this slug. Shared slugs resolve to the earliest `published_at`, then the lowest `id` |
+
+### Slugs
+
+Saving a new post, or changing a slug to one another post already uses, stores the next free suffix (`hello-world-2`, then `hello-world-3`). The other post is left unchanged. The saved post is returned with the slug that was stored.
+
+A post keeps the slug it already has. That includes older rows that still share a slug. On a public page, call `forPublicSlug()` so the URL opens one post: the earliest `published_at`, then the lowest `id`. Drafts and scheduled posts are skipped.
+
+```php
+$post = Post::forPublicSlug($slug)->firstOrFail();
+```
 
 ### Published vs pending
 
@@ -32,18 +43,18 @@ While a post is live, the editor autosaves into a `pending` JSON column so the p
 
 ### Useful attributes
 
-| Attribute          | Notes                                                    |
-| ------------------ | -------------------------------------------------------- |
-| `id`               | UUID                                                     |
-| `slug`             | Unique per author                                        |
-| `title`, `summary` | Plain text                                               |
-| `body`             | HTML from the editor                                     |
-| `published_at`     | `null` draft · future scheduled · past/now live          |
-| `featured_image`   | URL or `/storage/...` path                               |
-| `meta`             | SEO fields (`title`, `description`, `canonical_link`, …) |
-| `pending`          | Unpublished edits (editor only)                          |
-| `user_id`          | Host user id                                             |
-| `topic_id`         | Optional topic                                           |
+| Attribute          | Notes                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| `id`               | UUID                                                                                     |
+| `slug`             | Public URL key. New and edited slugs are suffixed until unique. An existing slug is kept |
+| `title`, `summary` | Plain text                                                                               |
+| `body`             | HTML from the editor                                                                     |
+| `published_at`     | `null` draft · future scheduled · past/now live                                          |
+| `featured_image`   | URL or `/storage/...` path                                                               |
+| `meta`             | SEO fields (`title`, `description`, `canonical_link`, …)                                 |
+| `pending`          | Unpublished edits (editor only)                                                          |
+| `user_id`          | Host user id                                                                             |
+| `topic_id`         | Optional topic                                                                           |
 
 When a future `published_at` elapses, `published()` already includes the post. Canvas runs `canvas:announce-scheduled` every minute so domain events and outbound webhooks receive `PostPublished` without another editor save. Opening the editor or promoting pending changes after the clock has elapsed does not itself fire `PostPublished`; the scheduler still announces once.
 
@@ -163,9 +174,9 @@ Route::get('/blog/posts', function () {
 });
 
 Route::get('/blog/posts/{slug}', function (string $slug) {
-    $post = Post::published()
+    $post = Post::forPublicSlug($slug)
         ->with(['tags:name,slug', 'topic:id,name,slug', 'user:id,name'])
-        ->firstWhere('slug', $slug) ?? abort(404);
+        ->first() ?? abort(404);
 
     return [
         'post' => $post,

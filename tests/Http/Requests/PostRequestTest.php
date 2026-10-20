@@ -60,34 +60,37 @@ it('rejects invalid slugs', function (): void {
     );
 });
 
-it('rejects duplicate slugs for the same user', function (): void {
-    $existing = Post::factory()->create([
+it('suffixes a slug another of the same author already uses', function (): void {
+    Post::factory()->create([
         'user_id' => $this->admin->id,
         'slug' => 'taken-slug',
     ]);
     $post = Post::factory()->create(['user_id' => $this->admin->id]);
 
-    assertFormRequestInvalid(
+    $request = makeFormRequest(
         PostRequest::class,
         [
-            'slug' => $existing->slug,
+            'slug' => 'taken-slug',
             'title' => 'Another post',
         ],
         $this->admin,
-        ['slug'],
         ['id' => $post->id],
         "canvas/api/posts/{$post->id}",
     );
+
+    $request->validateResolved();
+
+    expect($request->validated('slug'))->toBe('taken-slug-2');
 });
 
-it('allows the same slug when updating the existing post', function (): void {
+it('keeps a post slug when the save does not change it', function (): void {
     $post = Post::factory()->create([
         'user_id' => $this->admin->id,
         'slug' => 'my-slug',
         'title' => 'My post',
     ]);
 
-    assertFormRequestValid(
+    $request = makeFormRequest(
         PostRequest::class,
         [
             'slug' => 'my-slug',
@@ -97,16 +100,20 @@ it('allows the same slug when updating the existing post', function (): void {
         ['id' => $post->id],
         "canvas/api/posts/{$post->id}",
     );
+
+    $request->validateResolved();
+
+    expect($request->validated('slug'))->toBe('my-slug');
 });
 
-it('allows the same slug for different users', function (): void {
+it('suffixes a slug another author already uses', function (): void {
     Post::factory()->create([
         'user_id' => $this->admin->id,
         'slug' => 'shared-slug',
     ]);
     $post = Post::factory()->create(['user_id' => $this->editor->id]);
 
-    assertFormRequestValid(
+    $request = makeFormRequest(
         PostRequest::class,
         [
             'slug' => 'shared-slug',
@@ -116,6 +123,36 @@ it('allows the same slug for different users', function (): void {
         ['id' => $post->id],
         "canvas/api/posts/{$post->id}",
     );
+
+    $request->validateResolved();
+
+    expect($request->validated('slug'))->toBe('shared-slug-2');
+});
+
+it('keeps a slug this post already shares with another author', function (): void {
+    Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'slug' => 'shared-slug',
+    ]);
+    $post = Post::factory()->create([
+        'user_id' => $this->editor->id,
+        'slug' => 'shared-slug',
+    ]);
+
+    $request = makeFormRequest(
+        PostRequest::class,
+        [
+            'slug' => 'shared-slug',
+            'title' => 'Editor post',
+        ],
+        $this->editor,
+        ['id' => $post->id],
+        "canvas/api/posts/{$post->id}",
+    );
+
+    $request->validateResolved();
+
+    expect($request->validated('slug'))->toBe('shared-slug');
 });
 
 it('rejects invalid published dates and meta payloads', function (): void {

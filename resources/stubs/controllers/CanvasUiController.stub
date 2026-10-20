@@ -53,9 +53,9 @@ class CanvasUiController extends Controller
 
     public function show(string $slug): View
     {
-        $post = Post::published()
+        $post = Post::forPublicSlug($slug)
             ->with(['user', 'tags', 'topic'])
-            ->firstWhere('slug', $slug);
+            ->first();
 
         if (! $post) {
             abort(404);

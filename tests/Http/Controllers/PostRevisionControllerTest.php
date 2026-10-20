@@ -551,6 +551,32 @@ describe('when restoring a revision', function (): void {
             ->and($branch?->reason)->toBe(RevisionReason::Restored);
     });
 
+    it('suffixes a restored slug that another post already uses', function (): void {
+        $other = Post::factory()->create([
+            'user_id' => $this->editor->id,
+            'slug' => 'restored-slug',
+        ]);
+
+        $post = Post::factory()->draft()->create([
+            'user_id' => $this->admin->id,
+            'slug' => 'current',
+        ]);
+
+        $revision = PostRevision::factory()->create([
+            'post_id' => $post->id,
+            'slug' => 'restored-slug',
+            'title' => 'Restored title',
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->postJson("canvas/api/posts/{$post->id}/revisions/{$revision->id}/restore")
+            ->assertSuccessful()
+            ->assertJsonPath('slug', 'restored-slug-2');
+
+        expect($post->fresh()->slug)->toBe('restored-slug-2')
+            ->and($other->fresh()->slug)->toBe('restored-slug');
+    });
+
     it('rejects restore for a revision on another post', function (): void {
         $post = Post::factory()->create(['user_id' => $this->admin->id]);
         $other = Post::factory()->create(['user_id' => $this->admin->id]);
