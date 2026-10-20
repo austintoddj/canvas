@@ -1,3 +1,5 @@
+import { replaceTags, stripEmbeddedElements } from '@/lib/strip-markup';
+
 export type DiffPartType = 'equal' | 'added' | 'deleted';
 
 export type DiffPart = {
@@ -118,24 +120,14 @@ export function stripHtml(value: string | null | undefined): string {
         return '';
     }
 
-    // One pass can reassemble `<script` or `<style` from a nested tag.
-    let plain = value;
-    let previous: string;
-
-    do {
-        previous = plain;
-        plain = plain.replace(/<script\b[\s\S]*?(?:<\/script\s*>|$)/gi, '');
-    } while (plain !== previous);
-
-    do {
-        previous = plain;
-        plain = plain.replace(/<style\b[\s\S]*?(?:<\/style\s*>|$)/gi, '');
-    } while (plain !== previous);
+    const plain = replaceTags(
+        stripEmbeddedElements(value)
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<\/p>/gi, '\n'),
+        ''
+    );
 
     return plain
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<\/p>/gi, '\n')
-        .replace(/<[^>]+>/g, '')
         .replace(/&nbsp;/g, ' ')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
