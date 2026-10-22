@@ -4,9 +4,19 @@ updates:
       directory: '/'
       schedule:
           interval: 'weekly'
+          day: 'monday'
+          time: '06:00'
+          timezone: 'America/Chicago'
       cooldown:
           default-days: 5
       groups:
+          weekly-patch-minor:
+              applies-to: 'version-updates'
+              patterns:
+                  - '*'
+              update-types:
+                  - 'minor'
+                  - 'patch'
           github-actions:
               patterns:
                   - '*'
@@ -22,10 +32,20 @@ updates:
       directory: '/'
       schedule:
           interval: 'weekly'
+          day: 'monday'
+          time: '06:00'
+          timezone: 'America/Chicago'
       target-branch: 'develop'
       cooldown:
           default-days: 5
       groups:
+          weekly-patch-minor:
+              applies-to: 'version-updates'
+              patterns:
+                  - '*'
+              update-types:
+                  - 'minor'
+                  - 'patch'
           tiptap:
               patterns:
                   - '@tiptap/*'
@@ -45,9 +65,20 @@ updates:
       directory: '/'
       schedule:
           interval: 'weekly'
+          day: 'monday'
+          time: '06:00'
+          timezone: 'America/Chicago'
       target-branch: 'develop'
       cooldown:
           default-days: 5
+      groups:
+          weekly-patch-minor:
+              applies-to: 'version-updates'
+              patterns:
+                  - '*'
+              update-types:
+                  - 'minor'
+                  - 'patch'
       reviewers:
           - 'austintoddj'
       labels:
