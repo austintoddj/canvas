@@ -111,6 +111,52 @@ describe('CalendarIndex', () => {
         });
     });
 
+    it('arrow keys round-trip an empty month without dropping grid focus', async () => {
+        const user = userEvent.setup();
+        renderCalendar('/calendar?month=2026-08');
+
+        await waitFor(() => {
+            expect(document.querySelector('[data-calendar-grid="true"]')).not.toBeNull();
+        });
+
+        // Hold the next fetch open so the empty-month loading state can commit.
+        // A resolved mock batches that state away and hides the skeleton unmount.
+        let release: (value: { posts: [] }) => void = () => {};
+        postsMock.mockImplementation(
+            () =>
+                new Promise((resolve) => {
+                    release = resolve;
+                })
+        );
+
+        const heading = document.querySelector('h2');
+        const before = heading?.textContent ?? '';
+        expect(before.length).toBeGreaterThan(0);
+
+        const grid = document.querySelector('[data-calendar-grid="true"]') as HTMLElement;
+        grid.focus();
+        await user.keyboard('{ArrowRight}');
+
+        await waitFor(() => {
+            expect(document.querySelector('h2')?.textContent).not.toBe(before);
+        });
+
+        // Skeleton swap on an empty refetch unmounts the grid and focus falls to body.
+        expect(grid.isConnected).toBe(true);
+        expect(document.activeElement).toBe(grid);
+
+        release({ posts: [] });
+        postsMock.mockResolvedValue({ posts: [] });
+
+        await user.keyboard('{ArrowLeft}');
+
+        await waitFor(() => {
+            expect(document.querySelector('h2')?.textContent).toBe(before);
+        });
+        expect(grid.isConnected).toBe(true);
+        expect(document.activeElement).toBe(grid);
+    });
+
     it('selecting an out-of-month padding day switches month and opens the day panel', async () => {
         const user = userEvent.setup();
         postsMock.mockResolvedValue({

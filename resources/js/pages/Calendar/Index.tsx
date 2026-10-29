@@ -123,6 +123,7 @@ export default function CalendarIndex() {
     const [error, setError] = useState<string | null>(null);
     /** Bumped on “Today” so the today marker remounts and re-runs its one-shot pulse. */
     const [todayPulseKey, setTodayPulseKey] = useState(0);
+    const [hasResolved, setHasResolved] = useState(false);
 
     useDocumentTitle(t('calendar.title'));
 
@@ -162,6 +163,7 @@ export default function CalendarIndex() {
             .finally(() => {
                 if (!cancelled) {
                     setLoading(false);
+                    setHasResolved(true);
                 }
             });
 
@@ -173,11 +175,12 @@ export default function CalendarIndex() {
 
     const byDate = useMemo(() => groupPostsByDate(posts), [posts]);
     const inMonthPosts = useMemo(() => postsInMonth(posts, yearMonth), [posts, yearMonth]);
-    // Use full fetch size for skeleton/refresh so month switches keep the grid
-    // instead of flashing skeleton when the target month is empty.
+    // After the first response, keep the grid mounted on refetch. An empty month
+    // still looks like a first load (count 0); swapping in the skeleton unmounts
+    // the focused grid, so the next arrow key never changes the month.
     const fetchCount = posts.length;
-    const showInitialSkeleton = isInitialLoading(loading, fetchCount);
-    const refreshing = isRefreshing(loading, fetchCount);
+    const showInitialSkeleton = !hasResolved && isInitialLoading(loading, fetchCount);
+    const refreshing = hasResolved ? loading : isRefreshing(loading, fetchCount);
     const { animateContent } = useAsyncReveal(loading, fetchCount, queryKey);
     const monthEmpty = !loading && inMonthPosts.length === 0;
 
