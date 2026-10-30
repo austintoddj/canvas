@@ -33,12 +33,11 @@ const boot = makeBoot({
         'posts.type_published': 'Published',
         'posts.type_drafts': 'Drafts',
         'posts.sort_label': 'Sort posts',
-        'posts.sort_created_newest': 'Created date, newest first',
-        'posts.sort_created_oldest': 'Created date, oldest first',
-        'posts.sort_updated_newest': 'Recent activity, newest first',
-        'posts.sort_updated_oldest': 'Recent activity, oldest first',
-        'posts.sort_published_newest': 'Published date, newest first',
-        'posts.sort_published_oldest': 'Published date, oldest first',
+        'posts.sort_created': 'Created',
+        'posts.sort_published': 'Published',
+        'posts.sort_updated': 'Updated',
+        'posts.sort_newest': 'Newest first',
+        'posts.sort_oldest': 'Oldest first',
         'posts.empty_published_headline': 'No published posts yet',
         'posts.empty_published_blurb': 'Nothing published yet.',
         'posts.empty_drafts_headline': 'No drafts yet',
@@ -117,6 +116,7 @@ describe('PostsIndex sort', () => {
         });
 
         expect(screen.getByRole('combobox', { name: 'Sort posts' })).toHaveValue('created');
+        expect(screen.getByRole('button', { name: 'Newest first' })).toBeInTheDocument();
     });
 
     it('loads each sort from the query string and keeps it on the next page', async () => {
@@ -130,7 +130,16 @@ describe('PostsIndex sort', () => {
                 expect(indexMock).toHaveBeenCalledWith({ sort }, expect.any(AbortSignal));
             });
 
-            expect(screen.getByRole('combobox', { name: 'Sort posts' })).toHaveValue(sort);
+            const field = sort.startsWith('published')
+                ? 'published'
+                : sort.startsWith('updated')
+                  ? 'updated'
+                  : 'created';
+
+            expect(screen.getByRole('combobox', { name: 'Sort posts' })).toHaveValue(field);
+            expect(
+                screen.getByRole('button', { name: sort.endsWith('_oldest') ? 'Oldest first' : 'Newest first' })
+            ).toBeInTheDocument();
 
             await waitFor(() => {
                 expect(screen.getByRole('link', { name: 'Next page' })).toHaveAttribute(
@@ -159,6 +168,14 @@ describe('PostsIndex sort', () => {
                 'href',
                 '/posts?sort=published&page=2'
             );
+        });
+
+        await user.click(screen.getByRole('button', { name: 'Newest first' }));
+
+        await waitFor(() => {
+            expect(indexMock).toHaveBeenLastCalledWith({ sort: 'published_oldest' }, expect.any(AbortSignal));
+            expect(screen.getByRole('button', { name: 'Oldest first' })).toBeInTheDocument();
+            expect(screen.getByRole('combobox', { name: 'Sort posts' })).toHaveValue('published');
         });
     });
 });

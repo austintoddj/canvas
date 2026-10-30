@@ -8,6 +8,10 @@ export type PostsListTab = 'published' | 'draft';
 export type PostsListSort =
     'created' | 'created_oldest' | 'updated' | 'updated_oldest' | 'published' | 'published_oldest';
 
+export type PostsSortField = 'created' | 'published' | 'updated';
+
+export type PostsSortDirection = 'newest' | 'oldest';
+
 export type PostsListFilters = {
     tab: PostsListTab;
     scope: 'user' | 'all';
@@ -15,16 +19,52 @@ export type PostsListFilters = {
     sort: PostsListSort;
 };
 
-export const POSTS_SORT_OPTIONS: { value: PostsListSort; labelKey: string }[] = [
-    { value: 'created', labelKey: 'posts.sort_created_newest' },
-    { value: 'created_oldest', labelKey: 'posts.sort_created_oldest' },
-    { value: 'updated', labelKey: 'posts.sort_updated_newest' },
-    { value: 'updated_oldest', labelKey: 'posts.sort_updated_oldest' },
-    { value: 'published', labelKey: 'posts.sort_published_newest' },
-    { value: 'published_oldest', labelKey: 'posts.sort_published_oldest' },
+export const POSTS_SORT_FIELDS: { value: PostsSortField; labelKey: string }[] = [
+    { value: 'created', labelKey: 'posts.sort_created' },
+    { value: 'published', labelKey: 'posts.sort_published' },
+    { value: 'updated', labelKey: 'posts.sort_updated' },
 ];
 
-const POSTS_SORT_VALUES = new Set<string>(POSTS_SORT_OPTIONS.map((option) => option.value));
+const POSTS_SORT_VALUES = new Set<string>([
+    'created',
+    'created_oldest',
+    'updated',
+    'updated_oldest',
+    'published',
+    'published_oldest',
+]);
+
+export function postsSortField(sort: PostsListSort): PostsSortField {
+    if (sort === 'published' || sort === 'published_oldest') {
+        return 'published';
+    }
+
+    if (sort === 'updated' || sort === 'updated_oldest') {
+        return 'updated';
+    }
+
+    return 'created';
+}
+
+export function postsSortDirection(sort: PostsListSort): PostsSortDirection {
+    return sort.endsWith('_oldest') ? 'oldest' : 'newest';
+}
+
+export function postsListSort(field: PostsSortField, direction: PostsSortDirection): PostsListSort {
+    if (direction === 'newest') {
+        return field;
+    }
+
+    if (field === 'created') {
+        return 'created_oldest';
+    }
+
+    if (field === 'updated') {
+        return 'updated_oldest';
+    }
+
+    return 'published_oldest';
+}
 
 export function parsePostsListSort(value: string | null | undefined): PostsListSort {
     if (value !== null && value !== undefined && POSTS_SORT_VALUES.has(value)) {

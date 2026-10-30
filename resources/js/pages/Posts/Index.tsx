@@ -40,17 +40,20 @@ import { paginationWindow, shouldGoToPreviousPageAfterDelete } from '@/lib/list-
 import {
     countsAfterPostDelete,
     parsePostsListFilters,
-    POSTS_SORT_OPTIONS,
+    POSTS_SORT_FIELDS,
     postListSortInstant,
     postListStatus,
     postsIndexPath,
     postsIndexQueryParams,
+    postsListSort,
+    postsSortDirection,
+    postsSortField,
     type PostsListFilters,
-    type PostsListSort,
+    type PostsSortField,
 } from '@/lib/posts/list';
 import { toast } from '@/lib/toast';
 import type { Paginated, PostListItem, PostsIndexResponse } from '@/types/api';
-import { IconChartBar, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconChartBar, IconPlus, IconSortAscending, IconSortDescending, IconTrash } from '@tabler/icons-react';
 
 function updateFilters(current: URLSearchParams, patch: Partial<PostsListFilters>, resetPage = false): URLSearchParams {
     const next = new URLSearchParams(current);
@@ -206,6 +209,8 @@ export default function PostsIndex() {
     const refreshing = isRefreshing(loading, itemCount);
     const isEmpty = shouldShowEmpty(loading, itemCount);
     const { animateEmpty, animateContent } = useAsyncReveal(loading, itemCount);
+    const sortField = postsSortField(filters.sort);
+    const sortDirection = postsSortDirection(filters.sort);
     const emptyHeadline =
         filters.tab === 'draft' ? t('posts.empty_drafts_headline') : t('posts.empty_published_headline');
     const emptyDescription = filters.tab === 'draft' ? t('posts.empty_drafts_blurb') : t('posts.empty_published_blurb');
@@ -253,21 +258,52 @@ export default function PostsIndex() {
                     </PillNavItem>
                 </PillNav>
 
-                <div className="flex flex-wrap items-center gap-3 sm:ms-auto">
-                    <Field className="w-full sm:w-72">
-                        <Select
-                            name="posts-sort"
-                            aria-label={t('posts.sort_label')}
-                            value={filters.sort}
-                            onChange={(event) => setFilters({ sort: event.target.value as PostsListSort }, true)}
+                <div className="flex flex-wrap items-center gap-2 sm:ms-auto sm:gap-3">
+                    <div className="flex shrink-0 items-center gap-2">
+                        <Field className="w-fit">
+                            <Select
+                                name="posts-sort"
+                                aria-label={t('posts.sort_label')}
+                                value={sortField}
+                                onChange={(event) =>
+                                    setFilters(
+                                        {
+                                            sort: postsListSort(event.target.value as PostsSortField, sortDirection),
+                                        },
+                                        true
+                                    )
+                                }
+                            >
+                                {POSTS_SORT_FIELDS.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {t(option.labelKey)}
+                                    </option>
+                                ))}
+                            </Select>
+                        </Field>
+                        <button
+                            type="button"
+                            aria-label={sortDirection === 'newest' ? t('posts.sort_newest') : t('posts.sort_oldest')}
+                            onClick={() =>
+                                setFilters(
+                                    {
+                                        sort: postsListSort(
+                                            sortField,
+                                            sortDirection === 'newest' ? 'oldest' : 'newest'
+                                        ),
+                                    },
+                                    true
+                                )
+                            }
+                            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-zinc-950/10 text-zinc-700 hover:bg-zinc-950/5 focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:size-8 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5"
                         >
-                            {POSTS_SORT_OPTIONS.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {t(option.labelKey)}
-                                </option>
-                            ))}
-                        </Select>
-                    </Field>
+                            {sortDirection === 'newest' ? (
+                                <IconSortDescending className="size-5 sm:size-4" aria-hidden="true" />
+                            ) : (
+                                <IconSortAscending className="size-5 sm:size-4" aria-hidden="true" />
+                            )}
+                        </button>
+                    </div>
 
                     {canViewAllPosts ? (
                         <PillNav

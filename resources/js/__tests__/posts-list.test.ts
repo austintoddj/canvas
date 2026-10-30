@@ -10,7 +10,10 @@ import {
     postListStatus,
     postsIndexPath,
     postsIndexQueryParams,
-    POSTS_SORT_OPTIONS,
+    postsListSort,
+    postsSortDirection,
+    postsSortField,
+    POSTS_SORT_FIELDS,
 } from '@/lib/posts/list';
 
 describe('posts list helpers', () => {
@@ -100,9 +103,15 @@ describe('posts list helpers', () => {
         expect(parsePostsListSort('nope')).toBe('created');
         expect(parsePostsListFilters(new URLSearchParams('sort=popular')).sort).toBe('created');
 
-        for (const option of POSTS_SORT_OPTIONS) {
-            expect(parsePostsListSort(option.value)).toBe(option.value);
-            expect(parsePostsListFilters(new URLSearchParams(`sort=${option.value}`)).sort).toBe(option.value);
+        for (const field of POSTS_SORT_FIELDS) {
+            for (const direction of ['newest', 'oldest'] as const) {
+                const sort = postsListSort(field.value, direction);
+
+                expect(postsSortField(sort)).toBe(field.value);
+                expect(postsSortDirection(sort)).toBe(direction);
+                expect(parsePostsListSort(sort)).toBe(sort);
+                expect(parsePostsListFilters(new URLSearchParams(`sort=${sort}`)).sort).toBe(sort);
+            }
         }
 
         expect(postsIndexPath({ sort: 'created' })).toBe('/posts');
