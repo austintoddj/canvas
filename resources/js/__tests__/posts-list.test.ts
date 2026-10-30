@@ -61,24 +61,35 @@ describe('posts list helpers', () => {
             scope: 'user',
             page: 1,
             search: '',
+            sort: 'created',
         });
         expect(parsePostsListFilters(new URLSearchParams('type=draft&scope=all&page=3&search=%20hello%20'))).toEqual({
             tab: 'draft',
             scope: 'all',
             page: 3,
             search: 'hello',
+            sort: 'created',
         });
+        expect(parsePostsListFilters(new URLSearchParams('sort=published_asc')).sort).toBe('published_asc');
+        expect(parsePostsListFilters(new URLSearchParams('sort=popular')).sort).toBe('created');
 
         expect(postsIndexPath({ tab: 'published', scope: 'user', page: 1 })).toBe('/posts');
         expect(postsIndexPath({ tab: 'draft', scope: 'all', page: 2, search: ' hello ' })).toBe(
             '/posts?type=draft&scope=all&page=2&search=hello'
         );
-        expect(postsIndexQueryParams({ tab: 'published', scope: 'user', page: 1, search: '  ' })).toEqual({});
-        expect(postsIndexQueryParams({ tab: 'draft', scope: 'all', page: 3, search: 'hello' })).toEqual({
+        expect(postsIndexPath({ sort: 'published' })).toBe('/posts?sort=published');
+        expect(postsIndexPath({ sort: 'created' })).toBe('/posts');
+        expect(
+            postsIndexQueryParams({ tab: 'published', scope: 'user', page: 1, search: '  ', sort: 'created' })
+        ).toEqual({});
+        expect(
+            postsIndexQueryParams({ tab: 'draft', scope: 'all', page: 3, search: 'hello', sort: 'activity_asc' })
+        ).toEqual({
             type: 'draft',
             scope: 'all',
             page: 3,
             search: 'hello',
+            sort: 'activity_asc',
         });
     });
 

@@ -368,6 +368,34 @@ class Post extends Model
     }
 
     /**
+     * Posts index order. Unknown values keep the historical default: newest `created_at`.
+     *
+     * Undated drafts sort last. MySQL, SQLite, and Postgres disagree on NULL placement.
+     *
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    public function scopeOrderedForIndex(Builder $query, ?string $sort): Builder
+    {
+        [$column, $direction] = match ($sort) {
+            'activity' => ['updated_at', 'desc'],
+            'activity_asc' => ['updated_at', 'asc'],
+            'published' => ['published_at', 'desc'],
+            'published_asc' => ['published_at', 'asc'],
+            'created_asc' => ['created_at', 'asc'],
+            default => ['created_at', 'desc'],
+        };
+
+        if ($column === 'published_at') {
+            $query->orderByRaw('case when published_at is null then 1 else 0 end');
+        }
+
+        return $query
+            ->orderBy($column, $direction)
+            ->orderBy('id', $direction);
+    }
+
+    /**
      * @param  Builder<Post>  $query
      * @return Builder<Post>
      */

@@ -160,6 +160,7 @@ export type PostsIndexParams = {
     scope?: 'user' | 'all';
     page?: number;
     search?: string;
+    sort?: 'activity' | 'activity_asc' | 'published' | 'published_asc' | 'created_asc';
 };
 
 /** Calendar month range item (scheduled + published only). */

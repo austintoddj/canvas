@@ -25,6 +25,7 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/table';
 import { TableListSkeleton } from '@/components/TableListSkeleton';
 import { LoadError } from '@/components/LoadError';
 import { SearchField } from '@/components/SearchField';
+import { Select } from '@/components/select';
 import { Text, PageDescription } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
@@ -40,8 +41,10 @@ import { paginationWindow, shouldGoToPreviousPageAfterDelete } from '@/lib/list-
 import {
     countsAfterPostDelete,
     parsePostsListFilters,
+    parsePostsListSort,
     postListStatus,
     POSTS_SEARCH_DEBOUNCE_MS,
+    POSTS_SORT_OPTIONS,
     postsIndexPath,
     postsIndexQueryParams,
     type PostsListFilters,
@@ -76,6 +79,14 @@ function updateFilters(current: URLSearchParams, patch: Partial<PostsListFilters
             next.set('search', search);
         } else {
             next.delete('search');
+        }
+    }
+
+    if (patch.sort !== undefined) {
+        if (patch.sort === 'created') {
+            next.delete('sort');
+        } else {
+            next.set('sort', patch.sort);
         }
     }
 
@@ -281,14 +292,29 @@ export default function PostsIndex() {
                     </PillNavItem>
                 </PillNav>
 
-                {/* Below `sm`, `order-last` puts search on its own row under the pills. */}
-                <SearchField
-                    id="posts-search"
-                    label={t('posts.search_label')}
-                    value={searchDraft}
-                    onChange={setSearchDraft}
-                    className="order-last w-full sm:order-none sm:w-52"
-                />
+                {/* Below `sm`, `order-last` puts search and sort on their own rows under the pills. */}
+                <div className="order-last flex w-full flex-col gap-3 sm:order-none sm:w-auto sm:flex-row sm:items-center">
+                    <SearchField
+                        id="posts-search"
+                        label={t('posts.search_label')}
+                        value={searchDraft}
+                        onChange={setSearchDraft}
+                        className="w-full sm:w-52"
+                    />
+                    <Select
+                        className="w-full sm:w-56"
+                        name="posts-sort"
+                        aria-label={t('posts.sort_label')}
+                        value={filters.sort}
+                        onChange={(event) => setFilters({ sort: parsePostsListSort(event.target.value) }, true)}
+                    >
+                        {POSTS_SORT_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {t(option.labelKey)}
+                            </option>
+                        ))}
+                    </Select>
+                </div>
 
                 <div className="flex flex-wrap items-center gap-3 sm:ms-auto">
                     {canViewAllPosts ? (

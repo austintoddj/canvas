@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MobilePageActionProvider } from '@/contexts/MobilePageActionContext';
@@ -29,6 +30,13 @@ const translations = {
     'posts.scope_all': 'All',
     'posts.view_calendar': 'View calendar',
     'posts.search_label': 'Search posts',
+    'posts.sort_label': 'Sort',
+    'posts.sort_activity_newest': 'Recent activity',
+    'posts.sort_activity_oldest': 'Oldest activity',
+    'posts.sort_published_newest': 'Newest published',
+    'posts.sort_published_oldest': 'Oldest published',
+    'posts.sort_created_newest': 'Newest created',
+    'posts.sort_created_oldest': 'Oldest created',
     'posts.filtered_empty': 'No posts match your search.',
     'posts.empty_published_headline': 'No published posts',
     'posts.empty_published_blurb': 'Publish a post and it will show up here.',
@@ -192,6 +200,28 @@ describe('Posts list rows', () => {
         expect(linkClasses).toContain('min-h-11');
         expect(linkClasses).toContain('px-2');
         expect(filters?.contains(link)).toBe(true);
+    });
+
+    it('requests the selected sort and resets to the first page', async () => {
+        const user = userEvent.setup();
+        indexMock.mockResolvedValue(payload([post({ id: 'live', title: 'Hello' })]));
+
+        renderWithCanvas(
+            <MobilePageActionProvider>
+                <PostsIndex />
+            </MobilePageActionProvider>,
+            { boot: makeBoot({ translations }), path: '/posts?page=2' }
+        );
+
+        const sort = await screen.findByRole('combobox', { name: 'Sort' });
+        expect(sort).toHaveValue('created');
+        expect(indexMock).toHaveBeenCalledWith(expect.objectContaining({ page: 2 }), expect.anything());
+
+        await user.selectOptions(sort, 'published');
+
+        await waitFor(() => {
+            expect(indexMock).toHaveBeenCalledWith({ sort: 'published' }, expect.anything());
+        });
     });
 });
 

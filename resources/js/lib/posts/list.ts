@@ -4,12 +4,35 @@ import type { PostsIndexParams } from '@/types/api';
 
 export type PostsListTab = 'published' | 'draft';
 
+/** `created` is the historical default (newest `created_at`) and is omitted from the URL. */
+export type PostsListSort = 'activity' | 'activity_asc' | 'published' | 'published_asc' | 'created' | 'created_asc';
+
 export type PostsListFilters = {
     tab: PostsListTab;
     scope: 'user' | 'all';
     page: number;
     search: string;
+    sort: PostsListSort;
 };
+
+export const POSTS_SORT_OPTIONS: { value: PostsListSort; labelKey: string }[] = [
+    { value: 'activity', labelKey: 'posts.sort_activity_newest' },
+    { value: 'activity_asc', labelKey: 'posts.sort_activity_oldest' },
+    { value: 'published', labelKey: 'posts.sort_published_newest' },
+    { value: 'published_asc', labelKey: 'posts.sort_published_oldest' },
+    { value: 'created', labelKey: 'posts.sort_created_newest' },
+    { value: 'created_asc', labelKey: 'posts.sort_created_oldest' },
+];
+
+const POSTS_SORT_VALUES = new Set<string>(POSTS_SORT_OPTIONS.map((option) => option.value));
+
+export function parsePostsListSort(value: string | null | undefined): PostsListSort {
+    if (value !== null && value !== undefined && POSTS_SORT_VALUES.has(value)) {
+        return value as PostsListSort;
+    }
+
+    return 'created';
+}
 
 export const POSTS_SEARCH_DEBOUNCE_MS = 300;
 
@@ -54,6 +77,10 @@ export function postsIndexPath(filters: Partial<PostsListFilters> = {}): string 
         params.search = filters.search.trim();
     }
 
+    if (filters.sort !== undefined && filters.sort !== 'created') {
+        params.sort = filters.sort;
+    }
+
     return `/posts${buildQueryString(params)}`;
 }
 
@@ -67,8 +94,9 @@ export function parsePostsListFilters(searchParams: URLSearchParams): PostsListF
     const scope = searchParams.get('scope') === 'all' ? 'all' : 'user';
     const page = Math.max(1, Number.parseInt(searchParams.get('page') ?? '1', 10) || 1);
     const search = searchParams.get('search')?.trim() ?? '';
+    const sort = parsePostsListSort(searchParams.get('sort'));
 
-    return { tab, scope, page, search };
+    return { tab, scope, page, search, sort };
 }
 
 export function postsIndexQueryParams(filters: PostsListFilters): PostsIndexParams {
@@ -77,6 +105,7 @@ export function postsIndexQueryParams(filters: PostsListFilters): PostsIndexPara
         scope: filters.scope === 'all' ? 'all' : undefined,
         page: filters.page > 1 ? filters.page : undefined,
         search: filters.search.trim() !== '' ? filters.search.trim() : undefined,
+        sort: filters.sort === 'created' ? undefined : filters.sort,
     };
 }
 
