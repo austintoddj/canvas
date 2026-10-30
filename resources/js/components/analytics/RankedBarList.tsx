@@ -139,7 +139,7 @@ export default function RankedBarList({
                 className={clsx(
                     // min-w-0 + overflow-hidden keep long labels (referer URLs) inside the chart column.
                     'relative flex h-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-zinc-950/10 p-5',
-                    'dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5',
+                    'dark:border-white/10 dark:bg-white/[0.02]',
                     className
                 )}
                 data-ranked-bar-list="true"

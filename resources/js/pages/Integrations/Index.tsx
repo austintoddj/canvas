@@ -5,8 +5,9 @@ import { IntegrationCard } from '@/components/integrations/IntegrationCard';
 import { IntegrationsListSkeleton } from '@/components/integrations/IntegrationsListSkeleton';
 import { UnsplashIntegrationDrawer } from '@/components/integrations/UnsplashIntegrationDrawer';
 import { WebhookIntegrationDrawer } from '@/components/integrations/WebhookIntegrationDrawer';
+import { LoadError } from '@/components/LoadError';
 import { PageHeader } from '@/components/PageHeader';
-import { PageDescription, ErrorText } from '@/components/text';
+import { PageDescription } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { integrationsApi, type IntegrationsStatus } from '@/lib/api/integrations';
@@ -18,6 +19,7 @@ export default function IntegrationsIndex() {
     const [status, setStatus] = useState<IntegrationsStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     const [openDrawer, setOpenDrawer] = useState<IntegrationDrawer | null>(null);
 
     useDocumentTitle(t('integrations.title'));
@@ -59,7 +61,7 @@ export default function IntegrationsIndex() {
         void load();
 
         return () => controller.abort();
-    }, [t]);
+    }, [reloadKey, t]);
 
     const unsplashStatus = status?.unsplash.status ?? 'off';
     const aiStatus = status?.ai.status ?? 'off';
@@ -74,7 +76,7 @@ export default function IntegrationsIndex() {
                 <PageDescription>{t('integrations.description')}</PageDescription>
             </PageHeader>
 
-            {loadError ? <ErrorText>{loadError}</ErrorText> : null}
+            {loadError ? <LoadError message={loadError} onRetry={() => setReloadKey((key) => key + 1)} /> : null}
 
             {loading ? (
                 <div aria-busy="true">
@@ -82,7 +84,7 @@ export default function IntegrationsIndex() {
                 </div>
             ) : (
                 <div
-                    className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                    className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
                     data-integrations-list="true"
                     data-integrations-cards="true"
                 >

@@ -159,6 +159,7 @@ export type PostsIndexParams = {
     type?: 'draft';
     scope?: 'user' | 'all';
     page?: number;
+    search?: string;
 };
 
 /** Calendar month range item (scheduled + published only). */

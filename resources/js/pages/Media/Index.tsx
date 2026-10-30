@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useLayoutEffect, useRef, useState, type DragEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -18,7 +18,9 @@ import { MediaTagRail } from '@/components/media/MediaTagRail';
 import { MediaViewMenu } from '@/components/media/MediaViewMenu';
 import { PageHeader } from '@/components/PageHeader';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
-import { Text, PageDescription, ErrorText } from '@/components/text';
+import { LoadError } from '@/components/LoadError';
+import { SearchField } from '@/components/SearchField';
+import { Text, PageDescription } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -65,7 +67,7 @@ import {
 } from '@/lib/media/list';
 import { toast, toastFromTone } from '@/lib/toast';
 import type { Media, MediaTag } from '@/types/api';
-import { IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
+import { IconTrash, IconUpload } from '@tabler/icons-react';
 
 const ACCEPT = ALLOWED_MEDIA_MIME_TYPES.join(',');
 
@@ -97,6 +99,7 @@ function setDetailParam(current: URLSearchParams, mediaId: string | null): URLSe
 
 export default function MediaIndex() {
     const { t } = useCanvas();
+    const reducedMotion = useReducedMotion() === true;
     const { canViewAllMedia } = usePermissions();
     const [searchParams, setSearchParams] = useSearchParams();
     const filters = parseMediaListFilters(searchParams);
@@ -114,6 +117,7 @@ export default function MediaIndex() {
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
     const [pageDragging, setPageDragging] = useState(false);
@@ -207,7 +211,7 @@ export default function MediaIndex() {
             cancelled = true;
             controller.abort();
         };
-    }, [filters.scope, filters.search, filters.mime, filters.sort, filters.tag, filters.untagged, t]);
+    }, [filters.scope, filters.search, filters.mime, filters.sort, filters.tag, filters.untagged, reloadKey, t]);
 
     useEffect(() => {
         let cancelled = false;
@@ -855,7 +859,7 @@ export default function MediaIndex() {
                 {pageDragging ? (
                     <motion.div
                         key="media-drop-overlay"
-                        className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/40 p-6 backdrop-blur-md dark:bg-zinc-950/70"
+                        className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-zinc-950/40 p-6"
                         aria-hidden="true"
                         data-media-drop-overlay="true"
                         initial={{ opacity: 0 }}
@@ -864,11 +868,11 @@ export default function MediaIndex() {
                         transition={{ duration: 0.18, ease: 'easeOut' }}
                     >
                         <motion.div
-                            className="flex w-full max-w-lg flex-col items-center rounded-3xl border border-white/20 bg-white/90 px-8 py-12 text-center shadow-2xl shadow-zinc-950/20 ring-1 ring-zinc-950/5 dark:border-white/15 dark:bg-zinc-800/90 dark:shadow-none dark:ring-1 dark:ring-white/10 dark:backdrop-blur-xl"
-                            initial={{ opacity: 0, y: 18 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.8 }}
+                            className="flex w-full max-w-lg flex-col items-center rounded-2xl bg-white px-6 py-8 text-center shadow-lg ring-1 ring-zinc-950/10 sm:px-8 sm:py-12 dark:bg-zinc-900 dark:ring-white/10"
+                            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                            animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                            transition={{ duration: 0.18, ease: 'easeOut' }}
                         >
                             <span className="flex size-14 items-center justify-center rounded-2xl bg-zinc-950 text-white dark:bg-white dark:text-zinc-950">
                                 <IconUpload className="size-7" aria-hidden="true" />
@@ -936,20 +940,13 @@ export default function MediaIndex() {
                         </div>
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end lg:shrink-0">
                             <div className="flex min-w-0 items-center gap-1.5">
-                                <label className="sr-only" htmlFor="media-search">
-                                    {t('media.search_label')}
-                                </label>
-                                <div className="flex h-9 min-w-0 flex-1 items-center gap-1.5 rounded-full bg-zinc-950/[0.04] px-3 ring-1 ring-zinc-950/8 sm:h-8 sm:w-52 sm:flex-none sm:px-2.5 dark:bg-white/5 dark:ring-white/10">
-                                    <IconSearch className="size-3.5 shrink-0 text-zinc-400" aria-hidden="true" />
-                                    <input
-                                        id="media-search"
-                                        name="media-search"
-                                        value={searchDraft}
-                                        placeholder={t('media.search_label')}
-                                        className="min-w-0 flex-1 bg-transparent text-sm text-zinc-950 outline-none placeholder:text-zinc-400 sm:text-[13px] dark:text-white dark:placeholder:text-zinc-500"
-                                        onChange={(event) => setSearchDraft(event.target.value)}
-                                    />
-                                </div>
+                                <SearchField
+                                    id="media-search"
+                                    label={t('media.search_label')}
+                                    value={searchDraft}
+                                    onChange={setSearchDraft}
+                                    className="min-w-0 flex-1 sm:w-52 sm:flex-none"
+                                />
                                 <MediaViewMenu
                                     mime={filters.mime}
                                     sort={filters.sort}
@@ -972,14 +969,7 @@ export default function MediaIndex() {
                         </div>
                     </div>
 
-                    {error ? (
-                        <div
-                            className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 dark:border-red-500/30 dark:bg-red-500/10"
-                            role="alert"
-                        >
-                            <ErrorText>{error}</ErrorText>
-                        </div>
-                    ) : null}
+                    {error ? <LoadError message={error} onRetry={() => setReloadKey((key) => key + 1)} /> : null}
 
                     {showInitialSkeleton ? <MediaGridSkeleton /> : null}
 
@@ -1210,12 +1200,12 @@ export default function MediaIndex() {
                         key="media-selection-bar"
                         data-media-selection-actions="true"
                         className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 pointer-events-none"
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 12 }}
-                        transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.75 }}
+                        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                        animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                        exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                        transition={{ duration: 0.18, ease: 'easeOut' }}
                     >
-                        <div className="pointer-events-auto w-full max-w-lg rounded-2xl border border-canvas-border bg-canvas-panel px-3 py-3 shadow-lg ring-1 ring-zinc-950/5 sm:px-4 dark:border-canvas-border-dark dark:bg-canvas-panel-dark dark:shadow-black/40 dark:ring-white/10">
+                        <div className="pointer-events-auto w-full max-w-lg rounded-2xl bg-canvas-panel px-3 py-3 shadow-lg ring-1 ring-zinc-950/10 sm:px-4 dark:bg-canvas-panel-dark dark:ring-white/10">
                             <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                                 <div className="flex items-center justify-between gap-3 sm:justify-start">
                                     <Text

@@ -65,7 +65,7 @@ export function DashboardAudience({
         return (
             <section className="space-y-3" data-dashboard-audience={mode}>
                 <AudienceHeader rangeDays={rangeDays} onRangeChange={onRangeChange} />
-                <div className="rounded-xl border border-zinc-950/10 px-5 py-5 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5">
+                <div className="rounded-xl border border-zinc-950/10 px-5 py-5 dark:border-white/10 dark:bg-white/[0.02]">
                     <p className="text-sm font-medium text-zinc-950 dark:text-white">{t(keys.headline)}</p>
                     <Text className="mt-1 text-sm text-canvas-muted dark:text-canvas-muted-dark">{t(keys.blurb)}</Text>
                     <div className="mt-4">
@@ -89,7 +89,7 @@ export function DashboardAudience({
                     <StatCard label={visitsCard.label} value={visitsCard.value} />
                 </div>
                 <div
-                    className="rounded-xl border border-zinc-950/10 px-5 py-4 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5"
+                    className="rounded-xl border border-zinc-950/10 px-5 py-4 dark:border-white/10 dark:bg-white/[0.02]"
                     data-dashboard-traffic-hint="true"
                 >
                     <p className="text-sm font-medium text-zinc-950 dark:text-white">{t(keys.headline)}</p>

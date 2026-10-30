@@ -9,6 +9,7 @@ import { Subheading } from '@/components/heading';
 import { Input } from '@/components/input';
 import { SideDrawer } from '@/components/SideDrawer';
 import { Skeleton } from '@/components/Skeleton';
+import { LoadError } from '@/components/LoadError';
 import { ErrorText, Text } from '@/components/text';
 import { Textarea } from '@/components/textarea';
 import { MediaTagPicker } from '@/components/media/MediaTagPicker';
@@ -65,6 +66,7 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
     // Start loading when opened so the skeleton paints before the first paint frame.
     const [loading, setLoading] = useState(() => open && mediaId !== null);
     const [error, setError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -122,7 +124,7 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
             cancelled = true;
             controller.abort();
         };
-    }, [open, mediaId, t]);
+    }, [open, mediaId, reloadKey, t]);
 
     useEffect(() => {
         if (!open) {
@@ -336,7 +338,7 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
 
                 {!loading && error !== null && media === null ? (
                     <div className="px-5 py-8">
-                        <ErrorText>{error}</ErrorText>
+                        <LoadError message={error} onRetry={() => setReloadKey((key) => key + 1)} />
                     </div>
                 ) : null}
 
@@ -482,8 +484,8 @@ export function MediaDetailDrawer({ open, mediaId, onClose, onUpdated, onDeleted
             </SideDrawer>
 
             <Alert open={confirmDeleteOpen} onClose={closeDeleteConfirm} size="sm">
-                <AlertTitle>{t('media.delete_title')}</AlertTitle>
-                <AlertDescription>{t('media.delete_confirm_body', { name: mediaName })}</AlertDescription>
+                <AlertTitle>{t('common.delete_named', { name: mediaName })}</AlertTitle>
+                <AlertDescription>{t('common.this_cannot_be_undone')}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
                         {t('common.cancel')}

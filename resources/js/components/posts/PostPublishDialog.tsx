@@ -4,7 +4,14 @@ import { motion, useReducedMotion } from 'motion/react';
 
 import { Button } from '@/components/button';
 import DateTimePicker from '@/components/DateTimePicker';
-import { Dialog, DialogActions, DialogBody, DialogCloseButton, DialogTitle } from '@/components/dialog';
+import {
+    Dialog,
+    DialogActions,
+    DialogBody,
+    DialogCloseButton,
+    DialogDescription,
+    DialogTitle,
+} from '@/components/dialog';
 import { PillNav, PillNavItem, PILL_SLIDE_DURATION_S } from '@/components/pill-nav';
 import { useCanvas } from '@/hooks/useCanvas';
 import { shouldAnimateReveal } from '@/lib/async-ui';
@@ -89,18 +96,12 @@ export default function PostPublishDialog({
                 </div>
 
                 <div className="pe-10">
-                    <DialogTitle className="sr-only">
-                        {t('editor.publish_dialog_title', 'Looks good to me.')}
+                    <DialogTitle>
+                        {mode === 'later' ? t('editor.schedule', 'Schedule') : t('editor.publish', 'Publish')}
                     </DialogTitle>
-                    <p
-                        aria-hidden="true"
-                        className="text-2xl/8 font-semibold tracking-tight text-emerald-600 sm:text-3xl/9 dark:text-emerald-400"
-                    >
-                        {t('editor.publish_dialog_title', 'Looks good to me.')}
-                    </p>
-                    <p className="mt-1 text-2xl/8 font-semibold tracking-tight text-zinc-950 sm:text-3xl/9 dark:text-white">
+                    <DialogDescription>
                         {t('editor.publish_dialog_subtitle', 'Choose when readers should see it.')}
-                    </p>
+                    </DialogDescription>
                 </div>
             </div>
 
@@ -119,13 +120,22 @@ export default function PostPublishDialog({
                     onChange={setMode}
                     indicator="slide"
                     slideMotion="ease"
+                    stackBelowSm
                     aria-label={t('editor.publish_timing_label', 'When to publish')}
                     className="w-full"
                 >
-                    <PillNavItem value="now" className="flex-1 justify-center" disabled={busy || disabled}>
+                    <PillNavItem
+                        value="now"
+                        className="min-h-11 flex-1 justify-center lg:min-h-0"
+                        disabled={busy || disabled}
+                    >
                         {t('editor.publish_now', 'Publish now')}
                     </PillNavItem>
-                    <PillNavItem value="later" className="flex-1 justify-center" disabled={busy || disabled}>
+                    <PillNavItem
+                        value="later"
+                        className="min-h-11 flex-1 justify-center lg:min-h-0"
+                        disabled={busy || disabled}
+                    >
                         {t('editor.schedule_for_later', 'Schedule for later')}
                     </PillNavItem>
                 </PillNav>

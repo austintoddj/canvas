@@ -131,6 +131,35 @@ describe('when listing posts', function (): void {
             ]);
     });
 
+    it('filters the current tab by title without changing the tab counts', function (): void {
+        $match = createPublishedPost(['user_id' => $this->admin->id, 'title' => 'Needle post']);
+        $other = createPublishedPost(['user_id' => $this->admin->id, 'title' => 'Other post']);
+        $draft = createDraftPost(['user_id' => $this->admin->id, 'title' => 'Needle draft']);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?search=Needle')
+            ->assertSuccessful()
+            ->assertJsonFragment(['id' => $match->id])
+            ->assertJsonMissing(['id' => $other->id])
+            ->assertJsonMissing(['id' => $draft->id])
+            ->assertJsonPath('publishedCount', $this->admin->posts()->published()->count())
+            ->assertJsonPath('draftCount', $this->admin->posts()->draft()->count());
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?type=draft&search=Needle')
+            ->assertSuccessful()
+            ->assertJsonFragment(['id' => $draft->id])
+            ->assertJsonMissing(['id' => $match->id]);
+
+        $literal = createPublishedPost(['user_id' => $this->admin->id, 'title' => '100% done']);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?search='.rawurlencode('%'))
+            ->assertSuccessful()
+            ->assertJsonFragment(['id' => $literal->id])
+            ->assertJsonMissing(['id' => $match->id]);
+    });
+
     it('flags list rows with unpublished edits without exposing the pending blob', function (): void {
         $pendingPost = Post::factory()->create([
             'user_id' => $this->admin->id,

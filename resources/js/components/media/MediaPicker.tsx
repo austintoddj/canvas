@@ -7,6 +7,7 @@ import { Input } from '@/components/input';
 import { MediaDropzone } from '@/components/media/MediaDropzone';
 import { MediaGrid } from '@/components/media/MediaGrid';
 import { MediaGridSkeleton } from '@/components/media/MediaGridSkeleton';
+import { LoadError } from '@/components/LoadError';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { ErrorText } from '@/components/text';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -47,6 +48,8 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [errorKind, setErrorKind] = useState<'load' | 'other' | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
@@ -65,6 +68,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
             if (!cancelled) {
                 setLoading(true);
                 setError(null);
+                setErrorKind(null);
             }
         });
 
@@ -81,6 +85,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
             .catch(() => {
                 if (!cancelled && !controller.signal.aborted) {
                     setError(t('media.load_error'));
+                    setErrorKind('load');
                 }
             })
             .finally(() => {
@@ -93,7 +98,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
             cancelled = true;
             controller.abort();
         };
-    }, [scope, debouncedSearch]);
+    }, [scope, debouncedSearch, reloadKey]);
 
     async function loadMore() {
         if (loadingMore || page >= lastPage) {
@@ -102,6 +107,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
 
         setLoadingMore(true);
         setError(null);
+        setErrorKind(null);
 
         try {
             const response = await fetchMediaPage({ scope, search: debouncedSearch, page: page + 1 });
@@ -110,6 +116,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
             setLastPage(response.last_page);
         } catch {
             setError(t('media.load_error'));
+            setErrorKind('load');
         } finally {
             setLoadingMore(false);
         }
@@ -118,11 +125,13 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
     async function handleFiles(files: File[]) {
         if (files.length === 0) {
             setError(unsupportedTypeMessage());
+            setErrorKind('other');
             return;
         }
 
         setUploading(true);
         setError(null);
+        setErrorKind(null);
 
         try {
             const uploaded = await uploadMedia(files[0]);
@@ -130,6 +139,7 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
             onSelect(uploaded.url, uploaded);
         } catch (uploadError) {
             setError(uploadError instanceof Error ? uploadError.message : t('media.upload_failed', 'Upload failed.'));
+            setErrorKind('other');
         } finally {
             setUploading(false);
         }
@@ -180,7 +190,11 @@ export function MediaPickerPanel({ onSelect }: MediaPickerPanelProps) {
                 onFiles={(files) => void handleFiles(files)}
             />
 
-            {error ? <ErrorText className="mt-4">{error}</ErrorText> : null}
+            {error && errorKind === 'load' ? (
+                <LoadError className="mt-4" message={error} onRetry={() => setReloadKey((key) => key + 1)} />
+            ) : error ? (
+                <ErrorText className="mt-4">{error}</ErrorText>
+            ) : null}
 
             {showInitialSkeleton ? <MediaGridSkeleton className="mt-6" count={6} compact /> : null}
 

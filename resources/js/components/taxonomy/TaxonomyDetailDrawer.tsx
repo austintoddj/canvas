@@ -5,6 +5,7 @@ import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/
 import { Button } from '@/components/button';
 import { Description, ErrorMessage, Field, FieldGroup, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
+import { LoadError } from '@/components/LoadError';
 import { SideDrawer } from '@/components/SideDrawer';
 import { ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
@@ -50,7 +51,6 @@ type TaxonomyCopy = {
     created: string;
     saved: string;
     deleted: string;
-    deleteTitle: string;
     createLabel: string;
     saveLabel: string;
 };
@@ -84,7 +84,6 @@ export function TaxonomyDetailDrawer({
                   created: t('taxonomy.tag_created'),
                   saved: t('taxonomy.tag_saved'),
                   deleted: t('taxonomy.tag_deleted'),
-                  deleteTitle: t('taxonomy.tag_delete_title'),
                   createLabel: t('taxonomy.tag_create'),
                   saveLabel: t('common.save'),
               }
@@ -100,7 +99,6 @@ export function TaxonomyDetailDrawer({
                   created: t('taxonomy.topic_created'),
                   saved: t('taxonomy.topic_saved'),
                   deleted: t('taxonomy.topic_deleted'),
-                  deleteTitle: t('taxonomy.topic_delete_title'),
                   createLabel: t('taxonomy.topic_create'),
                   saveLabel: t('common.save'),
               };
@@ -108,6 +106,7 @@ export function TaxonomyDetailDrawer({
     const [baseline, setBaseline] = useState(() => serializeTaxonomyForm(emptyTaxonomyForm()));
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     const [fieldErrors, setFieldErrors] = useState<LaravelValidationErrors>({});
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -203,7 +202,7 @@ export function TaxonomyDetailDrawer({
             cancelled = true;
             controller.abort();
         };
-    }, [open, itemId, isNewProp, kind, labels.loadError, labels.notFound, navigate, onClose]);
+    }, [open, itemId, isNewProp, kind, labels.loadError, labels.notFound, navigate, onClose, reloadKey]);
 
     useEffect(() => {
         if (!open || !ready || loading) {
@@ -218,12 +217,12 @@ export function TaxonomyDetailDrawer({
     }, [open, ready, loading, itemId]);
 
     const isDirty = serializeTaxonomyForm(form) !== baseline;
-    const displayName =
+    const deleteName =
         form.name.trim() === ''
             ? kind === 'tag'
                 ? t('taxonomy.this_tag')
                 : t('taxonomy.this_topic')
-            : `“${form.name}”`;
+            : form.name.trim();
     const title = isNew ? labels.titleNew : form.name.trim() === '' ? labels.titleEdit : form.name;
     const showForm = ready && error === null;
     const showFooter = open && itemId !== null && (showForm || loading);
@@ -383,7 +382,7 @@ export function TaxonomyDetailDrawer({
 
                 {!loading && error !== null && !showForm ? (
                     <div className="px-5 py-8">
-                        <ErrorText>{error}</ErrorText>
+                        <LoadError message={error} onRetry={() => setReloadKey((key) => key + 1)} />
                     </div>
                 ) : null}
 
@@ -430,8 +429,8 @@ export function TaxonomyDetailDrawer({
             </SideDrawer>
 
             <Alert open={confirmDeleteOpen} onClose={closeDeleteConfirm} size="sm">
-                <AlertTitle>{labels.deleteTitle}</AlertTitle>
-                <AlertDescription>{t('taxonomy.delete_confirm', { name: displayName })}</AlertDescription>
+                <AlertTitle>{t('common.delete_named', { name: deleteName })}</AlertTitle>
+                <AlertDescription>{t('common.this_cannot_be_undone')}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
                         {t('common.cancel')}

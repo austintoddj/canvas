@@ -36,9 +36,9 @@ export function IntegrationCard({
         <button
             type="button"
             className={cn(
-                'group flex h-full w-full cursor-pointer flex-col rounded-xl border border-zinc-950/10 bg-white p-4 text-left shadow-sm transition-all',
-                'hover:border-zinc-950/15 hover:shadow-md dark:border-white/10 dark:bg-white/[0.02] dark:shadow-none',
-                'dark:ring-1 dark:ring-white/5 dark:hover:border-white/15 dark:hover:bg-white/[0.04]',
+                'group flex h-full w-full cursor-pointer flex-col rounded-xl border border-zinc-950/10 bg-white p-4 text-left transition-colors',
+                'hover:border-zinc-950/15 dark:border-white/10 dark:bg-white/[0.02]',
+                'dark:hover:border-white/15 dark:hover:bg-white/[0.04]',
                 'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
                 selected && 'border-zinc-950/20 bg-zinc-950/[0.03] dark:border-white/20 dark:bg-white/[0.06]',
                 className
@@ -65,12 +65,6 @@ export function IntegrationCard({
                     {description}
                 </span>
                 {meta ? <span className="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">{meta}</span> : null}
-            </div>
-
-            <div className="mt-4">
-                <span className="inline-flex items-center justify-center rounded-lg border border-zinc-950/10 px-[calc(--spacing(3)-1px)] py-[calc(--spacing(1.5)-1px)] text-sm/6 font-semibold text-zinc-950 dark:border-white/15 dark:text-white">
-                    {actionLabel}
-                </span>
             </div>
         </button>
     );

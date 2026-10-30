@@ -64,7 +64,7 @@ export function ListRowEnd({ date, children, className }: ListRowEndProps) {
 
 const actionClassName = (danger?: boolean) =>
     clsx(
-        'inline-flex size-10 shrink-0 items-center justify-center rounded-lg',
+        'inline-flex size-10 shrink-0 items-center justify-center rounded-lg [&_svg]:size-4',
         'focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
         'disabled:cursor-not-allowed disabled:opacity-50',
         danger

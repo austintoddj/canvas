@@ -8,7 +8,7 @@ type TableListSkeletonProps = {
 export function TableListSkeleton({ rows = 6, columns = 4 }: TableListSkeletonProps) {
     return (
         <div
-            className="overflow-hidden rounded-xl border border-zinc-950/10 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5"
+            className="overflow-hidden rounded-xl border border-zinc-950/10 dark:border-white/10 dark:bg-white/[0.02]"
             aria-hidden="true"
             data-table-list-skeleton="true"
         >

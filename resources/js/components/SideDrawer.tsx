@@ -101,14 +101,14 @@ export function SideDrawer({
         <Headless.Dialog open={open} onClose={onClose} className="relative z-50" data-side-drawer="true">
             <Headless.DialogBackdrop
                 transition
-                className="fixed inset-0 bg-zinc-950/25 transition duration-300 ease-out data-closed:opacity-0 dark:bg-zinc-950/50"
+                className="fixed inset-0 bg-zinc-950/25 transition duration-200 ease-out data-closed:opacity-0 motion-reduce:transition-opacity dark:bg-zinc-950/50"
             />
 
-            <div className="fixed inset-0 overflow-hidden p-2">
-                <div className="flex h-full justify-end">
+            <div className="fixed inset-x-0 top-0 h-dvh max-h-dvh overflow-hidden p-2">
+                <div className="flex h-full max-h-full justify-end">
                     <Headless.DialogPanel
                         transition
-                        className="flex h-full w-full max-w-md min-h-0 transition duration-300 ease-in-out data-closed:translate-x-full sm:max-w-lg"
+                        className="flex h-full w-full max-w-md min-h-0 transition duration-200 ease-out data-closed:translate-x-full motion-reduce:transition-opacity motion-reduce:data-closed:translate-x-0 sm:max-w-lg"
                     >
                         <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-lg bg-canvas-panel shadow-xs ring-1 ring-zinc-950/5 dark:bg-canvas-panel-dark dark:shadow-2xl dark:shadow-black/40 dark:ring-white/10">
                             <div className="flex shrink-0 items-center justify-between gap-3 px-5 py-3.5">

@@ -112,7 +112,7 @@ export function DashboardRecentPosts({ posts, scope }: DashboardRecentPostsProps
                                                 label={t('dashboard.recent_stats_aria', { title })}
                                                 tooltip={t('editor.stats')}
                                             >
-                                                <IconChartBar className="size-5" aria-hidden="true" />
+                                                <IconChartBar className="size-4" aria-hidden="true" />
                                             </ListRowActionLink>
                                         ) : null}
                                     </ListRowEnd>

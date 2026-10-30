@@ -331,8 +331,8 @@ export default function PostEditorLayout({
 
     return (
         <div
-            // Viewport minus sidebar-layout padding so the body pane scrolls, not the document.
-            className="flex h-[calc(100svh-7.5rem)] flex-col gap-4 overflow-hidden sm:gap-8 lg:h-[calc(100svh-6rem)]"
+            // Below lg: top bar + page p-6 + main pb-2. At lg the editor well is p-6, plus main pt-2 and pb-2.
+            className="flex h-[calc(100svh-7.5rem)] flex-col gap-4 overflow-hidden sm:gap-8 lg:h-[calc(100svh-4rem)]"
             data-post-editor-focus="false"
         >
             {chrome}

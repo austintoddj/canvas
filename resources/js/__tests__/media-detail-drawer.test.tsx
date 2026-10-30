@@ -66,8 +66,9 @@ const dictionary = {
     'common.delete': 'Delete',
     'common.save': 'Save',
     'common.saving': 'Saving…',
-    'media.delete_title': 'Delete media',
-    'media.delete_confirm_body': 'Delete :name?',
+    'common.delete_named': 'Delete “:name”?',
+    'common.this_cannot_be_undone': 'This cannot be undone.',
+    'common.try_again': 'Try again',
     'common.cancel': 'Cancel',
     'common.deleting': 'Deleting…',
 };

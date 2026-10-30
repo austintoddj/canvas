@@ -20,7 +20,8 @@ import {
 } from '@/components/pagination';
 import { Table, TableBody, TableCell, TableRow } from '@/components/table';
 import { TableListSkeleton } from '@/components/TableListSkeleton';
-import { Text, PageDescription, ErrorText } from '@/components/text';
+import { LoadError } from '@/components/LoadError';
+import { Text, PageDescription } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -212,13 +213,13 @@ export default function UsersIndex() {
                 <PageDescription>{t('users.description')}</PageDescription>
             </PageHeader>
 
-            {error ? <ErrorText>{error}</ErrorText> : null}
+            {error ? <LoadError message={error} onRetry={() => void reloadUsers()} /> : null}
 
             {showInitialSkeleton ? (
                 <TableListSkeleton rows={6} columns={2} />
             ) : response ? (
                 <ContentReveal busy={refreshing} animate={animateContent}>
-                    <Table striped>
+                    <Table>
                         <TableBody>
                             {response.data.map((user) => {
                                 const role = user.canvas?.role ?? null;
@@ -282,7 +283,7 @@ export default function UsersIndex() {
                                                         danger
                                                         onClick={() => setPendingRevoke(user)}
                                                     >
-                                                        <IconTrash className="size-5" aria-hidden="true" />
+                                                        <IconTrash className="size-4" aria-hidden="true" />
                                                     </ListRowActionButton>
                                                 ) : null}
                                             </ListRowEnd>
@@ -375,12 +376,12 @@ export default function UsersIndex() {
             />
 
             <Alert open={pendingRevoke !== null} onClose={closeRevokeConfirm} size="sm">
-                <AlertTitle>{t('users.revoke_title')}</AlertTitle>
-                <AlertDescription>
-                    {t('users.revoke_body', {
+                <AlertTitle>
+                    {t('users.revoke_title', {
                         name: pendingRevoke?.name ?? t('common.untitled'),
                     })}
-                </AlertDescription>
+                </AlertTitle>
+                <AlertDescription>{t('common.this_cannot_be_undone')}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={revoking} onClick={closeRevokeConfirm}>
                         {t('common.cancel')}

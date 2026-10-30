@@ -14,7 +14,7 @@ import React, {
 
 type PillNavIndicator = 'layout' | 'slide';
 
-/** `spring` matches layout-mode feel; `ease` locks duration for sibling panel expands. */
+/** `spring` keeps its name for callers. It is a 200ms ease with no bounce. `ease` stays locked to a sibling panel expand. */
 type PillNavSlideMotion = 'spring' | 'ease';
 
 type PillNavContextValue = {
@@ -27,7 +27,9 @@ type PillNavContextValue = {
 
 type SlideMetrics = {
     x: number;
+    y: number;
     width: number;
+    height: number;
 };
 
 const PillNavContext = createContext<PillNavContextValue | null>(null);
@@ -45,10 +47,13 @@ function usePillNav(component: string): PillNavContextValue {
 /** Duration (seconds) for `slideMotion="ease"` — keep sibling panel expands in sync. */
 export const PILL_SLIDE_DURATION_S = 0.28;
 
-const PILL_SPRING = { type: 'spring', bounce: 0.15, duration: 0.45 } as const;
+/** Default indicator. No bounce, at every width. */
+const PILL_INDICATOR_MS = 200;
+const PILL_INDICATOR_EASE = [0.22, 1, 0.36, 1] as const;
+const PILL_INDICATOR_TRANSITION = { duration: PILL_INDICATOR_MS / 1000, ease: PILL_INDICATOR_EASE } as const;
 
-/** Approximate the layout-mode spring with a CSS transform ease (Safari-stable under re-renders). */
-const SLIDE_SPRING_CSS = 'transform 450ms cubic-bezier(0.22, 1.2, 0.36, 1)';
+/** CSS twin of the layout indicator so `slide` mode stays Safari-stable under re-renders. */
+const SLIDE_DEFAULT_CSS = `transform ${PILL_INDICATOR_MS}ms cubic-bezier(${PILL_INDICATOR_EASE.join(', ')})`;
 
 const SLIDE_EASE_CSS = `transform ${PILL_SLIDE_DURATION_S * 1000}ms cubic-bezier(0.2, 0, 0, 1)`;
 
@@ -57,13 +62,18 @@ const SLIDE_EASE_CSS = `transform ${PILL_SLIDE_DURATION_S * 1000}ms cubic-bezier
  * full precision; we only skip no-op state writes.
  */
 function slideMetricsClose(a: SlideMetrics, b: SlideMetrics): boolean {
-    return Math.abs(a.x - b.x) < 0.5 && Math.abs(a.width - b.width) < 0.5;
+    return (
+        Math.abs(a.x - b.x) < 0.5 &&
+        Math.abs(a.y - b.y) < 0.5 &&
+        Math.abs(a.width - b.width) < 0.5 &&
+        Math.abs(a.height - b.height) < 0.5
+    );
 }
 
 /**
  * Animated segmented control with a sliding “floating pill” indicator.
  *
- * - `layout` (default): shared layoutId spring — great for mixed-width items.
+ * - `layout` (default): shared layoutId ease — great for mixed-width items.
  * - `slide`: transform-only indicator for equal-width items; immune to parent
  *   reflow. Uses CSS `transform` transitions (not Motion) so concurrent React
  *   updates (e.g. media grid refetch) do not interrupt the slide on Safari.
@@ -75,6 +85,7 @@ export function PillNav<T extends string>({
     children,
     indicator = 'layout',
     slideMotion = 'spring',
+    stackBelowSm = false,
     'aria-label': ariaLabel,
 }: {
     value: T;
@@ -83,6 +94,8 @@ export function PillNav<T extends string>({
     children: React.ReactNode;
     indicator?: PillNavIndicator;
     slideMotion?: PillNavSlideMotion;
+    /** One full-width option per row below `sm`. From `sm`, equal columns. */
+    stackBelowSm?: boolean;
     'aria-label'?: string;
 }) {
     const id = useId();
@@ -128,7 +141,9 @@ export function PillNav<T extends string>({
 
         return {
             x: activeRect.left - trackRect.left,
+            y: activeRect.top - trackRect.top,
             width: activeRect.width,
+            height: activeRect.height,
         };
     }, []);
 
@@ -173,7 +188,7 @@ export function PillNav<T extends string>({
             return;
         }
 
-        const durationMs = (slideMotion === 'spring' ? PILL_SPRING.duration : PILL_SLIDE_DURATION_S) * 1000;
+        const durationMs = slideMotion === 'spring' ? PILL_INDICATOR_MS : PILL_SLIDE_DURATION_S * 1000;
         freezeResizeUntilRef.current = performance.now() + durationMs + 50;
 
         measureSlide({ force: true, animate: true });
@@ -200,7 +215,7 @@ export function PillNav<T extends string>({
     }, [indicator, measureSlide, count, value, slideMotion]);
 
     const slideTransitionCss =
-        !reducedMotion && animateSlide ? (slideMotion === 'ease' ? SLIDE_EASE_CSS : SLIDE_SPRING_CSS) : undefined;
+        !reducedMotion && animateSlide ? (slideMotion === 'ease' ? SLIDE_EASE_CSS : SLIDE_DEFAULT_CSS) : undefined;
 
     const track = (
         <div
@@ -212,16 +227,22 @@ export function PillNav<T extends string>({
                 'relative items-center gap-0.5 rounded-full bg-zinc-950/5 p-1 dark:bg-white/[0.06] dark:ring-1 dark:ring-white/5',
                 // Equal columns so the measured indicator stays aligned under reflow
                 // (e.g. media grid refetch under Mine / All authors).
-                indicator === 'slide' ? 'inline-grid grid-flow-col auto-cols-fr' : 'inline-flex'
+                // `stackBelowSm` is one column on a phone so long labels do not share a row.
+                indicator === 'slide'
+                    ? stackBelowSm
+                        ? 'grid w-full grid-cols-1 sm:grid-cols-none sm:grid-flow-col sm:auto-cols-fr'
+                        : 'inline-grid grid-flow-col auto-cols-fr'
+                    : 'inline-flex'
             )}
         >
             {indicator === 'slide' && slide !== null ? (
                 <span
                     aria-hidden="true"
-                    className="pointer-events-none absolute top-1 bottom-1 left-0 rounded-full bg-white shadow-sm will-change-transform dark:bg-zinc-700 dark:shadow-none dark:ring-1 dark:ring-white/10"
+                    className="pointer-events-none absolute top-0 left-0 rounded-full bg-white shadow-sm will-change-transform dark:bg-zinc-700 dark:shadow-none dark:ring-1 dark:ring-white/10"
                     style={{
                         width: slide.width,
-                        transform: `translate3d(${slide.x}px, 0, 0)`,
+                        height: slide.height,
+                        transform: `translate3d(${slide.x}px, ${slide.y}px, 0)`,
                         transition: slideTransitionCss,
                     }}
                 />
@@ -290,7 +311,7 @@ export function PillNavItem({
                     <motion.span
                         layoutId={layoutId}
                         className="absolute inset-0 -z-10 rounded-full bg-white shadow-sm dark:bg-zinc-700 dark:shadow-none dark:ring-1 dark:ring-white/10"
-                        transition={PILL_SPRING}
+                        transition={PILL_INDICATOR_TRANSITION}
                     />
                 )
             ) : null}

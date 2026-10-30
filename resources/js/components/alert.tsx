@@ -39,7 +39,8 @@ export function Alert({
                             className,
                             sizes[size],
                             'row-start-2 w-full rounded-2xl bg-white p-8 shadow-lg ring-1 ring-zinc-950/10 sm:rounded-2xl sm:p-6 dark:bg-zinc-900 dark:ring-white/10 forced-colors:outline',
-                            'transition duration-100 will-change-transform data-closed:opacity-0 data-enter:ease-out data-closed:data-enter:scale-95 data-leave:ease-in'
+                            // Phone: slide up, no scale. From sm: fade and a slight scale, no travel. Reduced motion fades only.
+                            'transition duration-[180ms] ease-out will-change-transform data-closed:translate-y-12 data-closed:opacity-0 sm:duration-[160ms] sm:data-closed:translate-y-0 sm:data-closed:scale-[0.98] motion-reduce:transition-opacity motion-reduce:will-change-auto motion-reduce:data-closed:translate-y-0 motion-reduce:data-closed:scale-100 motion-reduce:sm:data-closed:translate-y-0 motion-reduce:sm:data-closed:scale-100'
                         )}
                     >
                         {children}

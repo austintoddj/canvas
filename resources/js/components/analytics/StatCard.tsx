@@ -33,7 +33,7 @@ export default function StatCard({
     const presentation = presentMonthOverMonth(change, typeof value === 'number' ? value : 0);
 
     return (
-        <div className="rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5">
+        <div className="rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02]">
             <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">{label}</Text>
             <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums text-zinc-950 dark:text-white">
                 {display}

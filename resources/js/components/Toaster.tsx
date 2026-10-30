@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useSyncExternalStore } from 'react';
 import clsx from 'clsx';
 
+import { TouchTarget } from '@/components/button';
 import { t } from '@/lib/i18n';
 import { dismissToast, getToasts, subscribeToasts, type ToastItem, type ToastTone } from '@/lib/toast';
 import { IconAlertTriangle, IconCircleCheck, IconExclamationCircle, IconInfoCircle, IconX } from '@tabler/icons-react';
@@ -53,26 +54,27 @@ function ToastCard({ item }: { item: ToastItem }) {
 
     return (
         <motion.div
-            layout={!reducedMotion}
             role={item.tone === 'error' ? 'alert' : 'status'}
             aria-live={item.tone === 'error' ? 'assertive' : 'polite'}
             data-toast
             data-toast-tone={item.tone}
-            initial={reducedMotion ? false : { opacity: 0, y: 12, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98 }}
-            transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 520, damping: 36, mass: 0.7 }}
-            className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border border-zinc-950/10 bg-white px-3.5 py-3 text-sm shadow-lg shadow-zinc-950/10 ring-1 ring-zinc-950/5 dark:border-white/10 dark:bg-zinc-800 dark:shadow-2xl dark:shadow-black/50 dark:ring-white/10"
+            initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+            transition={reducedMotion ? { duration: 0 } : { duration: 0.18, ease: 'easeOut' }}
+            className="pointer-events-auto flex w-full items-start gap-3 rounded-xl bg-white px-3.5 py-3 text-sm shadow-lg ring-1 ring-zinc-950/10 sm:max-w-sm dark:bg-zinc-800 dark:ring-white/10"
         >
             <ToastToneIcon tone={item.tone} />
             <p className="min-w-0 flex-1 text-[13px]/leading-5 text-zinc-950 dark:text-zinc-100">{item.message}</p>
             <button
                 type="button"
-                className="shrink-0 rounded-md p-0.5 text-zinc-400 transition hover:bg-zinc-950/5 hover:text-zinc-700 focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:hover:bg-white/10 dark:hover:text-zinc-200"
+                className="relative shrink-0 rounded-md p-0.5 text-zinc-400 transition hover:bg-zinc-950/5 hover:text-zinc-700 focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:hover:bg-white/10 dark:hover:text-zinc-200"
                 aria-label={t('common.dismiss_notification')}
                 onClick={() => dismissToast(item.id)}
             >
-                <IconX className="size-4" aria-hidden="true" />
+                <TouchTarget>
+                    <IconX className="size-4" aria-hidden="true" />
+                </TouchTarget>
             </button>
         </motion.div>
     );
@@ -83,7 +85,7 @@ export function Toaster() {
 
     return (
         <div
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-[80] flex flex-col items-end gap-2 p-4 sm:inset-x-auto sm:right-0 sm:bottom-0 sm:max-w-md sm:p-6"
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-[80] flex flex-col gap-2 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:inset-x-auto sm:right-0 sm:max-w-md sm:items-end sm:p-6 sm:pb-[max(1.5rem,env(safe-area-inset-bottom))]"
             data-toaster
             aria-label={t('common.notifications')}
         >

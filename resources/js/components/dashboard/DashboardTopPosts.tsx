@@ -86,7 +86,7 @@ export function DashboardTopPosts({
             <div
                 onPointerEnter={() => setHovered(true)}
                 onPointerLeave={() => setHovered(false)}
-                className="relative flex h-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5"
+                className="relative flex h-full min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02]"
                 data-dashboard-top-posts="true"
             >
                 <div className="shrink-0">

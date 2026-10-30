@@ -5,7 +5,7 @@ import { Link } from './link';
 
 const styles = {
     base: [
-        'relative isolate inline-flex cursor-pointer items-baseline justify-center gap-x-2 rounded-lg border text-base/6 font-semibold disabled:cursor-not-allowed data-disabled:cursor-not-allowed',
+        'relative isolate inline-flex cursor-pointer items-baseline justify-center gap-x-2 rounded-lg border text-base/6 font-medium disabled:cursor-not-allowed data-disabled:cursor-not-allowed',
         'px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)] sm:text-sm/6',
         'focus:not-data-focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500',
         'data-disabled:opacity-50',
@@ -18,8 +18,6 @@ const styles = {
         'dark:bg-(--btn-bg)',
         // Button background, implemented as foreground layer to stack on top of pseudo-border layer
         'before:absolute before:inset-0 before:-z-10 before:rounded-[calc(var(--radius-lg)-1px)] before:bg-(--btn-bg)',
-        // Drop shadow, applied to the inset `before` layer so it blends with the border
-        'before:shadow-sm',
         // Background color is moved to control and shadow is removed in dark mode so hide `before` pseudo
         'dark:before:hidden',
         // Dark mode: Subtle white outline is applied using a border

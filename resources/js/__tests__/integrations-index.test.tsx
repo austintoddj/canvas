@@ -109,7 +109,9 @@ describe('IntegrationsIndex card layout', () => {
 
         const grid = document.querySelector('[data-integrations-cards="true"]');
         expect(grid?.className).toMatch(/grid/);
-        expect(grid?.className).toMatch(/xl:grid-cols-4/);
+        expect(grid?.className).toMatch(/sm:grid-cols-2/);
+        expect(grid?.className).toMatch(/lg:grid-cols-3/);
+        expect(grid?.className).not.toMatch(/xl:grid-cols-4/);
         expect(grid?.className).not.toMatch(/divide-y/);
 
         for (const kind of ['unsplash', 'ai', 'webhooks'] as const) {
