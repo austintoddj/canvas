@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Alert, AlertActions, AlertBody, AlertDescription, AlertTitle } from '@/components/alert';
 import { Button } from '@/components/button';
+import { LoadError } from '@/components/LoadError';
 import { Field, Label } from '@/components/fieldset';
 import { Input } from '@/components/input';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
@@ -50,6 +51,7 @@ export default function PostVersionHistoryDrawer({
     // Start loading when opened so the skeleton paints before the first paint frame.
     const [loading, setLoading] = useState(() => open && postId !== null);
     const [loadError, setLoadError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     const [filter, setFilter] = useState<RevisionFilter>('all');
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [diffOpen, setDiffOpen] = useState(false);
@@ -105,7 +107,7 @@ export default function PostVersionHistoryDrawer({
             cancelled = true;
             controller.abort();
         };
-    }, [open, postId, t]);
+    }, [open, postId, reloadKey, t]);
 
     const visibleRevisions = useMemo(() => filterRevisions(revisions, filter), [revisions, filter]);
     const groups = useMemo(
@@ -290,35 +292,8 @@ export default function PostVersionHistoryDrawer({
                     ) : null}
 
                     {loadError !== null ? (
-                        <div className="space-y-3 px-5 py-4">
-                            <p className="text-sm text-canvas-danger dark:text-canvas-danger-dark">{loadError}</p>
-                            <Button
-                                type="button"
-                                outline
-                                onClick={() => {
-                                    if (postId === null) {
-                                        return;
-                                    }
-
-                                    setLoading(true);
-                                    setLoadError(null);
-                                    void postsApi
-                                        .revisions(postId)
-                                        .then((response) => {
-                                            setRevisions(response.revisions);
-                                            setLoading(false);
-                                        })
-                                        .catch(() => {
-                                            setLoadError(
-                                                t('editor.history_load_error', 'Unable to load version history.')
-                                            );
-                                            setRevisions([]);
-                                            setLoading(false);
-                                        });
-                                }}
-                            >
-                                {t('editor.history_retry', 'Try again')}
-                            </Button>
+                        <div className="px-5 py-4">
+                            <LoadError message={loadError} onRetry={() => setReloadKey((key) => key + 1)} />
                         </div>
                     ) : null}
 

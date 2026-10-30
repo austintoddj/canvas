@@ -34,7 +34,7 @@ vi.mock('@/lib/toast', () => ({
 const dictionary = {
     'editor.history_title': 'Version history',
     'editor.history_load_error': 'Unable to load version history.',
-    'editor.history_retry': 'Try again',
+    'common.try_again': 'Try again',
     'editor.history_empty_title': 'No versions yet',
     'editor.history_empty_blurb': 'Versions are saved when you publish, update, or leave the editor.',
     'editor.history_filter_label': 'Filter versions',

@@ -37,6 +37,14 @@ describe('Toaster', () => {
         expect(screen.getByText('Something failed')).toBeInTheDocument();
         expect(screen.getByRole('alert')).toHaveAttribute('data-toast-tone', 'error');
 
+        const toastCard = screen.getByRole('alert');
+        expect(toastCard.className).toContain('shadow-lg');
+        expect(toastCard.className).toContain('ring-zinc-950/10');
+        expect(toastCard.className).toContain('sm:max-w-sm');
+        expect(toastCard.className).not.toMatch(/(^|\s)border(\s|$)/);
+        expect(toastCard.className).not.toMatch(/(^|\s)max-w-sm(\s|$)/);
+        expect(document.querySelector('[data-toaster]')?.className).toContain('safe-area-inset-bottom');
+
         const dismissButtons = screen.getAllByRole('button', { name: 'Dismiss notification' });
         await user.click(dismissButtons[0]!);
 

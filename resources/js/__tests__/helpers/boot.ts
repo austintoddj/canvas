@@ -8,8 +8,10 @@ const defaultTranslations: Record<string, string> = {
     'common.close': 'Close',
     'common.cancel': 'Cancel',
     'common.save': 'Save',
+    'common.try_again': 'Try again',
+    'common.delete_named': 'Delete “:name”?',
+    'common.this_cannot_be_undone': 'This cannot be undone.',
     'common.saving': 'Saving…',
-    'editor.publish_dialog_title': 'Looks good to me.',
     'editor.publish_dialog_subtitle': 'Choose when readers should see it.',
     'editor.publish_needs_title': 'Add a title before publishing.',
     'editor.publish_timing_label': 'When to publish',
@@ -30,7 +32,6 @@ const defaultTranslations: Record<string, string> = {
     'editor.schedule': 'Schedule',
     'editor.publish': 'Publish',
     assets_are_not_up_to_date: 'Assets are not up to date',
-    to_update_run: 'To update, run:',
     assets_docs_link: 'Upgrade docs',
 };
 

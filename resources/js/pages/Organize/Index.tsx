@@ -6,8 +6,7 @@ import { Button } from '@/components/button';
 import { ContentReveal } from '@/components/ContentReveal';
 import { EmptyState } from '@/components/EmptyState';
 import { EmptyStateReveal } from '@/components/EmptyStateReveal';
-import { Field, Label } from '@/components/fieldset';
-import { Input } from '@/components/input';
+import { SearchField } from '@/components/SearchField';
 import { ListRowActionButton, ListRowEnd } from '@/components/ListRowEnd';
 import { PageHeader } from '@/components/PageHeader';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
@@ -25,7 +24,8 @@ import { TableListSkeleton } from '@/components/TableListSkeleton';
 import { TagsEmptyVisual } from '@/components/tags/TagsEmptyVisual';
 import { TaxonomyDetailDrawer } from '@/components/taxonomy/TaxonomyDetailDrawer';
 import { TopicsEmptyVisual } from '@/components/topics/TopicsEmptyVisual';
-import { Text, PageDescription, ErrorText } from '@/components/text';
+import { LoadError } from '@/components/LoadError';
+import { Text, PageDescription } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -98,7 +98,6 @@ type TabCopy = {
     loadError: string;
     createError: string;
     untitled: string;
-    deleteTitle: string;
 };
 
 export default function OrganizeIndex() {
@@ -123,7 +122,6 @@ export default function OrganizeIndex() {
                   loadError: t('organize.load_topics_error'),
                   createError: t('organize.create_topic_error'),
                   untitled: t('organize.untitled_topic'),
-                  deleteTitle: t('organize.delete_confirm_topic'),
               }
             : {
                   newLabel: t('organize.new_tag'),
@@ -136,7 +134,6 @@ export default function OrganizeIndex() {
                   loadError: t('organize.load_tags_error'),
                   createError: t('organize.create_tag_error'),
                   untitled: t('organize.untitled_tag'),
-                  deleteTitle: t('organize.delete_confirm_tag'),
               };
 
     const [searchDraft, setSearchDraft] = useState(filters.search);
@@ -371,34 +368,32 @@ export default function OrganizeIndex() {
                 <PillNavItem value="tags">{t('organize.tags')}</PillNavItem>
             </PillNav>
 
-            <div className="flex flex-wrap items-end gap-3">
-                <Field className="min-w-[12rem] flex-1 sm:max-w-xs">
-                    <Label className="sr-only">{copy.searchLabel}</Label>
-                    <Input
-                        type="search"
-                        name="taxonomy-search"
-                        value={searchDraft}
-                        placeholder={t('organize.search_placeholder')}
-                        onChange={(event) => setSearchDraft(event.target.value)}
-                    />
-                </Field>
-                <Field className="w-full sm:w-44">
-                    <Label className="sr-only">{t('organize.sort_label')}</Label>
-                    <Select
-                        name="taxonomy-sort"
-                        value={filters.sort}
-                        onChange={(event) => setSort(event.target.value as TaxonomyListSort)}
-                    >
-                        {TAXONOMY_SORT_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {t(option.labelKey)}
-                            </option>
-                        ))}
-                    </Select>
-                </Field>
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <SearchField
+                    id="taxonomy-search"
+                    name="taxonomy-search"
+                    label={copy.searchLabel}
+                    value={searchDraft}
+                    placeholder={t('organize.search_placeholder')}
+                    onChange={setSearchDraft}
+                    className="w-full sm:w-52"
+                />
+                <Select
+                    className="w-full sm:w-44"
+                    name="taxonomy-sort"
+                    aria-label={t('organize.sort_label')}
+                    value={filters.sort}
+                    onChange={(event) => setSort(event.target.value as TaxonomyListSort)}
+                >
+                    {TAXONOMY_SORT_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                            {t(option.labelKey)}
+                        </option>
+                    ))}
+                </Select>
             </div>
 
-            {error ? <ErrorText>{error}</ErrorText> : null}
+            {error ? <LoadError message={error} onRetry={() => void reloadList()} /> : null}
 
             {showInitialSkeleton ? (
                 <TableListSkeleton rows={6} columns={3} />
@@ -427,7 +422,7 @@ export default function OrganizeIndex() {
                 </EmptyStateReveal>
             ) : response ? (
                 <ContentReveal busy={refreshing} animate={animateContent}>
-                    <Table striped>
+                    <Table>
                         <TableBody>
                             {response.data.map((item) => {
                                 const name = item.name.trim() === '' ? copy.untitled : item.name;
@@ -471,7 +466,7 @@ export default function OrganizeIndex() {
                                                     danger
                                                     onClick={() => setPendingDelete(item)}
                                                 >
-                                                    <IconTrash className="size-5" aria-hidden="true" />
+                                                    <IconTrash className="size-4" aria-hidden="true" />
                                                 </ListRowActionButton>
                                             </ListRowEnd>
                                         </TableCell>
@@ -562,15 +557,15 @@ export default function OrganizeIndex() {
             />
 
             <Alert open={pendingDelete !== null} onClose={closeDeleteConfirm} size="sm">
-                <AlertTitle>{copy.deleteTitle}</AlertTitle>
-                <AlertDescription>
-                    {t('taxonomy.delete_confirm', {
+                <AlertTitle>
+                    {t('common.delete_named', {
                         name:
                             pendingDelete === null || pendingDelete.name.trim() === ''
                                 ? copy.untitled
                                 : pendingDelete.name.trim(),
                     })}
-                </AlertDescription>
+                </AlertTitle>
+                <AlertDescription>{t('common.this_cannot_be_undone')}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
                         {t('common.cancel')}

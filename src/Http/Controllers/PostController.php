@@ -32,6 +32,9 @@ class PostController extends Controller
 
         $baseQuery = $this->visiblePostsQuery($user, $canViewAllPosts);
 
+        $search = request()->string('search')->trim()->toString();
+        $sort = request()->query('sort');
+
         $posts = (clone $baseQuery)
             // `pending` is selected so the has_pending_changes append resolves, then hidden
             // so list rows never ship the full unpublished blob.
@@ -41,7 +44,12 @@ class PostController extends Controller
                 fn (Builder $query) => $query->draft(),
                 fn (Builder $query) => $query->published(),
             )
-            ->latest()
+            ->when($search !== '', function (Builder $query) use ($search): Builder {
+                $escaped = addcslashes($search, '%_\\');
+
+                return $query->whereRaw('title like ? escape ?', ['%'.$escaped.'%', '\\']);
+            })
+            ->orderedForIndex(is_string($sort) ? $sort : null)
             ->withCount('views')
             ->paginate();
 

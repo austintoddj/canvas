@@ -10,7 +10,8 @@ import { PageHeader } from '@/components/PageHeader';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Skeleton } from '@/components/Skeleton';
 import { Table, TableBody, TableCell, TableRow } from '@/components/table';
-import { Text, PageDescription, ErrorText } from '@/components/text';
+import { LoadError } from '@/components/LoadError';
+import { Text, PageDescription } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -121,8 +122,10 @@ export default function CalendarIndex() {
     const [posts, setPosts] = useState<CalendarPost[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     /** Bumped on “Today” so the today marker remounts and re-runs its one-shot pulse. */
     const [todayPulseKey, setTodayPulseKey] = useState(0);
+    const [hasResolved, setHasResolved] = useState(false);
 
     useDocumentTitle(t('calendar.title'));
 
@@ -162,6 +165,7 @@ export default function CalendarIndex() {
             .finally(() => {
                 if (!cancelled) {
                     setLoading(false);
+                    setHasResolved(true);
                 }
             });
 
@@ -169,15 +173,16 @@ export default function CalendarIndex() {
             cancelled = true;
             controller.abort();
         };
-    }, [queryKey, range.from, range.to, effectiveScope, t]);
+    }, [queryKey, range.from, range.to, effectiveScope, reloadKey, t]);
 
     const byDate = useMemo(() => groupPostsByDate(posts), [posts]);
     const inMonthPosts = useMemo(() => postsInMonth(posts, yearMonth), [posts, yearMonth]);
-    // Use full fetch size for skeleton/refresh so month switches keep the grid
-    // instead of flashing skeleton when the target month is empty.
+    // After the first response, keep the grid mounted on refetch. An empty month
+    // still looks like a first load (count 0); swapping in the skeleton unmounts
+    // the focused grid, so the next arrow key never changes the month.
     const fetchCount = posts.length;
-    const showInitialSkeleton = isInitialLoading(loading, fetchCount);
-    const refreshing = isRefreshing(loading, fetchCount);
+    const showInitialSkeleton = !hasResolved && isInitialLoading(loading, fetchCount);
+    const refreshing = hasResolved ? loading : isRefreshing(loading, fetchCount);
     const { animateContent } = useAsyncReveal(loading, fetchCount, queryKey);
     const monthEmpty = !loading && inMonthPosts.length === 0;
 
@@ -315,7 +320,7 @@ export default function CalendarIndex() {
                 ) : null}
             </div>
 
-            {error ? <ErrorText>{error}</ErrorText> : null}
+            {error ? <LoadError message={error} onRetry={() => setReloadKey((key) => key + 1)} /> : null}
 
             {showInitialSkeleton ? (
                 <CalendarSkeleton />
@@ -557,7 +562,7 @@ export default function CalendarIndex() {
                                                                         tooltip={t('editor.stats')}
                                                                     >
                                                                         <IconChartBar
-                                                                            className="size-5"
+                                                                            className="size-4"
                                                                             aria-hidden="true"
                                                                         />
                                                                     </ListRowActionLink>

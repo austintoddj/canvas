@@ -35,6 +35,24 @@ function SaveHarness() {
     );
 }
 
+describe('SideDrawer viewport', () => {
+    it('sizes the overlay to the dynamic viewport and keeps body scroll contained', () => {
+        render(
+            <SideDrawer open onClose={() => undefined} title="Drawer" footer={<button type="button">Save</button>}>
+                <p>Body</p>
+            </SideDrawer>
+        );
+
+        const overlay = document.querySelector('[data-side-drawer] .h-dvh');
+        expect(overlay).not.toBeNull();
+        expect(overlay?.className).toContain('max-h-dvh');
+        expect(overlay?.className).not.toContain('inset-0');
+
+        const body = document.querySelector('[data-side-drawer-scroll="true"]');
+        expect(body?.className).toContain('overscroll-contain');
+    });
+});
+
 describe('SideDrawer scroll position', () => {
     it('restores body scroll after a re-render while open', () => {
         render(<SaveHarness />);

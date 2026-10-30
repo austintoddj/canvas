@@ -14,7 +14,8 @@ import { Subheading } from '@/components/heading';
 import { PageHeader } from '@/components/PageHeader';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Skeleton } from '@/components/Skeleton';
-import { PageDescription, ErrorText } from '@/components/text';
+import { LoadError } from '@/components/LoadError';
+import { PageDescription } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -80,6 +81,7 @@ export default function Dashboard() {
     const [presentation, setPresentation] = useState<DashboardPresentation | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
 
     useDocumentTitle(t('dashboard.title'));
 
@@ -127,7 +129,7 @@ export default function Dashboard() {
             cancelled = true;
             controller.abort();
         };
-    }, [effectiveScope, rangeDays, t]);
+    }, [effectiveScope, rangeDays, reloadKey, t]);
 
     function setScope(next: DashboardScope) {
         const params = new URLSearchParams(searchParams);
@@ -203,7 +205,14 @@ export default function Dashboard() {
                     ) : undefined
                 }
             >
-                <PageDescription>{pulseSummary ?? t('dashboard.description')}</PageDescription>
+                {pulseSummary !== null ? (
+                    <PageDescription>{pulseSummary}</PageDescription>
+                ) : error === null ? (
+                    <div className="mt-1 space-y-1.5" data-dashboard-subtitle-skeleton="true" aria-hidden="true">
+                        <Skeleton className="h-4 w-64 max-w-full" />
+                        <Skeleton className="h-4 w-40 max-w-full sm:hidden" />
+                    </div>
+                ) : null}
             </PageHeader>
 
             {canViewAllPosts ? (
@@ -220,7 +229,7 @@ export default function Dashboard() {
                 </section>
             ) : null}
 
-            {error ? <ErrorText>{error}</ErrorText> : null}
+            {error ? <LoadError message={error} onRetry={() => setReloadKey((key) => key + 1)} /> : null}
 
             {showInitialSkeleton ? (
                 <DashboardSkeleton />

@@ -49,6 +49,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
 import { useSidebarCollapsed } from '@/hooks/useSidebarCollapsed';
 import { type ThemeMode, useTheme } from '@/hooks/useTheme';
+import { isPostEditorPath } from '@/lib/posts/list';
 import { resolveMobilePageAction } from '@/lib/resolve-mobile-page-action';
 import { searchShortcutKeys } from '@/lib/platform';
 import { hostHomeUrl } from '@/lib/urls';
@@ -454,6 +455,7 @@ function LayoutShell() {
 
             <SidebarLayout
                 collapsed={collapsed}
+                editorInset={isPostEditorPath(pathname)}
                 navbar={
                     <Navbar>
                         <NavbarSpacer />

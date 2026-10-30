@@ -106,7 +106,7 @@ export function DashboardPipeline({ pipeline, scope, totals }: DashboardPipeline
                         <div
                             key={column.key}
                             className={clsx(
-                                'flex flex-col rounded-xl border p-4 dark:ring-1 dark:ring-white/5',
+                                'flex flex-col rounded-xl border p-4',
                                 column.accent === 'amber'
                                     ? 'border-amber-500/25 bg-amber-500/[0.03] dark:border-amber-400/20 dark:bg-amber-400/[0.05]'
                                     : 'border-zinc-950/10 dark:border-white/10 dark:bg-white/[0.02]'

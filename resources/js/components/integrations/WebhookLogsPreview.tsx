@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/button';
+import { LoadError } from '@/components/LoadError';
 import { useCanvas } from '@/hooks/useCanvas';
 import { integrationsApi, type WebhookDelivery } from '@/lib/api/integrations';
 import { formatRelativeTime } from '@/lib/format-relative-time';
@@ -72,7 +73,7 @@ export function WebhookLogsPreview({ open = true, refreshKey = 0 }: WebhookLogsP
                 {t('integrations.webhooks_logs', 'Webhook logs')}
             </p>
 
-            <div className="overflow-hidden rounded-xl border border-zinc-950/10 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5">
+            <div className="overflow-hidden rounded-xl border border-zinc-950/10 dark:border-white/10 dark:bg-white/[0.02]">
                 <div className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,1.35fr)_auto] gap-3 px-3.5 pt-3 pb-1.5 text-xs text-zinc-500 dark:text-zinc-400">
                     <span>{t('integrations.webhooks_status', 'Status')}</span>
                     <span>{t('integrations.webhooks_logs_event', 'Event')}</span>
@@ -90,7 +91,9 @@ export function WebhookLogsPreview({ open = true, refreshKey = 0 }: WebhookLogsP
                         ) : null}
 
                         {loadError ? (
-                            <p className="px-3 py-3 text-sm text-red-600 dark:text-red-400">{loadError}</p>
+                            <div className="px-3 py-3">
+                                <LoadError message={loadError} onRetry={() => void load()} />
+                            </div>
                         ) : null}
 
                         {empty ? (

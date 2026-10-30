@@ -8,7 +8,8 @@ import { Button } from '@/components/button';
 import { ContentReveal } from '@/components/ContentReveal';
 import { Heading } from '@/components/heading';
 import { Skeleton } from '@/components/Skeleton';
-import { PageDescription, ErrorText } from '@/components/text';
+import { LoadError } from '@/components/LoadError';
+import { PageDescription } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -46,6 +47,7 @@ export default function PostsStats() {
     const [stats, setStats] = useState<PostStatsResponse | null>(null);
     const [loading, setLoading] = useState(postId !== null);
     const [error, setError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
 
     const statsPageTitle =
         stats === null
@@ -104,7 +106,7 @@ export default function PostsStats() {
             cancelled = true;
             controller.abort();
         };
-    }, [navigate, postId, t]);
+    }, [navigate, postId, reloadKey, t]);
 
     const viewsSeries = useMemo(() => (stats ? parseDailyGraph(stats.graph.views) : []), [stats]);
     const visitsSeries = useMemo(() => (stats ? parseDailyGraph(stats.graph.visits) : []), [stats]);
@@ -156,7 +158,7 @@ export default function PostsStats() {
                 </div>
             </div>
 
-            {error && !loading ? <ErrorText>{error}</ErrorText> : null}
+            {error && !loading ? <LoadError message={error} onRetry={() => setReloadKey((key) => key + 1)} /> : null}
 
             {showInitialSkeleton ? (
                 <StatsSkeleton />

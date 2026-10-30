@@ -32,7 +32,7 @@ export function Table({
                             'inline-block min-w-full align-middle',
                             bleed
                                 ? 'sm:px-(--gutter)'
-                                : 'overflow-hidden rounded-xl border border-zinc-950/10 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5'
+                                : 'overflow-hidden rounded-xl border border-zinc-950/10 dark:border-white/10 dark:bg-white/[0.02]'
                         )}
                     >
                         <table className="min-w-full text-left text-sm/6 text-zinc-950 dark:text-white">
@@ -64,19 +64,24 @@ export function TableRow({
     target,
     title,
     className,
+    tabIndex,
     ...props
 }: { href?: string; target?: string; title?: string } & React.ComponentPropsWithoutRef<'tr'>) {
     const { striped } = useContext(TableContext);
+    const keyboardRow = tabIndex === 0;
 
     return (
         <TableRowContext.Provider value={{ href, target, title } as React.ContextType<typeof TableRowContext>}>
             <tr
                 {...props}
+                tabIndex={tabIndex}
                 className={clsx(
                     className,
                     href && 'cursor-pointer',
                     href &&
                         'has-[[data-row-link][data-focus]]:outline-2 has-[[data-row-link][data-focus]]:-outline-offset-2 has-[[data-row-link][data-focus]]:outline-blue-500 dark:focus-within:bg-white/2.5',
+                    keyboardRow &&
+                        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-500',
                     striped && 'even:bg-zinc-950/2.5 dark:even:bg-white/2.5',
                     href && striped && 'hover:bg-zinc-950/5 dark:hover:bg-white/5',
                     href && !striped && 'hover:bg-zinc-950/2.5 dark:hover:bg-white/2.5'

@@ -183,7 +183,7 @@ export function CommandPalette({ open, onClose }: Props) {
             <div className="fixed inset-0 overflow-y-auto p-4 sm:p-6 lg:p-20">
                 <Headless.DialogPanel
                     transition
-                    className="mx-auto max-w-xl transform overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition-all duration-100 data-closed:scale-95 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in dark:bg-zinc-900 dark:shadow-black/50 dark:ring-white/10"
+                    className="mx-auto flex max-h-[calc(100dvh-2rem-env(safe-area-inset-bottom))] w-full max-w-xl transform flex-col overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-zinc-950/10 transition duration-[180ms] data-closed:scale-95 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in dark:bg-zinc-900 dark:ring-white/10"
                 >
                     <Headless.Combobox<PaletteItem | null>
                         onChange={handleSelect}
@@ -191,7 +191,7 @@ export function CommandPalette({ open, onClose }: Props) {
                             /* keep open while dialog is open */
                         }}
                     >
-                        <div className="flex items-center border-b border-zinc-200 px-4 dark:border-white/10">
+                        <div className="flex shrink-0 items-center border-b border-zinc-200 px-4 dark:border-white/10">
                             <IconSearch className="size-5 shrink-0 text-zinc-400" />
 
                             <Headless.ComboboxInput
@@ -208,7 +208,10 @@ export function CommandPalette({ open, onClose }: Props) {
                         {parsed.mode === 'help' && <HelpPanel filterHints={filterHints} />}
 
                         {parsed.mode === 'search' && hasResults && (
-                            <Headless.ComboboxOptions static className="max-h-80 scroll-py-2 overflow-y-auto py-2">
+                            <Headless.ComboboxOptions
+                                static
+                                className="max-h-80 min-h-0 flex-1 scroll-py-2 overflow-y-auto py-2"
+                            >
                                 {pageItems.length > 0 && (
                                     <li>
                                         <p className="px-4 pb-1 pt-0.5 text-xs font-semibold text-zinc-400 uppercase tracking-wide dark:text-zinc-500">
@@ -351,7 +354,7 @@ function CommandPaletteFooter({ filterHints }: { filterHints: FilterHint[] }) {
     const { t } = useCanvas();
 
     return (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-zinc-200 bg-zinc-50 px-4 py-2.5 text-xs text-zinc-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400">
+        <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-t border-zinc-200 bg-zinc-50 px-4 py-2.5 text-xs text-zinc-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400">
             {filterHints.length > 0 && (
                 <span className="flex flex-wrap items-center gap-2">
                     {filterHints.map((hint) => (

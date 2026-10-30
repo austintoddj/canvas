@@ -68,10 +68,12 @@ describe('IntegrationCard', () => {
         expect(card?.className).toMatch(/cursor-pointer/);
         expect(card?.className).toMatch(/rounded/);
         expect(card?.className).toMatch(/border/);
+        expect(card?.className).not.toMatch(/shadow/);
         expect(within(card!).getByText('Webhooks')).toBeInTheDocument();
         expect(within(card!).getByText('Notify external services')).toBeInTheDocument();
         expect(within(card!).getByText('Not enabled')).toBeInTheDocument();
-        expect(within(card!).getByText('Configure')).toBeInTheDocument();
+        expect(within(card!).queryByText('Configure')).toBeNull();
+        expect(screen.getByRole('button', { name: 'Configure Webhooks' })).toBe(card);
         expect(within(card!).queryByRole('link')).toBeNull();
 
         await user.click(card!);
@@ -115,7 +117,7 @@ describe('IntegrationCard', () => {
         ];
 
         renderWithRouter(
-            <div data-integrations-cards="true" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div data-integrations-cards="true" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {kinds.map((item) => (
                     <IntegrationCard
                         key={item.kind}
@@ -163,7 +165,9 @@ describe('IntegrationsListSkeleton', () => {
         const skeleton = document.querySelector('[data-integrations-list-skeleton="true"]');
         expect(skeleton).not.toBeNull();
         expect(skeleton?.className).toMatch(/grid/);
-        expect(skeleton?.className).toMatch(/xl:grid-cols-4/);
+        expect(skeleton?.className).toMatch(/sm:grid-cols-2/);
+        expect(skeleton?.className).toMatch(/lg:grid-cols-3/);
+        expect(skeleton?.className).not.toMatch(/xl:grid-cols-4/);
         expect(skeleton?.className).not.toMatch(/divide-y/);
         expect(document.querySelector('[data-integrations-cards-skeleton="true"]')).not.toBeNull();
 

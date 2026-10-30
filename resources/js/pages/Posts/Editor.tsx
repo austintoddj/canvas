@@ -9,8 +9,8 @@ import PostInspectorDrawer, { type PostInspectorSection } from '@/components/pos
 import PostPreviewDialog from '@/components/posts/PostPreviewDialog';
 import PostPublishDialog from '@/components/posts/PostPublishDialog';
 import PostVersionHistoryDrawer from '@/components/posts/PostVersionHistoryDrawer';
+import { LoadError } from '@/components/LoadError';
 import { Skeleton } from '@/components/Skeleton';
-import { ErrorText } from '@/components/text';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLeaveRevisionCheckpoint } from '@/hooks/useLeaveRevisionCheckpoint';
@@ -62,6 +62,7 @@ export default function PostsEditor() {
     const [availableTopics, setAvailableTopics] = useState<TaxonomyOption[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
     const [inspectorOpen, setInspectorOpen] = useState(false);
     const [inspectorSection, setInspectorSection] = useState<PostInspectorSection>('post');
@@ -405,7 +406,7 @@ export default function PostsEditor() {
         void initialize();
 
         return () => controller.abort();
-    }, [hydrateEditor, id, isNewRoute, navigate, t, user]);
+    }, [hydrateEditor, id, isNewRoute, navigate, reloadKey, t, user]);
 
     function slugSyncedForm(current: PostFormState): PostFormState {
         if (slugManuallyEditedRef.current) {
@@ -498,14 +499,10 @@ export default function PostsEditor() {
     }
 
     if (loadError !== null) {
-        return (
-            <div className="space-y-4">
-                <ErrorText>{loadError}</ErrorText>
-            </div>
-        );
+        return <LoadError message={loadError} onRetry={() => setReloadKey((key) => key + 1)} />;
     }
 
-    const deleteTitle = form.title.trim() === '' ? t('posts.this_post') : `“${form.title}”`;
+    const deleteName = form.title.trim() === '' ? t('posts.this_post') : form.title.trim();
 
     return (
         <>
@@ -616,8 +613,8 @@ export default function PostsEditor() {
             </Alert>
 
             <Alert open={pendingDelete} onClose={closeDeleteConfirm} size="sm">
-                <AlertTitle>{t('editor.delete_title')}</AlertTitle>
-                <AlertDescription>{t('editor.delete_confirm_body', { title: deleteTitle })}</AlertDescription>
+                <AlertTitle>{t('common.delete_named', { name: deleteName })}</AlertTitle>
+                <AlertDescription>{t('common.this_cannot_be_undone')}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
                         {t('common.cancel')}

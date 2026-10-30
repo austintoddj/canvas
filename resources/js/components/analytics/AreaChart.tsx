@@ -55,8 +55,7 @@ export default function AreaChart({
     return (
         <div
             className={
-                className ??
-                'rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02] dark:ring-1 dark:ring-white/5'
+                className ?? 'rounded-xl border border-zinc-950/10 p-5 dark:border-white/10 dark:bg-white/[0.02]'
             }
         >
             {(title || caption) && (

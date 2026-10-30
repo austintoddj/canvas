@@ -3,6 +3,7 @@ import { IconRefresh } from '@tabler/icons-react';
 
 import { Button } from '@/components/button';
 import { Subheading } from '@/components/heading';
+import { LoadError } from '@/components/LoadError';
 import {
     Pagination,
     PaginationGap,
@@ -218,11 +219,7 @@ export function WebhookDeliveriesPanel({
                 </Select>
             </div>
 
-            {loadError ? (
-                <p className="text-sm text-red-600 dark:text-red-400" data-webhook-deliveries-error="true">
-                    {loadError}
-                </p>
-            ) : null}
+            {loadError ? <LoadError message={loadError} onRetry={() => void load()} /> : null}
 
             {showInitialSkeleton ? (
                 <div aria-busy="true">

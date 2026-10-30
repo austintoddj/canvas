@@ -1,0 +1,51 @@
+name: Dependabot auto-merge
+
+# Turns on GitHub auto-merge (squash) for Dependabot patch and minor updates.
+# The merge only happens after the "Require CI" ruleset's required checks pass.
+# Majors, and any PR that touches react, react-dom or next, are left for Todd.
+# Never checks out or runs PR code (pull_request_target runs with a write token).
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for held-back packages
+        id: held
+        env:
+          DEPS: ${{ steps.metadata.outputs.dependency-names }}
+        run: |
+          held=false
+          IFS=',' read -ra names <<< "$DEPS"
+          for raw in "${names[@]}"; do
+            name="$(echo "$raw" | xargs)"
+            case "$name" in
+              react|react-dom|next) held=true ;;
+            esac
+          done
+          echo "held=$held" >> "$GITHUB_OUTPUT"
+          echo "Dependencies: $DEPS (held: $held)"
+
+      - name: Enable auto-merge for patch and minor updates
+        if: >-
+          steps.held.outputs.held == 'false' &&
+          (steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+           steps.metadata.outputs.update-type == 'version-update:semver-minor')
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --auto --squash "$PR_URL"

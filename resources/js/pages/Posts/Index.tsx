@@ -23,7 +23,10 @@ import { PillNav, PillNavItem } from '@/components/pill-nav';
 import { Link } from '@/components/link';
 import { Table, TableBody, TableCell, TableRow } from '@/components/table';
 import { TableListSkeleton } from '@/components/TableListSkeleton';
-import { Text, PageDescription, ErrorText } from '@/components/text';
+import { LoadError } from '@/components/LoadError';
+import { SearchField } from '@/components/SearchField';
+import { Select } from '@/components/select';
+import { Text, PageDescription } from '@/components/text';
 import { useAsyncReveal } from '@/hooks/useAsyncReveal';
 import { useCanvas } from '@/hooks/useCanvas';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -38,7 +41,10 @@ import { paginationWindow, shouldGoToPreviousPageAfterDelete } from '@/lib/list-
 import {
     countsAfterPostDelete,
     parsePostsListFilters,
+    parsePostsListSort,
     postListStatus,
+    POSTS_SEARCH_DEBOUNCE_MS,
+    POSTS_SORT_OPTIONS,
     postsIndexPath,
     postsIndexQueryParams,
     type PostsListFilters,
@@ -66,6 +72,24 @@ function updateFilters(current: URLSearchParams, patch: Partial<PostsListFilters
         }
     }
 
+    if (patch.search !== undefined) {
+        const search = patch.search.trim();
+
+        if (search !== '') {
+            next.set('search', search);
+        } else {
+            next.delete('search');
+        }
+    }
+
+    if (patch.sort !== undefined) {
+        if (patch.sort === 'created') {
+            next.delete('sort');
+        } else {
+            next.set('sort', patch.sort);
+        }
+    }
+
     if (resetPage || patch.page !== undefined) {
         const page = resetPage ? 1 : (patch.page ?? 1);
 
@@ -90,8 +114,16 @@ export default function PostsIndex() {
     const [response, setResponse] = useState<PostsIndexResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     const [pendingDelete, setPendingDelete] = useState<PostListItem | null>(null);
     const [deleting, setDeleting] = useState(false);
+    const [searchDraft, setSearchDraft] = useState(filters.search);
+    const [syncedSearch, setSyncedSearch] = useState(filters.search);
+
+    if (filters.search !== syncedSearch) {
+        setSyncedSearch(filters.search);
+        setSearchDraft(filters.search);
+    }
 
     useDocumentTitle(t('posts.title'));
 
@@ -130,7 +162,24 @@ export default function PostsIndex() {
             cancelled = true;
             controller.abort();
         };
-    }, [queryKey, searchParams, t]);
+    }, [queryKey, reloadKey, searchParams, t]);
+
+    useEffect(() => {
+        const trimmed = searchDraft.trim();
+        const current = filters.search.trim();
+
+        if (trimmed === current) {
+            return;
+        }
+
+        const timer = window.setTimeout(() => {
+            setSearchParams((params) => updateFilters(params, { search: searchDraft }, true), { replace: true });
+        }, POSTS_SEARCH_DEBOUNCE_MS);
+
+        return () => {
+            window.clearTimeout(timer);
+        };
+    }, [searchDraft, filters.search, setSearchParams]);
 
     function setFilters(patch: Partial<PostsListFilters>, resetPage = false) {
         setSearchParams(updateFilters(searchParams, patch, resetPage));
@@ -192,16 +241,19 @@ export default function PostsIndex() {
     const showInitialSkeleton = isInitialLoading(loading, itemCount);
     const refreshing = isRefreshing(loading, itemCount);
     const isEmpty = shouldShowEmpty(loading, itemCount);
+    const hasSearch = filters.search.trim() !== '';
+    const showTrueEmpty = isEmpty && !hasSearch;
+    const showFilteredEmpty = isEmpty && hasSearch;
     const { animateEmpty, animateContent } = useAsyncReveal(loading, itemCount);
     const emptyHeadline =
         filters.tab === 'draft' ? t('posts.empty_drafts_headline') : t('posts.empty_published_headline');
     const emptyDescription = filters.tab === 'draft' ? t('posts.empty_drafts_blurb') : t('posts.empty_published_blurb');
-    const deleteLabel =
+    const deleteName =
         pendingDelete === null || (pendingDelete.title ?? '').trim() === ''
             ? t('posts.this_post')
-            : `“${(pendingDelete.title ?? '').trim()}”`;
+            : (pendingDelete.title ?? '').trim();
     /** Show through load; hide only when empty state owns the CTA. */
-    const showCreateAction = !isEmpty;
+    const showCreateAction = !showTrueEmpty;
     useMobilePageAction({ visible: showCreateAction });
 
     return (
@@ -240,6 +292,30 @@ export default function PostsIndex() {
                     </PillNavItem>
                 </PillNav>
 
+                {/* Below `sm`, `order-last` puts search and sort on their own rows under the pills. */}
+                <div className="order-last flex w-full flex-col gap-3 sm:order-none sm:w-auto sm:flex-row sm:items-center">
+                    <SearchField
+                        id="posts-search"
+                        label={t('posts.search_label')}
+                        value={searchDraft}
+                        onChange={setSearchDraft}
+                        className="w-full sm:w-52"
+                    />
+                    <Select
+                        className="w-full sm:w-56"
+                        name="posts-sort"
+                        aria-label={t('posts.sort_label')}
+                        value={filters.sort}
+                        onChange={(event) => setFilters({ sort: parsePostsListSort(event.target.value) }, true)}
+                    >
+                        {POSTS_SORT_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {t(option.labelKey)}
+                            </option>
+                        ))}
+                    </Select>
+                </div>
+
                 <div className="flex flex-wrap items-center gap-3 sm:ms-auto">
                     {canViewAllPosts ? (
                         <PillNav
@@ -262,7 +338,7 @@ export default function PostsIndex() {
                             href={calendarIndexPath({
                                 scope: canViewAllPosts && filters.scope === 'all' ? 'all' : 'user',
                             })}
-                            className="text-sm font-medium text-zinc-700 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white"
+                            className="inline-flex min-h-11 items-center px-2 text-sm font-medium text-zinc-700 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white"
                             data-posts-calendar-link="true"
                         >
                             {t('posts.view_calendar', 'View calendar')}
@@ -271,11 +347,11 @@ export default function PostsIndex() {
                 </div>
             </div>
 
-            {error ? <ErrorText>{error}</ErrorText> : null}
+            {error ? <LoadError message={error} onRetry={() => setReloadKey((key) => key + 1)} /> : null}
 
             {showInitialSkeleton ? (
                 <TableListSkeleton rows={6} columns={3} />
-            ) : isEmpty ? (
+            ) : showTrueEmpty ? (
                 <EmptyStateReveal animate={animateEmpty}>
                     <EmptyState
                         headline={emptyHeadline}
@@ -289,10 +365,16 @@ export default function PostsIndex() {
                         }
                     />
                 </EmptyStateReveal>
+            ) : showFilteredEmpty ? (
+                <EmptyStateReveal animate={animateEmpty}>
+                    <Text className="text-sm text-canvas-muted dark:text-canvas-muted-dark">
+                        {t('posts.filtered_empty')}
+                    </Text>
+                </EmptyStateReveal>
             ) : posts ? (
                 <ContentReveal busy={refreshing} animate={animateContent}>
                     {/* Allow wrap so dense mobile rows don't force horizontal page scroll. */}
-                    <Table striped className="whitespace-normal">
+                    <Table className="whitespace-normal">
                         <TableBody>
                             {posts.data.map((post) => {
                                 const status = postListStatus(post.published_at);
@@ -308,9 +390,7 @@ export default function PostsIndex() {
                                           : t('posts.draft_badge');
                                 const thumb = (post.featured_image ?? '').trim();
                                 const listDate = formatListDate(post.updated_at);
-                                const summaryLine = post.summary?.trim()
-                                    ? post.summary
-                                    : `${post.views_count.toLocaleString()} views`;
+                                const summary = post.summary?.trim() ?? '';
 
                                 return (
                                     <TableRow
@@ -340,19 +420,27 @@ export default function PostsIndex() {
                                                         <span className="min-w-0 break-words font-medium text-zinc-950 sm:truncate dark:text-white">
                                                             {title}
                                                         </span>
-                                                        <Badge color={badgeColor} data-publish-status={status}>
-                                                            {badgeLabel}
-                                                        </Badge>
+                                                        {status === 'published' ? null : (
+                                                            <Badge color={badgeColor} data-publish-status={status}>
+                                                                {badgeLabel}
+                                                            </Badge>
+                                                        )}
                                                         {post.has_pending_changes ? (
                                                             <Badge color="zinc" data-pending-changes="true">
                                                                 {t('dashboard.pending_badge')}
                                                             </Badge>
                                                         ) : null}
                                                     </div>
-                                                    <Text className="mt-1 line-clamp-2 text-sm text-canvas-muted sm:line-clamp-1 dark:text-canvas-muted-dark">
-                                                        <span className="sm:hidden">{listDate} · </span>
-                                                        {summaryLine}
-                                                    </Text>
+                                                    {summary !== '' ? (
+                                                        <Text className="mt-1 line-clamp-2 text-sm text-canvas-muted sm:line-clamp-1 dark:text-canvas-muted-dark">
+                                                            <span className="sm:hidden">{listDate} · </span>
+                                                            {summary}
+                                                        </Text>
+                                                    ) : (
+                                                        <Text className="mt-1 text-sm text-canvas-muted sm:hidden dark:text-canvas-muted-dark">
+                                                            {listDate}
+                                                        </Text>
+                                                    )}
                                                 </div>
                                             </div>
                                         </TableCell>
@@ -368,7 +456,7 @@ export default function PostsIndex() {
                                                         label={t('dashboard.recent_stats_aria', { title })}
                                                         tooltip={t('editor.stats')}
                                                     >
-                                                        <IconChartBar className="size-5" aria-hidden="true" />
+                                                        <IconChartBar className="size-4" aria-hidden="true" />
                                                     </ListRowActionLink>
                                                 ) : null}
                                                 <ListRowActionButton
@@ -377,7 +465,7 @@ export default function PostsIndex() {
                                                     danger
                                                     onClick={() => setPendingDelete(post)}
                                                 >
-                                                    <IconTrash className="size-5" aria-hidden="true" />
+                                                    <IconTrash className="size-4" aria-hidden="true" />
                                                 </ListRowActionButton>
                                             </ListRowEnd>
                                         </TableCell>
@@ -424,8 +512,8 @@ export default function PostsIndex() {
             ) : null}
 
             <Alert open={pendingDelete !== null} onClose={closeDeleteConfirm} size="sm">
-                <AlertTitle>{t('editor.delete_title')}</AlertTitle>
-                <AlertDescription>{t('editor.delete_confirm_body', { title: deleteLabel })}</AlertDescription>
+                <AlertTitle>{t('common.delete_named', { name: deleteName })}</AlertTitle>
+                <AlertDescription>{t('common.this_cannot_be_undone')}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={deleting} onClick={closeDeleteConfirm}>
                         {t('common.cancel')}

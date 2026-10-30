@@ -7,6 +7,7 @@ import { Badge } from '@/components/badge';
 import { Button } from '@/components/button';
 import { ErrorMessage } from '@/components/fieldset';
 import { SideDrawer } from '@/components/SideDrawer';
+import { LoadError } from '@/components/LoadError';
 import { Text, ErrorText } from '@/components/text';
 import { AuthorProfileFields } from '@/components/users/AuthorProfileFields';
 import { RoleSelectDropdown } from '@/components/users/RoleSelectDropdown';
@@ -49,6 +50,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
     const [baseline, setBaseline] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     const [saving, setSaving] = useState(false);
     const [revoking, setRevoking] = useState(false);
     const [confirmRevokeOpen, setConfirmRevokeOpen] = useState(false);
@@ -134,7 +136,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
             cancelled = true;
             controller.abort();
         };
-    }, [boot.appTimezone, boot.defaultLocale, currentUser.id, navigate, onClose, open, t, userId]);
+    }, [boot.appTimezone, boot.defaultLocale, currentUser.id, navigate, onClose, open, reloadKey, t, userId]);
 
     const isDirty =
         isSelf && profileForm !== null
@@ -392,7 +394,7 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
 
                 {!loading && error !== null && !showForm ? (
                     <div className="px-5 py-8">
-                        <ErrorText>{error}</ErrorText>
+                        <LoadError message={error} onRetry={() => setReloadKey((key) => key + 1)} />
                     </div>
                 ) : null}
 
@@ -472,12 +474,12 @@ export function UserDetailDrawer({ open, userId, onClose, onSaved, onRevoked }: 
             </SideDrawer>
 
             <Alert open={confirmRevokeOpen} onClose={closeRevokeConfirm} size="sm">
-                <AlertTitle>{t('users.revoke_title')}</AlertTitle>
-                <AlertDescription>
-                    {t('users.revoke_body', {
+                <AlertTitle>
+                    {t('users.revoke_title', {
                         name: user?.name ?? t('common.untitled'),
                     })}
-                </AlertDescription>
+                </AlertTitle>
+                <AlertDescription>{t('common.this_cannot_be_undone')}</AlertDescription>
                 <AlertActions>
                     <Button type="button" plain disabled={revoking} onClick={closeRevokeConfirm}>
                         {t('common.cancel')}

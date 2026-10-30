@@ -131,6 +131,111 @@ describe('when listing posts', function (): void {
             ]);
     });
 
+    it('filters the current tab by title without changing the tab counts', function (): void {
+        $match = createPublishedPost(['user_id' => $this->admin->id, 'title' => 'Needle post']);
+        $other = createPublishedPost(['user_id' => $this->admin->id, 'title' => 'Other post']);
+        $draft = createDraftPost(['user_id' => $this->admin->id, 'title' => 'Needle draft']);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?search=Needle')
+            ->assertSuccessful()
+            ->assertJsonFragment(['id' => $match->id])
+            ->assertJsonMissing(['id' => $other->id])
+            ->assertJsonMissing(['id' => $draft->id])
+            ->assertJsonPath('publishedCount', $this->admin->posts()->published()->count())
+            ->assertJsonPath('draftCount', $this->admin->posts()->draft()->count());
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?type=draft&search=Needle')
+            ->assertSuccessful()
+            ->assertJsonFragment(['id' => $draft->id])
+            ->assertJsonMissing(['id' => $match->id]);
+
+        $literal = createPublishedPost(['user_id' => $this->admin->id, 'title' => '100% done']);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?search='.rawurlencode('%'))
+            ->assertSuccessful()
+            ->assertJsonFragment(['id' => $literal->id])
+            ->assertJsonMissing(['id' => $match->id]);
+    });
+
+    it('sorts by recent activity, published date, or created date', function (): void {
+        // Invariant: posts index order is activity, published_at, or created_at (GH-1561).
+        $touchedRecently = createPublishedPost([
+            'id' => '00000000-0000-4000-8000-0000000000aa',
+            'user_id' => $this->admin->id,
+            'title' => 'Touched recently',
+        ]);
+        $publishedRecently = createPublishedPost([
+            'id' => '00000000-0000-4000-8000-0000000000bb',
+            'user_id' => $this->admin->id,
+            'title' => 'Published recently',
+        ]);
+
+        Post::query()->whereKey($touchedRecently->id)->update([
+            'published_at' => now()->subDays(10)->format('Y-m-d H:i:s'),
+            'created_at' => now()->subDays(2)->format('Y-m-d H:i:s'),
+            'updated_at' => now()->subHour()->format('Y-m-d H:i:s'),
+        ]);
+        Post::query()->whereKey($publishedRecently->id)->update([
+            'published_at' => now()->subDay()->format('Y-m-d H:i:s'),
+            'created_at' => now()->subDays(12)->format('Y-m-d H:i:s'),
+            'updated_at' => now()->subDays(3)->format('Y-m-d H:i:s'),
+        ]);
+
+        $ids = fn (string $query = ''): array => collect(
+            $this->actingAs($this->admin, 'canvas')
+                ->getJson('canvas/api/posts'.$query)
+                ->assertSuccessful()
+                ->json('posts.data')
+        )->pluck('id')->all();
+
+        expect($ids())->toBe([$touchedRecently->id, $publishedRecently->id])
+            ->and($ids('?sort=created'))->toBe([$touchedRecently->id, $publishedRecently->id])
+            ->and($ids('?sort=created_asc'))->toBe([$publishedRecently->id, $touchedRecently->id])
+            ->and($ids('?sort=activity'))->toBe([$touchedRecently->id, $publishedRecently->id])
+            ->and($ids('?sort=activity_asc'))->toBe([$publishedRecently->id, $touchedRecently->id])
+            ->and($ids('?sort=published'))->toBe([$publishedRecently->id, $touchedRecently->id])
+            ->and($ids('?sort=published_asc'))->toBe([$touchedRecently->id, $publishedRecently->id])
+            ->and($ids('?sort=nope'))->toBe([$touchedRecently->id, $publishedRecently->id]);
+    });
+
+    it('sorts undated drafts after posts that have a publish date', function (): void {
+        $undated = createDraftPost([
+            'id' => '00000000-0000-4000-8000-0000000000c1',
+            'user_id' => $this->admin->id,
+            'title' => 'Undated draft',
+        ]);
+        $sooner = createDraftPost([
+            'id' => '00000000-0000-4000-8000-0000000000c2',
+            'user_id' => $this->admin->id,
+            'title' => 'Sooner',
+        ]);
+        $later = createDraftPost([
+            'id' => '00000000-0000-4000-8000-0000000000c3',
+            'user_id' => $this->admin->id,
+            'title' => 'Later',
+        ]);
+
+        Post::query()->whereKey($sooner->id)->update([
+            'published_at' => now()->addDay()->format('Y-m-d H:i:s'),
+        ]);
+        Post::query()->whereKey($later->id)->update([
+            'published_at' => now()->addWeek()->format('Y-m-d H:i:s'),
+        ]);
+
+        $ids = fn (string $sort): array => collect(
+            $this->actingAs($this->admin, 'canvas')
+                ->getJson('canvas/api/posts?type=draft&sort='.$sort)
+                ->assertSuccessful()
+                ->json('posts.data')
+        )->pluck('id')->all();
+
+        expect($ids('published'))->toBe([$later->id, $sooner->id, $undated->id])
+            ->and($ids('published_asc'))->toBe([$sooner->id, $later->id, $undated->id]);
+    });
+
     it('flags list rows with unpublished edits without exposing the pending blob', function (): void {
         $pendingPost = Post::factory()->create([
             'user_id' => $this->admin->id,

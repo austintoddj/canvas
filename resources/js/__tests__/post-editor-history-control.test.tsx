@@ -120,6 +120,6 @@ describe('PostEditorLayout history control', () => {
         expect(root?.className).toMatch(/flex/);
         expect(root?.className).toMatch(/overflow-hidden/);
         expect(root?.className).toMatch(/h-\[calc\(100svh-7\.5rem\)\]/);
-        expect(root?.className).toMatch(/lg:h-\[calc\(100svh-6rem\)\]/);
+        expect(root?.className).toMatch(/lg:h-\[calc\(100svh-4rem\)\]/);
     });
 });

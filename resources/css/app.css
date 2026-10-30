@@ -71,6 +71,19 @@
     }
 }
 
+/* The media selection bar is a fixed stack. Lift toasts above it. */
+html:has([data-media-selection-actions]) [data-toaster] {
+    bottom: calc(8.5rem + env(safe-area-inset-bottom));
+    padding-bottom: 1rem;
+}
+
+@media (min-width: 40rem) {
+    html:has([data-media-selection-actions]) [data-toaster] {
+        bottom: calc(5.5rem + env(safe-area-inset-bottom));
+        padding-bottom: 1.5rem;
+    }
+}
+
 /* TipTap post body surface */
 .canvas-post-body {
     color: var(--color-zinc-800);
