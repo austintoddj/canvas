@@ -159,6 +159,7 @@ export type PostsIndexParams = {
     type?: 'draft';
     scope?: 'user' | 'all';
     page?: number;
+    sort?: 'created_oldest' | 'updated' | 'updated_oldest' | 'published' | 'published_oldest';
 };
 
 /** Calendar month range item (scheduled + published only). */

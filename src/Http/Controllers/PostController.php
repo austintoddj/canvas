@@ -32,7 +32,7 @@ class PostController extends Controller
 
         $baseQuery = $this->visiblePostsQuery($user, $canViewAllPosts);
 
-        $posts = (clone $baseQuery)
+        $query = (clone $baseQuery)
             // `pending` is selected so the has_pending_changes append resolves, then hidden
             // so list rows never ship the full unpublished blob.
             ->select('id', 'title', 'summary', 'featured_image', 'published_at', 'created_at', 'updated_at', 'pending')
@@ -40,8 +40,9 @@ class PostController extends Controller
                 request()->query('type') === 'draft',
                 fn (Builder $query) => $query->draft(),
                 fn (Builder $query) => $query->published(),
-            )
-            ->latest()
+            );
+
+        $posts = $this->applyIndexSort($query)
             ->withCount('views')
             ->paginate();
 
@@ -251,6 +252,46 @@ class PostController extends Controller
             ! $canViewAll || request()->query('scope', 'user') !== 'all',
             fn (Builder $query) => $query->where('user_id', data_get($user, 'id'))
         );
+    }
+
+    /**
+     * Default is created date, newest first (`latest()`), so an empty or unknown
+     * `sort` keeps the historical index order.
+     *
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    private function applyIndexSort(Builder $query): Builder
+    {
+        $sort = request()->query('sort');
+
+        return match (is_string($sort) ? $sort : '') {
+            'created_oldest' => $query->oldest(),
+            'updated' => $query->orderByDesc('updated_at')->orderByDesc('id'),
+            'updated_oldest' => $query->orderBy('updated_at')->orderBy('id'),
+            'published' => $this->orderByPublishedAt($query, 'desc'),
+            'published_oldest' => $this->orderByPublishedAt($query, 'asc'),
+            default => $query->latest(),
+        };
+    }
+
+    /**
+     * Drafts store a null `published_at`. Rank those rows after dated ones in
+     * both directions so the order stays chronological on MySQL, PostgreSQL, and SQLite.
+     *
+     * @param  Builder<Post>  $query
+     * @param  'asc'|'desc'  $direction
+     * @return Builder<Post>
+     */
+    private function orderByPublishedAt(Builder $query, string $direction): Builder
+    {
+        $query->orderByRaw('case when published_at is null then 1 else 0 end');
+
+        if ($direction === 'asc') {
+            return $query->orderBy('published_at')->orderBy('id');
+        }
+
+        return $query->orderByDesc('published_at')->orderByDesc('id');
     }
 
     /**

@@ -20,7 +20,9 @@ import {
     PaginationPrevious,
 } from '@/components/pagination';
 import { PillNav, PillNavItem } from '@/components/pill-nav';
+import { Field } from '@/components/fieldset';
 import { Link } from '@/components/link';
+import { Select } from '@/components/select';
 import { Table, TableBody, TableCell, TableRow } from '@/components/table';
 import { TableListSkeleton } from '@/components/TableListSkeleton';
 import { Text, PageDescription, ErrorText } from '@/components/text';
@@ -38,10 +40,13 @@ import { paginationWindow, shouldGoToPreviousPageAfterDelete } from '@/lib/list-
 import {
     countsAfterPostDelete,
     parsePostsListFilters,
+    POSTS_SORT_OPTIONS,
+    postListSortInstant,
     postListStatus,
     postsIndexPath,
     postsIndexQueryParams,
     type PostsListFilters,
+    type PostsListSort,
 } from '@/lib/posts/list';
 import { toast } from '@/lib/toast';
 import type { Paginated, PostListItem, PostsIndexResponse } from '@/types/api';
@@ -63,6 +68,14 @@ function updateFilters(current: URLSearchParams, patch: Partial<PostsListFilters
             next.set('scope', 'all');
         } else {
             next.delete('scope');
+        }
+    }
+
+    if (patch.sort !== undefined) {
+        if (patch.sort === 'created') {
+            next.delete('sort');
+        } else {
+            next.set('sort', patch.sort);
         }
     }
 
@@ -241,6 +254,21 @@ export default function PostsIndex() {
                 </PillNav>
 
                 <div className="flex flex-wrap items-center gap-3 sm:ms-auto">
+                    <Field className="w-full sm:w-72">
+                        <Select
+                            name="posts-sort"
+                            aria-label={t('posts.sort_label')}
+                            value={filters.sort}
+                            onChange={(event) => setFilters({ sort: event.target.value as PostsListSort }, true)}
+                        >
+                            {POSTS_SORT_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {t(option.labelKey)}
+                                </option>
+                            ))}
+                        </Select>
+                    </Field>
+
                     {canViewAllPosts ? (
                         <PillNav
                             value={filters.scope}
@@ -307,7 +335,7 @@ export default function PostsIndex() {
                                           ? t('posts.scheduled_badge')
                                           : t('posts.draft_badge');
                                 const thumb = (post.featured_image ?? '').trim();
-                                const listDate = formatListDate(post.updated_at);
+                                const listDate = formatListDate(postListSortInstant(post, filters.sort));
                                 const summaryLine = post.summary?.trim()
                                     ? post.summary
                                     : `${post.views_count.toLocaleString()} views`;

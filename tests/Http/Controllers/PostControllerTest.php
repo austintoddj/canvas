@@ -168,6 +168,125 @@ describe('when listing posts', function (): void {
             ->and($cleanRow['has_pending_changes'])->toBeFalse()
             ->and(array_key_exists('pending', $cleanRow))->toBeFalse();
     });
+
+    it('sorts by created date newest first by default', function (): void {
+        $posts = postsWithDistinctSortDates($this->admin->id);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts')
+            ->assertSuccessful()
+            ->assertJsonCount(3, 'posts.data')
+            ->assertJsonPath('posts.data.0.id', $posts['fresh']->id)
+            ->assertJsonPath('posts.data.1.id', $posts['middle']->id)
+            ->assertJsonPath('posts.data.2.id', $posts['touched']->id);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?sort=created')
+            ->assertSuccessful()
+            ->assertJsonPath('posts.data.0.id', $posts['fresh']->id)
+            ->assertJsonPath('posts.data.1.id', $posts['middle']->id)
+            ->assertJsonPath('posts.data.2.id', $posts['touched']->id);
+    });
+
+    it('sorts by created date oldest first', function (): void {
+        $posts = postsWithDistinctSortDates($this->admin->id);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?sort=created_oldest')
+            ->assertSuccessful()
+            ->assertJsonCount(3, 'posts.data')
+            ->assertJsonPath('posts.data.0.id', $posts['touched']->id)
+            ->assertJsonPath('posts.data.1.id', $posts['middle']->id)
+            ->assertJsonPath('posts.data.2.id', $posts['fresh']->id);
+    });
+
+    it('sorts by recent activity', function (): void {
+        $posts = postsWithDistinctSortDates($this->admin->id);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?sort=updated')
+            ->assertSuccessful()
+            ->assertJsonCount(3, 'posts.data')
+            ->assertJsonPath('posts.data.0.id', $posts['touched']->id)
+            ->assertJsonPath('posts.data.1.id', $posts['middle']->id)
+            ->assertJsonPath('posts.data.2.id', $posts['fresh']->id);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?sort=updated_oldest')
+            ->assertSuccessful()
+            ->assertJsonPath('posts.data.0.id', $posts['fresh']->id)
+            ->assertJsonPath('posts.data.1.id', $posts['middle']->id)
+            ->assertJsonPath('posts.data.2.id', $posts['touched']->id);
+    });
+
+    it('sorts by published date', function (): void {
+        $posts = postsWithDistinctSortDates($this->admin->id);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?sort=published')
+            ->assertSuccessful()
+            ->assertJsonCount(3, 'posts.data')
+            ->assertJsonPath('posts.data.0.id', $posts['fresh']->id)
+            ->assertJsonPath('posts.data.1.id', $posts['middle']->id)
+            ->assertJsonPath('posts.data.2.id', $posts['touched']->id);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?sort=published_oldest')
+            ->assertSuccessful()
+            ->assertJsonPath('posts.data.0.id', $posts['touched']->id)
+            ->assertJsonPath('posts.data.1.id', $posts['middle']->id)
+            ->assertJsonPath('posts.data.2.id', $posts['fresh']->id);
+    });
+
+    it('places unpublished drafts last when sorting by published date', function (): void {
+        $draft = Post::factory()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Draft',
+            'published_at' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $soon = Post::factory()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Soon',
+            'published_at' => now()->addDays(3),
+            'created_at' => now()->subDay(),
+            'updated_at' => now()->subDay(),
+        ]);
+        $later = Post::factory()->create([
+            'user_id' => $this->admin->id,
+            'title' => 'Later',
+            'published_at' => now()->addDays(14),
+            'created_at' => now()->subDays(2),
+            'updated_at' => now()->subDays(2),
+        ]);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?type=draft&sort=published')
+            ->assertSuccessful()
+            ->assertJsonCount(3, 'posts.data')
+            ->assertJsonPath('posts.data.0.id', $later->id)
+            ->assertJsonPath('posts.data.1.id', $soon->id)
+            ->assertJsonPath('posts.data.2.id', $draft->id);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?type=draft&sort=published_oldest')
+            ->assertSuccessful()
+            ->assertJsonPath('posts.data.0.id', $soon->id)
+            ->assertJsonPath('posts.data.1.id', $later->id)
+            ->assertJsonPath('posts.data.2.id', $draft->id);
+    });
+
+    it('ignores an unknown sort and keeps created date newest first', function (): void {
+        $posts = postsWithDistinctSortDates($this->admin->id);
+
+        $this->actingAs($this->admin, 'canvas')
+            ->getJson('canvas/api/posts?sort=popular')
+            ->assertSuccessful()
+            ->assertJsonPath('posts.data.0.id', $posts['fresh']->id)
+            ->assertJsonPath('posts.data.1.id', $posts['middle']->id)
+            ->assertJsonPath('posts.data.2.id', $posts['touched']->id);
+    });
 });
 
 describe('when showing posts', function (): void {
@@ -1253,3 +1372,35 @@ describe('when removing taxonomy', function (): void {
         $this->assertCount(0, $post->refresh()->tags);
     });
 });
+
+/**
+ * Created, updated, and published instants differ so each sort column is observable.
+ *
+ * @return array{fresh: Post, middle: Post, touched: Post}
+ */
+function postsWithDistinctSortDates(int|string $userId): array
+{
+    return [
+        'touched' => Post::factory()->create([
+            'user_id' => $userId,
+            'title' => 'Touched',
+            'published_at' => now()->subDays(20),
+            'created_at' => now()->subDays(30),
+            'updated_at' => now()->subMinutes(5),
+        ]),
+        'middle' => Post::factory()->create([
+            'user_id' => $userId,
+            'title' => 'Middle',
+            'published_at' => now()->subDays(10),
+            'created_at' => now()->subDays(15),
+            'updated_at' => now()->subDays(8),
+        ]),
+        'fresh' => Post::factory()->create([
+            'user_id' => $userId,
+            'title' => 'Fresh',
+            'published_at' => now()->subDay(),
+            'created_at' => now()->subDays(2),
+            'updated_at' => now()->subDays(12),
+        ]),
+    ];
+}
