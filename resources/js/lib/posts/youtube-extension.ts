@@ -15,6 +15,8 @@
 import { nodePasteRule } from '@tiptap/core';
 import Youtube from '@tiptap/extension-youtube';
 
+import { isSafeHttpUrl } from '@/lib/posts/embeds';
+
 const YOUTUBE_IFRAME_ALLOW =
     'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
 
@@ -257,7 +259,7 @@ export function createCanvasYoutubeExtension() {
             if (embedSrc === null) {
                 const fallback = typeof rawSrc === 'string' && rawSrc.trim() !== '' ? rawSrc.trim() : null;
 
-                if (fallback !== null) {
+                if (fallback !== null && isSafeHttpUrl(fallback)) {
                     return [
                         'div',
                         {

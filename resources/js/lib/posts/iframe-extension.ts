@@ -5,6 +5,7 @@ import {
     CANVAS_IFRAME_PASTE_REGEX,
     iframeAttrsFromPasteMatch,
     iframeLayoutFromSrc,
+    isSafeEmbedSrc,
     resolveIframeEmbedFromUrl,
 } from '@/lib/posts/embeds';
 
@@ -61,9 +62,14 @@ export const CanvasIframe = Node.create<CanvasIframeOptions>({
                         return null;
                     }
 
-                    return (
-                        element.getAttribute('data-src') ?? element.querySelector('iframe')?.getAttribute('src') ?? null
-                    );
+                    const dataSrc = element.getAttribute('data-src');
+                    const raw =
+                        dataSrc !== null && dataSrc !== ''
+                            ? dataSrc
+                            : (element.querySelector('iframe')?.getAttribute('src') ?? null);
+
+                    // Scheme is checked again here. setIframe is not on the path that reloads stored HTML.
+                    return isSafeEmbedSrc(raw) ? raw.trim() : null;
                 },
             },
         };
@@ -74,7 +80,8 @@ export const CanvasIframe = Node.create<CanvasIframeOptions>({
     },
 
     renderHTML({ node, HTMLAttributes }) {
-        const src = (node.attrs.src ?? HTMLAttributes.src) as string | null;
+        const rawSrc = (node.attrs.src ?? HTMLAttributes.src) as string | null;
+        const src = isSafeEmbedSrc(rawSrc) ? rawSrc.trim() : null;
         const layout = src ? iframeLayoutFromSrc(src) : 'video';
 
         const wrapperAttrs = mergeAttributes(this.options.HTMLAttributes, {
@@ -122,7 +129,7 @@ export const CanvasIframe = Node.create<CanvasIframeOptions>({
                     }
 
                     const resolved = resolveIframeEmbedFromUrl(options.src);
-                    const src = resolved?.src ?? (/^https:\/\//i.test(options.src) ? options.src : null);
+                    const src = resolved?.src ?? (isSafeEmbedSrc(options.src) ? options.src.trim() : null);
 
                     if (!src) {
                         return false;

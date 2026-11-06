@@ -11,6 +11,7 @@ use Canvas\Models\Topic;
 use Canvas\Tests\Models\BareUser;
 use Canvas\Tests\Models\User;
 use Canvas\Tests\TestCase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 
@@ -82,6 +83,25 @@ it('shows a paginated listing of published posts only', function (): void {
         ->assertViewHas('posts');
 
     $this->assertSame(3, $response->viewData('posts')->total());
+});
+
+it('does not render a stored unsafe iframe on the public post', function (): void {
+    // Regression: GHSA-8xqp-qv6c-p5r8 — public body is rendered unescaped
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'published_at' => now()->subDay(),
+        'body' => '<p>Visible</p>',
+    ]);
+
+    DB::table('canvas_posts')->where('id', $post->id)->update([
+        'body' => '<p>Visible</p><iframe src="javascript:0"></iframe>',
+    ]);
+
+    $this->get("canvas-ui/{$post->slug}")
+        ->assertSuccessful()
+        ->assertSee('Visible', false)
+        ->assertDontSee('javascript:', false)
+        ->assertDontSee('<iframe', false);
 });
 
 it('shows a single published post', function (): void {
