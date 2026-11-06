@@ -18,6 +18,9 @@ export default defineConfig({
         include: ['resources/js/__tests__/**/*.{test,spec}.{ts,tsx}'],
         setupFiles: ['resources/js/__tests__/setup.ts', 'resources/js/__tests__/setup-dom.ts'],
         clearMocks: true,
+        // Node 26's global localStorage getter returns undefined unless
+        // --localstorage-file is set, which hides happy-dom's storage.
+        execArgv: ['--no-experimental-webstorage'],
         // Editor embed tests insert real Twitter/Vimeo iframe srcs. happy-dom
         // otherwise fetches those pages (and their scripts) over the network.
         environmentOptions: {

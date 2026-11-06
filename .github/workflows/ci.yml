@@ -1,0 +1,191 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  js:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: resources/dist is a clean build of this commit
+        run: |
+          if [ -n "$(git status --porcelain -- resources/dist)" ]; then
+            git status --short -- resources/dist
+            echo "::error::resources/dist does not match a clean build. Run npm run build with the Node in .nvmrc and commit resources/dist."
+            exit 1
+          fi
+
+  php:
+    name: php (${{ matrix.deps }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - deps: lowest
+            php: '8.3'
+          - deps: newest
+            php: '8.5'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip
+          tools: composer:v2
+          coverage: none
+      - if: matrix.deps == 'lowest'
+        run: composer update --prefer-lowest --prefer-stable --no-interaction --no-progress
+      - if: matrix.deps == 'newest'
+        run: composer install --no-interaction --no-progress
+      - if: matrix.deps == 'newest'
+        run: composer pint:test
+      - if: matrix.deps == 'newest'
+        run: composer lint
+      - run: composer test
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Throwaway service containers. These credentials are not secrets.
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: canvas_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: canvas_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      DB_HOST: 127.0.0.1
+      DB_DATABASE: canvas_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.5'
+          extensions: dom, curl, libxml, mbstring, zip, pdo_mysql, pdo_pgsql
+          tools: composer:v2
+          coverage: none
+      - run: composer install --no-interaction --no-progress
+      - name: MySQL
+        env:
+          DB_CONNECTION: mysql
+          DB_PORT: '3306'
+          DB_USERNAME: root
+          DB_PASSWORD: ''
+        run: composer test:database
+      - name: Postgres
+        env:
+          DB_CONNECTION: pgsql
+          DB_PORT: '5432'
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+        run: composer test:database
+
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.3'
+          extensions: dom, curl, libxml, mbstring, zip, sqlite3, pdo_sqlite, fileinfo
+          tools: composer:v2
+          coverage: none
+      - run: bash bin/install-smoke.sh 12
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.5'
+          extensions: dom, curl, libxml, mbstring, zip, sqlite3, pdo_sqlite, fileinfo
+          tools: composer:v2
+          coverage: none
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Laravel 13 host
+        env:
+          E2E_HOST_DIR: ${{ runner.temp }}/canvas-e2e-host
+        run: bash bin/e2e-prepare.sh 13
+      - name: Playwright
+        env:
+          E2E_HOST_DIR: ${{ runner.temp }}/canvas-e2e-host
+        run: npm run e2e
+      - name: Upload results
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-results
+          path: test-results
+          retention-days: 5
+          if-no-files-found: ignore
+
+  ci:
+    if: always()
+    needs: [js, php, database, install, e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every job passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then
+              echo "::error::A required job ended with: $result"
+              exit 1
+            fi
+          done

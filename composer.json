@@ -83,6 +83,7 @@
         "test:install-smoke": "bash bin/install-smoke.sh",
         "pint": "pint",
         "pint:test": "pint --test",
+        "check": ["@pint:test", "@lint", "@test"],
         "pint:fix": "pint",
         "preflight": "bash bin/preflight.sh"
     },

@@ -1,88 +1,63 @@
 version: 2
 updates:
-    - package-ecosystem: 'github-actions'
-      directory: '/'
-      schedule:
-          interval: 'weekly'
-          day: 'monday'
-          time: '06:00'
-          timezone: 'America/Chicago'
-      cooldown:
-          default-days: 5
-      groups:
-          weekly-patch-minor:
-              applies-to: 'version-updates'
-              patterns:
-                  - '*'
-              update-types:
-                  - 'minor'
-                  - 'patch'
-          github-actions:
-              patterns:
-                  - '*'
-      reviewers:
-          - 'austintoddj'
-      labels:
-          - 'github-actions'
-          - 'dependencies'
-      commit-message:
-          prefix: 'chore(deps)'
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Chicago
+    cooldown:
+      default-days: 5
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+      major:
+        patterns: ["*"]
+        update-types: [major]
+    labels:
+      - npm
+      - dependencies
+    commit-message:
+      prefix: chore(deps)
 
-    - package-ecosystem: 'npm'
-      directory: '/'
-      schedule:
-          interval: 'weekly'
-          day: 'monday'
-          time: '06:00'
-          timezone: 'America/Chicago'
-      target-branch: 'develop'
-      cooldown:
-          default-days: 5
-      groups:
-          weekly-patch-minor:
-              applies-to: 'version-updates'
-              patterns:
-                  - '*'
-              update-types:
-                  - 'minor'
-                  - 'patch'
-          tiptap:
-              patterns:
-                  - '@tiptap/*'
-          react-router:
-              patterns:
-                  - 'react-router'
-                  - 'react-router-dom'
-      reviewers:
-          - 'austintoddj'
-      labels:
-          - 'npm'
-          - 'dependencies'
-      commit-message:
-          prefix: 'chore(deps)'
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Chicago
+    cooldown:
+      default-days: 5
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+      major:
+        patterns: ["*"]
+        update-types: [major]
+    labels:
+      - composer
+      - dependencies
+    commit-message:
+      prefix: chore(deps)
 
-    - package-ecosystem: 'composer'
-      directory: '/'
-      schedule:
-          interval: 'weekly'
-          day: 'monday'
-          time: '06:00'
-          timezone: 'America/Chicago'
-      target-branch: 'develop'
-      cooldown:
-          default-days: 5
-      groups:
-          weekly-patch-minor:
-              applies-to: 'version-updates'
-              patterns:
-                  - '*'
-              update-types:
-                  - 'minor'
-                  - 'patch'
-      reviewers:
-          - 'austintoddj'
-      labels:
-          - 'composer'
-          - 'dependencies'
-      commit-message:
-          prefix: 'chore(deps)'
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Chicago
+    cooldown:
+      default-days: 5
+    groups:
+      actions:
+        patterns: ["*"]
+    labels:
+      - github-actions
+      - dependencies
+    commit-message:
+      prefix: chore(deps)
