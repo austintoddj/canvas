@@ -14,11 +14,12 @@
         "e2e:prepare": "bash bin/e2e-prepare.sh",
         "e2e": "playwright test",
         "e2e:ui": "playwright test --ui",
-        "preflight": "bash bin/preflight.sh"
+        "preflight": "bash bin/preflight.sh",
+        "check": "npm run typecheck && npm run lint && npm test && npm run build && composer check"
     },
     "dependencies": {
         "@headlessui/react": "^2.2.10",
-        "@tabler/icons-react": "^3.45.0",
+        "@tabler/icons-react": "^3.50.0",
         "@tiptap/extension-audio": "^3.32.0",
         "@tiptap/extension-character-count": "^3.32.0",
         "@tiptap/extension-code-block-lowlight": "^3.32.0",
@@ -41,7 +42,7 @@
         "motion": "^12.42.0",
         "react": "^19.3.1",
         "react-dom": "^19.3.1",
-        "react-router-dom": "^7.18.4",
+        "react-router-dom": "^7.18.5",
         "tailwind-merge": "^3.3.1"
     },
     "devDependencies": {
@@ -66,7 +67,7 @@
         "tailwindcss": "^4.3.1",
         "typescript": "npm:@typescript/typescript6@^6.0.0",
         "typescript-7": "npm:typescript@^7",
-        "typescript-eslint": "^8.72.0",
+        "typescript-eslint": "^8.72.1",
         "vitest": "^4.1.10"
     }
 }

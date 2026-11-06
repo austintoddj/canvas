@@ -12,7 +12,7 @@ Pull requests are welcome and preferred when you already have a fix. Keep each p
 
 ## Which branch?
 
-Open pull requests against the `develop` branch unless an issue or maintainer asks you to use another branch (for example a version branch during a major release).
+Open pull requests against `main`.
 
 ## Local development
 
@@ -40,7 +40,7 @@ npm install
 npm run dev
 ```
 
-Use PHP 8.3+ and a Laravel major supported by the package (`composer.json` and CI). Node 22 matches CI for JavaScript checks.
+Use PHP 8.3+ and a Laravel major supported by the package (`composer.json` and CI). Use the Node version in `.nvmrc` for JavaScript checks and for `npm run build`. CI uses that same version.
 
 Host installation and usage are documented under [`docs/`](../docs/).
 
@@ -49,7 +49,7 @@ Host installation and usage are documented under [`docs/`](../docs/).
 Before submitting a pull request, please:
 
 1. Run the test suite and static checks that apply to your change.
-2. If you changed the admin SPA, run `npm run build` and **commit** the updated files in `resources/dist`. Hosts serve those published assets; CI does not rebuild them for consumers.
+2. If you changed the admin SPA, run `npm run build` with the Node version in `.nvmrc` and **commit** `resources/dist`. CI rebuilds that folder and fails if it does not match.
 3. If you changed host-facing behavior, update the matching page under [`docs/`](../docs/).
 4. If you changed UI copy, update every language file (see [translations](#translations)).
 
@@ -80,6 +80,16 @@ You may verify key parity with:
 
 ```bash
 composer test -- --filter=LocalizationTest
+```
+
+## Releasing
+
+A version tag on `main` is a release. Packagist reads the tag. Tag only a `main` commit whose `ci` run is green. Never move or delete a tag. A bad release is fixed with the next patch version.
+
+```bash
+gh run list -R austintoddj/canvas -b main -w ci -L 1
+git fetch origin && git tag -a vX.Y.Z -m vX.Y.Z origin/main && git push origin vX.Y.Z
+gh release create vX.Y.Z -R austintoddj/canvas --verify-tag --generate-notes
 ```
 
 ## Coding style

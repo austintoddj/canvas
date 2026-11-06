@@ -12,8 +12,8 @@ Laravel publishing **package** (`austintoddj/canvas`): PHP API + React admin SPA
 - **Secrets:** never commit `.env`, webhook secrets, AI keys, or host credentials; never log them in tests/fixtures.
 - **Runtime:** Pest runs in-package via Orchestra Testbench — no sibling Laravel app required. E2E and install-smoke need a host (`bin/e2e-prepare.sh`, `bin/install-smoke.sh`). Do not invent a full app scaffold for unit work.
 - **Patterns:** copy neighboring controllers/pages/tests. Do not introduce new layers (repositories, global stores, foundation deps) without local precedent.
-- **Tests:** while iterating, filter Pest/Vitest to the touched area; run `composer test -- --filter=LocalizationTest` when changing `resources/lang` or UI copy; full PR gate below before calling work done.
-- **Git:** do not perform any Git actions unless the user explicitly grants permission.
+- **Tests:** while iterating, filter Pest/Vitest to the touched area; run `composer test -- --filter=LocalizationTest` when changing `resources/lang` or UI copy. Before calling work done, run `npm run check` (see Verify).
+- **Git:** open a pull request when the user asks for the change. Do not push to `main`, create tags, or merge.
 
 ## Layout
 
@@ -37,7 +37,7 @@ Path alias: `@/*` → `resources/js/*` (`tsconfig.json`, `vite.config.ts`).
 ## Tooling
 
 - **PHP** ≥ 8.3 (prefer newest CI matrix PHP), **Laravel** 12|13 (prefer newest major APIs; Illuminate components only — not full `laravel/framework` as a require)
-- **Node** 22 (CI), **npm** + `package-lock.json` (`.npmrc`: `legacy-peer-deps=true`)
+- **Node** from `.nvmrc` (26), **npm** + `package-lock.json` (`.npmrc`: `legacy-peer-deps=true`)
 - Pest + Arch, Orchestra Testbench, Larastan **level 6**, Laravel Pint
 - Vitest (happy-dom/jsdom via setup), Playwright e2e, ESLint 10 flat config, Prettier
 
@@ -97,12 +97,12 @@ bash bin/preflight.sh    # or: npm run preflight | composer preflight
 
 Config touchpoints: `phpunit.xml.dist`, `phpstan.neon.dist`, `vitest.config.ts`, `playwright.config.ts`, `eslint.config.js`, `.prettierrc`, `vite.config.ts`, `testbench.yaml`.
 
-## PR quality gate (match CI)
+## Verify
 
-1. `npm run typecheck && npm run lint && npm test`
-2. `npm run build` — **commit** `resources/dist/` if SPA changed
-3. `composer pint:test && composer lint && composer test:ci`
-4. UI strings: full lang catalog + `composer test -- --filter=LocalizationTest`
+- Run `npm run check` locally. Nothing else. In Canvas it rebuilds `resources/dist`; commit that with your change.
+- Don't run e2e, the install smoke, the database tests, a dev server, a browser, or screenshots to verify a change. CI does that.
+- Open a PR and wait on `gh pr checks --watch`. Read the failing step and fix that.
+- Rerun a failed check at most once (`gh run rerun <run-id> --failed`). A second failure is real; report it.
 
 ## Do
 
@@ -120,6 +120,12 @@ Config touchpoints: `phpunit.xml.dist`, `phpstan.neon.dist`, `vitest.config.ts`,
 
 ## Don't
 
+- Push to the default branch, create or push tags, publish or stage a package, merge PRs, or turn on auto-merge for your own PRs.
+- Edit files in `.github/`, rulesets, repo or Actions settings, or npm or Packagist settings. Propose those in the PR description.
+- Add CI jobs, versions, browsers, or checks.
+- Check out, install, or run an outside contributor's branch. Read the diff on GitHub instead.
+- Post on issues, PRs, discussions, or security advisories you didn't open.
+- Send real email or call real third-party services from tests.
 - Add `illuminate/foundation` as a package require; don't import foundation FormRequest in `src/`.
 - Eager-load host `canvasUser` relations from core package code (`tests/Architecture/HostSeamsTest.php`).
 - Use `dd` / `dump` / `die` / `var_dump` in package code.
@@ -136,4 +142,4 @@ Config touchpoints: `phpunit.xml.dist`, `phpstan.neon.dist`, `vitest.config.ts`,
 
 - Roles: Contributor / Editor / Admin (`Canvas\Enums\Role`). Integrations: Unsplash, AI writing, webhooks, weekly digest.
 - Publish wire: ISO-8601 with offset/Z for `published_at` HTTP payloads (see `publishedAtIso()` in `tests/Pest.php`).
-- Default PR target: `develop` (see `.github/CONTRIBUTING.md` for host path-repo workflow).
+- Default PR target: `main` (see `.github/CONTRIBUTING.md` for host path-repo workflow).
