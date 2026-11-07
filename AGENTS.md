@@ -30,7 +30,7 @@ Laravel publishing **package** (`austintoddj/canvas`): PHP API + React admin SPA
 | `resources/dist/`                             | **Committed** Vite build — hosts serve this                        |
 | `resources/views/`, `resources/stubs/`        | Blade layout/mail + `canvas:ui` stubs (code only; no host manuals) |
 | `tests/`                                      | Pest (PHP); `tests/e2e/` Playwright                                |
-| `bin/`                                        | `preflight.sh`, `install-smoke.sh`, `e2e-prepare.sh`               |
+| `bin/`                                        | `ci.sh`, `preflight.sh`, `install-smoke.sh`, `e2e-prepare.sh`       |
 
 Path alias: `@/*` → `resources/js/*` (`tsconfig.json`, `vite.config.ts`).
 
@@ -89,18 +89,25 @@ npm run e2e              # playwright (tests/e2e/)
 npm run e2e:ui
 ```
 
-### Preflight (deps + lint + build + pint)
+### CI checks
+
+`npm run check` is the short loop: typecheck, lint, unit tests, the production build, and `composer check`.
+
+`npm run ci` is the local merge gate: JavaScript checks (including a clean `resources/dist`), Pint's check, PHPStan, Pest, the Laravel 12 install smoke, and Playwright against a Laravel 13 host. `npm run preflight` and `composer preflight` install dependencies when `node_modules` or `vendor` is missing, then run that same script. Formatting stays on `npm run format` and `composer pint`.
 
 ```bash
-bash bin/preflight.sh    # or: npm run preflight | composer preflight
+npm run ci               # or: composer ci
+npm run preflight        # or: composer preflight
 ```
+
+GitHub also runs PHP 8.3 with the lowest dependencies, plus MySQL and Postgres.
 
 Config touchpoints: `phpunit.xml.dist`, `phpstan.neon.dist`, `vitest.config.ts`, `playwright.config.ts`, `eslint.config.js`, `.prettierrc`, `vite.config.ts`, `testbench.yaml`.
 
 ## Verify
 
-- Run `npm run check` locally. Nothing else. In Canvas it rebuilds `resources/dist`; commit that with your change.
-- Don't run e2e, the install smoke, the database tests, a dev server, a browser, or screenshots to verify a change. CI does that.
+- Run `npm run check` locally while iterating. In Canvas it rebuilds `resources/dist`; commit that with your change.
+- Don't run e2e, the install smoke, the database tests, a dev server, a browser, or screenshots to verify a change. `npm run ci` is the full local gate when you are debugging CI. GitHub runs the lowest PHP dependencies and the database tests.
 - Open a PR and wait on `gh pr checks --watch`. Read the failing step and fix that.
 - Rerun a failed check at most once (`gh run rerun <run-id> --failed`). A second failure is real; report it.
 

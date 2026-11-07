@@ -85,6 +85,7 @@
         "pint:test": "pint --test",
         "check": ["@pint:test", "@lint", "@test"],
         "pint:fix": "pint",
+        "ci": "bash bin/ci.sh",
         "preflight": "bash bin/preflight.sh"
     },
     "extra": {

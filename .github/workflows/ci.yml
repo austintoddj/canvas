@@ -25,17 +25,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build
-      - name: resources/dist is a clean build of this commit
-        run: |
-          if [ -n "$(git status --porcelain -- resources/dist)" ]; then
-            git status --short -- resources/dist
-            echo "::error::resources/dist does not match a clean build. Run npm run build with the Node in .nvmrc and commit resources/dist."
-            exit 1
-          fi
+      - run: bash bin/ci.sh js
 
   php:
     name: php (${{ matrix.deps }})
@@ -63,11 +53,10 @@ jobs:
         run: composer update --prefer-lowest --prefer-stable --no-interaction --no-progress
       - if: matrix.deps == 'newest'
         run: composer install --no-interaction --no-progress
+      - if: matrix.deps == 'lowest'
+        run: bash bin/ci.sh php-test
       - if: matrix.deps == 'newest'
-        run: composer pint:test
-      - if: matrix.deps == 'newest'
-        run: composer lint
-      - run: composer test
+        run: bash bin/ci.sh php
 
   database:
     runs-on: ubuntu-latest
@@ -155,15 +144,10 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - name: Laravel 13 host
+      - name: Install smoke host and Playwright
         env:
           E2E_HOST_DIR: ${{ runner.temp }}/canvas-e2e-host
-        run: bash bin/e2e-prepare.sh 13
-      - name: Playwright
-        env:
-          E2E_HOST_DIR: ${{ runner.temp }}/canvas-e2e-host
-        run: npm run e2e
+        run: bash bin/ci.sh e2e
       - name: Upload results
         if: failure()
         continue-on-error: true
