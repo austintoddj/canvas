@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 #
-# Checks GitHub runs after install. Preflight calls this with no arguments.
-# GitHub also runs PHP 8.3 with the lowest dependencies, plus MySQL and Postgres.
+# Checks GitHub runs after install.
+# GitHub also runs Pest on Laravel 12 with PHP 8.3, plus MySQL and Postgres.
 #
 # Usage:
 #   bin/ci.sh            # js, php, install smoke, and e2e
+#   bin/ci.sh commit     # js and php
 #   bin/ci.sh js
 #   bin/ci.sh php
 #   bin/ci.sh php-test
@@ -77,6 +78,12 @@ case "${1:-all}" in
   php) php ;;
   php-test) php_test ;;
   e2e) e2e ;;
+  commit)
+    js
+    php
+    echo ""
+    echo "==> Commit checks passed."
+    ;;
   all)
     js
     php
