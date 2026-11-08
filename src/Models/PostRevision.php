@@ -6,6 +6,8 @@ namespace Canvas\Models;
 
 use Canvas\Database\Factories\PostRevisionFactory;
 use Canvas\Enums\RevisionReason;
+use Canvas\Support\PostBody;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -40,6 +42,14 @@ class PostRevision extends Model
     protected static function newFactory(): PostRevisionFactory
     {
         return PostRevisionFactory::new();
+    }
+
+    /**
+     * @return Attribute<?string, ?string>
+     */
+    protected function body(): Attribute
+    {
+        return PostBody::eloquentAttribute();
     }
 
     /**

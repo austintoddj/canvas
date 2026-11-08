@@ -293,6 +293,37 @@ describe('post editor media round-trip', () => {
         expect(editor.getHTML()).not.toContain('data-invalid-youtube');
     });
 
+    it('does not materialize a non-https iframe from stored html', () => {
+        editor = createEditor(
+            '<div data-canvas-iframe="" data-src="javascript:0"><iframe src="javascript:0"></iframe></div>'
+        );
+
+        expect(editor.view.dom.querySelector('iframe')).toBeNull();
+        expect(editor.getHTML().toLowerCase()).not.toContain('javascript:');
+
+        editor.commands.setContent(
+            '<div data-canvas-iframe="" data-src="https://player.vimeo.com/video/1"><iframe src="https://player.vimeo.com/video/1" srcdoc="<p>x</p>"></iframe></div>',
+            { emitUpdate: false }
+        );
+
+        const iframe = editor.view.dom.querySelector('iframe');
+        expect(iframe?.getAttribute('src')).toBe('https://player.vimeo.com/video/1');
+        expect(iframe?.hasAttribute('srcdoc')).toBe(false);
+        expect(editor.getHTML().toLowerCase()).not.toContain('srcdoc');
+        expect(editor.commands.setIframe({ src: 'javascript:0' })).toBe(false);
+    });
+
+    it('does not turn an invalid youtube src into a javascript link', () => {
+        editor = createEditor({
+            type: 'doc',
+            content: [{ type: 'youtube', attrs: { src: 'javascript:0' } }],
+        } as never);
+
+        expect(editor.getHTML().toLowerCase()).not.toContain('javascript:');
+        expect(editor.view.dom.querySelector('iframe')).toBeNull();
+        expect(editor.view.dom.querySelector('a')).toBeNull();
+    });
+
     it('loads mixed X and YouTube embed HTML without throwing', () => {
         const html = [
             '<p>embeds</p>',

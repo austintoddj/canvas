@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Canvas\Models;
 
 use Canvas\Database\Factories\PostFactory;
+use Canvas\Support\PostBody;
 use Canvas\Support\ReadTime;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Casts\Json;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -58,7 +61,6 @@ class Post extends Model
         'published_at' => 'datetime',
         'published_notified_at' => 'datetime',
         'meta' => 'array',
-        'pending' => 'array',
     ];
 
     protected static function newFactory(): PostFactory
@@ -120,6 +122,49 @@ class Post extends Model
     public function revisions(): HasMany
     {
         return $this->hasMany(PostRevision::class);
+    }
+
+    /**
+     * @return Attribute<?string, ?string>
+     */
+    protected function body(): Attribute
+    {
+        return PostBody::eloquentAttribute();
+    }
+
+    /**
+     * @return Attribute<array<string, mixed>|null, array<string, mixed>|null>
+     */
+    protected function pending(): Attribute
+    {
+        return Attribute::make(
+            get: static function (mixed $value): ?array {
+                if (is_array($value)) {
+                    return PostBody::cleanPending($value);
+                }
+
+                if (! is_string($value) || $value === '') {
+                    return null;
+                }
+
+                $decoded = Json::decode($value);
+
+                return is_array($decoded) ? PostBody::cleanPending($decoded) : null;
+            },
+            set: static function (mixed $value): ?string {
+                if ($value === null) {
+                    return null;
+                }
+
+                if (! is_array($value)) {
+                    return null;
+                }
+
+                $encoded = Json::encode(PostBody::cleanPending($value));
+
+                return is_string($encoded) ? $encoded : null;
+            },
+        );
     }
 
     public function getReadTimeAttribute(): string
@@ -211,7 +256,9 @@ class Post extends Model
             'title' => $data['title'] ?? $this->title,
             'slug' => $data['slug'] ?? $this->slug,
             'summary' => array_key_exists('summary', $data) ? $data['summary'] : $this->summary,
-            'body' => array_key_exists('body', $data) ? $data['body'] : $this->body,
+            'body' => array_key_exists('body', $data)
+                ? PostBody::clean(is_string($data['body']) ? $data['body'] : null)
+                : $this->body,
             'featured_image' => array_key_exists('featured_image', $data) ? $data['featured_image'] : $this->featured_image,
             'featured_image_caption' => array_key_exists('featured_image_caption', $data)
                 ? $data['featured_image_caption']

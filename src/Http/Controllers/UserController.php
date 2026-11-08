@@ -124,6 +124,12 @@ class UserController extends Controller
 
     public function posts(Model $user): JsonResponse
     {
+        $currentUser = request()->user(config('canvas.guard'));
+
+        if ((string) $currentUser->getKey() !== (string) $user->getKey()) {
+            Gate::forUser($currentUser)->authorize('viewAll', Post::class);
+        }
+
         return response()->json(
             Post::query()
                 ->where('user_id', $user->getKey())

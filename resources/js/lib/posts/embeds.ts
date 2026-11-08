@@ -7,6 +7,62 @@
  * provider enum; the node schema is just `{ src }`.
  */
 
+const UNSAFE_EMBED_SCHEME = /^(?:javascript|data|vbscript|blob|file):/i;
+
+function stripUrlControls(value: string): string {
+    let stripped = '';
+
+    for (const char of value) {
+        const code = char.charCodeAt(0);
+
+        if (code <= 32 || code === 127) {
+            continue;
+        }
+
+        stripped += char;
+    }
+
+    return stripped;
+}
+
+function hasUnsafeEmbedScheme(value: string): boolean {
+    return UNSAFE_EMBED_SCHEME.test(stripUrlControls(value.trim()));
+}
+
+/**
+ * http(s) URL with a real host. Rejects scheme tricks such as whitespace inside `javascript:`.
+ */
+export function isSafeHttpUrl(src: unknown): src is string {
+    if (typeof src !== 'string') {
+        return false;
+    }
+
+    const trimmed = src.trim();
+
+    if (trimmed === '' || hasUnsafeEmbedScheme(trimmed)) {
+        return false;
+    }
+
+    try {
+        const url = new URL(trimmed);
+
+        return (url.protocol === 'https:' || url.protocol === 'http:') && url.hostname !== '';
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Iframe embeds are https only. The insert command used to be the only place this was enforced.
+ */
+export function isSafeEmbedSrc(src: unknown): src is string {
+    if (!isSafeHttpUrl(src)) {
+        return false;
+    }
+
+    return new URL(src.trim()).protocol === 'https:';
+}
+
 export type ResolvedIframeEmbed = {
     /** iframe-ready embed URL stored on the node. */
     src: string;

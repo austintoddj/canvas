@@ -30,14 +30,14 @@ Laravel publishing **package** (`austintoddj/canvas`): PHP API + React admin SPA
 | `resources/dist/`                             | **Committed** Vite build — hosts serve this                        |
 | `resources/views/`, `resources/stubs/`        | Blade layout/mail + `canvas:ui` stubs (code only; no host manuals) |
 | `tests/`                                      | Pest (PHP); `tests/e2e/` Playwright                                |
-| `bin/`                                        | `preflight.sh`, `install-smoke.sh`, `e2e-prepare.sh`               |
+| `bin/`                                        | `ci.sh`, `preflight.sh`, `install-smoke.sh`, `e2e-prepare.sh`       |
 
 Path alias: `@/*` → `resources/js/*` (`tsconfig.json`, `vite.config.ts`).
 
 ## Tooling
 
 - **PHP** ≥ 8.3 (prefer newest CI matrix PHP), **Laravel** 12|13 (prefer newest major APIs; Illuminate components only — not full `laravel/framework` as a require)
-- **Node** from `.nvmrc` (26), **npm** + `package-lock.json` (`.npmrc`: `legacy-peer-deps=true`)
+- **Node** from `.nvmrc`, **npm** + `package-lock.json` (`.npmrc`: `legacy-peer-deps=true`)
 - Pest + Arch, Orchestra Testbench, Larastan **level 6**, Laravel Pint
 - Vitest (happy-dom/jsdom via setup), Playwright e2e, ESLint 10 flat config, Prettier
 
@@ -89,18 +89,28 @@ npm run e2e              # playwright (tests/e2e/)
 npm run e2e:ui
 ```
 
-### Preflight (deps + lint + build + pint)
+### CI checks
+
+`npm run check` is the short loop: typecheck, lint, unit tests, the production build, and `composer check`. It does not format, and it does not check that `resources/dist` is clean.
+
+`npm run preflight` is the commit check. It installs `node_modules` or `vendor` when the directory is missing, runs Prettier and Pint, then the JavaScript checks (including a clean `resources/dist`), Pint's check, PHPStan, and Pest. It rewrites files. It does not run the install smoke or Playwright. While iterating, run `npm run check` instead.
+
+`npm run ci` is the full local gate: the same JavaScript and PHP checks without formatting, the Laravel 12 install smoke, and Playwright against a Laravel 13 host.
 
 ```bash
-bash bin/preflight.sh    # or: npm run preflight | composer preflight
+npm run check
+npm run preflight        # or: composer preflight
+npm run ci               # or: composer ci
 ```
+
+GitHub runs Pest on Laravel 12 with PHP 8.3, the lockfile checks on Laravel 13 with PHP 8.5, plus MySQL and Postgres.
 
 Config touchpoints: `phpunit.xml.dist`, `phpstan.neon.dist`, `vitest.config.ts`, `playwright.config.ts`, `eslint.config.js`, `.prettierrc`, `vite.config.ts`, `testbench.yaml`.
 
 ## Verify
 
-- Run `npm run check` locally. Nothing else. In Canvas it rebuilds `resources/dist`; commit that with your change.
-- Don't run e2e, the install smoke, the database tests, a dev server, a browser, or screenshots to verify a change. CI does that.
+- Run `npm run check` locally while iterating. In Canvas it rebuilds `resources/dist`; commit that with your change.
+- Don't run e2e, the install smoke, the database tests, a dev server, a browser, or screenshots to verify a change. `npm run ci` is the full local gate when you are debugging CI. GitHub runs Pest on Laravel 12 and the database tests on the lockfile.
 - Open a PR and wait on `gh pr checks --watch`. Read the failing step and fix that.
 - Rerun a failed check at most once (`gh run rerun <run-id> --failed`). A second failure is real; report it.
 
