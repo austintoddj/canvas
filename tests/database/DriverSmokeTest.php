@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
-// Focused suite for real MySQL / Postgres CI drivers (see workflow php-database job).
+// Focused suite for real MySQL and Postgres. The database job in .github/workflows/ci.yml runs it.
 uses()->group('database');
 
 it('runs on a real database driver connection', function (): void {

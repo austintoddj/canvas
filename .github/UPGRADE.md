@@ -102,7 +102,7 @@ Details: [docs/webhooks.md](../docs/webhooks.md).
 
 #### Support window
 
-Canvas 7 requires PHP 8.3+ and Laravel 12 or 13. Laravel 11 and PHP 8.2 are not supported. Treat `composer.json` and `.github/workflows/tests.yml` as the live source of truth.
+Canvas 7 requires PHP 8.3+ and Laravel 12 or 13. Laravel 11 and PHP 8.2 are not supported. Treat `composer.json` and `.github/workflows/ci.yml` as the live source of truth.
 
 ## Upgrading to 6.0.0 from 5.4
 

@@ -28,17 +28,19 @@ jobs:
       - run: bash bin/ci.sh js
 
   php:
-    name: php (${{ matrix.deps }})
+    name: php (${{ matrix.name }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         include:
-          - deps: lowest
+          - name: laravel-12
             php: '8.3'
-          - deps: newest
+            laravel: '12'
+          - name: laravel-13
             php: '8.5'
+            laravel: '13'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -49,13 +51,37 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip
           tools: composer:v2
           coverage: none
-      - if: matrix.deps == 'lowest'
-        run: composer update --prefer-lowest --prefer-stable --no-interaction --no-progress
-      - if: matrix.deps == 'newest'
+      - name: Install Laravel 12
+        if: matrix.laravel == '12'
+        run: |
+          composer require "orchestra/testbench:^10.8" --dev --no-update --no-interaction --no-progress
+          composer update --no-interaction --no-progress --prefer-dist
+          php -r '
+          $lock = json_decode(file_get_contents("composer.lock"), true);
+          $want = ["laravel/framework" => "v12.", "orchestra/testbench" => "v10."];
+          $found = [];
+          foreach (["packages", "packages-dev"] as $section) {
+              foreach ($lock[$section] ?? [] as $package) {
+                  if (isset($want[$package["name"]])) {
+                      $found[$package["name"]] = $package["version"];
+                  }
+              }
+          }
+          foreach ($want as $name => $prefix) {
+              $version = $found[$name] ?? "";
+              if (!str_starts_with($version, $prefix)) {
+                  fwrite(STDERR, "$name resolved to \"$version\", expected {$prefix}*\n");
+                  exit(1);
+              }
+              echo "$name $version\n";
+          }
+          '
+      - name: Install Laravel 13
+        if: matrix.laravel == '13'
         run: composer install --no-interaction --no-progress
-      - if: matrix.deps == 'lowest'
+      - if: matrix.laravel == '12'
         run: bash bin/ci.sh php-test
-      - if: matrix.deps == 'newest'
+      - if: matrix.laravel == '13'
         run: bash bin/ci.sh php
 
   database:
@@ -129,6 +155,9 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

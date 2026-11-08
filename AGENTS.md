@@ -37,7 +37,7 @@ Path alias: `@/*` → `resources/js/*` (`tsconfig.json`, `vite.config.ts`).
 ## Tooling
 
 - **PHP** ≥ 8.3 (prefer newest CI matrix PHP), **Laravel** 12|13 (prefer newest major APIs; Illuminate components only — not full `laravel/framework` as a require)
-- **Node** from `.nvmrc` (26), **npm** + `package-lock.json` (`.npmrc`: `legacy-peer-deps=true`)
+- **Node** from `.nvmrc`, **npm** + `package-lock.json` (`.npmrc`: `legacy-peer-deps=true`)
 - Pest + Arch, Orchestra Testbench, Larastan **level 6**, Laravel Pint
 - Vitest (happy-dom/jsdom via setup), Playwright e2e, ESLint 10 flat config, Prettier
 
@@ -91,23 +91,26 @@ npm run e2e:ui
 
 ### CI checks
 
-`npm run check` is the short loop: typecheck, lint, unit tests, the production build, and `composer check`.
+`npm run check` is the short loop: typecheck, lint, unit tests, the production build, and `composer check`. It does not format, and it does not check that `resources/dist` is clean.
 
-`npm run ci` is the local merge gate: JavaScript checks (including a clean `resources/dist`), Pint's check, PHPStan, Pest, the Laravel 12 install smoke, and Playwright against a Laravel 13 host. `npm run preflight` and `composer preflight` install dependencies when `node_modules` or `vendor` is missing, then run that same script. Formatting stays on `npm run format` and `composer pint`.
+`npm run preflight` is the commit check. It installs `node_modules` or `vendor` when the directory is missing, runs Prettier and Pint, then the JavaScript checks (including a clean `resources/dist`), Pint's check, PHPStan, and Pest. It rewrites files. It does not run the install smoke or Playwright. While iterating, run `npm run check` instead.
+
+`npm run ci` is the full local gate: the same JavaScript and PHP checks without formatting, the Laravel 12 install smoke, and Playwright against a Laravel 13 host.
 
 ```bash
-npm run ci               # or: composer ci
+npm run check
 npm run preflight        # or: composer preflight
+npm run ci               # or: composer ci
 ```
 
-GitHub also runs PHP 8.3 with the lowest dependencies, plus MySQL and Postgres.
+GitHub runs Pest on Laravel 12 with PHP 8.3, the lockfile checks on Laravel 13 with PHP 8.5, plus MySQL and Postgres.
 
 Config touchpoints: `phpunit.xml.dist`, `phpstan.neon.dist`, `vitest.config.ts`, `playwright.config.ts`, `eslint.config.js`, `.prettierrc`, `vite.config.ts`, `testbench.yaml`.
 
 ## Verify
 
 - Run `npm run check` locally while iterating. In Canvas it rebuilds `resources/dist`; commit that with your change.
-- Don't run e2e, the install smoke, the database tests, a dev server, a browser, or screenshots to verify a change. `npm run ci` is the full local gate when you are debugging CI. GitHub runs the lowest PHP dependencies and the database tests.
+- Don't run e2e, the install smoke, the database tests, a dev server, a browser, or screenshots to verify a change. `npm run ci` is the full local gate when you are debugging CI. GitHub runs Pest on Laravel 12 and the database tests on the lockfile.
 - Open a PR and wait on `gh pr checks --watch`. Read the failing step and fix that.
 - Rerun a failed check at most once (`gh run rerun <run-id> --failed`). A second failure is real; report it.
 

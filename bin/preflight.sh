@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Local run of the CI checks.
+# Ready to commit. Formats, then runs the JavaScript and PHP checks.
+# The install smoke and Playwright stay on bin/ci.sh.
 #
 # Usage:
 #   bin/preflight.sh
@@ -23,4 +24,12 @@ if [[ ! -d vendor ]]; then
   composer install --no-interaction --no-progress
 fi
 
-exec "${ROOT}/bin/ci.sh"
+echo ""
+echo "==> npm run format"
+npm run format
+
+echo ""
+echo "==> composer pint"
+composer pint
+
+exec "${ROOT}/bin/ci.sh" commit
