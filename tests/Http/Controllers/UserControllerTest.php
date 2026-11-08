@@ -132,6 +132,45 @@ describe('when listing users', function (): void {
         $this->assertCount(1, $response->getOriginalContent());
     });
 
+    // Regression: GHSA-44cp-9fph-8778 — a contributor can read another author's posts, including drafts.
+    it('forbids a contributor from reading another authors posts', function (): void {
+        $author = User::factory()->contributor()->create();
+
+        Post::factory()->draft()->create([
+            'user_id' => $author->id,
+            'body' => 'secret-draft-body',
+        ]);
+
+        $this->actingAsContributor()
+            ->getJson("canvas/api/users/{$author->id}/posts")
+            ->assertForbidden()
+            ->assertDontSee('secret-draft-body');
+    });
+
+    it('lets a contributor read their own posts', function (): void {
+        Post::factory()->draft()->create([
+            'user_id' => $this->contributor->id,
+            'body' => 'own-draft-body',
+        ]);
+
+        $this->actingAsContributor()
+            ->getJson("canvas/api/users/{$this->contributor->id}/posts")
+            ->assertSuccessful()
+            ->assertSee('own-draft-body');
+    });
+
+    it('lets an editor read another authors draft', function (): void {
+        Post::factory()->draft()->create([
+            'user_id' => $this->contributor->id,
+            'body' => 'editor-visible-draft',
+        ]);
+
+        $this->actingAsEditor()
+            ->getJson("canvas/api/users/{$this->contributor->id}/posts")
+            ->assertSuccessful()
+            ->assertSee('editor-visible-draft');
+    });
+
     it('returns not found for unknown users', function (): void {
         $this->actingAsAdmin()
             ->getJson('canvas/api/users/not-a-user')
