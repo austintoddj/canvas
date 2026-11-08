@@ -1,0 +1,1 @@
+import{_ as e,h as t}from"./jsx-runtime-BsOE6Zmu.js";var n=e(t(),1),r=`Canvas`;function i(e,t=r){let n=e?.trim()??``;return n===``?t:`${n} ― ${t}`}function a(e){(0,n.useEffect)(()=>{document.title=i(e)},[e])}export{a as t};
