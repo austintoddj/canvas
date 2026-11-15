@@ -30,7 +30,7 @@ class UserController extends Controller
         $hostTable = (new $userModel)->getTable();
 
         $canvasUsers = CanvasUser::query()
-            ->with(['user' => fn ($query) => $query->select('id', 'name', 'email')])
+            ->with('user')
             ->join($hostTable, 'canvas_users.user_id', '=', "{$hostTable}.id")
             ->orderByDesc("{$hostTable}.created_at")
             ->select('canvas_users.*')
@@ -73,7 +73,7 @@ class UserController extends Controller
 
         return response()->json([
             'id' => $user->getKey(),
-            'name' => data_get($user, 'name'),
+            'name' => HostUser::name($user),
             'email' => $email,
             'avatar_url' => AuthorAvatar::url($canvasUser?->avatar),
             'has_canvas_access' => $canvasUser !== null,
@@ -115,7 +115,7 @@ class UserController extends Controller
     public function show(Model $user): UserResource
     {
         $canvasUser = CanvasUser::query()
-            ->with(['user' => fn ($query) => $query->select('id', 'name', 'email')])
+            ->with('user')
             ->withPostsCount()
             ->findOrFail($user->getKey());
 

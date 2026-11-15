@@ -9,11 +9,13 @@ use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Canvas\Support\AuthorAvatar;
+use Canvas\Support\HostUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class SearchController extends Controller
 {
@@ -117,27 +119,24 @@ class SearchController extends Controller
     private function searchUsers(string $query): array
     {
         return CanvasUser::query()
-            ->with(['user' => fn ($query) => $query->select('id', 'name', 'email')])
-            ->when($query !== '', function (Builder $builder) use ($query): void {
-                $builder->where(function (Builder $nested) use ($query): void {
-                    $nested->where('username', 'like', "%{$query}%")
-                        ->orWhereHas('user', function (Builder $user) use ($query): void {
-                            $user->where('name', 'like', "%{$query}%");
-                        });
-                });
-            })
+            ->with('user')
             ->latest('user_id')
-            ->limit(self::RESULTS_PER_TYPE)
-            ->get()
+            // Host accessors may combine arbitrary columns, so match names after hydration.
+            ->lazy($query === '' ? self::RESULTS_PER_TYPE : 100)
+            ->filter(fn (CanvasUser $canvasUser): bool => $query === ''
+                || Str::contains(HostUser::name($canvasUser->user) ?? '', $query, ignoreCase: true)
+                || Str::contains($canvasUser->username ?? '', $query, ignoreCase: true))
+            ->take(self::RESULTS_PER_TYPE)
             ->map(fn (CanvasUser $canvasUser) => [
                 'id' => $canvasUser->user_id,
-                'name' => data_get($canvasUser->user, 'name'),
+                'name' => HostUser::name($canvasUser->user),
                 'email' => data_get($canvasUser->user, 'email'),
                 'username' => $canvasUser->username,
                 'avatar_url' => AuthorAvatar::url($canvasUser->avatar),
                 'type' => 'User',
                 'route' => 'edit-user',
             ])
+            ->values()
             ->all();
     }
 }

@@ -1,9 +1,10 @@
 @extends('canvas::ui.layout')
 
 @php
+    $authorName = \Canvas\Support\HostUser::name($user);
     $canvasUser = $user->relationLoaded('canvasUser') ? $user->getRelation('canvasUser') : null;
     $avatarUrl = \Canvas\Support\AuthorAvatar::url($canvasUser?->avatar);
-    $initials = collect(preg_split('/\s+/', trim((string) $user->name) ?: '') ?: [])
+    $initials = collect(preg_split('/\s+/', trim((string) $authorName) ?: '') ?: [])
         ->filter()
         ->take(2)
         ->map(fn (string $part) => mb_strtoupper(mb_substr($part, 0, 1)))
@@ -13,19 +14,19 @@
     }
     $authorDescription = filled($canvasUser?->summary)
         ? $canvasUser->summary
-        : 'Posts by '.$user->name.'.';
+        : 'Posts by '.$authorName.'.';
 @endphp
 
-@section('title', $user->name . ' — ' . config('app.name'))
+@section('title', $authorName . ' — ' . config('app.name'))
 
 @push('head')
     @include('canvas::ui.partials.meta', [
-        'title' => $user->name,
+        'title' => $authorName,
         'description' => $authorDescription,
         'url' => route('canvas-ui.author', $canvasUser?->username ?? ''),
         'type' => 'website',
         'image' => $avatarUrl,
-        'imageAlt' => $user->name,
+        'imageAlt' => $authorName,
     ])
 @endpush
 
@@ -33,7 +34,7 @@
     <header class="mb-10 flex items-start gap-5">
         @if ($avatarUrl)
             <img src="{{ $avatarUrl }}"
-                 alt="{{ $user->name }}"
+                 alt="{{ $authorName }}"
                  class="w-20 h-20 rounded-full object-cover shrink-0"
                  loading="lazy"
                  decoding="async">
@@ -41,7 +42,7 @@
             <span class="inline-flex w-20 h-20 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xl font-medium shrink-0" aria-hidden="true">{{ $initials }}</span>
         @endif
         <div>
-            <h1 class="text-3xl font-bold">{{ $user->name }}</h1>
+            <h1 class="text-3xl font-bold">{{ $authorName }}</h1>
             @if ($canvasUser?->username)
                 <p class="text-gray-500 mt-1">{{ '@'.$canvasUser->username }}</p>
             @endif

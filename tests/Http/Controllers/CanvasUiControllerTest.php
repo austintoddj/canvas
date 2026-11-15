@@ -9,11 +9,14 @@ use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
 use Canvas\Tests\Models\BareUser;
+use Canvas\Tests\Models\CustomNameUser;
 use Canvas\Tests\Models\User;
 use Canvas\Tests\TestCase;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
 beforeEach(function (): void {
     TestCase::acquireCanvasUiScaffoldLock();
@@ -510,4 +513,28 @@ it('renders the reader for bare host users without canvas relations', function (
         ->assertSee('Bare Reader Author')
         ->assertSee('Writes without a trait')
         ->assertSee('Bare Host Post');
+});
+
+// Invariant: public author names use the host accessor even without a name column.
+it('renders custom display names on public listings posts and author pages', function (): void {
+    $author = User::factory()->contributor()->create();
+    $username = $author->canvasUser->username;
+    $post = Post::factory()->create([
+        'user_id' => $author->id,
+        'published_at' => now()->subDay(),
+    ]);
+
+    Schema::table('users', function (Blueprint $table): void {
+        $table->renameColumn('name', 'first_name');
+        $table->string('last_name')->nullable();
+    });
+    config()->set('canvas.user_model', CustomNameUser::class);
+    CustomNameUser::query()->whereKey($author->id)->update([
+        'first_name' => 'Custom',
+        'last_name' => 'Writer',
+    ]);
+
+    foreach (['canvas-ui', "canvas-ui/{$post->slug}", "canvas-ui/@{$username}"] as $url) {
+        $this->get($url)->assertSuccessful()->assertSee('Custom Writer');
+    }
 });

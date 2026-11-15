@@ -3,6 +3,7 @@
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
+use Canvas\Tests\Models\User;
 
 it('returns only a contributors own posts', function (): void {
     Post::factory()->count(3)->create(['user_id' => $this->contributor->id]);
@@ -152,4 +153,21 @@ it('filters results by type', function (): void {
     expect(collect($response->json())->where('type', 'Tag'))->toHaveCount(2);
     expect(collect($response->json())->where('type', 'Post'))->toBeEmpty();
     expect(collect($response->json())->where('type', 'Topic'))->toBeEmpty();
+});
+
+// Invariant: user search filters resolved names before limiting results, across batches.
+it('finds older users by display name beyond the first batch and limits matches', function (): void {
+    $admin = $this->admin;
+    $author = User::factory()->contributor()->create(['name' => 'Older Writer']);
+    User::factory()->contributor()->count(101)->create(['name' => 'Newer Writer']);
+
+    $this->actingAs($admin, 'canvas')
+        ->getJson('canvas/api/search?type=user&q=older')
+        ->assertSuccessful()
+        ->assertJsonCount(1)
+        ->assertJsonPath('0.id', $author->id);
+
+    $this->getJson('canvas/api/search?type=user&q=Writer')
+        ->assertSuccessful()
+        ->assertJsonCount(10);
 });

@@ -6,6 +6,7 @@ namespace Canvas\Http\Resources;
 
 use Canvas\Models\CanvasUser;
 use Canvas\Support\AuthorAvatar;
+use Canvas\Support\HostUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -48,7 +49,7 @@ class UserResource extends JsonResource
 
         return [
             'id' => $user->getKey(),
-            'name' => data_get($user, 'name'),
+            'name' => HostUser::name($user),
             'email' => $email,
             'avatar_url' => AuthorAvatar::url($canvasUser?->avatar),
             'posts_count' => $this->when(
