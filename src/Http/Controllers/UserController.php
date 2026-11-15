@@ -112,8 +112,10 @@ class UserController extends Controller
         ], $created ? 201 : 200);
     }
 
-    public function show(Model $user): UserResource
+    public function show(Model|int|string $user): UserResource
     {
+        $user = $this->resolveUser($user);
+
         $canvasUser = CanvasUser::query()
             ->with('user')
             ->withPostsCount()
@@ -122,8 +124,10 @@ class UserController extends Controller
         return UserResource::make(UserResource::hostUserFromCanvasUser($canvasUser));
     }
 
-    public function posts(Model $user): JsonResponse
+    public function posts(Model|int|string $user): JsonResponse
     {
+        $user = $this->resolveUser($user);
+
         $currentUser = request()->user(config('canvas.guard'));
 
         if ((string) $currentUser->getKey() !== (string) $user->getKey()) {
@@ -142,12 +146,21 @@ class UserController extends Controller
     /**
      * @throws Exception
      */
-    public function destroy(Model $user): JsonResponse
+    public function destroy(Model|int|string $user): JsonResponse
     {
+        $user = $this->resolveUser($user);
+
         Gate::forUser(request()->user(config('canvas.guard')))->authorize('delete', $user);
 
         CanvasUser::query()->where('user_id', $user->getKey())->delete();
 
         return response()->json(null, 204);
+    }
+
+    private function resolveUser(Model|int|string $user): Model
+    {
+        return $user instanceof Model
+            ? $user
+            : HostUser::modelClass()::query()->findOrFail($user);
     }
 }
