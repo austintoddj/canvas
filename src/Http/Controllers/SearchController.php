@@ -118,14 +118,16 @@ class SearchController extends Controller
      */
     private function searchUsers(string $query): array
     {
+        $query = $this->normalizeUserSearch($query);
+
         return CanvasUser::query()
             ->with('user')
             ->latest('user_id')
             // Host accessors may combine arbitrary columns, so match names after hydration.
             ->lazy($query === '' ? self::RESULTS_PER_TYPE : 100)
             ->filter(fn (CanvasUser $canvasUser): bool => $query === ''
-                || Str::contains(HostUser::name($canvasUser->user) ?? '', $query, ignoreCase: true)
-                || Str::contains($canvasUser->username ?? '', $query, ignoreCase: true))
+                || Str::contains($this->normalizeUserSearch(HostUser::name($canvasUser->user) ?? ''), $query)
+                || Str::contains($this->normalizeUserSearch($canvasUser->username ?? ''), $query))
             ->take(self::RESULTS_PER_TYPE)
             ->map(fn (CanvasUser $canvasUser) => [
                 'id' => $canvasUser->user_id,
@@ -138,5 +140,15 @@ class SearchController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    private function normalizeUserSearch(string $value): string
+    {
+        // Fold Latin accents and combining marks without transliterating other scripts.
+        return Str::lower(preg_replace_callback(
+            '/\p{Latin}\p{M}*/u',
+            static fn (array $match): string => Str::ascii($match[0]),
+            $value,
+        ) ?? $value);
     }
 }

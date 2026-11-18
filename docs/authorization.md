@@ -85,7 +85,7 @@ protected function canvasName(): Attribute
 
 Canvas prefers a `canvas_name` accessor when one exists, including Laravel's `Attribute` accessor syntax. A database column named `canvas_name` alone does not change the display name. Custom schemas do not need a `name` column when an accessor supplies the name.
 
-Display names are used in the admin, public author and post pages, and digest greetings. Author payloads retain their `name` field. Canvas loads the host attributes needed by your accessor but includes only explicit user and author fields in its responses. User search matches resolved display names and Canvas usernames in batches; searches may scan more users when names are computed.
+Display names are used in the admin, public author and post pages, and digest greetings. Author payloads retain their `name` field. Canvas loads the host attributes needed by your accessor but includes only explicit user and author fields in its responses. User search matches resolved display names and Canvas usernames in batches. All names use the same case-insensitive comparison with Latin accents folded (`Jose` matches `José`); other scripts are preserved. Searches may scan more users when names are computed.
 
 A reader previously published with `canvas:ui` keeps using `$user->name` until you update its views or republish it:
 

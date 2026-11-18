@@ -1,9 +1,13 @@
 <?php
 
+use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
+use Canvas\Tests\Models\CustomNameUser;
 use Canvas\Tests\Models\User;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 it('returns only a contributors own posts', function (): void {
     Post::factory()->count(3)->create(['user_id' => $this->contributor->id]);
@@ -170,4 +174,52 @@ it('finds older users by display name beyond the first batch and limits matches'
     $this->getJson('canvas/api/search?type=user&q=Writer')
         ->assertSuccessful()
         ->assertJsonCount(10);
+});
+
+// Invariant: stored and computed names share case- and accent-insensitive search.
+it('matches user names regardless of Latin accents without changing their display', function (bool $computed, string $name, string $query): void {
+    $admin = User::factory()->admin()->create(['name' => 'Search Administrator']);
+    $admin->canvasUser->update(['username' => 'search-admin']);
+
+    if ($computed) {
+        Schema::table('users', function (Blueprint $table): void {
+            $table->renameColumn('name', 'first_name');
+            $table->string('last_name')->nullable();
+        });
+        config()->set('canvas.user_model', CustomNameUser::class);
+        $author = CustomNameUser::query()->create([
+            'first_name' => $name,
+            'last_name' => 'Writer',
+            'email' => 'accent@example.com',
+            'password' => 'test-only-password',
+        ]);
+        CanvasUser::factory()->create(['user_id' => $author->getKey()]);
+    } else {
+        $author = User::factory()->contributor()->create(['name' => $name.' Writer']);
+    }
+
+    $this->actingAs($admin, 'canvas')
+        ->getJson('canvas/api/search?'.http_build_query(['type' => 'user', 'q' => $query]))
+        ->assertSuccessful()
+        ->assertJsonCount(1)
+        ->assertJsonPath('0.id', $author->getKey())
+        ->assertJsonPath('0.name', $name.' Writer');
+})->with(['stored' => false, 'computed' => true])->with([
+    'accented name' => ['José', 'JOSE'],
+    'accented query' => ['Jose', 'JOSÉ'],
+    'combining accent' => ["Jose\u{0301}", 'jose'],
+    'combining query' => ['Jose', "jose\u{0301}"],
+    'Cyrillic' => ['Москва', 'мОСКВА'],
+    'CJK' => ['北京', '北京'],
+]);
+
+it('does not discard non-Latin search terms or names', function (): void {
+    $admin = $this->admin;
+    User::factory()->contributor()->create(['name' => '北京 Writer']);
+    User::factory()->contributor()->create(['name' => 'Shanghai Writer']);
+
+    $this->actingAs($admin, 'canvas')
+        ->getJson('canvas/api/search?'.http_build_query(['type' => 'user', 'q' => '上海']))
+        ->assertSuccessful()
+        ->assertJsonCount(0);
 });
