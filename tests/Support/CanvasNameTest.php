@@ -1,6 +1,5 @@
 <?php
 
-use Canvas\Concerns\CanvasUser as CanvasUserTrait;
 use Canvas\Http\Resources\UserResource;
 use Canvas\Models\CanvasUser;
 use Canvas\Models\Media;
@@ -18,7 +17,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 
 // Invariant: display names are optional and accessor detection never relies on a column.
-it('resolves legacy names without the trait and ignores a canvas_name column', function (): void {
+it('resolves legacy names without an accessor and ignores a canvas_name column', function (): void {
     $user = new BareUser(['name' => 'Legacy Writer', 'canvas_name' => 'Unrelated column']);
 
     expect(HostUser::name($user))->toBe('Legacy Writer')
@@ -27,27 +26,15 @@ it('resolves legacy names without the trait and ignores a canvas_name column', f
         ->and(HostUser::name(null))->toBeNull();
 });
 
-it('provides a default canvas_name accessor without changing model serialization', function (): void {
-    $user = new class extends BareUser
-    {
-        use CanvasUserTrait;
-    };
-    $user->name = 'Default Writer';
-
-    expect($user->canvas_name)->toBe('Default Writer')
-        ->and(HostUser::name($user))->toBe('Default Writer')
-        ->and($user->toArray())->not->toHaveKey('canvas_name');
-
-    $user->name = null;
-    expect($user->canvas_name)->toBe('');
-    $user->setRawAttributes([]);
+it('handles missing legacy names with missing attribute protection enabled', function (): void {
+    $user = new BareUser;
     $user->exists = true;
     Model::preventAccessingMissingAttributes();
 
     try {
-        expect($user->canvas_name)->toBe('')
-            ->and(HostUser::name($user))->toBe('')
-            ->and(HostUser::name(tap(new BareUser, fn ($bare) => $bare->exists = true)))->toBeNull();
+        expect(HostUser::name($user))->toBeNull();
+        $user->name = null;
+        expect(HostUser::name($user))->toBeNull();
     } finally {
         Model::preventAccessingMissingAttributes(false);
     }

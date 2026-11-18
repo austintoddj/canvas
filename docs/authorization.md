@@ -63,27 +63,7 @@ Canvas stores author profile data on `canvas_users`: role, username, summary, av
 
 Canvas uses your user model's `name` attribute by default. Existing applications do not need to change their models.
 
-You may add the optional `CanvasUser` trait to provide a `canvas_name` Eloquent attribute:
-
-```php
-use Canvas\Concerns\CanvasUser;
-
-class User extends Authenticatable
-{
-    use CanvasUser;
-}
-```
-
-The default accessor returns `name`, or an empty string when it is missing or null. To use another attribute, override the accessor on your model:
-
-```php
-public function getCanvasNameAttribute(): string
-{
-    return $this->username;
-}
-```
-
-You may also combine columns such as `first_name` and `last_name`:
+To customize the display name, define an accessor on your user model. No Canvas trait is required:
 
 ```php
 public function getCanvasNameAttribute(): string
@@ -92,6 +72,25 @@ public function getCanvasNameAttribute(): string
 }
 ```
 
+You may instead use Laravel's `Attribute` accessor syntax:
+
+```php
+use Illuminate\Database\Eloquent\Casts\Attribute;
+
+protected function canvasName(): Attribute
+{
+    return Attribute::get(fn (): string => trim("{$this->first_name} {$this->last_name}"));
+}
+```
+
 Canvas prefers a `canvas_name` accessor when one exists, including Laravel's `Attribute` accessor syntax. A database column named `canvas_name` alone does not change the display name. Custom schemas do not need a `name` column when an accessor supplies the name.
 
 Display names are used in the admin, public author and post pages, and digest greetings. Author payloads retain their `name` field. Canvas loads the host attributes needed by your accessor but includes only explicit user and author fields in its responses. User search matches resolved display names and Canvas usernames in batches; searches may scan more users when names are computed.
+
+A reader previously published with `canvas:ui` keeps using `$user->name` until you update its views or republish it:
+
+```bash
+php artisan canvas:ui --force
+```
+
+This overwrites the published controller, routes, and views. Preserve your customizations before running the command.

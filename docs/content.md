@@ -165,26 +165,39 @@ Media on the public disk is usually a root-relative `/storage/...` path. Run `st
 
 ```php
 use Canvas\Models\Post;
+use Canvas\Support\PostAuthor;
 use Canvas\Support\PostSeo;
 
 Route::get('/blog/posts', function () {
     return Post::published()
         ->select(['id', 'slug', 'title', 'summary', 'featured_image', 'published_at', 'user_id', 'topic_id'])
-        ->with(['topic:id,name,slug', 'user:id,name'])
+        ->with(['topic:id,name,slug', 'user'])
         ->latest()
-        ->paginate(10);
+        ->paginate(10)
+        ->through(function (Post $post): array {
+            $author = PostAuthor::for($post);
+            $post->unsetRelation('user');
+
+            return [...$post->toArray(), 'user' => $author];
+        });
 });
 
 Route::get('/blog/posts/{slug}', function (string $slug) {
     $post = Post::forPublicSlug($slug)
-        ->with(['tags:name,slug', 'topic:id,name,slug', 'user:id,name'])
+        ->with(['tags:name,slug', 'topic:id,name,slug', 'user'])
         ->first() ?? abort(404);
 
+    $author = PostAuthor::for($post);
+    $post->unsetRelation('user');
+    $post->makeHidden('pending');
+
     return [
-        'post' => $post,
+        'post' => [...$post->toArray(), 'user' => $author],
         'seo' => PostSeo::resolve($post, url("/blog/{$slug}")),
     ];
 });
 ```
+
+Load the full `user` relation so custom display-name accessors can read their source columns. `PostAuthor::for()` returns only the author ID, resolved name, Canvas username, and avatar URL. Replace the loaded host relation with that payload before serializing the post.
 
 Never expose `pending` or sensitive host user fields. For cache invalidation and SSG rebuilds, prefer [webhooks](./webhooks.md).

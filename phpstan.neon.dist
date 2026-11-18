@@ -19,6 +19,4 @@ parameters:
         # Optional host-app gift; required by consumers outside this package's src/ tree.
         -
             identifier: trait.unused
-            paths:
-                - src/Concerns/HasCanvasAccess.php
-                - src/Concerns/CanvasUser.php
+            path: src/Concerns/HasCanvasAccess.php
