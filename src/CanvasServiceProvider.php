@@ -52,6 +52,7 @@ use Illuminate\Contracts\Validation\ValidatesWhenResolved;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Routing\Redirector;
 use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Support\Facades\Gate;
@@ -196,7 +197,7 @@ class CanvasServiceProvider extends ServiceProvider
             return $userModel::query()->findOrFail($value);
         });
 
-        Route::middleware(config('canvas.middleware'))
+        Route::middleware([...config('canvas.middleware'), SubstituteBindings::class])
             ->domain(config('canvas.domain'))
             ->prefix(config('canvas.path'))
             ->group(function (): void {
