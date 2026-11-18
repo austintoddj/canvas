@@ -177,7 +177,7 @@ it('finds older users by display name beyond the first batch and limits matches'
 });
 
 // Invariant: stored and computed names share case- and accent-insensitive search.
-it('matches user names regardless of Latin accents without changing their display', function (bool $computed, string $name, string $query): void {
+it('matches user names regardless of accents without changing their display', function (bool $computed, string $name, string $query): void {
     $admin = User::factory()->admin()->create(['name' => 'Search Administrator']);
     $admin->canvasUser->update(['username' => 'search-admin']);
 
@@ -210,6 +210,10 @@ it('matches user names regardless of Latin accents without changing their displa
     'combining accent' => ["Jose\u{0301}", 'jose'],
     'combining query' => ['Jose', "jose\u{0301}"],
     'Cyrillic' => ['Москва', 'мОСКВА'],
+    'Cyrillic accented name' => ['Семён', 'СЕМЕН'],
+    'Cyrillic accented query' => ['Семен', 'СЕМЁН'],
+    'Cyrillic combining accent' => ["Семе\u{0308}н", 'семен'],
+    'Cyrillic combining query' => ['Семен', "семе\u{0308}н"],
     'CJK' => ['北京', '北京'],
 ]);
 

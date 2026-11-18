@@ -169,17 +169,18 @@ use Canvas\Support\PostAuthor;
 use Canvas\Support\PostSeo;
 
 Route::get('/blog/posts', function () {
-    return Post::published()
+    $posts = Post::published()
         ->select(['id', 'slug', 'title', 'summary', 'featured_image', 'published_at', 'user_id', 'topic_id'])
-        ->with(['topic:id,name,slug', 'user'])
+        ->with('topic:id,name,slug')
         ->latest()
-        ->paginate(10)
-        ->through(function (Post $post): array {
-            $author = PostAuthor::for($post);
-            $post->unsetRelation('user');
+        ->paginate(10);
 
-            return [...$post->toArray(), 'user' => $author];
-        });
+    $authors = PostAuthor::mapByUserIds($posts->getCollection()->pluck('user_id')->all());
+
+    return $posts->through(fn (Post $post): array => [
+        ...$post->toArray(),
+        'user' => $authors[$post->user_id] ?? null,
+    ]);
 });
 
 Route::get('/blog/posts/{slug}', function (string $slug) {
@@ -198,6 +199,8 @@ Route::get('/blog/posts/{slug}', function (string $slug) {
 });
 ```
 
-Load the full `user` relation so custom display-name accessors can read their source columns. `PostAuthor::for()` returns only the author ID, resolved name, Canvas username, and avatar URL. Replace the loaded host relation with that payload before serializing the post.
+For listings, `PostAuthor::mapByUserIds()` loads host users and Canvas profiles in one batch for the page, avoiding a profile query per post. It loads complete host models so custom display-name accessors can read their source columns.
+
+For a single post, load the full `user` relation and call `PostAuthor::for()`. Both helpers return only the author ID, resolved name, Canvas username, and avatar URL. Replace any loaded host relation with that payload before serializing the post.
 
 Never expose `pending` or sensitive host user fields. For cache invalidation and SSG rebuilds, prefer [webhooks](./webhooks.md).

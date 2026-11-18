@@ -144,7 +144,14 @@ class SearchController extends Controller
 
     private function normalizeUserSearch(string $value): string
     {
-        // Fold Latin accents and combining marks without transliterating other scripts.
+        $value = strtr($value, [
+            'Ё' => 'Е',
+            'ё' => 'е',
+            "Е\u{0308}" => 'Е',
+            "е\u{0308}" => 'е',
+        ]);
+
+        // Fold Latin accents and Cyrillic ё without transliterating other scripts.
         return Str::lower(preg_replace_callback(
             '/\p{Latin}\p{M}*/u',
             static fn (array $match): string => Str::ascii($match[0]),
