@@ -1,9 +1,10 @@
 @if ($user)
     @php
+        $authorName = \Canvas\Support\HostUser::name($user);
         $canvasUser = $user->relationLoaded('canvasUser') ? $user->getRelation('canvasUser') : null;
         $avatarUrl = \Canvas\Support\AuthorAvatar::url($canvasUser?->avatar);
         $size = $size ?? 32;
-        $initials = collect(preg_split('/\s+/', trim((string) $user->name) ?: '') ?: [])
+        $initials = collect(preg_split('/\s+/', trim((string) $authorName) ?: '') ?: [])
             ->filter()
             ->take(2)
             ->map(fn (string $part) => mb_strtoupper(mb_substr($part, 0, 1)))
@@ -15,7 +16,7 @@
     <div @class(['flex items-center gap-2 text-sm text-gray-500', $wrapperClass ?? null])>
         @if ($avatarUrl)
             <img src="{{ $avatarUrl }}"
-                 alt="{{ $user->name }}"
+                 alt="{{ $authorName }}"
                  @class(['rounded-full object-cover', $imageClass ?? 'w-6 h-6'])
                  loading="lazy"
                  decoding="async">
@@ -28,10 +29,10 @@
         @if ($canvasUser?->username)
             <a href="{{ route('canvas-ui.author', $canvasUser->username) }}"
                @class(['hover:underline', $linkClass ?? null])>
-                {{ $user->name }}
+                {{ $authorName }}
             </a>
         @else
-            <span @class($linkClass ?? null)>{{ $user->name }}</span>
+            <span @class($linkClass ?? null)>{{ $authorName }}</span>
         @endif
     </div>
 @endif

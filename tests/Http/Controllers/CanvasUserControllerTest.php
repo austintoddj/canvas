@@ -5,6 +5,8 @@ use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Tests\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Support\Facades\Route;
 
 it('lists users from canvas_users when the host model lacks HasCanvasAccess', function (): void {
     useBareUserModel();
@@ -93,3 +95,36 @@ it('eager loads canvas user from canvas_users for models without HasCanvasAccess
     expect($bareUser->relationLoaded('canvasUser'))->toBeTrue();
     expect($bareUser->getRelation('canvasUser'))->toBeInstanceOf(CanvasUser::class);
 });
+
+// Invariant: host route bindings may leave Canvas user parameters as raw identifiers.
+it('resolves raw user identifiers without depending on host route bindings', function (bool $withoutBindings): void {
+    if ($withoutBindings) {
+        $this->withoutMiddleware(SubstituteBindings::class);
+    } else {
+        Route::bind('user', fn (mixed $value): mixed => $value);
+    }
+
+    $admin = $this->admin;
+    $author = $this->contributor;
+    Post::factory()->create(['user_id' => $author->id]);
+
+    $this->actingAs($admin, 'canvas')
+        ->getJson("canvas/api/users/{$author->id}")
+        ->assertSuccessful()
+        ->assertJsonPath('id', $author->id);
+
+    $this->getJson("canvas/api/users/{$author->id}/posts")
+        ->assertSuccessful()
+        ->assertJsonCount(1, 'data');
+
+    $this->getJson('canvas/api/users/999999')->assertNotFound();
+
+    $this->actingAs($author, 'canvas')
+        ->getJson("canvas/api/users/{$admin->id}/posts")->assertForbidden();
+    $this->deleteJson("canvas/api/users/{$admin->id}")->assertForbidden();
+
+    $this->actingAs($admin, 'canvas')
+        ->deleteJson("canvas/api/users/{$author->id}")->assertNoContent();
+    expect(CanvasUser::query()->find($author->id))->toBeNull()
+        ->and(User::query()->find($author->id))->not->toBeNull();
+})->with(['raw host binding' => false, 'without binding middleware' => true]);

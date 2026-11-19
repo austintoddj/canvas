@@ -18,7 +18,7 @@
     if ($post->user) {
         $jsonLd['author'] = [
             '@type' => 'Person',
-            'name' => $post->user->name,
+            'name' => \Canvas\Support\HostUser::name($post->user),
         ];
     }
 @endphp

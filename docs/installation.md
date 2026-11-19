@@ -4,7 +4,7 @@
 
 Canvas requires PHP 8.3+ and Laravel 12 or 13. Your application must already provide authentication for the guard Canvas will use (`web` by default).
 
-Canvas reads `id`, `name`, and `email` from your user model and expects a stock Laravel **bigint** primary key. It does not create users or own login routes.
+Canvas reads `id` and `email` from your user model and expects a stock Laravel **bigint** primary key. Author display names use a `canvas_name` accessor when defined, otherwise the `name` attribute. A `name` column is not required when your accessor supplies the name. See [author display names](./authorization.md#author-display-names). Canvas does not create users or own login routes.
 
 ## Installing Canvas
 

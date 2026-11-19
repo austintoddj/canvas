@@ -31,7 +31,7 @@ final class MediaUploader
 
         return [
             'id' => $user->getKey(),
-            'name' => data_get($user, 'name'),
+            'name' => HostUser::name($user),
             'username' => $canvasUser?->username,
             'avatar_url' => AuthorAvatar::url($canvasUser?->avatar),
         ];
