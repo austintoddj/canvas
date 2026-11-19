@@ -7,6 +7,9 @@ use Canvas\Models\Topic;
 use Canvas\Models\View;
 use Canvas\Models\Visit;
 use Carbon\Carbon;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 describe('when listing posts', function (): void {
@@ -276,6 +279,61 @@ describe('when listing posts', function (): void {
 });
 
 describe('when showing posts', function (): void {
+    describe('without host route bindings', function (): void {
+        beforeEach(function (): void {
+            $this->app->make(Kernel::class);
+            $middleware = Route::getMiddlewareGroups()['web'];
+            Route::middlewareGroup('web', array_values(array_diff($middleware, [SubstituteBindings::class])));
+        });
+
+        // Invariant: the editor receives the stored post even when the host web group omits bindings.
+        it('returns the complete published post', function (): void {
+            $topic = Topic::factory()->create();
+            $tag = Tag::factory()->create();
+            $post = Post::factory()->create([
+                'user_id' => $this->admin->id,
+                'topic_id' => $topic->id,
+                'body' => '<p>Stored article content.</p>',
+            ]);
+            $post->tags()->attach($tag);
+
+            $this->actingAs($this->admin, 'canvas')
+                ->getJson("canvas/api/posts/{$post->id}")
+                ->assertSuccessful()
+                ->assertJsonPath('post.id', $post->id)
+                ->assertJsonPath('post.title', $post->title)
+                ->assertJsonPath('post.slug', $post->slug)
+                ->assertJsonPath('post.body', $post->body)
+                ->assertJsonPath('post.summary', $post->summary)
+                ->assertJsonPath('post.published_at', $post->toArray()['published_at'])
+                ->assertJsonPath('post.meta', $post->meta)
+                ->assertJsonPath('post.featured_image', $post->featured_image)
+                ->assertJsonPath('post.featured_image_caption', $post->featured_image_caption)
+                ->assertJsonPath('post.topic.slug', $topic->slug)
+                ->assertJsonPath('post.tags.0.slug', $tag->slug)
+                ->assertJsonPath('post.user.id', $this->admin->id)
+                ->assertJsonMissingPath('post.user.password');
+        });
+
+        it('returns 404 for a missing post', function (): void {
+            $this->actingAs($this->admin, 'canvas')
+                ->getJson('canvas/api/posts/'.Str::uuid())
+                ->assertNotFound();
+        });
+
+        it('allows contributors to read only their own posts', function (): void {
+            $ownPost = Post::factory()->create(['user_id' => $this->contributor->id]);
+            $otherPost = Post::factory()->create(['user_id' => $this->admin->id]);
+
+            $this->actingAs($this->contributor, 'canvas')
+                ->getJson("canvas/api/posts/{$ownPost->id}")
+                ->assertSuccessful()
+                ->assertJsonPath('post.id', $ownPost->id);
+
+            $this->getJson("canvas/api/posts/{$otherPost->id}")->assertNotFound();
+        });
+    });
+
     it('returns data for creating a post', function (): void {
         $this->actingAs($this->admin, 'canvas')
             ->getJson('canvas/api/posts/create')
