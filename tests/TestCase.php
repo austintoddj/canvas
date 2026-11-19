@@ -40,17 +40,17 @@ abstract class TestCase extends OrchestraTestCase
         $this->admin;
     }
 
-    protected function actingAsContributor(): static
+    public function actingAsContributor(): static
     {
         return $this->actingAs($this->contributor, 'canvas');
     }
 
-    protected function actingAsEditor(): static
+    public function actingAsEditor(): static
     {
         return $this->actingAs($this->editor, 'canvas');
     }
 
-    protected function actingAsAdmin(): static
+    public function actingAsAdmin(): static
     {
         return $this->actingAs($this->admin, 'canvas');
     }

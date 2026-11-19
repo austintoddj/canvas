@@ -43,6 +43,12 @@ Canvas authenticates against the guard named by `CANVAS_GUARD`. Your application
 CANVAS_GUARD=staff
 ```
 
+### Middleware
+
+You may add middleware for tenancy, throttling, or other application concerns to `canvas.middleware`. Keep `web` or equivalent session and CSRF middleware when using a session guard.
+
+Canvas always adds route model binding middleware, including when your application's `web` group omits it. Authentication uses the configured guard.
+
 ### Locales
 
 Leave `CANVAS_LOCALES` empty to offer every language in the package catalog. To limit the language picker, provide a comma-separated list of codes:
