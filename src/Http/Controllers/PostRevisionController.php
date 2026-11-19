@@ -12,6 +12,7 @@ use Canvas\Models\PostRevision;
 use Canvas\Support\ContentLocales;
 use Canvas\Support\PostAuthor;
 use Canvas\Support\PostLastRevision;
+use Canvas\Support\PostLifecycleEvents;
 use Canvas\Support\PostSlug;
 use Canvas\Support\RecordPostRevision;
 use Exception;
@@ -177,6 +178,7 @@ class PostRevisionController extends Controller
             ]]
             : [];
 
+        $otherSnapshots = PostLifecycleEvents::otherTranslationSnapshots($post);
         if ($post->published) {
             $post->writePending($data, $tags, $topic);
         } else {
@@ -186,6 +188,10 @@ class PostRevisionController extends Controller
         }
 
         $post = $post->refresh();
+
+        foreach ($otherSnapshots as $locale => $snapshot) {
+            PostLifecycleEvents::dispatch($snapshot, (clone $post)->inLocale($locale));
+        }
 
         $user = request()->user(config('canvas.guard'));
         $userId = data_get($user, 'id');

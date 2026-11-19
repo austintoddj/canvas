@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Alert, AlertActions, AlertBody, AlertDescription, AlertTitle } from '@/components/alert';
 import { Button } from '@/components/button';
@@ -61,6 +61,13 @@ export default function PostVersionHistoryDrawer({
     const [busyId, setBusyId] = useState<string | null>(null);
     const [renameOpen, setRenameOpen] = useState(false);
     const [renameValue, setRenameValue] = useState('');
+    const restoreSession = useRef(0);
+
+    useEffect(() => {
+        return () => {
+            restoreSession.current += 1;
+        };
+    }, [postId, locale]);
 
     useEffect(() => {
         if (!open || postId === null) {
@@ -195,10 +202,12 @@ export default function PostVersionHistoryDrawer({
             return;
         }
 
+        const session = restoreSession.current;
         setBusyId(revision.id);
 
         try {
             const post = await postsApi.restoreRevision(postId, revision.id, undefined, locale);
+            if (session !== restoreSession.current) return;
             onRestored(post);
             if (post.has_pending_changes) {
                 toast.success(t('editor.history_restored_pending', 'Restored as pending edits — Update to publish.'));
@@ -210,9 +219,11 @@ export default function PostVersionHistoryDrawer({
             setRenameOpen(false);
             onClose();
         } catch {
-            toast.error(t('editor.history_restore_error', 'Unable to restore this version.'));
+            if (session === restoreSession.current) {
+                toast.error(t('editor.history_restore_error', 'Unable to restore this version.'));
+            }
         } finally {
-            setBusyId(null);
+            if (session === restoreSession.current) setBusyId(null);
         }
     }
 

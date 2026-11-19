@@ -219,7 +219,7 @@ php artisan canvas:translate-posts --locale=en --dry-run
 php artisan canvas:translate-posts --locale=en
 ```
 
-Run the transfer while editorial writes are stopped. It copies existing content, pending changes, publication markers, and history, including soft-deleted posts, without emitting lifecycle events. It preserves IDs and timestamps and may be run again after interruption. It synchronizes the primary translation from the legacy columns; other languages are preserved.
+Run the transfer while editorial writes are stopped. It copies existing content, pending changes, publication markers, and history, including soft-deleted posts, without emitting lifecycle events. It preserves IDs and timestamps and may be run again after interruption. The dry run validates the same primary-language restrictions without writing data. It synchronizes the primary translation from the legacy columns; other languages are preserved.
 
 Set `CANVAS_CONTENT_ENABLED=true` and refresh your configuration cache. The editor now offers a content-language selector. New translations start empty. Saving before switching languages preserves the current changes; a failed save keeps the current language open. Shared fields are edited in the primary language and follow its existing publish/update behavior.
 

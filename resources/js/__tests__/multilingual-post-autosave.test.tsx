@@ -69,3 +69,60 @@ describe('multilingual autosave', () => {
         expect(result.current.saveStatus).toBe('error');
     });
 });
+
+it('ignores a save response from a different post in the same language', async () => {
+    // Regression: GH-1587 — publication dates from an old post must not hydrate the next post.
+    vi.useFakeTimers();
+    let finishSave!: (post: Post) => void;
+    vi.mocked(postsApi.store).mockImplementationOnce(
+        () =>
+            new Promise((resolve) => {
+                finishSave = resolve;
+            })
+    );
+    const onSaved = vi.fn();
+    const { result, rerender } = renderHook(
+        ({ postId }) => usePostAutosave({ postId, form, locale: 'en', enabled: true, onSaved }),
+        { initialProps: { postId: 'post-1' } }
+    );
+    let saving!: Promise<boolean>;
+    act(() => {
+        saving = result.current.saveNow();
+    });
+    rerender({ postId: 'post-2' });
+    await act(async () => {
+        finishSave(post);
+        await vi.advanceTimersByTimeAsync(350);
+        await saving;
+    });
+    expect(onSaved).not.toHaveBeenCalled();
+});
+
+it('ignores a save from an earlier visit to the same language', async () => {
+    // Regression: GH-1587 — returning to a locale starts a new editor session.
+    vi.useFakeTimers();
+    let finishSave!: (post: Post) => void;
+    vi.mocked(postsApi.store).mockImplementationOnce(
+        () =>
+            new Promise((resolve) => {
+                finishSave = resolve;
+            })
+    );
+    const onSaved = vi.fn();
+    const { result, rerender } = renderHook(
+        ({ locale }) => usePostAutosave({ postId: 'post-1', form, locale, enabled: true, onSaved }),
+        { initialProps: { locale: 'en' } }
+    );
+    let saving!: Promise<boolean>;
+    act(() => {
+        saving = result.current.saveNow();
+    });
+    rerender({ locale: 'ru' });
+    rerender({ locale: 'en' });
+    await act(async () => {
+        finishSave(post);
+        await vi.advanceTimersByTimeAsync(350);
+        await saving;
+    });
+    expect(onSaved).not.toHaveBeenCalled();
+});

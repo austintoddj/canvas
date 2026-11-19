@@ -145,14 +145,7 @@ class PostController extends Controller
             return response()->json($this->postPayload($post->refresh()), 200);
         }
 
-        $otherSnapshots = [];
-        if (ContentLocales::enabled() && $post->exists && $post->contentLocale() === ContentLocales::default()) {
-            foreach ($post->translationStatuses() as $locale => $status) {
-                if ($locale !== ContentLocales::default() && in_array($status, ['published', 'scheduled'], true)) {
-                    $otherSnapshots[$locale] = PostSnapshot::from((clone $post)->inLocale($locale));
-                }
-            }
-        }
+        $otherSnapshots = PostLifecycleEvents::otherTranslationSnapshots($post);
         $before = $post->exists ? PostSnapshot::from($post) : null;
         $hadRevisions = $post->exists && $post->revisions()->exists();
 
@@ -287,6 +280,10 @@ class PostController extends Controller
         $sort = request('sort');
         if (in_array($sort, ['published', 'published_asc', 'activity', 'activity_asc'], true)) {
             $column = str_starts_with($sort, 'activity') ? 'updated_at' : 'published_at';
+            if ($column === 'published_at') {
+                $query->orderBy(PostTranslation::query()->selectRaw('case when published_at is null then 1 else 0 end')
+                    ->whereColumn('post_id', 'canvas_posts.id')->where('locale', $locale));
+            }
             $query->orderBy(PostTranslation::query()->select($column)->whereColumn('post_id', 'canvas_posts.id')->where('locale', $locale), str_ends_with($sort, '_asc') ? 'asc' : 'desc');
             $query->orderBy('id');
         } else {

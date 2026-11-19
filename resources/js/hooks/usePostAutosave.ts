@@ -44,9 +44,7 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
     const lastSavedSnapshot = useRef<string | null>(null);
     const formRef = useRef(form);
     const localeRef = useRef(locale);
-    useEffect(() => {
-        localeRef.current = locale;
-    }, [locale]);
+    const saveSession = useRef(0);
     const onSavedRef = useRef(onSaved);
     const enabledRef = useRef(enabled);
     const postIdRef = useRef(postId);
@@ -73,7 +71,12 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
 
     useEffect(() => {
         postIdRef.current = postId;
-    }, [postId]);
+        localeRef.current = locale;
+        saveSession.current += 1;
+        promoteNextSave.current = false;
+        scheduleNextSave.current = false;
+        publishNowNextSave.current = false;
+    }, [postId, locale]);
 
     useEffect(() => {
         mountedRef.current = true;
@@ -114,9 +117,12 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
 
     useEffect(() => {
         performSaveRef.current = async () => {
+            const session = saveSession.current;
             while (inFlightPromise.current !== null) {
                 await inFlightPromise.current;
             }
+
+            if (session !== saveSession.current) return false;
 
             const id = postIdRef.current;
 
@@ -173,8 +179,8 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
                     requestLocale
                 );
 
-                if (!mountedRef.current || requestLocale !== localeRef.current) {
-                    if (requestLocale === localeRef.current) lastSavedSnapshot.current = snapshot;
+                if (!mountedRef.current || session !== saveSession.current) {
+                    if (session === saveSession.current) lastSavedSnapshot.current = snapshot;
                     resolveInFlight(true);
                     inFlightPromise.current = null;
 
@@ -193,8 +199,8 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
                     savingStartedAt.current = null;
                 }
 
-                if (!mountedRef.current || requestLocale !== localeRef.current) {
-                    if (requestLocale === localeRef.current) lastSavedSnapshot.current = snapshot;
+                if (!mountedRef.current || session !== saveSession.current) {
+                    if (session === saveSession.current) lastSavedSnapshot.current = snapshot;
                     resolveInFlight(true);
                     inFlightPromise.current = null;
 
@@ -235,7 +241,7 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
             } catch (error) {
                 savingStartedAt.current = null;
 
-                if (mountedRef.current && requestLocale === localeRef.current) {
+                if (mountedRef.current && session === saveSession.current) {
                     if (error instanceof ValidationError) {
                         setFieldErrors(error.errors);
                     }

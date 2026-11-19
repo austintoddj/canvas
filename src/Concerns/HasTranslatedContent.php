@@ -145,7 +145,9 @@ trait HasTranslatedContent
             $primary = $this->getTranslation(ContentLocales::default());
             if ($primary !== null) {
                 foreach ($this->translatedAttributes as $field) {
-                    parent::setAttribute($field, $primary->getAttribute($field));
+                    if (! $this->exists || ! $primary->exists || $primary->isDirty($field)) {
+                        parent::setAttribute($field, $primary->getAttribute($field));
+                    }
                 }
             }
             // Quiet saves skip Astrotomic's saved listener, including publication markers.

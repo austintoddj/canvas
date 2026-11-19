@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { makeBoot } from '@/__tests__/helpers/boot';
+import { renderWithCanvas } from '@/__tests__/helpers/render';
 import PostVersionHistoryDrawer from '@/components/posts/PostVersionHistoryDrawer';
 import { CanvasContext, type CanvasContextValue } from '@/contexts/CanvasContext';
 import { createTranslator } from '@/lib/i18n';
@@ -347,4 +349,43 @@ describe('PostVersionHistoryDrawer', () => {
             expect(screen.getByText('Launch plan')).toBeInTheDocument();
         });
     });
+});
+
+it('ignores a restored revision after leaving its translation', async () => {
+    // Regression: GH-1587 — a late restore must not hydrate another language's editor.
+    const user = userEvent.setup();
+    const created = new Date().toISOString();
+    revisionsMock.mockResolvedValue({
+        revisions: [listItem({ id: 'r1', created_at: created, label: 'English checkpoint' })],
+    });
+    revisionMock.mockResolvedValue({ revision: fullRevision({ id: 'r1', created_at: created }) });
+    let finishRestore!: (post: unknown) => void;
+    restoreMock.mockReturnValue(
+        new Promise((resolve) => {
+            finishRestore = resolve;
+        })
+    );
+    const onRestored = vi.fn();
+    const view = renderWithCanvas(
+        <PostVersionHistoryDrawer
+            open
+            onClose={() => undefined}
+            postId="post-1"
+            locale="en"
+            currentTitle="Current title"
+            currentBody="Current body"
+            onRestored={onRestored}
+        />,
+        { boot: makeBoot({ translations: dictionary }) }
+    );
+    await user.click(await screen.findByRole('button', { name: /English checkpoint/ }));
+    const restore = await screen.findByRole('button', { name: 'Restore' });
+    await waitFor(() => expect(restore).toBeEnabled());
+    await user.click(restore);
+    await waitFor(() => expect(restoreMock).toHaveBeenCalled());
+    view.unmount();
+    await act(async () => {
+        finishRestore({ id: 'post-1', locale: 'en', title: 'Restored English' });
+    });
+    expect(onRestored).not.toHaveBeenCalled();
 });

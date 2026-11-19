@@ -93,7 +93,14 @@ export default function PostsEditor() {
     /** create() only mints a UUID — skip show() after redirect to /posts/:id. */
     const bootstrappedPostId = useRef<string | null>(null);
     const allowLeaveRef = useRef(false);
+    const languageSwitchSession = useRef(0);
     const syncBaselineRef = useRef<(snapshot: string) => void>(() => {});
+
+    useEffect(() => {
+        return () => {
+            languageSwitchSession.current += 1;
+        };
+    }, [id, locale]);
 
     const documentPage = form.title.trim() === '' ? t('editor.untitled_post') : form.title.trim();
     useDocumentTitle(loading ? t('posts.title') : documentPage);
@@ -103,6 +110,7 @@ export default function PostsEditor() {
     }, [slugManuallyEdited]);
 
     const autosaveEnabled = postId !== null && !loading && loadError === null;
+    const editorDisabled = !autosaveEnabled || switchingLanguage;
 
     const handleSaved = useCallback((post: Post, resolvedSlug?: string) => {
         setDraftPersisted(true);
@@ -222,8 +230,10 @@ export default function PostsEditor() {
             return;
         }
 
+        const session = languageSwitchSession.current;
         try {
             const post = await postsApi.discard(postId, undefined, locale);
+            if (session !== languageSwitchSession.current) return;
             const next = postToFormState(post);
             setForm(next);
             setHasPendingChanges(false);
@@ -231,7 +241,9 @@ export default function PostsEditor() {
             resetBaseline(serializeFormState(next));
             toast.success(t('editor.discarded', 'Changes discarded.'));
         } catch {
-            toast.error(t('editor.discard_error', 'Unable to discard changes.'));
+            if (session === languageSwitchSession.current) {
+                toast.error(t('editor.discard_error', 'Unable to discard changes.'));
+            }
         }
     }
 
@@ -360,6 +372,7 @@ export default function PostsEditor() {
                 return;
             }
 
+            setSwitchingLanguage(false);
             setLoading(true);
             setLoadError(null);
 
@@ -440,23 +453,25 @@ export default function PostsEditor() {
 
     async function changeContentLanguage(next: string) {
         if (!postId || next === locale || switchingLanguage) return;
+        const session = languageSwitchSession.current;
         setSwitchingLanguage(true);
         try {
-            if (!(await saveNow())) return;
+            if (!(await saveNow()) || languageSwitchSession.current !== session) return;
             try {
                 await postsApi.createRevision(postId, {}, undefined, locale);
             } catch (error) {
                 if (!(error instanceof ApiError && error.status === 422)) throw error;
             }
+            if (languageSwitchSession.current !== session) return;
             setHistoryOpen(false);
             setInspectorOpen(false);
             setLoading(true);
             resetBaseline(serializeFormState(emptyForm()));
             setSearchParams({ locale: next }, { replace: true });
         } catch {
-            toast.error(t('editor.load_error'));
+            if (languageSwitchSession.current === session) toast.error(t('editor.load_error'));
         } finally {
-            setSwitchingLanguage(false);
+            if (languageSwitchSession.current === session) setSwitchingLanguage(false);
         }
     }
 
@@ -570,7 +585,7 @@ export default function PostsEditor() {
                 inspectorOpen={inspectorOpen}
                 historyOpen={historyOpen}
                 lastRevision={lastRevision}
-                disabled={!autosaveEnabled}
+                disabled={editorDisabled}
                 publishBusy={publishBusy}
                 onTitleChange={handleTitleChange}
                 onOpenInspector={() => setInspectorOpen(true)}
@@ -582,7 +597,7 @@ export default function PostsEditor() {
                     <PostBodyEditor
                         body={form.body}
                         title={form.title}
-                        disabled={!autosaveEnabled}
+                        disabled={editorDisabled}
                         focusMode={focusMode}
                         onToggleFocusMode={onToggleFocusMode}
                         onChange={handleBodyChange}
@@ -611,7 +626,7 @@ export default function PostsEditor() {
                 availableTags={availableTags}
                 availableTopics={availableTopics}
                 fieldErrors={fieldErrors}
-                disabled={!autosaveEnabled}
+                disabled={editorDisabled}
                 hasPendingChanges={hasPendingChanges}
                 deleting={deleting}
                 onChange={handleFormChange}
@@ -636,7 +651,7 @@ export default function PostsEditor() {
                 open={publishConfirmOpen}
                 form={form}
                 busy={publishBusy}
-                disabled={!autosaveEnabled}
+                disabled={editorDisabled}
                 onClose={() => setPublishConfirmOpen(false)}
                 onPublishNow={handlePublish}
                 onSchedule={handleSchedule}
@@ -662,7 +677,7 @@ export default function PostsEditor() {
                     <Button
                         type="button"
                         color="dark/zinc"
-                        disabled={publishBusy || !autosaveEnabled}
+                        disabled={publishBusy || editorDisabled}
                         onClick={() => void handleUpdate()}
                     >
                         {publishBusy ? t('editor.updating', 'Updating…') : t('editor.update', 'Update')}

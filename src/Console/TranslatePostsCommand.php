@@ -22,18 +22,18 @@ class TranslatePostsCommand extends Command
 
             return self::FAILURE;
         }
+        $previous = DB::table('canvas_settings')->where('key', 'content.default_locale')->value('value');
+        if ($previous !== null && $previous !== $locale) {
+            $this->error('Changing the default content locale requires a separate data migration.');
+
+            return self::FAILURE;
+        }
         // The raw query deliberately includes soft-deleted posts and preserves stored HTML/dates.
         $count = DB::table('canvas_posts')->count();
         if ($this->option('dry-run')) {
             $this->info("{$count} posts would be synchronized to [{$locale}].");
 
             return self::SUCCESS;
-        }
-        $previous = DB::table('canvas_settings')->where('key', 'content.default_locale')->value('value');
-        if ($previous !== null && $previous !== $locale) {
-            $this->error('Changing the default content locale requires a separate data migration.');
-
-            return self::FAILURE;
         }
         DB::table('canvas_settings')->updateOrInsert(['key' => 'content.default_locale'], ['value' => $locale]);
         DB::table('canvas_posts')->orderBy('id')->chunkById(100, function ($posts) use ($locale): void {

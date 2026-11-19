@@ -167,3 +167,63 @@ it('eager loads public content in a bounded number of queries without duplicate 
     DB::disableQueryLog();
     expect($page->total())->toBe(3)->and($count)->toBeLessThanOrEqual(4);
 });
+
+it('keeps cursor reads in the requested published language', function (): void {
+    // Invariant: streaming queries use the same visibility and language as eager queries.
+    $post = Post::factory()->create(['title' => 'Private English draft', 'published_at' => null]);
+    $post->inLocale('ru')->fill(['title' => 'Public Russian', 'published_at' => now()->subDay()])->save();
+
+    $public = Post::published('ru')->cursor()->first();
+
+    expect($public->contentLocale())->toBe('ru')
+        ->and($public->title)->toBe('Public Russian')
+        ->and(json_encode($public->toArray()))->not->toContain('Private English draft');
+});
+
+it('does not overwrite the primary mirror with a stale unmodified translation', function (): void {
+    // Regression: GH-1587 — independently loaded locale models can outlive a primary-language edit.
+    $post = Post::factory()->create(['title' => 'Original English']);
+    $secondary = Post::query()->select('id', 'slug')->with('translations')->findOrFail($post->id)->inLocale('ru');
+    $primary = $post->fresh()->inLocale('en');
+    $primary->title = 'Updated English';
+    $primary->save();
+
+    $secondary->title = 'Russian';
+    $secondary->save();
+
+    expect(DB::table('canvas_posts')->where('id', $post->id)->value('title'))->toBe('Updated English')
+        ->and($primary->fresh()->inLocale('en')->title)->toBe('Updated English');
+});
+
+it('sorts undated translated drafts after scheduled drafts', function (string $sort): void {
+    // Regression: GH-1587 — SQL drivers disagree on NULL ordering.
+    $undated = Post::factory()->create(['user_id' => $this->contributor->id, 'published_at' => null]);
+    $scheduled = Post::factory()->create(['user_id' => $this->contributor->id, 'published_at' => now()->addDay()]);
+
+    $this->actingAsContributor()->getJson('/canvas/api/posts?locale=en&type=draft&sort='.$sort)
+        ->assertOk()->assertJsonPath('posts.data.0.id', $scheduled->id)
+        ->assertJsonPath('posts.data.1.id', $undated->id);
+})->with(['published', 'published_asc']);
+
+it('notifies live translations when a primary draft revision changes shared fields', function (): void {
+    // Regression: GH-1587 — restoring shared content changes other public translations too.
+    Event::fake([PostUpdated::class]);
+    $post = Post::factory()->create(['user_id' => $this->contributor->id, 'published_at' => null, 'featured_image_caption' => 'Original caption']);
+    $revision = RecordPostRevision::fromPost($post, reason: RevisionReason::Origin);
+    $post->featured_image_caption = 'Current caption';
+    $post->save();
+    $post->inLocale('ru')->fill(['title' => 'Russian', 'published_at' => now()->subDay()])->save();
+
+    $this->actingAsContributor()->postJson('/canvas/api/posts/'.$post->id.'/revisions/'.$revision->id.'/restore?locale=en')->assertOk();
+
+    Event::assertDispatched(PostUpdated::class, fn ($event) => $event->locale === 'ru');
+});
+
+it('rejects a primary-language change during a migration dry run', function (): void {
+    // Regression: GH-1587 — dry-run must validate the same migration preconditions as a real run.
+    $this->artisan('canvas:translate-posts', ['--locale' => 'en'])->assertSuccessful();
+    config(['canvas.content.default_locale' => 'ru']);
+
+    $this->artisan('canvas:translate-posts', ['--locale' => 'ru', '--dry-run' => true])->assertFailed();
+    expect(DB::table('canvas_settings')->where('key', 'content.default_locale')->value('value'))->toBe('en');
+});

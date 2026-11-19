@@ -18,6 +18,25 @@ use LogicException;
  */
 final class PostLifecycleEvents
 {
+    /** @return array<string, PostSnapshot> */
+    public static function otherTranslationSnapshots(Post $post): array
+    {
+        if (! ContentLocales::enabled() || ! $post->exists || $post->contentLocale() !== ContentLocales::default()) {
+            return [];
+        }
+
+        $snapshots = [];
+        foreach ($post->translations as $translation) {
+            if ($translation->locale !== ContentLocales::default()
+                && in_array($translation->locale, ContentLocales::all(), true)
+                && $translation->published_at !== null) {
+                $snapshots[$translation->locale] = PostSnapshot::from((clone $post)->inLocale($translation->locale));
+            }
+        }
+
+        return $snapshots;
+    }
+
     /**
      * @param  PostSnapshot|null  $before  Null when the post did not exist yet
      */
