@@ -6,7 +6,7 @@
     @include('canvas::ui.partials.meta', [
         'title' => config('app.name'),
         'description' => 'Posts from '.config('app.name').'.',
-        'url' => route('canvas-ui.index'),
+        'url' => \Canvas\Support\ReaderUrl::route('canvas-ui.index'),
         'type' => 'website',
     ])
 @endpush
@@ -16,7 +16,7 @@
         @forelse ($posts as $post)
             <article class="border-b border-gray-100 pb-10 last:border-0">
                 @if ($post->featured_image)
-                    <a href="{{ route('canvas-ui.show', $post->slug) }}">
+                    <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.show', $post->slug, \Canvas\Support\ContentLocales::enabled() ? $post->contentLocale() : null) }}">
                         <img src="{{ $post->featured_image }}"
                              alt="{{ $post->featured_image_caption ?? $post->title }}"
                              class="w-full h-56 object-cover rounded-lg mb-4"
@@ -27,7 +27,7 @@
 
                 <div class="flex items-center gap-3 text-sm text-gray-500 mb-2">
                     @if ($post->topic)
-                        <a href="{{ route('canvas-ui.topic', $post->topic->slug) }}"
+                        <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.topic', $post->topic->slug) }}"
                            class="font-medium text-indigo-600 hover:underline">
                             {{ $post->topic->name }}
                         </a>
@@ -41,7 +41,7 @@
                 </div>
 
                 <h2 class="text-2xl font-bold mb-2 leading-snug">
-                    <a href="{{ route('canvas-ui.show', $post->slug) }}" class="hover:underline">
+                    <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.show', $post->slug, \Canvas\Support\ContentLocales::enabled() ? $post->contentLocale() : null) }}" class="hover:underline">
                         {{ $post->title }}
                     </a>
                 </h2>

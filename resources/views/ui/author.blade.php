@@ -23,7 +23,7 @@
     @include('canvas::ui.partials.meta', [
         'title' => $authorName,
         'description' => $authorDescription,
-        'url' => route('canvas-ui.author', $canvasUser?->username ?? ''),
+        'url' => \Canvas\Support\ReaderUrl::route('canvas-ui.author', $canvasUser?->username ?? ''),
         'type' => 'website',
         'image' => $avatarUrl,
         'imageAlt' => $authorName,
@@ -80,7 +80,7 @@
     </section>
 
     <div class="mt-8">
-        <a href="{{ route('canvas-ui.index') }}" class="text-sm text-gray-500 hover:text-gray-700">
+        <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.index') }}" class="text-sm text-gray-500 hover:text-gray-700">
             &larr; All posts
         </a>
     </div>

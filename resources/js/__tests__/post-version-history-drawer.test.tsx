@@ -274,7 +274,7 @@ describe('PostVersionHistoryDrawer', () => {
         await user.click(document.querySelector('[data-revision-rename-save="true"]') as HTMLElement);
 
         await waitFor(() => {
-            expect(renameMock).toHaveBeenCalledWith('post-1', 'r1', { label: 'Launch plan' });
+            expect(renameMock).toHaveBeenCalledWith('post-1', 'r1', { label: 'Launch plan' }, undefined, undefined);
             expect(document.querySelector('[data-revision-renaming="true"]')).toBeNull();
         });
 

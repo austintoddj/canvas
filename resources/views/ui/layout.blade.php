@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', (isset($post) && \Canvas\Support\ContentLocales::enabled() ? $post->contentLocale() : app()->getLocale())) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', config('app.name'))</title>
-    <link rel="alternate" type="application/rss+xml" title="{{ config('app.name') }}" href="{{ route('canvas-ui.feed') }}">
+    <link rel="alternate" type="application/rss+xml" title="{{ config('app.name') }}" href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.feed') }}">
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <script>
         tailwind.config = {
@@ -33,12 +33,12 @@
 <body class="bg-white text-gray-900 antialiased font-sans">
     <header class="border-b border-gray-100 py-4 mb-8">
         <div class="max-w-3xl mx-auto px-4 flex items-center justify-between">
-            <a href="{{ route('canvas-ui.index') }}" class="font-semibold text-lg tracking-tight">
+            <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.index') }}" class="font-semibold text-lg tracking-tight">
                 {{ config('app.name') }}
             </a>
             <nav class="flex items-center gap-4 text-sm text-gray-500">
-                <a href="{{ route('canvas-ui.tags') }}" class="hover:text-gray-700">Tags</a>
-                <a href="{{ route('canvas-ui.topics') }}" class="hover:text-gray-700">Topics</a>
+                <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.tags') }}" class="hover:text-gray-700">Tags</a>
+                <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.topics') }}" class="hover:text-gray-700">Topics</a>
             </nav>
         </div>
     </header>
@@ -49,7 +49,7 @@
 
     <footer class="border-t border-gray-100 py-6 mt-8">
         <div class="max-w-3xl mx-auto px-4 flex items-center justify-center gap-4 text-sm text-gray-400">
-            <a href="{{ route('canvas-ui.feed') }}" class="hover:text-gray-600 hover:underline">RSS</a>
+            <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.feed') }}" class="hover:text-gray-600 hover:underline">RSS</a>
             <span aria-hidden="true">&middot;</span>
             <span>Powered by <a href="https://trycanvas.app" class="hover:underline">Canvas</a></span>
         </div>

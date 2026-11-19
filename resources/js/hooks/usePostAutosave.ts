@@ -29,19 +29,24 @@ export function shouldSkipStore(snapshot: string, lastSaved: string | null, prom
 
 type UsePostAutosaveOptions = {
     postId: string | null;
+    locale?: string;
     form: PostFormState;
     enabled: boolean;
     debounceMs?: number;
     onSaved?: (post: Post, resolvedSlug?: string) => void;
 };
 
-export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSaved }: UsePostAutosaveOptions) {
+export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSaved, locale }: UsePostAutosaveOptions) {
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
     const [fieldErrors, setFieldErrors] = useState<LaravelValidationErrors>({});
     const [isDirty, setIsDirty] = useState(false);
 
     const lastSavedSnapshot = useRef<string | null>(null);
     const formRef = useRef(form);
+    const localeRef = useRef(locale);
+    useEffect(() => {
+        localeRef.current = locale;
+    }, [locale]);
     const onSavedRef = useRef(onSaved);
     const enabledRef = useRef(enabled);
     const postIdRef = useRef(postId);
@@ -119,6 +124,7 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
                 return false;
             }
 
+            const requestLocale = localeRef.current;
             const formSnapshot = formRef.current;
             const snapshot = serializeFormState(formSnapshot);
             const shouldPromote = promoteNextSave.current;
@@ -162,11 +168,13 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
                         promote: shouldPromote,
                         schedule: shouldSchedule,
                         publish_now: shouldPublishNow,
-                    })
+                    }),
+                    undefined,
+                    requestLocale
                 );
 
-                if (!mountedRef.current) {
-                    lastSavedSnapshot.current = snapshot;
+                if (!mountedRef.current || requestLocale !== localeRef.current) {
+                    if (requestLocale === localeRef.current) lastSavedSnapshot.current = snapshot;
                     resolveInFlight(true);
                     inFlightPromise.current = null;
 
@@ -185,8 +193,8 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
                     savingStartedAt.current = null;
                 }
 
-                if (!mountedRef.current) {
-                    lastSavedSnapshot.current = snapshot;
+                if (!mountedRef.current || requestLocale !== localeRef.current) {
+                    if (requestLocale === localeRef.current) lastSavedSnapshot.current = snapshot;
                     resolveInFlight(true);
                     inFlightPromise.current = null;
 
@@ -227,7 +235,7 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
             } catch (error) {
                 savingStartedAt.current = null;
 
-                if (mountedRef.current) {
+                if (mountedRef.current && requestLocale === localeRef.current) {
                     if (error instanceof ValidationError) {
                         setFieldErrors(error.errors);
                     }
@@ -309,7 +317,7 @@ export function usePostAutosave({ postId, form, enabled, debounceMs = 2500, onSa
                 debounceTimer.current = null;
             }
         };
-    }, [debounceMs, enabled, form, postId]);
+    }, [debounceMs, enabled, form, postId, locale]);
 
     useEffect(() => {
         if (saveStatus !== 'saved') {

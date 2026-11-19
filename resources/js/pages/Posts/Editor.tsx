@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useBlocker, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useBlocker, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Alert, AlertActions, AlertDescription, AlertTitle } from '@/components/alert';
+import { Select } from '@/components/select';
 import { Button } from '@/components/button';
 import PostBodyEditor from '@/components/posts/PostBodyEditor';
 import PostEditorLayout from '@/components/posts/PostEditorLayout';
@@ -50,11 +51,20 @@ const emptyForm = (): PostFormState => ({
 });
 
 export default function PostsEditor() {
-    const { t, user } = useCanvas();
-    const { id } = useParams();
+    const { t, user, boot } = useCanvas();
     const location = useLocation();
-    const navigate = useNavigate();
     const isNewRoute = location.pathname.endsWith('/new');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const locale = boot.content
+        ? isNewRoute
+            ? boot.content.default_locale
+            : (searchParams.get('locale') ?? boot.content.default_locale)
+        : undefined;
+    const sharedReadOnly = boot.content !== undefined && locale !== boot.content.default_locale;
+    const [translationStatuses, setTranslationStatuses] = useState<Post['translation_statuses']>({});
+    const [switchingLanguage, setSwitchingLanguage] = useState(false);
+    const { id } = useParams();
+    const navigate = useNavigate();
 
     const [form, setForm] = useState<PostFormState>(emptyForm);
     const [postId, setPostId] = useState<string | null>(isNewRoute ? null : (id ?? null));
@@ -96,6 +106,7 @@ export default function PostsEditor() {
 
     const handleSaved = useCallback((post: Post, resolvedSlug?: string) => {
         setDraftPersisted(true);
+        setTranslationStatuses(post.translation_statuses ?? {});
         setHasPendingChanges(postHasPendingChanges(post));
         if (post.last_revision !== undefined) {
             setLastRevision(post.last_revision);
@@ -142,13 +153,14 @@ export default function PostsEditor() {
 
     const { saveStatus, fieldErrors, isDirty, resetBaseline, saveNow, syncBaseline } = usePostAutosave({
         postId,
+        locale,
         form,
         enabled: autosaveEnabled,
         onSaved: handleSaved,
     });
 
     // Session-boundary checkpoint when leaving this post (SPA nav / tab close).
-    useLeaveRevisionCheckpoint(postId, draftPersisted && !loading && loadError === null && postId !== null);
+    useLeaveRevisionCheckpoint(postId, draftPersisted && !loading && loadError === null && postId !== null, locale);
 
     useEffect(() => {
         syncBaselineRef.current = syncBaseline;
@@ -211,7 +223,7 @@ export default function PostsEditor() {
         }
 
         try {
-            const post = await postsApi.discard(postId);
+            const post = await postsApi.discard(postId, undefined, locale);
             const next = postToFormState(post);
             setForm(next);
             setHasPendingChanges(false);
@@ -369,7 +381,10 @@ export default function PostsEditor() {
                         nextId,
                         false
                     );
-                    navigate(`/posts/${nextId}`, { replace: true });
+                    navigate(
+                        `/posts/${nextId}${boot.content ? `?locale=${encodeURIComponent(boot.content.default_locale)}` : ''}`,
+                        { replace: true }
+                    );
                     return;
                 }
 
@@ -378,8 +393,9 @@ export default function PostsEditor() {
                     return;
                 }
 
-                const response = await postsApi.show(id, controller.signal);
+                const response = await postsApi.show(id, controller.signal, locale);
                 setDraftPersisted(true);
+                setTranslationStatuses(response.post.translation_statuses ?? {});
                 setLastRevision(response.post.last_revision ?? null);
                 hydrateEditor(
                     postToFormState(response.post),
@@ -406,10 +422,10 @@ export default function PostsEditor() {
         void initialize();
 
         return () => controller.abort();
-    }, [hydrateEditor, id, isNewRoute, navigate, reloadKey, t, user]);
+    }, [hydrateEditor, id, isNewRoute, navigate, reloadKey, t, user, locale, boot.content]);
 
     function slugSyncedForm(current: PostFormState): PostFormState {
-        if (slugManuallyEditedRef.current) {
+        if (sharedReadOnly || slugManuallyEditedRef.current) {
             return current;
         }
 
@@ -422,11 +438,33 @@ export default function PostsEditor() {
         return { ...current, slug };
     }
 
+    async function changeContentLanguage(next: string) {
+        if (!postId || next === locale || switchingLanguage) return;
+        setSwitchingLanguage(true);
+        try {
+            if (!(await saveNow())) return;
+            try {
+                await postsApi.createRevision(postId, {}, undefined, locale);
+            } catch (error) {
+                if (!(error instanceof ApiError && error.status === 422)) throw error;
+            }
+            setHistoryOpen(false);
+            setInspectorOpen(false);
+            setLoading(true);
+            resetBaseline(serializeFormState(emptyForm()));
+            setSearchParams({ locale: next }, { replace: true });
+        } catch {
+            toast.error(t('editor.load_error'));
+        } finally {
+            setSwitchingLanguage(false);
+        }
+    }
+
     function handleTitleChange(title: string) {
         setForm((current) => {
             const next = { ...current, title };
 
-            if (slugManuallyEditedRef.current) {
+            if (sharedReadOnly || slugManuallyEditedRef.current) {
                 return next;
             }
 
@@ -507,6 +545,23 @@ export default function PostsEditor() {
     return (
         <>
             <PostEditorLayout
+                languageControl={
+                    boot.content ? (
+                        <Select
+                            aria-label={t('editor.content_language')}
+                            value={locale}
+                            disabled={switchingLanguage || publishBusy || !draftPersisted}
+                            onChange={(event) => void changeContentLanguage(event.target.value)}
+                            className="max-w-44"
+                        >
+                            {boot.content.locales.map((code) => (
+                                <option key={code} value={code}>
+                                    {code} · {t(`editor.translation_${translationStatuses?.[code] ?? 'missing'}`)}
+                                </option>
+                            ))}
+                        </Select>
+                    ) : null
+                }
                 form={form}
                 postId={postId}
                 titleError={fieldErrors.title?.[0]}
@@ -536,6 +591,8 @@ export default function PostsEditor() {
             />
 
             <PostVersionHistoryDrawer
+                key={locale}
+                locale={locale}
                 open={historyOpen}
                 onClose={() => setHistoryOpen(false)}
                 postId={postId}
@@ -545,6 +602,7 @@ export default function PostsEditor() {
             />
 
             <PostInspectorDrawer
+                sharedReadOnly={sharedReadOnly}
                 open={inspectorOpen}
                 section={inspectorSection}
                 onClose={() => setInspectorOpen(false)}

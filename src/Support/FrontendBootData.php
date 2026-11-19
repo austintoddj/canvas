@@ -26,6 +26,7 @@ final class FrontendBootData
         $locale = Localization::resolveLocale($canvasUser?->locale);
 
         return [
+            ...(ContentLocales::enabled() ? ['content' => ['default_locale' => ContentLocales::default(), 'locales' => ContentLocales::all()]] : []),
             'languages' => Localization::languageOptions($locale),
             'maxUpload' => UploadLimits::maxBytes(),
             'path' => Paths::basePath(),

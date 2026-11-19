@@ -99,6 +99,7 @@ final class RecordPostRevision
         /** @var PostRevision $revision */
         $revision = $post->revisions()->create([
             'id' => (string) Str::orderedUuid(),
+            'locale' => ContentLocales::enabled() ? $post->contentLocale() : null,
             'user_id' => $userId,
             'label' => $resolvedLabel,
             'reason' => $reason,
@@ -123,18 +124,19 @@ final class RecordPostRevision
      */
     public static function pruneExcessForPost(Post $post, ?int $keep = null): int
     {
-        return self::pruneExcessForPostId((string) $post->getKey(), $keep);
+        return self::pruneExcessForPostId((string) $post->getKey(), $keep, ContentLocales::enabled() ? $post->contentLocale() : null);
     }
 
     /**
      * @return int Number of rows deleted
      */
-    public static function pruneExcessForPostId(string $postId, ?int $keep = null): int
+    public static function pruneExcessForPostId(string $postId, ?int $keep = null, ?string $locale = null): int
     {
         $keep = max(1, $keep ?? PostRevision::DEFAULT_KEEP_PER_POST);
 
         $keepIds = PostRevision::query()
             ->where('post_id', $postId)
+            ->where('locale', $locale)
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit($keep)
@@ -146,6 +148,7 @@ final class RecordPostRevision
 
         return (int) PostRevision::query()
             ->where('post_id', $postId)
+            ->where('locale', $locale)
             ->whereNotIn('id', $keepIds)
             ->delete();
     }

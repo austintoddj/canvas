@@ -4,27 +4,35 @@ declare(strict_types=1);
 
 namespace Canvas\Models;
 
+use Astrotomic\Translatable\Contracts\Translatable;
+use Canvas\Concerns\HasTranslatedContent;
 use Canvas\Database\Factories\PostFactory;
+use Canvas\Support\ContentLocales;
 use Canvas\Support\PostBody;
 use Canvas\Support\ReadTime;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Casts\Json;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Arr;
 
 /**
  * @use HasFactory<PostFactory>
+ *
+ * @property-read Collection<int, PostTranslation> $translations
  */
-class Post extends Model
+class Post extends Model implements Translatable
 {
     /** @use HasFactory<PostFactory> */
     use HasFactory;
 
+    use HasTranslatedContent;
     use SoftDeletes;
 
     /**
@@ -121,7 +129,13 @@ class Post extends Model
      */
     public function revisions(): HasMany
     {
-        return $this->hasMany(PostRevision::class);
+        return $this->hasMany(PostRevision::class)->where(function ($query): void {
+            if (ContentLocales::enabled()) {
+                $query->where('locale', $this->contentLocale());
+            } else {
+                $query->whereNull('locale')->orWhere('locale', ContentLocales::default());
+            }
+        });
     }
 
     /**
@@ -169,7 +183,7 @@ class Post extends Model
 
     public function getReadTimeAttribute(): string
     {
-        return ReadTime::calculate($this->body, app()->getLocale());
+        return ReadTime::calculate($this->body, ContentLocales::enabled() ? $this->contentLocale() : app()->getLocale());
     }
 
     public function getPublishedAttribute(): bool
@@ -236,23 +250,13 @@ class Post extends Model
      * @param  array<string, mixed>  $data
      * @param  array<int, array{name?: string, slug?: string}>  $tags
      * @param  array<int, array{name?: string, slug?: string}>  $topic
-     * @return array{
-     *     title: mixed,
-     *     slug: mixed,
-     *     summary: mixed,
-     *     body: mixed,
-     *     featured_image: mixed,
-     *     featured_image_caption: mixed,
-     *     meta: mixed,
-     *     tags: list<array{name: string, slug: string}>,
-     *     topic: array{name: string, slug: string}|null
-     * }
+     * @return array<string, mixed>
      */
     public function buildPendingPayload(array $data, array $tags = [], array $topic = []): array
     {
         $topicInput = collect($topic)->first();
 
-        return [
+        $payload = [
             'title' => $data['title'] ?? $this->title,
             'slug' => $data['slug'] ?? $this->slug,
             'summary' => array_key_exists('summary', $data) ? $data['summary'] : $this->summary,
@@ -279,6 +283,10 @@ class Post extends Model
                 ]
                 : null,
         ];
+
+        return ContentLocales::enabled() && $this->contentLocale() !== ContentLocales::default()
+            ? Arr::only($payload, ['title', 'summary', 'body', 'meta'])
+            : $payload;
     }
 
     /**
@@ -304,6 +312,10 @@ class Post extends Model
 
         if (! $this->metaMatchesLive($pending['meta'] ?? null)) {
             return false;
+        }
+
+        if (ContentLocales::enabled() && $this->contentLocale() !== ContentLocales::default()) {
+            return true;
         }
 
         return $this->taxonomyMatchesLive($pending['tags'] ?? [], $pending['topic'] ?? null);
@@ -446,8 +458,15 @@ class Post extends Model
      * @param  Builder<Post>  $query
      * @return Builder<Post>
      */
-    public function scopePublished(Builder $query): Builder
+    public function scopePublished(Builder $query, ?string $locale = null): Builder
     {
+        if (ContentLocales::enabled()) {
+            $locale = ContentLocales::resolve($locale);
+            $locales = config('canvas.content.fallback', true) ? array_unique([$locale, ContentLocales::default()]) : [$locale];
+
+            return $query->whereHas('translations', fn ($translation) => $translation->whereIn('locale', $locales)->where('published_at', '<=', now()))->forLocale($locale);
+        }
+
         return $query->where('published_at', '<=', now()->toDateTimeString());
     }
 
@@ -460,11 +479,21 @@ class Post extends Model
      * @param  Builder<Post>  $query
      * @return Builder<Post>
      */
-    public function scopeForPublicSlug(Builder $query, string $slug): Builder
+    public function scopeForPublicSlug(Builder $query, string $slug, ?string $locale = null): Builder
     {
+        if (ContentLocales::enabled()) {
+            $locale = ContentLocales::resolve($locale);
+            $locales = config('canvas.content.fallback', true) ? array_unique([$locale, ContentLocales::default()]) : [$locale];
+            $date = PostTranslation::query()->select('published_at')->whereColumn('post_id', 'canvas_posts.id')
+                ->whereIn('locale', $locales)->where('published_at', '<=', now())
+                ->orderByRaw('case when locale = ? then 0 else 1 end', [$locale])->limit(1);
+
+            return $query->where('slug', $slug)->published($locale)->reorder()->orderBy($date)->orderBy('id');
+        }
+
         return $query
             ->where('slug', $slug)
-            ->published()
+            ->published($locale)
             ->reorder()
             ->orderBy('published_at')
             ->orderBy('id');
@@ -474,8 +503,14 @@ class Post extends Model
      * @param  Builder<Post>  $query
      * @return Builder<Post>
      */
-    public function scopeDraft(Builder $query): Builder
+    public function scopeDraft(Builder $query, ?string $locale = null): Builder
     {
+        if (ContentLocales::enabled()) {
+            $locale = ContentLocales::resolve($locale);
+
+            return $query->whereHas('translations', fn ($translation) => $translation->where('locale', $locale)->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '>', now())))->forLocale($locale, false);
+        }
+
         return $query->where(fn (Builder $q) => $q
             ->whereNull('published_at')
             ->orWhere('published_at', '>', now())

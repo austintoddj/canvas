@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Canvas\Http\Requests;
 
 use Canvas\Models\Post;
+use Canvas\Support\ContentLocales;
 use Canvas\Support\MediaUrl;
 use Canvas\Support\PostSlug;
 use Canvas\Support\PublishedAt;
@@ -59,6 +60,9 @@ class PostRequest extends FormRequest
      */
     public function rules(): array
     {
+        if (ContentLocales::enabled()) {
+            ContentLocales::requested();
+        }
         $user = $this->user(config('canvas.guard'));
         $postId = $this->route('id');
         $post = $this->existingPost();
@@ -159,6 +163,24 @@ class PostRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
+            if (ContentLocales::enabled() && ContentLocales::requested() !== ContentLocales::default()) {
+                $post = $this->existingPost();
+                foreach (['slug', 'featured_image', 'featured_image_caption'] as $field) {
+                    if ($this->exists($field) && $this->input($field) !== $post?->getAttribute($field)) {
+                        $validator->errors()->add($field, trans('canvas::app.editor.shared_content_fields'));
+                    }
+                }
+                foreach (['tags', 'topic'] as $field) {
+                    if ($this->exists($field)) {
+                        $current = $field === 'tags' ? $post?->tags->pluck('slug')->all() : ($post?->topic ? [$post->topic->slug] : []);
+                        $input = $this->input($field, []);
+                        $incoming = collect(is_array($input) ? $input : [])->pluck('slug')->sort()->values()->all();
+                        if ($incoming !== collect($current)->sort()->values()->all()) {
+                            $validator->errors()->add($field, trans('canvas::app.editor.shared_content_fields'));
+                        }
+                    }
+                }
+            }
             if ($this->boolean('schedule') && $this->boolean('publish_now')) {
                 $validator->errors()->add('schedule', 'The schedule and publish_now options cannot both be true.');
             }
@@ -174,6 +196,9 @@ class PostRequest extends FormRequest
         $this->postResolved = true;
         $postId = $this->route('id');
         $post = is_string($postId) ? Post::query()->find($postId) : null;
+        if ($post instanceof Post && ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
         $this->post = $post instanceof Post ? $post : null;
 
         return $this->post;

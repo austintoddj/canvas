@@ -36,7 +36,7 @@ class CanvasUiController extends Controller
             ->get();
 
         $channelTitle = config('app.name');
-        $channelLink = route('canvas-ui.index');
+        $channelLink = \Canvas\Support\ReaderUrl::route('canvas-ui.index');
         $channelDescription = 'Posts from '.$channelTitle.'.';
         $channelLanguage = str_replace('_', '-', app()->getLocale());
 
@@ -70,7 +70,16 @@ class CanvasUiController extends Controller
             referer: request()->header('referer'),
         ));
 
-        return view('canvas::ui.show', compact('post'));
+        $translationLinks = [];
+        if (\Canvas\Support\ContentLocales::enabled()) {
+            foreach ($post->translationStatuses() as $locale => $status) {
+                if ($status === 'published') {
+                    $translationLinks[$locale] = \Canvas\Support\ReaderUrl::route('canvas-ui.show', $slug, $locale);
+                }
+            }
+        }
+
+        return view('canvas::ui.show', compact('post', 'translationLinks'));
     }
 
     public function author(string $username): View

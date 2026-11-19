@@ -98,3 +98,9 @@ Payloads include metadata (id, slug, title, summary, dates, featured image, SEO 
     }
 }
 ```
+
+## Translated posts
+
+With multilingual content enabled, each translation emits its own publication, schedule, update, and unpublish events. Domain events expose `$event->locale`; webhook `data.locale` identifies the version and `data.id` remains the shared post ID. Event names and `api_version` remain unchanged. With multilingual content disabled, the webhook payload retains its existing shape.
+
+Pending-only saves do not emit events. Applying shared public fields through the primary version also emits update events for other published or scheduled translations affected by the change. Deleting the post emits deletion events for its published and scheduled translations. Scheduled publication is announced once per translation; keep the Laravel scheduler running.

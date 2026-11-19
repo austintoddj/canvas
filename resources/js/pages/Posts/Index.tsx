@@ -55,6 +55,7 @@ import { IconChartBar, IconPlus, IconTrash } from '@tabler/icons-react';
 
 function updateFilters(current: URLSearchParams, patch: Partial<PostsListFilters>, resetPage = false): URLSearchParams {
     const next = new URLSearchParams(current);
+    if (patch.locale !== undefined) next.set('locale', patch.locale);
 
     if (patch.tab !== undefined) {
         if (patch.tab === 'draft') {
@@ -105,7 +106,7 @@ function updateFilters(current: URLSearchParams, patch: Partial<PostsListFilters
 
 export default function PostsIndex() {
     const navigate = useNavigate();
-    const { t } = useCanvas();
+    const { t, boot } = useCanvas();
     const { canViewAllPosts } = usePermissions();
     const [searchParams, setSearchParams] = useSearchParams();
     const filters = parsePostsListFilters(searchParams);
@@ -294,6 +295,19 @@ export default function PostsIndex() {
 
                 {/* Below `sm`, `order-last` puts search and sort on their own rows under the pills. */}
                 <div className="order-last flex w-full flex-col gap-3 sm:order-none sm:w-auto sm:flex-row sm:items-center">
+                    {boot.content ? (
+                        <Select
+                            aria-label={t('editor.content_language')}
+                            value={filters.locale ?? boot.content.default_locale}
+                            onChange={(event) => setFilters({ locale: event.target.value }, true)}
+                        >
+                            {boot.content.locales.map((locale) => (
+                                <option key={locale} value={locale}>
+                                    {locale}
+                                </option>
+                            ))}
+                        </Select>
+                    ) : null}
                     <SearchField
                         id="posts-search"
                         label={t('posts.search_label')}
@@ -398,11 +412,17 @@ export default function PostsIndex() {
                                         className="group/list-row cursor-pointer hover:bg-zinc-950/5 dark:hover:bg-white/5"
                                         tabIndex={0}
                                         aria-label={t('common.edit_aria', { name: title })}
-                                        onClick={() => navigate(`/posts/${post.id}`)}
+                                        onClick={() =>
+                                            navigate(
+                                                `/posts/${post.id}${filters.locale ? `?locale=${encodeURIComponent(filters.locale)}` : ''}`
+                                            )
+                                        }
                                         onKeyDown={(event) => {
                                             if (event.key === 'Enter' || event.key === ' ') {
                                                 event.preventDefault();
-                                                navigate(`/posts/${post.id}`);
+                                                navigate(
+                                                    `/posts/${post.id}${filters.locale ? `?locale=${encodeURIComponent(filters.locale)}` : ''}`
+                                                );
                                             }
                                         }}
                                     >

@@ -73,7 +73,7 @@ class DigestCommand extends Command
 
                     $posts = Post::query()
                         ->where('user_id', $canvasUser->user_id)
-                        ->published()
+                        ->publishedAny()
                         ->withCount([
                             'views' => fn (Builder $query) => $query->whereBetween('created_at', [
                                 $period->startUtc(),

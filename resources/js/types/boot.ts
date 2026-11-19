@@ -30,6 +30,7 @@ export type LanguageOption = {
 };
 
 export type CanvasBoot = {
+    content?: { default_locale: string; locales: string[] };
     path: string;
     languages: LanguageOption[];
     maxUpload: number;

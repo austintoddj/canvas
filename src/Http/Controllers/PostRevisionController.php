@@ -9,6 +9,7 @@ use Canvas\Http\Requests\RenamePostRevisionRequest;
 use Canvas\Http\Requests\StorePostRevisionRequest;
 use Canvas\Models\Post;
 use Canvas\Models\PostRevision;
+use Canvas\Support\ContentLocales;
 use Canvas\Support\PostAuthor;
 use Canvas\Support\PostLastRevision;
 use Canvas\Support\PostSlug;
@@ -35,6 +36,9 @@ class PostRevisionController extends Controller
 
     public function index(Post $post): JsonResponse
     {
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
         $this->ensurePostIsVisibleToCurrentUser($post);
 
         $revisions = $post->revisions()
@@ -54,7 +58,13 @@ class PostRevisionController extends Controller
 
     public function show(Post $post, PostRevision $revision): JsonResponse
     {
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
         $this->ensureRevisionBelongsToPost($post, $revision);
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
         $this->ensurePostIsVisibleToCurrentUser($post);
 
         return response()->json([
@@ -64,6 +74,9 @@ class PostRevisionController extends Controller
 
     public function store(StorePostRevisionRequest $request, Post $post): JsonResponse
     {
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
         $this->ensurePostIsVisibleToCurrentUser($post);
         $this->ensurePostIsUpdatableByCurrentUser($post);
 
@@ -93,7 +106,13 @@ class PostRevisionController extends Controller
 
     public function update(RenamePostRevisionRequest $request, Post $post, PostRevision $revision): JsonResponse
     {
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
         $this->ensureRevisionBelongsToPost($post, $revision);
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
         $this->ensurePostIsVisibleToCurrentUser($post);
         $this->ensurePostIsUpdatableByCurrentUser($post);
 
@@ -118,7 +137,13 @@ class PostRevisionController extends Controller
      */
     public function restore(Post $post, PostRevision $revision): JsonResponse
     {
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
         $this->ensureRevisionBelongsToPost($post, $revision);
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
         $this->ensurePostIsVisibleToCurrentUser($post);
         $this->ensurePostIsUpdatableByCurrentUser($post);
 
@@ -132,6 +157,9 @@ class PostRevisionController extends Controller
             'meta' => $revision->meta,
         ];
 
+        if (ContentLocales::enabled() && $post->contentLocale() !== ContentLocales::default()) {
+            unset($data['slug'], $data['featured_image'], $data['featured_image_caption']);
+        }
         $post->loadMissing(['tags:name,slug', 'topic:id,name,slug']);
 
         $tags = $post->tags
@@ -174,7 +202,7 @@ class PostRevisionController extends Controller
 
     private function ensureRevisionBelongsToPost(Post $post, PostRevision $revision): void
     {
-        if ($revision->post_id !== $post->getKey()) {
+        if ($revision->post_id !== $post->getKey() || (ContentLocales::enabled() && $revision->locale !== $post->contentLocale()) || (! ContentLocales::enabled() && $revision->locale !== null && $revision->locale !== ContentLocales::default())) {
             throw (new ModelNotFoundException)->setModel(PostRevision::class, [$revision->getKey()]);
         }
     }
@@ -231,6 +259,10 @@ class PostRevisionController extends Controller
         $payload = $post->toArray();
         $payload['user'] = $author;
         $payload['last_revision'] = PostLastRevision::for($post);
+        if (ContentLocales::enabled()) {
+            $payload['translation_statuses'] = $post->translationStatuses();
+            $payload['default_locale'] = ContentLocales::default();
+        }
 
         return $payload;
     }

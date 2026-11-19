@@ -31,6 +31,7 @@ const editorChromeIconButtonClassName =
 
 type PostEditorLayoutProps = {
     form: PostFormState;
+    languageControl?: ReactNode;
     postId: string | null;
     titleError?: string;
     saveStatus: PostSaveStatus;
@@ -53,6 +54,7 @@ type PostEditorLayoutProps = {
 
 export default function PostEditorLayout({
     form,
+    languageControl,
     postId,
     titleError,
     saveStatus,
@@ -163,6 +165,7 @@ export default function PostEditorLayout({
                         <span className="hidden sm:inline">{t('posts.title')}</span>
                     </Button>
                 ) : null}
+                {languageControl}
                 <div className="flex min-w-0 items-center gap-2">
                     <div className="relative flex min-h-6 items-center">
                         <AnimatePresence mode="wait" initial={false}>

@@ -1,7 +1,7 @@
 @extends('canvas::ui.layout')
 
 @php
-    $seo = \Canvas\Support\PostSeo::resolve($post, route('canvas-ui.show', $post->slug));
+    $seo = \Canvas\Support\PostSeo::resolve($post, \Canvas\Support\ReaderUrl::route('canvas-ui.show', $post->slug, \Canvas\Support\ContentLocales::enabled() ? $post->contentLocale() : null));
     $pageTitle = $seo['title'].' — '.config('app.name');
     $jsonLd = [
         '@context' => 'https://schema.org',
@@ -26,6 +26,9 @@
 @section('title', $pageTitle)
 
 @push('head')
+    @foreach ($translationLinks ?? [] as $locale => $translationUrl)
+        <link rel="alternate" hreflang="{{ str_replace('_', '-', $locale) }}" href="{{ $translationUrl }}">
+    @endforeach
     @include('canvas::ui.partials.meta', [
         'title' => $seo['title'],
         'description' => $seo['description'],
@@ -40,10 +43,17 @@
 @endpush
 
 @section('content')
+    @if (! empty($translationLinks))
+        <nav class="mb-6 flex gap-4" aria-label="{{ trans('canvas::app.editor.content_language') }}">
+            @foreach ($translationLinks as $locale => $translationUrl)
+                <a href="{{ $translationUrl }}" hreflang="{{ str_replace('_', '-', $locale) }}" class="hover:underline" @if ($locale === $post->contentLocale()) aria-current="page" @endif>{{ $locale }}</a>
+            @endforeach
+        </nav>
+    @endif
     <article>
         <header class="mb-8">
             @if ($post->topic)
-                <a href="{{ route('canvas-ui.topic', $post->topic->slug) }}"
+                <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.topic', $post->topic->slug) }}"
                    class="text-sm font-medium text-indigo-600 hover:underline">
                     {{ $post->topic->name }}
                 </a>
@@ -95,7 +105,7 @@
             <footer class="mt-10 pt-6 border-t border-gray-100">
                 <div class="flex flex-wrap gap-2">
                     @foreach ($post->tags as $tag)
-                        <a href="{{ route('canvas-ui.tag', $tag->slug) }}"
+                        <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.tag', $tag->slug) }}"
                            class="inline-block px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200">
                             {{ $tag->name }}
                         </a>
@@ -106,7 +116,7 @@
     </article>
 
     <div class="mt-12">
-        <a href="{{ route('canvas-ui.index') }}" class="text-sm text-gray-500 hover:text-gray-700">
+        <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.index') }}" class="text-sm text-gray-500 hover:text-gray-700">
             &larr; All posts
         </a>
     </div>

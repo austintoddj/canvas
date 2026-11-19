@@ -31,6 +31,7 @@ type PostSidebarProps = {
     availableTopics: TaxonomyOption[];
     fieldErrors: LaravelValidationErrors;
     disabled?: boolean;
+    sharedReadOnly?: boolean;
 };
 
 function fieldError(errors: LaravelValidationErrors, key: string): string | undefined {
@@ -93,6 +94,7 @@ export default function PostSidebar({
     availableTopics,
     fieldErrors,
     disabled = false,
+    sharedReadOnly = false,
 }: PostSidebarProps) {
     const { t } = useCanvas();
     const canvasPath = (window.Canvas?.path ?? '/canvas').replace(/\/$/, '');
@@ -149,7 +151,7 @@ export default function PostSidebar({
                 <Input
                     name="slug"
                     value={form.slug}
-                    disabled={disabled}
+                    disabled={disabled || sharedReadOnly}
                     invalid={fieldError(fieldErrors, 'slug') !== undefined}
                     onChange={(event) => {
                         onSlugManualEdit?.();
@@ -185,7 +187,7 @@ export default function PostSidebar({
                     <TaxonomySelectButton
                         label={form.topic?.name ?? null}
                         emptyLabel={t('editor.select_topic')}
-                        disabled={disabled}
+                        disabled={disabled || sharedReadOnly}
                     />
                     <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                         <TaxonomyMenuItem
@@ -221,7 +223,7 @@ export default function PostSidebar({
                                 <BadgeButton
                                     key={tag.slug}
                                     color={isNew ? 'amber' : 'zinc'}
-                                    disabled={disabled}
+                                    disabled={disabled || sharedReadOnly}
                                     onClick={() => removeTag(tag.slug)}
                                     title={isNew ? t('editor.unknown_tag') : t('editor.remove_tag')}
                                     data-pending-taxonomy={isNew ? 'tag' : undefined}
@@ -244,7 +246,7 @@ export default function PostSidebar({
                     <TaxonomySelectButton
                         label={null}
                         emptyLabel={t('editor.add_tag')}
-                        disabled={disabled || tagChoices.length === 0}
+                        disabled={disabled || sharedReadOnly || tagChoices.length === 0}
                     />
                     <DropdownMenu anchor="bottom start" className={selectDropdownMenuClass}>
                         {tagChoices.length === 0 ? (

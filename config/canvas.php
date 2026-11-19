@@ -78,6 +78,13 @@ return [
     |
     */
 
+    'content' => [
+        'enabled' => env('CANVAS_CONTENT_ENABLED', false),
+        'locales' => [],
+        'default_locale' => null,
+        'fallback' => true,
+    ],
+
     'middleware' => [
         'web',
     ],

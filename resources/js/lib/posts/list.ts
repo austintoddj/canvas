@@ -8,6 +8,7 @@ export type PostsListTab = 'published' | 'draft';
 export type PostsListSort = 'activity' | 'activity_asc' | 'published' | 'published_asc' | 'created' | 'created_asc';
 
 export type PostsListFilters = {
+    locale?: string;
     tab: PostsListTab;
     scope: 'user' | 'all';
     page: number;
@@ -60,6 +61,7 @@ export function isPostScheduled(publishedAt: string | null, now: Date = new Date
 
 export function postsIndexPath(filters: Partial<PostsListFilters> = {}): string {
     const params: PostsIndexParams = {};
+    if (filters.locale) params.locale = filters.locale;
 
     if (filters.tab === 'draft') {
         params.type = 'draft';
@@ -96,11 +98,19 @@ export function parsePostsListFilters(searchParams: URLSearchParams): PostsListF
     const search = searchParams.get('search')?.trim() ?? '';
     const sort = parsePostsListSort(searchParams.get('sort'));
 
-    return { tab, scope, page, search, sort };
+    return {
+        tab,
+        scope,
+        page,
+        search,
+        sort,
+        ...(searchParams.get('locale') ? { locale: searchParams.get('locale')! } : {}),
+    };
 }
 
 export function postsIndexQueryParams(filters: PostsListFilters): PostsIndexParams {
     return {
+        ...(filters.locale ? { locale: filters.locale } : {}),
         type: filters.tab === 'draft' ? 'draft' : undefined,
         scope: filters.scope === 'all' ? 'all' : undefined,
         page: filters.page > 1 ? filters.page : undefined,

@@ -7,6 +7,7 @@ namespace Canvas\Http\Controllers;
 use Canvas\Analytics\DashboardInsights;
 use Canvas\Analytics\Period;
 use Canvas\Models\Post;
+use Canvas\Support\ContentLocales;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
@@ -32,7 +33,7 @@ class StatsController extends Controller
             fn (Builder $query) => $query->where('user_id', data_get($user, 'id'))
         );
 
-        $publishedIds = (clone $baseQuery)->published()->pluck('id');
+        $publishedIds = (clone $baseQuery)->publishedAny()->pluck('id');
         $locale = is_string(data_get($user, 'locale')) ? data_get($user, 'locale') : null;
 
         return response()->json([
@@ -58,6 +59,17 @@ class StatsController extends Controller
      */
     private function libraryCounts(Builder $baseQuery): array
     {
+        if (ContentLocales::enabled()) {
+            $unpublished = (clone $baseQuery)->whereDoesntHave('translations', fn ($q) => $q->whereIn('locale', ContentLocales::all())->where('published_at', '<=', now()));
+            $scheduled = fn ($q) => $q->whereIn('locale', ContentLocales::all())->where('published_at', '>', now());
+
+            return [
+                'published' => (clone $baseQuery)->publishedAny()->count(),
+                'drafts' => (clone $unpublished)->whereDoesntHave('translations', $scheduled)->count(),
+                'scheduled' => (clone $unpublished)->whereHas('translations', $scheduled)->count(),
+                'pending_updates' => (clone $baseQuery)->whereHas('translations', fn ($q) => $q->whereIn('locale', ContentLocales::all())->whereNotNull('pending'))->count(),
+            ];
+        }
         $now = now()->toDateTimeString();
 
         $counts = (clone $baseQuery)
@@ -90,6 +102,22 @@ class StatsController extends Controller
      */
     private function pipeline(Builder $baseQuery): array
     {
+        if (ContentLocales::enabled()) {
+            $result = [];
+            foreach (['drafts' => 'draft', 'scheduled' => 'scheduled', 'pending' => 'pending'] as $key => $status) {
+                $query = (clone $baseQuery)->whereHas('translations', function ($q) use ($status): void {
+                    $q->whereIn('locale', ContentLocales::all());
+                    match ($status) {
+                        'draft' => $q->whereNull('published_at'),
+                        'scheduled' => $q->where('published_at', '>', now()),
+                        'pending' => $q->whereNotNull('pending'),
+                    };
+                });
+                $result[$key] = $this->mapPipelinePosts($query->withAnyTranslation($status)->latest('updated_at')->limit(self::PIPELINE_LIMIT)->get());
+            }
+
+            return $result;
+        }
         $now = now();
 
         return [
@@ -156,6 +184,7 @@ class StatsController extends Controller
     {
         /** @var Collection<int, Post> $posts */
         $posts = (clone $baseQuery)
+            ->withAnyTranslation()
             ->select('id', 'title', 'summary', 'featured_image', 'published_at', 'created_at', 'updated_at', 'pending')
             ->withCount('views')
             ->latest('updated_at')
@@ -188,7 +217,7 @@ class StatsController extends Controller
 
         /** @var Collection<int, Post> $posts */
         $posts = (clone $baseQuery)
-            ->published()
+            ->publishedAny()
             ->select('id', 'title')
             ->withCount([
                 'views' => fn (Builder $query) => $query->whereBetween('created_at', [

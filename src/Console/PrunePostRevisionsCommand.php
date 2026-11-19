@@ -20,15 +20,15 @@ class PrunePostRevisionsCommand extends Command
         $keep = max(1, (int) $this->option('keep'));
 
         $postIds = PostRevision::query()
-            ->select('post_id')
-            ->groupBy('post_id')
+            ->select('post_id', 'locale')
+            ->groupBy('post_id', 'locale')
             ->havingRaw('count(*) > ?', [$keep])
-            ->pluck('post_id');
+            ->get();
 
         $deleted = 0;
 
         foreach ($postIds as $postId) {
-            $deleted += RecordPostRevision::pruneExcessForPostId((string) $postId, $keep);
+            $deleted += RecordPostRevision::pruneExcessForPostId((string) $postId->post_id, $keep, $postId->locale);
         }
 
         $this->info("Deleted {$deleted} post revision row(s) (kept {$keep} per post).");

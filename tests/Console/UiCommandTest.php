@@ -2,6 +2,7 @@
 
 use Canvas\Tests\TestCase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
 
 beforeEach(function (): void {
     TestCase::acquireCanvasUiScaffoldLock();
@@ -111,9 +112,10 @@ it('scaffolds a controller that is syntactically valid PHP', function (): void {
 it('creates the route stub with the canvas-ui prefix', function (): void {
     $this->artisan('canvas:ui');
 
-    $contents = file_get_contents(base_path('routes/canvas-ui.php'));
-
-    $this->assertStringContainsString("prefix('canvas-ui')", $contents);
+    require base_path('routes/canvas-ui.php');
+    Route::getRoutes()->refreshNameLookups();
+    expect(Route::getRoutes()->getByName('canvas-ui.index')->uri())->toBe('canvas-ui')
+        ->and(Route::getRoutes()->getByName('canvas-ui.show')->uri())->toBe('canvas-ui/{slug}');
 });
 
 it('creates the route stub with all named routes', function (): void {
