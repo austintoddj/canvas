@@ -17,6 +17,20 @@ final class HostUser
         return config('canvas.user_model');
     }
 
+    public static function name(?Model $user): ?string
+    {
+        if ($user === null) {
+            return null;
+        }
+
+        $attribute = $user->hasGetMutator('canvas_name') || $user->hasAttributeGetMutator('canvas_name')
+            ? 'canvas_name'
+            : 'name';
+        $name = $user->getAttributeValue($attribute);
+
+        return is_scalar($name) ? (string) $name : null;
+    }
+
     public static function findByIdentifier(int|string $value): ?Model
     {
         $userModel = self::modelClass();

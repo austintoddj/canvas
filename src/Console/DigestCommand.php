@@ -8,6 +8,7 @@ use Canvas\Mail\WeeklyDigest;
 use Canvas\Models\CanvasUser;
 use Canvas\Models\Post;
 use Canvas\Support\DigestPeriod;
+use Canvas\Support\HostUser;
 use Canvas\Support\Localization;
 use Canvas\Support\ReadTime;
 use Illuminate\Console\Command;
@@ -61,7 +62,7 @@ class DigestCommand extends Command
                     }
 
                     $email = data_get($user, 'email');
-                    $name = data_get($user, 'name');
+                    $name = HostUser::name($user);
 
                     if (! is_string($email) || $email === '' || ! is_string($name) || $name === '') {
                         continue;

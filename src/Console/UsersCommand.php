@@ -7,6 +7,7 @@ namespace Canvas\Console;
 use Canvas\Console\Concerns\ResolvesCanvasUsers;
 use Canvas\Http\Resources\UserResource;
 use Canvas\Models\CanvasUser;
+use Canvas\Support\HostUser;
 use Canvas\Support\Localization;
 use Illuminate\Console\Command;
 
@@ -30,9 +31,9 @@ class UsersCommand extends Command
         $rows = CanvasUser::query()
             ->with('user')
             ->get()
-            ->sortBy(fn (CanvasUser $canvasUser): mixed => data_get($canvasUser->user, 'name'))
+            ->sortBy(fn (CanvasUser $canvasUser): mixed => HostUser::name($canvasUser->user))
             ->map(fn (CanvasUser $canvasUser): array => [
-                data_get($canvasUser->user, 'name'),
+                HostUser::name($canvasUser->user),
                 data_get($canvasUser->user, 'email'),
                 $canvasUser->username,
                 $canvasUser->role->label(),
