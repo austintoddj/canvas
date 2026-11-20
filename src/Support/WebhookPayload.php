@@ -42,6 +42,7 @@ final class WebhookPayload
             'created_at' => self::iso8601($createdAt ?? now()),
             'data' => [
                 'id' => $post->id,
+                ...(ContentLocales::enabled() ? ['locale' => $post->contentLocale()] : []),
                 'slug' => $post->slug,
                 'title' => $post->title,
                 'summary' => $post->summary,

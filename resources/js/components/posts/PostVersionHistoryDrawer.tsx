@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Alert, AlertActions, AlertBody, AlertDescription, AlertTitle } from '@/components/alert';
 import { Button } from '@/components/button';
@@ -28,6 +28,7 @@ type PostVersionHistoryDrawerProps = {
     open: boolean;
     onClose: () => void;
     postId: string | null;
+    locale?: string;
     /** Current editor body/title used as the "after" side when previewing a revision. */
     currentTitle: string;
     currentBody: string | null;
@@ -41,6 +42,7 @@ export default function PostVersionHistoryDrawer({
     open,
     onClose,
     postId,
+    locale,
     currentTitle,
     currentBody,
     onRestored,
@@ -59,6 +61,13 @@ export default function PostVersionHistoryDrawer({
     const [busyId, setBusyId] = useState<string | null>(null);
     const [renameOpen, setRenameOpen] = useState(false);
     const [renameValue, setRenameValue] = useState('');
+    const restoreSession = useRef(0);
+
+    useEffect(() => {
+        return () => {
+            restoreSession.current += 1;
+        };
+    }, [postId, locale]);
 
     useEffect(() => {
         if (!open || postId === null) {
@@ -83,7 +92,7 @@ export default function PostVersionHistoryDrawer({
         });
 
         postsApi
-            .revisions(postId, controller.signal)
+            .revisions(postId, controller.signal, locale)
             .then((response) => {
                 if (cancelled) {
                     return;
@@ -107,7 +116,7 @@ export default function PostVersionHistoryDrawer({
             cancelled = true;
             controller.abort();
         };
-    }, [open, postId, reloadKey, t]);
+    }, [open, postId, reloadKey, t, locale]);
 
     const visibleRevisions = useMemo(() => filterRevisions(revisions, filter), [revisions, filter]);
     const groups = useMemo(
@@ -139,7 +148,7 @@ export default function PostVersionHistoryDrawer({
         setSelectedLoading(true);
 
         try {
-            const response = await postsApi.revision(postId, id);
+            const response = await postsApi.revision(postId, id, undefined, locale);
             setFullById((current) => {
                 const next = new Map(current);
                 next.set(id, response.revision);
@@ -193,10 +202,12 @@ export default function PostVersionHistoryDrawer({
             return;
         }
 
+        const session = restoreSession.current;
         setBusyId(revision.id);
 
         try {
-            const post = await postsApi.restoreRevision(postId, revision.id);
+            const post = await postsApi.restoreRevision(postId, revision.id, undefined, locale);
+            if (session !== restoreSession.current) return;
             onRestored(post);
             if (post.has_pending_changes) {
                 toast.success(t('editor.history_restored_pending', 'Restored as pending edits — Update to publish.'));
@@ -208,9 +219,11 @@ export default function PostVersionHistoryDrawer({
             setRenameOpen(false);
             onClose();
         } catch {
-            toast.error(t('editor.history_restore_error', 'Unable to restore this version.'));
+            if (session === restoreSession.current) {
+                toast.error(t('editor.history_restore_error', 'Unable to restore this version.'));
+            }
         } finally {
-            setBusyId(null);
+            if (session === restoreSession.current) setBusyId(null);
         }
     }
 
@@ -224,7 +237,7 @@ export default function PostVersionHistoryDrawer({
         setBusyId(revisionId);
 
         try {
-            const response = await postsApi.renameRevision(postId, revisionId, { label: nextLabel });
+            const response = await postsApi.renameRevision(postId, revisionId, { label: nextLabel }, undefined, locale);
             setRevisions((current) => current.map((item) => (item.id === revisionId ? response.revision : item)));
             setFullById((current) => {
                 const full = current.get(revisionId);

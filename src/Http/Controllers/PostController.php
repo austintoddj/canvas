@@ -7,8 +7,10 @@ namespace Canvas\Http\Controllers;
 use Canvas\Analytics\PostInsights;
 use Canvas\Http\Requests\PostRequest;
 use Canvas\Models\Post;
+use Canvas\Models\PostTranslation;
 use Canvas\Models\Tag;
 use Canvas\Models\Topic;
+use Canvas\Support\ContentLocales;
 use Canvas\Support\PostAuthor;
 use Canvas\Support\PostLastRevision;
 use Canvas\Support\PostLifecycleEvents;
@@ -20,6 +22,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
@@ -34,6 +37,10 @@ class PostController extends Controller
 
         $search = request()->string('search')->trim()->toString();
         $sort = request()->query('sort');
+
+        if (ContentLocales::enabled()) {
+            return $this->translatedIndex($baseQuery);
+        }
 
         $posts = (clone $baseQuery)
             // `pending` is selected so the has_pending_changes append resolves, then hidden
@@ -69,12 +76,16 @@ class PostController extends Controller
     public function create(): JsonResponse
     {
         $uuid = Str::uuid();
+        if (ContentLocales::enabled()) {
+            ContentLocales::requested();
+        }
 
         return response()->json([
             'post' => Post::query()->make([
                 'id' => $uuid->toString(),
                 'slug' => "post-{$uuid->toString()}",
             ]),
+            ...(ContentLocales::enabled() ? ['content' => ['default_locale' => ContentLocales::default(), 'locales' => ContentLocales::all()]] : []),
             'tags' => Tag::query()->get(['name', 'slug']),
             'topics' => Topic::query()->get(['name', 'slug']),
         ]);
@@ -88,7 +99,13 @@ class PostController extends Controller
      */
     public function store(PostRequest $request, string $id): JsonResponse
     {
+        return DB::transaction(fn () => $this->storePost($request, $id));
+    }
+
+    private function storePost(PostRequest $request, string $id): JsonResponse
+    {
         $data = $request->validated();
+        unset($data['locale']);
         $promote = (bool) ($data['promote'] ?? false);
         $publishNow = (bool) ($data['publish_now'] ?? false);
         unset($data['promote'], $data['schedule'], $data['publish_now']);
@@ -101,7 +118,7 @@ class PostController extends Controller
 
         $user = request()->user(config('canvas.guard'));
 
-        $post = Post::query()->with('tags', 'topic')->find($id);
+        $post = Post::query()->with('tags', 'topic')->lockForUpdate()->find($id);
         $created = $post === null;
 
         if ($post && Gate::forUser($user)->denies('update', $post)) {
@@ -109,6 +126,9 @@ class PostController extends Controller
         }
 
         $post ??= new Post(['id' => $id]);
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
 
         $tagsInput = $request->input('tags', []);
         $topicInput = $request->input('topic', []);
@@ -125,6 +145,7 @@ class PostController extends Controller
             return response()->json($this->postPayload($post->refresh()), 200);
         }
 
+        $otherSnapshots = PostLifecycleEvents::otherTranslationSnapshots($post);
         $before = $post->exists ? PostSnapshot::from($post) : null;
         $hadRevisions = $post->exists && $post->revisions()->exists();
 
@@ -132,13 +153,20 @@ class PostController extends Controller
         $post->user_id ??= data_get($user, 'id');
         $post->clearPending();
 
-        $post->topic_id = $this->resolveTopicId($topicInput);
+        if (! ContentLocales::enabled() || $post->contentLocale() === ContentLocales::default()) {
+            $post->topic_id = $this->resolveTopicId($topicInput);
+        }
         $post->save();
 
-        $post->tags()->sync($this->resolveTagsForSync($tagsInput));
+        if (! ContentLocales::enabled() || $post->contentLocale() === ContentLocales::default()) {
+            $post->tags()->sync($this->resolveTagsForSync($tagsInput));
+        }
         $post->load(['tags', 'topic']);
 
         PostLifecycleEvents::dispatch($before, $post);
+        foreach ($otherSnapshots as $locale => $snapshot) {
+            PostLifecycleEvents::dispatch($snapshot, (clone $post)->inLocale($locale));
+        }
 
         $after = PostSnapshot::from($post);
         $reason = RecordPostRevision::reasonForStore($before, $after, $promote, $hadRevisions);
@@ -153,6 +181,9 @@ class PostController extends Controller
     public function discard(Post $post): JsonResponse
     {
         $this->ensurePostIsVisibleToCurrentUser($post);
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
 
         if (Gate::forUser(request()->user(config('canvas.guard')))->denies('update', $post)) {
             throw (new ModelNotFoundException)->setModel(Post::class, [$post->getKey()]);
@@ -167,11 +198,15 @@ class PostController extends Controller
     public function show(Post $post): JsonResponse
     {
         $this->ensurePostIsVisibleToCurrentUser($post);
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
 
         $post->reconcileNoOpPending();
 
         return response()->json([
             'post' => $this->postPayload($post->refresh()),
+            ...(ContentLocales::enabled() ? ['content' => ['default_locale' => ContentLocales::default(), 'locales' => ContentLocales::all()]] : []),
             'tags' => Tag::query()->get(['name', 'slug']),
             'topics' => Topic::query()->get(['name', 'slug']),
         ]);
@@ -180,7 +215,13 @@ class PostController extends Controller
     public function stats(Post $post): JsonResponse
     {
         $this->ensurePostIsVisibleToCurrentUser($post);
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
 
+        if (ContentLocales::enabled()) {
+            $post = Post::query()->whereKey($post->id)->publishedAny()->first() ?? $post;
+        }
         if (! $post->published) {
             return response()->json([
                 'message' => trans('canvas::app.stats.published_only'),
@@ -201,13 +242,64 @@ class PostController extends Controller
     public function destroy(Post $post): JsonResponse
     {
         $this->ensurePostIsVisibleToCurrentUser($post);
+        if (ContentLocales::enabled()) {
+            $post->inLocale(ContentLocales::requested());
+        }
 
         $post->loadMissing(['tags', 'topic']);
-        PostLifecycleEvents::dispatch(PostSnapshot::from($post), $post, deleted: true);
+        if (ContentLocales::enabled()) {
+            foreach ($post->translationStatuses() as $locale => $status) {
+                if (in_array($status, ['published', 'scheduled'], true)) {
+                    $localized = (clone $post)->inLocale($locale);
+                    PostLifecycleEvents::dispatch(PostSnapshot::from($localized), $localized, deleted: true);
+                }
+            }
+        } else {
+            PostLifecycleEvents::dispatch(PostSnapshot::from($post), $post, deleted: true);
+        }
 
         $post->delete();
 
         return response()->json(null, 204);
+    }
+
+    /** @param Builder<Post> $baseQuery */
+    private function translatedIndex(Builder $baseQuery): JsonResponse
+    {
+        $locale = ContentLocales::requested();
+        $baseQuery->whereHas('translations', fn ($q) => $q->where('locale', $locale));
+        $published = fn ($q) => $q->where('locale', $locale)->where('published_at', '<=', now());
+        $draft = fn ($q) => $q->where('locale', $locale)->where(fn ($q) => $q->whereNull('published_at')->orWhere('published_at', '>', now()));
+        $query = (clone $baseQuery)
+            ->select('canvas_posts.id', 'slug', 'featured_image', 'featured_image_caption', 'user_id', 'topic_id', 'canvas_posts.created_at', 'canvas_posts.updated_at')
+            ->whereHas('translations', request('type') === 'draft' ? $draft : $published);
+        $search = request()->string('search')->trim()->toString();
+        if ($search !== '') {
+            $query->whereHas('translations', fn ($q) => $q->where('locale', $locale)->whereRaw('title like ? escape ?', ['%'.addcslashes($search, '%_\\').'%', '\\']));
+        }
+        $sort = request('sort');
+        if (in_array($sort, ['published', 'published_asc', 'activity', 'activity_asc'], true)) {
+            $column = str_starts_with($sort, 'activity') ? 'updated_at' : 'published_at';
+            if ($column === 'published_at') {
+                $query->orderBy(PostTranslation::query()->selectRaw('case when published_at is null then 1 else 0 end')
+                    ->whereColumn('post_id', 'canvas_posts.id')->where('locale', $locale));
+            }
+            $query->orderBy(PostTranslation::query()->select($column)->whereColumn('post_id', 'canvas_posts.id')->where('locale', $locale), str_ends_with($sort, '_asc') ? 'asc' : 'desc');
+            $query->orderBy('id');
+        } else {
+            $query->orderedForIndex(is_string($sort) ? $sort : null);
+        }
+        $posts = $query->forLocale($locale, false)->withCount('views')->paginate();
+        $posts->getCollection()->each(function (Post $post): void {
+            $post->makeHidden(['pending', 'body', 'meta']);
+        });
+
+        return response()->json([
+            'posts' => $posts,
+            'draftCount' => (clone $baseQuery)->whereHas('translations', $draft)->count(),
+            'publishedCount' => (clone $baseQuery)->whereHas('translations', $published)->count(),
+            'content' => ['default_locale' => ContentLocales::default(), 'locales' => ContentLocales::all()],
+        ]);
     }
 
     private function ensurePostIsVisibleToCurrentUser(Post $post): void
@@ -232,6 +324,10 @@ class PostController extends Controller
         $payload = $post->toArray();
         $payload['user'] = $author;
         $payload['last_revision'] = PostLastRevision::for($post);
+        if (ContentLocales::enabled()) {
+            $payload['translation_statuses'] = $post->translationStatuses();
+            $payload['default_locale'] = ContentLocales::default();
+        }
 
         return $payload;
     }

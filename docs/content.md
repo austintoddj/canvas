@@ -204,3 +204,54 @@ For listings, `PostAuthor::mapByUserIds()` loads host users and Canvas profiles 
 For a single post, load the full `user` relation and call `PostAuthor::for()`. Both helpers return only the author ID, resolved name, Canvas username, and avatar URL. Replace any loaded host relation with that payload before serializing the post.
 
 Never expose `pending` or sensitive host user fields. For cache invalidation and SSG rebuilds, prefer [webhooks](./webhooks.md).
+
+## Multilingual posts
+
+A multilingual post shares its ID, slug, author, featured image and caption, tags, topic, views, and visits. Title, summary, HTML body, and SEO metadata belong to each translation. Publication dates, scheduled announcements, pending edits, and version history are independent per language.
+
+### Enabling translations
+
+Configure your [content languages](./configuration.md#content-languages), leaving the feature disabled. Run package migrations, then explicitly assign the existing content to the configured primary language:
+
+```bash
+php artisan migrate
+php artisan canvas:translate-posts --locale=en --dry-run
+php artisan canvas:translate-posts --locale=en
+```
+
+Run the transfer while editorial writes are stopped. It copies existing content, pending changes, publication markers, and history, including soft-deleted posts, without emitting lifecycle events. It preserves IDs and timestamps and may be run again after interruption. The dry run validates the same primary-language restrictions without writing data. It synchronizes the primary translation from the legacy columns; other languages are preserved.
+
+Set `CANVAS_CONTENT_ENABLED=true` and refresh your configuration cache. The editor now offers a content-language selector. New translations start empty. Saving before switching languages preserves the current changes; a failed save keeps the current language open. Shared fields are edited in the primary language and follow its existing publish/update behavior.
+
+You may disable the feature to return to the current primary content. Other translations remain stored. Before re-enabling, run the transfer command again while writes are stopped to include primary-language edits made while disabled. Changing the primary language after transfer requires a separate data migration. Removing a language from configuration hides it without deleting its content.
+
+### Reading translations
+
+```php
+$posts = Post::published('de')->with(['user', 'topic'])->paginate();
+$post = Post::forPublicSlug($slug, 'de')->firstOrFail();
+
+// The actual language may be the primary language when fallback was used.
+$locale = $post->contentLocale();
+```
+
+Without an explicit language, these scopes use Laravel's current locale when supported, otherwise the primary language. They load only published versions for the requested language and its allowed fallback. The selected fields and publication date always come from the same version. If neither is available, the listing excludes the post and the slug lookup returns no result.
+
+`forLocale($locale)` sets the same language context for a custom public query; combine it with `published($locale)` to restrict visibility. Raw `where`, `select`, and `orderBy` calls on the old content columns still target the primary-language mirror. Use the `translations` relationship or Astrotomic's translation query methods for translated fields. Keep unpublished relations and pending data out of your own API resources.
+
+### Writing translations
+
+```php
+$post->inLocale('de');
+$post->title = 'Ein neuer Beitrag';
+$post->body = '<p>Hallo!</p>';
+$post->save();
+
+// Astrotomic also exposes explicit translation models.
+$post->translateOrNew('de')->summary = 'Eine kurze Zusammenfassung';
+$post->save();
+```
+
+Model saves persist content directly. Use the Canvas editor for its pending/promote workflow. Save through the parent post to keep the primary-language mirror synchronized atomically. HTML sanitization also applies to translated bodies and pending content.
+
+History retention keeps the newest 50 checkpoints **per language**. Restoring a translation cannot restore another language or overwrite shared fields from a secondary language. Analytics remain aggregated per post, without counting each translation as another article.

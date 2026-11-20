@@ -6,7 +6,7 @@
     @include('canvas::ui.partials.meta', [
         'title' => 'Tags',
         'description' => 'Browse tags on '.config('app.name').'.',
-        'url' => route('canvas-ui.tags'),
+        'url' => \Canvas\Support\ReaderUrl::route('canvas-ui.tags'),
         'type' => 'website',
     ])
 @endpush
@@ -19,7 +19,7 @@
     <div class="space-y-3">
         @forelse ($tags as $tag)
             <div class="flex items-center justify-between border-b border-gray-100 pb-3 last:border-0">
-                <a href="{{ route('canvas-ui.tag', $tag->slug) }}"
+                <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.tag', $tag->slug) }}"
                    class="font-medium text-gray-800 hover:underline">
                     {{ $tag->name }}
                 </a>
@@ -37,7 +37,7 @@
     </div>
 
     <div class="mt-8">
-        <a href="{{ route('canvas-ui.index') }}" class="text-sm text-gray-500 hover:text-gray-700">
+        <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.index') }}" class="text-sm text-gray-500 hover:text-gray-700">
             &larr; All posts
         </a>
     </div>

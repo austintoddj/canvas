@@ -6,6 +6,7 @@ namespace Canvas\Models;
 
 use Canvas\Database\Factories\PostRevisionFactory;
 use Canvas\Enums\RevisionReason;
+use Canvas\Support\ContentLocales;
 use Canvas\Support\PostBody;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,6 +39,16 @@ class PostRevision extends Model
         'reason' => RevisionReason::class,
         'meta' => 'array',
     ];
+
+    public function attributesToArray()
+    {
+        $attributes = parent::attributesToArray();
+        if (! ContentLocales::enabled()) {
+            unset($attributes['locale']);
+        }
+
+        return $attributes;
+    }
 
     protected static function newFactory(): PostRevisionFactory
     {

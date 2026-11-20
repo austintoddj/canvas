@@ -15,6 +15,7 @@ use Canvas\Console\PruneWebhookDeliveriesCommand;
 use Canvas\Console\PublishCommand;
 use Canvas\Console\RemoveAccessCommand;
 use Canvas\Console\RolesCommand;
+use Canvas\Console\TranslatePostsCommand;
 use Canvas\Console\UiCommand;
 use Canvas\Console\UsersCommand;
 use Canvas\Contracts\HostResolver;
@@ -65,6 +66,8 @@ class CanvasServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/canvas.php', 'canvas');
+        // Resolve before request middleware changes Laravel's runtime locale.
+        $this->app['config']->set('canvas.content.default_locale', config('canvas.content.default_locale') ?: config('app.locale', 'en'));
 
         $this->app->singleton(MediaStorage::class, static fn (): MediaStorage => MediaStorage::make());
         $this->app->singleton(MediaService::class);
@@ -212,6 +215,7 @@ class CanvasServiceProvider extends ServiceProvider
         }
 
         $this->commands([
+            TranslatePostsCommand::class,
             AnnounceScheduledCommand::class,
             AssignRoleCommand::class,
             DigestCommand::class,

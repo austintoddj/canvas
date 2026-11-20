@@ -15,7 +15,7 @@ import {
  *
  * Server skips when content matches the latest checkpoint.
  */
-export function useLeaveRevisionCheckpoint(postId: string | null, enabled: boolean): void {
+export function useLeaveRevisionCheckpoint(postId: string | null, enabled: boolean, locale?: string): void {
     const enabledRef = useRef(enabled);
 
     useEffect(() => {
@@ -27,9 +27,9 @@ export function useLeaveRevisionCheckpoint(postId: string | null, enabled: boole
             return undefined;
         }
 
-        const id = postId;
+        const id = locale ? `${postId}:${locale}` : postId;
 
-        const send = (targetId: string) => postsApi.createRevision(targetId, {});
+        const send = () => postsApi.createRevision(postId, {}, undefined, locale);
 
         // Cancel any stale deferred leave for this id (Strict Mode remount).
         cancelLeaveRevisionCheckpoint(id);
@@ -54,5 +54,5 @@ export function useLeaveRevisionCheckpoint(postId: string | null, enabled: boole
 
             armLeaveRevisionCheckpoint(id, send);
         };
-    }, [postId, enabled]);
+    }, [postId, enabled, locale]);
 }

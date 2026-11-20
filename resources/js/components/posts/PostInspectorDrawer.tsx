@@ -25,6 +25,7 @@ type PostInspectorDrawerProps = {
     availableTopics: TaxonomyOption[];
     fieldErrors: LaravelValidationErrors;
     disabled?: boolean;
+    sharedReadOnly?: boolean;
     hasPendingChanges?: boolean;
     deleting?: boolean;
     onSlugManualEdit?: () => void;
@@ -45,6 +46,7 @@ export default function PostInspectorDrawer({
     availableTopics,
     fieldErrors,
     disabled = false,
+    sharedReadOnly = false,
     hasPendingChanges = false,
     deleting = false,
     onSlugManualEdit,
@@ -75,6 +77,7 @@ export default function PostInspectorDrawer({
 
             {section === 'post' ? (
                 <div className="min-w-0 space-y-6 overflow-x-hidden px-5 py-5" data-post-inspector-section="post">
+                    {sharedReadOnly ? <PageDescription>{t('editor.shared_content_fields')}</PageDescription> : null}
                     <div className="min-w-0">
                         <PostSidebar
                             form={form}
@@ -82,6 +85,7 @@ export default function PostInspectorDrawer({
                             availableTopics={availableTopics}
                             fieldErrors={fieldErrors}
                             disabled={disabled}
+                            sharedReadOnly={sharedReadOnly}
                             onChange={onChange}
                             onSlugManualEdit={onSlugManualEdit}
                         />
@@ -95,7 +99,11 @@ export default function PostInspectorDrawer({
                         </Heading>
                         <PageDescription>{t('editor.featured_image_help')}</PageDescription>
                         <div className="mt-4 min-w-0">
-                            <FeaturedImagePicker form={form} disabled={disabled} onChange={onChange} />
+                            <FeaturedImagePicker
+                                form={form}
+                                disabled={disabled || sharedReadOnly}
+                                onChange={onChange}
+                            />
                         </div>
                     </div>
 

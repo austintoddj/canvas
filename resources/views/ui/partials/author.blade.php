@@ -27,7 +27,7 @@
             ]) aria-hidden="true">{{ $initials }}</span>
         @endif
         @if ($canvasUser?->username)
-            <a href="{{ route('canvas-ui.author', $canvasUser->username) }}"
+            <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.author', $canvasUser->username) }}"
                @class(['hover:underline', $linkClass ?? null])>
                 {{ $authorName }}
             </a>

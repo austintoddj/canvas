@@ -6,7 +6,7 @@
     @include('canvas::ui.partials.meta', [
         'title' => $tag->name,
         'description' => 'Posts tagged '.$tag->name.'.',
-        'url' => route('canvas-ui.tag', $tag->slug),
+        'url' => \Canvas\Support\ReaderUrl::route('canvas-ui.tag', $tag->slug),
         'type' => 'website',
     ])
 @endpush
@@ -30,7 +30,7 @@
     </div>
 
     <div class="mt-8">
-        <a href="{{ route('canvas-ui.index') }}" class="text-sm text-gray-500 hover:text-gray-700">
+        <a href="{{ \Canvas\Support\ReaderUrl::route('canvas-ui.index') }}" class="text-sm text-gray-500 hover:text-gray-700">
             &larr; All posts
         </a>
     </div>

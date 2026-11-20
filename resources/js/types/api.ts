@@ -34,6 +34,9 @@ export type TaxonomyOption = {
 };
 
 export type PostListItem = {
+    locale?: string;
+    default_locale?: string;
+    translation_statuses?: Record<string, 'missing' | 'draft' | 'scheduled' | 'published'>;
     id: string;
     title: string | null;
     summary: string | null;
@@ -156,6 +159,7 @@ export type PostStatsResponse = {
 };
 
 export type PostsIndexParams = {
+    locale?: string;
     type?: 'draft';
     scope?: 'user' | 'all';
     page?: number;
