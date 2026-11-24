@@ -14,6 +14,8 @@ use Throwable;
 /**
  * Post body HTML is stored from the editor and rendered unescaped.
  * Safe documents are returned unchanged so pending diffs stay byte-stable.
+ * A document is safe only when libxml2 and a browser would both see no
+ * dangerous tags or attributes. Otherwise the stored value is the rebuilt tree.
  */
 final class PostBody
 {
@@ -147,14 +149,19 @@ final class PostBody
             return self::escape($html);
         }
 
-        if (! self::documentNeedsCleaning($document)) {
+        if (! self::documentNeedsCleaning($document) && self::rawHtmlIsReturnable($html)) {
             return $html;
         }
 
         $clean = self::rebuild($document);
+
+        if ($clean === '') {
+            return '';
+        }
+
         $again = self::load($clean);
 
-        if (! $again instanceof DOMDocument || self::documentNeedsCleaning($again)) {
+        if (! $again instanceof DOMDocument || self::documentNeedsCleaning($again) || ! self::rawHtmlIsReturnable($clean)) {
             return self::escape($html);
         }
 
@@ -210,6 +217,249 @@ final class PostBody
         }
 
         return $document;
+    }
+
+    /**
+     * Some libxml2 builds stop reading a start tag at a solidus, and they keep
+     * an abruptly closed comment open. Browsers do neither. Returning the
+     * original string in those cases stores the handlers libxml never saw.
+     */
+    private static function rawHtmlIsReturnable(string $html): bool
+    {
+        if (str_contains($html, "\0") || str_contains($html, '<?') || str_contains($html, '<![')) {
+            return false;
+        }
+
+        $length = strlen($html);
+        $i = 0;
+
+        while ($i < $length) {
+            $lt = strpos($html, '<', $i);
+
+            if ($lt === false) {
+                return true;
+            }
+
+            $i = $lt + 1;
+
+            if ($i >= $length) {
+                return true;
+            }
+
+            $character = $html[$i];
+
+            if ($character === '!') {
+                if (! self::consumeDeclaration($html, $i)) {
+                    return false;
+                }
+
+                continue;
+            }
+
+            if ($character === '?') {
+                return false;
+            }
+
+            if ($character === '/') {
+                $end = strpos($html, '>', $i);
+
+                if ($end === false) {
+                    return false;
+                }
+
+                $i = $end + 1;
+
+                continue;
+            }
+
+            if (! self::isNameStart($character)) {
+                continue;
+            }
+
+            if (! self::consumeStartTag($html, $i)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static function consumeDeclaration(string $html, int &$i): bool
+    {
+        $length = strlen($html);
+        $next = $i + 1;
+
+        if ($next + 1 < $length && $html[$next] === '-' && $html[$next + 1] === '-') {
+            $i = $next + 2;
+
+            if ($i < $length && $html[$i] === '>') {
+                return false;
+            }
+
+            if ($i + 1 < $length && $html[$i] === '-' && $html[$i + 1] === '>') {
+                return false;
+            }
+
+            $end = strpos($html, '-->', $i);
+
+            if ($end === false) {
+                $i = $length;
+
+                return true;
+            }
+
+            $i = $end + 3;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private static function consumeStartTag(string $html, int &$i): bool
+    {
+        $length = strlen($html);
+        $start = $i;
+
+        while ($i < $length) {
+            $character = $html[$i];
+
+            if (self::isWhitespace($character) || $character === '/' || $character === '>' || $character === '=') {
+                break;
+            }
+
+            $i++;
+        }
+
+        $tag = strtolower(substr($html, $start, $i - $start));
+
+        if ($tag === '' || ($tag !== 'meta' && in_array($tag, self::DROPPED_TAGS, true))) {
+            return false;
+        }
+
+        $iframeSrc = null;
+        $closed = false;
+
+        while ($i < $length) {
+            while ($i < $length && self::isWhitespace($html[$i])) {
+                $i++;
+            }
+
+            if ($i >= $length) {
+                return false;
+            }
+
+            $character = $html[$i];
+
+            if ($character === '>') {
+                $i++;
+                $closed = true;
+
+                break;
+            }
+
+            if ($character === '/') {
+                if ($i + 1 < $length && $html[$i + 1] === '>') {
+                    $i += 2;
+                    $closed = true;
+
+                    break;
+                }
+
+                return false;
+            }
+
+            $nameStart = $i;
+
+            while ($i < $length) {
+                $character = $html[$i];
+
+                if (self::isWhitespace($character) || $character === '/' || $character === '=' || $character === '>') {
+                    break;
+                }
+
+                $i++;
+            }
+
+            $name = strtolower(substr($html, $nameStart, $i - $nameStart));
+
+            if ($name === '' || str_starts_with($name, 'on') || $name === 'srcdoc') {
+                return false;
+            }
+
+            while ($i < $length && self::isWhitespace($html[$i])) {
+                $i++;
+            }
+
+            $value = '';
+
+            if ($i < $length && $html[$i] === '=') {
+                $i++;
+
+                while ($i < $length && self::isWhitespace($html[$i])) {
+                    $i++;
+                }
+
+                if ($i >= $length) {
+                    return false;
+                }
+
+                $quote = $html[$i];
+
+                if ($quote === '"' || $quote === "'") {
+                    $i++;
+                    $valueStart = $i;
+                    $end = strpos($html, $quote, $i);
+
+                    if ($end === false) {
+                        return false;
+                    }
+
+                    $value = substr($html, $valueStart, $end - $valueStart);
+                    $i = $end + 1;
+                } else {
+                    $valueStart = $i;
+
+                    while ($i < $length && ! self::isWhitespace($html[$i]) && $html[$i] !== '>') {
+                        $i++;
+                    }
+
+                    $value = substr($html, $valueStart, $i - $valueStart);
+                }
+            }
+
+            if ($name === 'style' && self::styleNeedsCleaning($value)) {
+                return false;
+            }
+
+            if (self::attributeValueIsDangerous($name, $value, $tag)) {
+                return false;
+            }
+
+            if ($tag === 'iframe' && $name === 'src') {
+                $iframeSrc = $value;
+            }
+
+            if ($tag === 'meta' && $name === 'http-equiv' && strtolower($value) !== '') {
+                return false;
+            }
+        }
+
+        if (! $closed) {
+            return false;
+        }
+
+        return $tag !== 'iframe' || self::isHttpsUrl((string) $iframeSrc);
+    }
+
+    private static function isNameStart(string $character): bool
+    {
+        return ($character >= 'A' && $character <= 'Z') || ($character >= 'a' && $character <= 'z');
+    }
+
+    private static function isWhitespace(string $character): bool
+    {
+        return $character === ' ' || $character === "\n" || $character === "\r" || $character === "\t" || $character === "\f";
     }
 
     private static function documentNeedsCleaning(DOMDocument $document): bool

@@ -146,7 +146,7 @@ Apply `Canvas\Http\Middleware\Session` on that route so session keys stay tidy (
 
 `body` is HTML from the TipTap editor, not Markdown. Escape titles and summaries. Render the body as HTML (`{!! $post->body !!}`).
 
-Iframe embeds must be `https` (YouTube, Vimeo, X, or any other `https` URL inserted in the editor). On save and on read, Canvas drops any other iframe URL, `srcdoc`, scripts, and event-handler attributes. Posts saved before that check still render without the unsafe markup. Custom themes can keep reading `$post->body`.
+Iframe embeds must be `https` (YouTube, Vimeo, X, or any other `https` URL inserted in the editor). On save and on read, Canvas drops any other iframe URL, `srcdoc`, scripts, and event-handler attributes, including handlers that only some HTML parsers would see. Posts saved before that check still render without the unsafe markup. Custom themes can keep reading `$post->body`.
 
 | Content      | Typical markup                                 |
 | ------------ | ---------------------------------------------- |

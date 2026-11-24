@@ -19,6 +19,12 @@ it('leaves editor html unchanged', function () use ($youtube, $vimeo): void {
         '<p><a href="https://example.com/post" class="text-blue-600">Link</a> and <a href="mailto:editor@example.com">mail</a></p>',
         '<img src="/storage/media/photo.png" class="canvas-post-body-image" alt="Photo">',
         '<img src="https://images.unsplash.com/photo-1" alt="Unsplash">',
+        '<img src="/storage/a.png" />',
+        '<img alt="a/b path" src="https://images.unsplash.com/photo-1">',
+        '<p>src/Support/PostBody.php</p>',
+        '<p>The word onerror= is text</p>',
+        '<!-- note --><p>Hi</p>',
+        '<br/>',
         $youtube,
         $vimeo,
     ];
@@ -58,6 +64,71 @@ it('strips unsafe iframes, scripts, and event handlers', function (): void {
     expect(PostBody::clean($clean))->toBe($clean)
         ->and(PostBody::clean($srcdoc))->toBe($srcdoc)
         ->and(PostBody::clean($handlers))->toBe($handlers);
+});
+
+it('does not keep event handlers hidden by a solidus or an abrupt comment', function (): void {
+    // Regression: GHSA-rwxv-634g-pw9j — libxml2 2.9 stops a start tag at "/" and
+    // leaves "<!-->" open, then the old cleaner stored that original string.
+    $payloads = [
+        '<p>Keep</p><img src="x"/onerror=alert(1)>',
+        '<img/src="x"/onerror=alert(1)>',
+        '<img/onerror=alert(1) src=x>',
+        '<img src="x" /onerror=alert(1)>',
+        '<img src="x" / onerror=alert(1)>',
+        '<img src="x"/ onerror=alert(1)>',
+        '<img alt="a > b" src="x"/onerror=alert(1)>',
+        "<img src=\"x\"\n/onerror=alert(1)>",
+        '<IMG SRC="x"/ONERROR=alert(1)>',
+        '<a/href="javascript:alert(1)">x</a>',
+        '<details/open/ontoggle=alert(1)>',
+        '<input/autofocus/onfocus=alert(1)>',
+        '<svg/onload=alert(1)>',
+        '<!--><img src=x onerror=alert(1)>-->',
+        '<p>Keep</p><!--><img src=x onerror=alert(1)>-->',
+        '<!--><img src=x onerror=alert(1)>',
+        '<!---> <img src=x onerror=alert(1)>',
+    ];
+
+    $returnable = new ReflectionMethod(PostBody::class, 'rawHtmlIsReturnable');
+
+    foreach ($payloads as $payload) {
+        $clean = PostBody::clean($payload);
+
+        expect($returnable->invoke(null, $payload))->toBeFalse()
+            ->and($clean)->not->toMatch('/on[a-z0-9:-]*\s*=/i')
+            ->and(strtolower((string) $clean))->not->toContain('javascript:')
+            ->and(PostBody::clean($clean))->toBe($clean);
+    }
+
+    expect(PostBody::clean('<p>Keep</p><img src="x"/onerror=alert(1)>'))->toContain('Keep')
+        ->and(PostBody::clean('<p>Keep</p><!--><img src=x onerror=alert(1)>-->'))->toContain('Keep');
+});
+
+it('strips a stored solidus event handler on read and on the next save', function (): void {
+    // Regression: GHSA-rwxv-634g-pw9j — already published posts are cleaned on read.
+    $payload = '<p>Visible</p><img src="x"/onerror=alert(1)>';
+
+    $post = Post::factory()->create([
+        'user_id' => $this->admin->id,
+        'body' => '<p>Visible</p>',
+    ]);
+
+    DB::table('canvas_posts')->where('id', $post->id)->update(['body' => $payload]);
+    $post->refresh();
+
+    expect($post->body)->toContain('Visible')
+        ->and($post->body)->not->toMatch('/onerror/i')
+        ->and($post->getRawOriginal('body'))->toBe($payload);
+
+    $post->pending = ['body' => $payload];
+    $post->body = $payload;
+    $post->save();
+
+    $fresh = $post->fresh();
+
+    expect($fresh)->not->toBeNull()
+        ->and($fresh->getRawOriginal('body'))->not->toMatch('/onerror/i')
+        ->and($fresh->pending['body'])->not->toMatch('/onerror/i');
 });
 
 it('cleans stored post and pending bodies on read and write', function (): void {
