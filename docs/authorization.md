@@ -29,6 +29,8 @@ You may also manage users from the admin UI as an Admin. Removing access deletes
 | Own posts & media | ✓           | ✓      | ✓     |
 | All posts & media |             | ✓      | ✓     |
 | Users             |             |        | ✓     |
+
+Any signed-in author can read their own profile. Reading another user's profile, including their email, requires Admin.
 | Taxonomy          |             |        | ✓     |
 | Integrations      |             |        | ✓     |
 

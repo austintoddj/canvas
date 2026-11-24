@@ -114,6 +114,13 @@ class UserController extends Controller
 
     public function show(Model|int|string $user): UserResource
     {
+        $currentUser = request()->user(config('canvas.guard'));
+        $targetKey = $user instanceof Model ? $user->getKey() : $user;
+
+        if ((string) $currentUser->getKey() !== (string) $targetKey) {
+            Gate::forUser($currentUser)->authorize('manage-users');
+        }
+
         $user = $this->resolveUser($user);
 
         $canvasUser = CanvasUser::query()

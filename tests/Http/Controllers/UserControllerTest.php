@@ -112,6 +112,33 @@ describe('when listing users', function (): void {
             ->assertJsonPath('canvas.role', 1);
     });
 
+    // Regression: GHSA-2988-rhgg-57r3 — any signed-in role could read another user's email and profile.
+    it('forbids a contributor from reading another users profile', function (): void {
+        $this->actingAsContributor()
+            ->getJson("canvas/api/users/{$this->admin->id}")
+            ->assertForbidden()
+            ->assertDontSee($this->admin->email);
+    });
+
+    it('forbids an editor from reading another users profile', function (): void {
+        $this->actingAsEditor()
+            ->getJson("canvas/api/users/{$this->contributor->id}")
+            ->assertForbidden()
+            ->assertDontSee($this->contributor->email);
+    });
+
+    it('lets an author read their own profile', function (): void {
+        $this->actingAsContributor()
+            ->getJson("canvas/api/users/{$this->contributor->id}")
+            ->assertSuccessful()
+            ->assertJsonPath('email', $this->contributor->email);
+
+        $this->actingAsEditor()
+            ->getJson("canvas/api/users/{$this->editor->id}")
+            ->assertSuccessful()
+            ->assertJsonPath('email', $this->editor->email);
+    });
+
     it('lists posts for a user', function (): void {
         $post = Post::factory()->create([
             'user_id' => $this->admin->id,
